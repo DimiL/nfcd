@@ -7,6 +7,10 @@ LOCAL_PATH := $(call my-dir)
 # Build nfcd
 include $(CLEAR_VARS)
 
+VOB_COMPONENTS := external/libnfc-nci/src
+NFA := $(VOB_COMPONENTS)/nfa
+NFC := $(VOB_COMPONENTS)/nfc
+
 LOCAL_SRC_FILES := \
     src/nfcd.cpp \
     lib-nci/NativeNfcManager.cpp \
@@ -16,11 +20,22 @@ LOCAL_SRC_FILES := \
     lib-nci/NativeNfcSecureElement.cpp \
     lib-nci/NativeP2pDevice.cpp \
     lib-nci/NativeNfcTag.cpp \
+    lib-nci/Mutex.cpp \
+    lib-nci/CondVar.cpp \
+    lib-nci/PowerSwitch.cpp \
     
 
 LOCAL_C_INCLUDES += \
-    external/libnfc-nxp/src \
-    external/libnfc-nxp/inc \
+    $(NFA)/include \
+    $(NFA)/brcm \
+    $(NFC)/include \
+    $(NFC)/brcm \
+    $(NFC)/int \
+    $(VOB_COMPONENTS)/hal/include \
+    $(VOB_COMPONENTS)/hal/int \
+    $(VOB_COMPONENTS)/include \
+    $(VOB_COMPONENTS)/gki/ulinux \
+    $(VOB_COMPONENTS)/gki/common \
     external/stlport/stlport \
     external/openssl/include \
     external/jansson/android \
@@ -31,6 +46,7 @@ LOCAL_C_INCLUDES += \
 
 LOCAL_SHARED_LIBRARIES += \
     libcutils \
+    libnfc-nci \
 
 LOCAL_MODULE := nfcd
 LOCAL_MODULE_TAGS := debug

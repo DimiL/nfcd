@@ -15,7 +15,7 @@ public:
 private:
 
   void initializeNativeStructure();
-
+  void doInitialize();
 };
 
 #endif 

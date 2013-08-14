@@ -16,5 +16,4 @@ private:
 
 };
 
-#endif
-
+#endif  // mozilla_NativeLlcpConnectionlessSocket_h__

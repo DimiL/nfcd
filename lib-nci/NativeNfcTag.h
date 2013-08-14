@@ -16,5 +16,4 @@ private:
 
 };
 
-#endif
-
+#endif // mozilla_NativeNfcTag_h__

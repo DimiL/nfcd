@@ -15,3 +15,5 @@ public:
 private:
 
 };
+
+#endif // mozilla_NativeLlcpSocket_h__

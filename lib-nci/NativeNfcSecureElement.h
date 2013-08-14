@@ -16,4 +16,4 @@ private:
 
 };
 
-#endif
+#endif // mozilla_NativeNfcSecureElement_h__

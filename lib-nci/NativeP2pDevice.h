@@ -15,4 +15,4 @@ public:
 private:
 };
 
-#endif
+#endif // mozilla_NativeP2pDevice_h__
