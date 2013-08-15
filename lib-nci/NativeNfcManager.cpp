@@ -3,7 +3,9 @@
 
 #include "NfcAdaptation.h"
 #include "SyncEvent.h"
+#include "PeerToPeer.h"
 #include "PowerSwitch.h"
+#include "NfcTag.h"
 
 extern "C"
 {
@@ -18,19 +20,48 @@ extern "C"
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
 
+/*****************************************************************************
+**
+** public variables and functions
+**
+*****************************************************************************/
+void                    doStartupConfig ();
+void                    startRfDiscovery (bool isStart);
+
+/*****************************************************************************
+**
+** private variables and functions
+**
+*****************************************************************************/
 static SyncEvent            sNfaEnableEvent;  //event for NFA_Enable()
 static SyncEvent            sNfaDisableEvent;  //event for NFA_Disable()
+static SyncEvent            sNfaEnableDisablePollingEvent;  //event for NFA_EnablePolling(), NFA_DisablePolling()
+static SyncEvent            sNfaSetConfigEvent;  // event for Set_Config....
+static SyncEvent            sNfaGetConfigEvent;  // event for Get_Config....
 
 static bool                 sIsNfaEnabled = false;
 static bool                 sDiscoveryEnabled = false;  //is polling for tag?
 static bool                 sIsDisabling = false;
+static bool                 sRfEnabled = false; // whether RF discovery is enabled
+static bool                 sP2pActive = false; // whether p2p was last active
+
+#define CONFIG_UPDATE_TECH_MASK     (1 << 1)
+#define DEFAULT_TECH_MASK           (NFA_TECHNOLOGY_MASK_A \
+                                     | NFA_TECHNOLOGY_MASK_B \
+                                     | NFA_TECHNOLOGY_MASK_F \
+                                     | NFA_TECHNOLOGY_MASK_ISO15693 \
+                                     | NFA_TECHNOLOGY_MASK_B_PRIME \
+                                     | NFA_TECHNOLOGY_MASK_A_ACTIVE \
+                                     | NFA_TECHNOLOGY_MASK_F_ACTIVE \
+                                     | NFA_TECHNOLOGY_MASK_KOVIO)
+
 
 static void nfaConnectionCallback (UINT8 event, tNFA_CONN_EVT_DATA *eventData);
 static void nfaDeviceManagementCallback (UINT8 event, tNFA_DM_CBACK_DATA *eventData);
 
-NativeNfcManager::NativeNfcManager()
+NativeNfcManager::NativeNfcManager(DeviceHost* pDeviceHost) :
+  m_pDeviceHost(pDeviceHost)
 {
-    doInitialize();
 }
 
 NativeNfcManager::~NativeNfcManager()
@@ -43,9 +74,13 @@ void NativeNfcManager::initializeNativeStructure()
 
 }
 
-void NativeNfcManager::doInitialize()
+bool NativeNfcManager::initialize()
 {
-    ALOGD("doInitialize >>");
+    return doInitialize();
+}
+
+bool NativeNfcManager::doInitialize()
+{
     tNFA_STATUS stat = NFA_STATUS_OK;
 
     // 1. Initialize PowerSwitch
@@ -65,8 +100,6 @@ void NativeNfcManager::doInitialize()
         stat = NFA_Enable (nfaDeviceManagementCallback, nfaConnectionCallback);
         if (stat == NFA_STATUS_OK)
         {
-            ALOGD("NFA Enable OK");
-            
             //num = initializeGlobalAppLogLevel ();
             CE_SetTraceLevel (num);
             LLCP_SetTraceLevel (num);
@@ -75,9 +108,7 @@ void NativeNfcManager::doInitialize()
             NFA_SetTraceLevel (num);
             NFA_P2pSetTraceLevel (num);
             
-            ALOGD("NFA Enable wait() >>");
             sNfaEnableEvent.wait(); //wait for NFA command to finish
-            ALOGD("NFA Enable wait() <<");
         }
         else 
         {
@@ -89,7 +120,40 @@ void NativeNfcManager::doInitialize()
     {
         if (sIsNfaEnabled)
         {
+            // Dimi : Remove temporarily, implement in the future
+            // SecureElement::getInstance().initialize (getNative(e, o));
+            //nativeNfcTag_registerNdefTypeHandler ();
+            NfcTag::getInstance().initialize ();
 
+            PeerToPeer::getInstance().initialize ();
+            PeerToPeer::getInstance().handleNfcOnOff (true);
+
+            /////////////////////////////////////////////////////////////////////////////////
+            // Add extra configuration here (work-arounds, etc.)
+
+            /*
+            struct nfc_jni_native_data *nat = getNative(e, o);
+
+            if ( nat )
+            {
+                if (GetNumValue(NAME_POLLING_TECH_MASK, &num, sizeof(num)))
+                    nat->tech_mask = num;
+                else
+                    nat->tech_mask = DEFAULT_TECH_MASK;
+
+                ALOGD ("%s: tag polling tech mask=0x%X", __FUNCTION__, nat->tech_mask);
+            }
+            */
+
+            // if this value exists, set polling interval.
+            /*
+            if (GetNumValue(NAME_NFA_DM_DISC_DURATION_POLL, &num, sizeof(num)))
+                NFA_SetRfDiscoveryDuration(num);
+            */
+
+            // Do custom NFCA startup configuration.
+            doStartupConfig();
+            goto TheEnd;
         }
     }
 
@@ -103,8 +167,74 @@ TheEnd:
         //PowerSwitch::getInstance ().setLevel (PowerSwitch::LOW_POWER);
     }
 
-    //return sIsNfaEnabled ? JNI_TRUE : JNI_FALSE;
-    return;
+    return sIsNfaEnabled ? true : false;
+}
+
+void NativeNfcManager::enableDiscovery()
+{
+    tNFA_TECHNOLOGY_MASK tech_mask = DEFAULT_TECH_MASK;
+    /*
+    struct nfc_jni_native_data *nat = getNative(e, o);
+
+    if (nat)
+        tech_mask = (tNFA_TECHNOLOGY_MASK)nat->tech_mask;
+
+    ALOGD ("%s: enter; tech_mask = %02x", __FUNCTION__, tech_mask);
+    */
+
+    if (sDiscoveryEnabled)
+    {
+        ALOGE ("%s: already polling", __FUNCTION__);
+        return;
+    }
+
+    tNFA_STATUS stat = NFA_STATUS_OK;
+
+    //ALOGD ("%s: sIsSecElemSelected=%u", __FUNCTION__, sIsSecElemSelected);
+
+    PowerSwitch::getInstance ().setLevel (PowerSwitch::FULL_POWER);
+
+    if (sRfEnabled) {
+        // Stop RF discovery to reconfigure
+        startRfDiscovery(false);
+    }
+    
+    {
+        SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+        stat = NFA_EnablePolling (tech_mask);
+        if (stat == NFA_STATUS_OK)
+        {
+            ALOGD ("%s: wait for enable event", __FUNCTION__);
+            sDiscoveryEnabled = true;
+            sNfaEnableDisablePollingEvent.wait (); //wait for NFA_POLL_ENABLED_EVT
+            ALOGD ("%s: got enabled event", __FUNCTION__);
+        }
+        else
+        {
+            ALOGE ("%s: fail enable discovery; error=0x%X", __FUNCTION__, stat);
+        }
+    }    
+
+    // Start P2P listening if tag polling was enabled or the mask was 0.
+    if (sDiscoveryEnabled || (tech_mask == 0))
+    {
+        ALOGD ("%s: Enable p2pListening", __FUNCTION__);
+        ALOGD ("[Dimi]Test>>");
+        PeerToPeer::getInstance().enableP2pListening (true);
+        ALOGD ("[Dimi]Test<<");
+
+        // Dimi : Remove SE related temporarily
+        //if NFC service has deselected the sec elem, then apply default routes
+        //if (!sIsSecElemSelected)
+        //    stat = SecureElement::getInstance().routeToDefault ();
+    }
+
+    // Actually start discovery.
+    startRfDiscovery (true);
+
+    PowerSwitch::getInstance ().setModeOn (PowerSwitch::DISCOVERY);
+
+    ALOGD ("%s: exit", __FUNCTION__);
 }
 
 /*******************************************************************************
@@ -144,6 +274,10 @@ void nfaDeviceManagementCallback (UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
 
     case NFA_DM_SET_CONFIG_EVT: //result of NFA_SetConfig
         ALOGD ("%s: NFA_DM_SET_CONFIG_EVT", __FUNCTION__);
+        {
+            SyncEventGuard guard (sNfaSetConfigEvent);
+            sNfaSetConfigEvent.notifyOne();
+        }
         break;
 
     case NFA_DM_GET_CONFIG_EVT: /* Result of NFA_GetConfig */
@@ -153,6 +287,18 @@ void nfaDeviceManagementCallback (UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
     case NFA_DM_RF_FIELD_EVT:
         ALOGD ("%s: NFA_DM_RF_FIELD_EVT; status=0x%X; field status=%u", __FUNCTION__,
               eventData->rf_field.status, eventData->rf_field.rf_field_status);
+
+        if (sIsDisabling || !sIsNfaEnabled)
+            break;
+
+        if (!sP2pActive && eventData->rf_field.status == NFA_STATUS_OK)
+        {
+            // Dimi : Remove SE function temporarily
+            /*
+            SecureElement::getInstance().notifyRfFieldEvent (
+                    eventData->rf_field.rf_field_status == NFA_DM_RF_FIELD_ON);
+            */
+        }
         break;
 
     case NFA_DM_NFCC_TRANSPORT_ERR_EVT:
@@ -194,24 +340,36 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
     case NFA_POLL_ENABLED_EVT: // whether polling successfully started
         {
             ALOGD("%s: NFA_POLL_ENABLED_EVT: status = %u", __FUNCTION__, eventData->status);
+
+            SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+            sNfaEnableDisablePollingEvent.notifyOne ();
         }
         break;
 
     case NFA_POLL_DISABLED_EVT: // Listening/Polling stopped
         {
             ALOGD("%s: NFA_POLL_DISABLED_EVT: status = %u", __FUNCTION__, eventData->status);
+
+            SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+            sNfaEnableDisablePollingEvent.notifyOne ();
         }
         break;
 
     case NFA_RF_DISCOVERY_STARTED_EVT: // RF Discovery started
         {
             ALOGD("%s: NFA_RF_DISCOVERY_STARTED_EVT: status = %u", __FUNCTION__, eventData->status);
+
+            SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+            sNfaEnableDisablePollingEvent.notifyOne ();
         }
         break;
 
     case NFA_RF_DISCOVERY_STOPPED_EVT: // RF Discovery stopped event
         {
             ALOGD("%s: NFA_RF_DISCOVERY_STOPPED_EVT: status = %u", __FUNCTION__, eventData->status);
+ 
+            SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+            sNfaEnableDisablePollingEvent.notifyOne ();
         }
         break;
 
@@ -309,10 +467,13 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
              eventData->llcp_activated.remote_lsc,
              eventData->llcp_activated.remote_link_miu,
              eventData->llcp_activated.local_link_miu);
+
+        PeerToPeer::getInstance().llcpActivatedHandler (eventData->llcp_activated);
         break;
 
     case NFA_LLCP_DEACTIVATED_EVT: // LLCP link is deactivated
         ALOGD("%s: NFA_LLCP_DEACTIVATED_EVT", __FUNCTION__);
+        PeerToPeer::getInstance().llcpDeactivatedHandler (eventData->llcp_deactivated);
         break;
 
     // Dimi : Compile error, to be fixed
@@ -340,10 +501,67 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
 
     case NFA_SET_P2P_LISTEN_TECH_EVT:
         ALOGD("%s: NFA_SET_P2P_LISTEN_TECH_EVT", __FUNCTION__);
+        PeerToPeer::getInstance().connectionEventHandler (connEvent, eventData);
         break;
 
     default:
         ALOGE("%s: unknown event ????", __FUNCTION__);
         break;
+    }
+}
+
+/*******************************************************************************
+**
+** Function:        startRfDiscovery
+**
+** Description:     Ask stack to start polling and listening for devices.
+**                  isStart: Whether to start.
+**
+** Returns:         None
+**
+*******************************************************************************/
+void startRfDiscovery(bool isStart)
+{
+    tNFA_STATUS status = NFA_STATUS_FAILED;
+
+    ALOGD ("%s: is start=%d", __FUNCTION__, isStart);
+    SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+    status  = isStart ? NFA_StartRfDiscovery () : NFA_StopRfDiscovery ();
+    if (status == NFA_STATUS_OK)
+    {
+        sNfaEnableDisablePollingEvent.wait (); //wait for NFA_RF_DISCOVERY_xxxx_EVT
+        sRfEnabled = isStart;
+    }
+    else
+    {
+        ALOGE ("%s: Failed to start/stop RF discovery; error=0x%X", __FUNCTION__, status);
+    }
+}
+
+/*******************************************************************************
+**
+** Function:        doStartupConfig
+**
+** Description:     Configure the NFC controller.
+**
+** Returns:         None
+**
+*******************************************************************************/
+void doStartupConfig()
+{
+    // Dimi : To be fixed, use correct nat
+    unsigned long num = 0;
+    // struct nfc_jni_native_data *nat = getNative(0, 0);
+    tNFA_STATUS stat = NFA_STATUS_FAILED;
+
+    // If polling for Active mode, set the ordering so that we choose Active over Passive mode first.
+    // if (nat && (nat->tech_mask & (NFA_TECHNOLOGY_MASK_A_ACTIVE | NFA_TECHNOLOGY_MASK_F_ACTIVE)))
+    if (true)
+    {
+        UINT8  act_mode_order_param[] = { 0x01 };
+        SyncEventGuard guard (sNfaSetConfigEvent);
+        stat = NFA_SetConfig(NCI_PARAM_ID_ACT_ORDER, sizeof(act_mode_order_param), &act_mode_order_param[0]);
+        if (stat == NFA_STATUS_OK)
+            sNfaSetConfigEvent.wait ();
     }
 }

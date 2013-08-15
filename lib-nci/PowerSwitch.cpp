@@ -24,12 +24,9 @@
 // Dimi: Remove SE function temporarily
 //#include "SecureElement.h"
 
+#define LOG_TAG "PowerSwitch"
 
-namespace android
-{
-    void doStartupConfig ();
-}
-
+void doStartupConfig ();
 
 PowerSwitch PowerSwitch::sPowerSwitch;
 const PowerSwitch::PowerActivity PowerSwitch::DISCOVERY=0x01;
@@ -298,7 +295,7 @@ bool PowerSwitch::setPowerOffSleepState (bool sleep)
                             deviceMgtPowerStateToString (mCurrDeviceMgtPowerState), mCurrDeviceMgtPowerState);
                     goto TheEnd;
                 }
-                android::doStartupConfig ();
+                doStartupConfig ();
                 mCurrLevel = FULL_POWER;
             }
             else

@@ -13,6 +13,8 @@ NFC := $(VOB_COMPONENTS)/nfc
 
 LOCAL_SRC_FILES := \
     src/nfcd.cpp \
+    src/DeviceHost.cpp \
+    src/NfcService.cpp \
     lib-nci/NativeNfcManager.cpp \
     lib-nci/NativeLlcpConnectionlessSocket.cpp \
     lib-nci/NativeLlcpSocket.cpp \
@@ -23,6 +25,8 @@ LOCAL_SRC_FILES := \
     lib-nci/Mutex.cpp \
     lib-nci/CondVar.cpp \
     lib-nci/PowerSwitch.cpp \
+    lib-nci/NfcTag.cpp \
+    lib-nci/PeerToPeer.cpp \
     
 
 LOCAL_C_INCLUDES += \
@@ -43,10 +47,16 @@ LOCAL_C_INCLUDES += \
     bionic \
     bionic/linker \
     system/nfcd/lib-nci \
+    system/nfcd/src \
 
 LOCAL_SHARED_LIBRARIES += \
+    libicuuc \
+    libnativehelper \
     libcutils \
+    libutils \
+    liblog \
     libnfc-nci \
+    libstlport
 
 LOCAL_MODULE := nfcd
 LOCAL_MODULE_TAGS := debug

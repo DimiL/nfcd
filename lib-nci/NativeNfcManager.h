@@ -5,17 +5,24 @@
 #ifndef mozilla_NativeNfcManager_h__
 #define mozilla_NativeNfcManager_h__
 
+#include "DeviceHost.h"
+
 class NativeNfcManager
 {
 public:
 
-  NativeNfcManager();
+  NativeNfcManager(DeviceHost* pDeviceHost);
   virtual ~NativeNfcManager();
 
+  bool initialize();
+  void enableDiscovery();
+ 
 private:
 
+  DeviceHost* m_pDeviceHost;
+
   void initializeNativeStructure();
-  void doInitialize();
+  bool doInitialize();
 };
 
 #endif 
