@@ -15,6 +15,7 @@ LOCAL_SRC_FILES := \
     src/nfcd.cpp \
     src/DeviceHost.cpp \
     src/NfcService.cpp \
+    src/NfcIpcSocket.cpp \
     lib-nci/NativeNfcManager.cpp \
     lib-nci/NativeLlcpConnectionlessSocket.cpp \
     lib-nci/NativeLlcpSocket.cpp \

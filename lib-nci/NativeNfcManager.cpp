@@ -1,5 +1,6 @@
 
 #include "NativeNfcManager.h"
+#include "NativeP2pDevice.h"
 
 #include "NfcAdaptation.h"
 #include "SyncEvent.h"
@@ -59,19 +60,28 @@ static bool                 sP2pActive = false; // whether p2p was last active
 static void nfaConnectionCallback (UINT8 event, tNFA_CONN_EVT_DATA *eventData);
 static void nfaDeviceManagementCallback (UINT8 event, tNFA_DM_CBACK_DATA *eventData);
 
-NativeNfcManager::NativeNfcManager(DeviceHost* pDeviceHost) :
-  m_pDeviceHost(pDeviceHost)
+NativeNfcManager::NativeNfcManager() :
+  mNativeP2pDevice(NULL)
 {
+    initializeNativeStructure();
 }
 
 NativeNfcManager::~NativeNfcManager()
 {
-
+    // Dimi : TODO, use MACRO
+    if (mNativeP2pDevice != NULL)    delete mNativeP2pDevice;
 }
 
 void NativeNfcManager::initializeNativeStructure()
 {
+    mNativeP2pDevice = new NativeP2pDevice();
+}
 
+void* NativeNfcManager::getNativeStruct(const char* name)
+{
+    if (0 == strcmp(name, "NativeP2pDevice"))
+        return reinterpret_cast<void*>(mNativeP2pDevice);
+    return NULL;
 }
 
 bool NativeNfcManager::initialize()
@@ -125,7 +135,7 @@ bool NativeNfcManager::doInitialize()
             //nativeNfcTag_registerNdefTypeHandler ();
             NfcTag::getInstance().initialize ();
 
-            PeerToPeer::getInstance().initialize ();
+            PeerToPeer::getInstance().initialize (this);
             PeerToPeer::getInstance().handleNfcOnOff (true);
 
             /////////////////////////////////////////////////////////////////////////////////
@@ -219,9 +229,7 @@ void NativeNfcManager::enableDiscovery()
     if (sDiscoveryEnabled || (tech_mask == 0))
     {
         ALOGD ("%s: Enable p2pListening", __FUNCTION__);
-        ALOGD ("[Dimi]Test>>");
         PeerToPeer::getInstance().enableP2pListening (true);
-        ALOGD ("[Dimi]Test<<");
 
         // Dimi : Remove SE related temporarily
         //if NFC service has deselected the sec elem, then apply default routes
@@ -565,3 +573,5 @@ void doStartupConfig()
             sNfaSetConfigEvent.wait ();
     }
 }
+
+

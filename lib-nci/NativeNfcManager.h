@@ -7,19 +7,21 @@
 
 #include "DeviceHost.h"
 
-class NativeNfcManager
+class NativeP2pDevice;
+
+class NativeNfcManager : public DeviceHost
 {
 public:
 
-  NativeNfcManager(DeviceHost* pDeviceHost);
+  NativeNfcManager();
   virtual ~NativeNfcManager();
 
   bool initialize();
   void enableDiscovery();
- 
-private:
+  void* getNativeStruct(const char* name);
 
-  DeviceHost* m_pDeviceHost;
+private:
+  NativeP2pDevice* mNativeP2pDevice;
 
   void initializeNativeStructure();
   bool doInitialize();

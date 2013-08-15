@@ -11,6 +11,9 @@
 static pthread_t thread_id;
 static sem_t thread_sem;
 
+static void* linkDevice;
+static void* nfcTag;
+
 typedef enum {
   MSG_UNDEFINED = 0,
   MSG_LLCP_LINK_ACTIVATION,
@@ -23,15 +26,18 @@ typedef enum {
 
 static MSG_TYPE msg_type = MSG_UNDEFINED;
 
-void nfc_service_send_MSG_LLCP_LINK_ACTIVATION()
+void nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
 {
   msg_type = MSG_LLCP_LINK_ACTIVATION;
+  linkDevice = pDevice;
   sem_post(&thread_sem);
 }
 
-void nfc_service_send_MSG_LLCP_LINK_DEACTIVATION()
+void nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice)
 {
+  ALOGD("nfc_service_send_MSG_LLCP_LINK_DEACTIVATION");
   msg_type = MSG_LLCP_LINK_DEACTIVATION;
+  linkDevice = pDevice;
   sem_post(&thread_sem);
 }
 
@@ -59,9 +65,9 @@ void nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS()
   sem_post(&thread_sem);
 }
 
-static void NfcService_MSG_LLCP_LINK_ACTIVATION()
+static void NfcService_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
 {
-  ALOGD("LLCP Activation message");
+  ALOGE("NfcService_MSG_LLCP_LINK_ACTIVATION");
 }
 
 static void *service_thread(void *arg)
@@ -77,7 +83,8 @@ static void *service_thread(void *arg)
 
     switch(msg_type) {
       case MSG_LLCP_LINK_ACTIVATION:
-        NfcService_MSG_LLCP_LINK_ACTIVATION();
+        ALOGE("NFCService : receive message MSG_LLCP_LINK_ACTIVATION");
+        NfcService_MSG_LLCP_LINK_ACTIVATION(linkDevice);
         break;
       case MSG_LLCP_LINK_DEACTIVATION:
         break;

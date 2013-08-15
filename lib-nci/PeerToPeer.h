@@ -22,6 +22,7 @@
 #include <utils/StrongPointer.h>
 #include "SyncEvent.h"
 //#include "NfcJniUtil.h"
+#include "NativeNfcManager.h"
 #include <string>
 extern "C"
 {
@@ -90,7 +91,7 @@ public:
     ** Returns:         None
     **
     *******************************************************************************/
-    void initialize ();
+    void initialize (NativeNfcManager* pNfcManager);
 
 
     /*******************************************************************************
@@ -392,6 +393,8 @@ private:
     SyncEvent       mSnepRegisterEvent;         // completion event for NFA_SnepRegisterClient()
     Mutex           mDisconnectMutex;           // synchronize the disconnect operation
     Mutex           mNewJniHandleMutex;         // synchronize the creation of a new JNI handle
+
+    NativeNfcManager*     mNfcManager;
 
 
     /*******************************************************************************

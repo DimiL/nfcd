@@ -18,9 +18,9 @@ public:
 
   void notifyTransactionListeners();
 
-  void notifyLlcpLinkActivation();
+  void notifyLlcpLinkActivation(void* pDevice);
 
-  void notifyLlcpLinkDeactivated();
+  void notifyLlcpLinkDeactivated(void* pDevice);
 
   void notifyLlcpLinkFirstPacketReceived();
 

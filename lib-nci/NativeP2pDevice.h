@@ -12,6 +12,10 @@ public:
   NativeP2pDevice();
   virtual ~NativeP2pDevice();
 
+  int mHandle;
+  int mMode;
+  unsigned char* mGeneralBytes;
+
 private:
 };
 

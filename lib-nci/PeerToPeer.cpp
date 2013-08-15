@@ -19,11 +19,13 @@
  */
 #include "OverrideLog.h"
 #include "PeerToPeer.h"
-//#include "NfcJniUtil.h"
+#include "NfcUtil.h"
 #include "llcp_defs.h"
 #include "config.h"
 //#include "JavaClassConstants.h"
 //#include <ScopedLocalRef.h>
+#include "NativeP2pDevice.h";
+
 
 /* Some older PN544-based solutions would only send the first SYMM back
  * (as an initiator) after the full LTO (750ms). But our connect timer
@@ -65,7 +67,8 @@ PeerToPeer::PeerToPeer ()
                         | NFA_TECHNOLOGY_MASK_F
                         | NFA_TECHNOLOGY_MASK_A_ACTIVE
                         | NFA_TECHNOLOGY_MASK_F_ACTIVE),
-    mNextJniHandle (1)
+    mNextJniHandle (1),
+    mNfcManager(NULL)
 {
     memset (mServers, 0, sizeof(mServers));
     memset (mClients, 0, sizeof(mClients));
@@ -110,9 +113,11 @@ PeerToPeer& PeerToPeer::getInstance ()
 ** Returns:         None
 **
 *******************************************************************************/
-void PeerToPeer::initialize ()
+void PeerToPeer::initialize (NativeNfcManager* pNfcManager)
 {
     unsigned long num = 0;
+
+    mNfcManager = pNfcManager;
 
     if (GetNumValue ("P2P_LISTEN_TECH_MASK", &num, sizeof (num)))
         mP2pListenTechMask = num;
@@ -299,8 +304,34 @@ void PeerToPeer::removeServer (tJNI_HANDLE jniHandle)
 *******************************************************************************/
 void PeerToPeer::llcpActivatedHandler (tNFA_LLCP_ACTIVATED& activated)
 {
-    // Dimi : To be implemented
-    // NotifyLlcpLinkActivation()
+    static const char fn [] = "PeerToPeer::llcpActivatedHandler";
+    ALOGE ("%s: enter", fn);
+
+    NativeP2pDevice* pNativeP2pDevice = 
+        reinterpret_cast<NativeP2pDevice*>(mNfcManager->getNativeStruct("NativeP2pDevice"));
+
+    if (pNativeP2pDevice == NULL) {
+        ALOGE("%s : cannot get native p2p device class");
+        return;
+    }
+    
+    // Dimi : To be fixed
+    //no longer need to receive NDEF message from a tag
+    // android::nativeNfcTag_deregisterNdefTypeHandler ();
+
+    if (activated.is_initiator == true) {
+        ALOGE ("%s: p2p initiator", fn);
+        pNativeP2pDevice->mMode = MODE_P2P_INITIATOR;
+    } else {
+        ALOGE ("%s: p2p target", fn);
+        pNativeP2pDevice->mMode = MODE_P2P_TARGET;
+    }
+
+    pNativeP2pDevice->mHandle = 0x1234;
+
+    mNfcManager->notifyLlcpLinkActivation(reinterpret_cast<void*>(pNativeP2pDevice));
+
+    ALOGE ("%s: exit", fn);
 }
 
 
@@ -317,7 +348,7 @@ void PeerToPeer::llcpActivatedHandler (tNFA_LLCP_ACTIVATED& activated)
 *******************************************************************************/
 void PeerToPeer::llcpDeactivatedHandler (tNFA_LLCP_DEACTIVATED& /*deactivated*/)
 {
-    // Dimi : To be implemented
+    //mNfcManager->notifyLlcpLinkDeactivated();
 }
 
 void PeerToPeer::llcpFirstPacketHandler ()

@@ -2,6 +2,7 @@
 #include "NativeNfcManager.h"
 
 #include "NfcService.h"
+#include "NfcIpcSocket.h"
 #include "DeviceHost.h"
 
 #define LOG_TAG "nfcd"
@@ -10,8 +11,7 @@
 int main() {
 
   // 1. Create Native NFC Manager and do initialize
-  DeviceHost* pDeviceHost = new DeviceHost(); 
-  NativeNfcManager* pNativeNfcManager = new NativeNfcManager(pDeviceHost);
+  NativeNfcManager* pNativeNfcManager = new NativeNfcManager();
   pNativeNfcManager->initialize();
 
   // 2. Enable Discovery
@@ -20,12 +20,10 @@ int main() {
   // 3. Create thread
   init_nfc_service();
 
-  // Dimi : Copy from netd
-  // Eventually we'll become the monitoring thread    
-  while(1) {
-    sleep(1000);
-  }
- 
-  ALOGI("nfcd exiting");
+  // 4. Create IPC socket & enter while loop
+  NfcIpcSocket* pNfcIpcSocket = new NfcIpcSocket();
+  pNfcIpcSocket->initialize();
+  pNfcIpcSocket->loop();
+
   //exit(0);
 }
