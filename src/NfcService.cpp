@@ -35,15 +35,15 @@ void NfcService::nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
 
 void NfcService::nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice)
 {
-  ALOGD("nfc_service_send_MSG_LLCP_LINK_DEACTIVATION");
   msg_type = MSG_LLCP_LINK_DEACTIVATION;
   linkDevice = pDevice;
   sem_post(&thread_sem);
 }
 
-void NfcService::nfc_service_send_MSG_NDEF_TAG()
+void NfcService::nfc_service_send_MSG_NDEF_TAG(void* pTag)
 {
   msg_type = MSG_NDEF_TAG;
+  nfcTag = pTag;
   sem_post(&thread_sem);
 }
 
@@ -70,6 +70,11 @@ static void NfcService_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
   ALOGE("NfcService_MSG_LLCP_LINK_ACTIVATION");
 }
 
+static void NfcService_MSG_NDEF_TAG(void* pTag)
+{
+  ALOGE("NfcService_MSG_NDEF_TAG"); 
+}
+
 static void *service_thread(void *arg)
 {
   pthread_setname_np(pthread_self(), "NFCService thread");
@@ -89,6 +94,7 @@ static void *service_thread(void *arg)
       case MSG_LLCP_LINK_DEACTIVATION:
         break;
       case MSG_NDEF_TAG:
+        NfcService_MSG_NDEF_TAG(nfcTag);
         break;
       case MSG_SE_FIELD_ACTIVATED:
         break;

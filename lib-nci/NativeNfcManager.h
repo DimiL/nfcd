@@ -6,8 +6,8 @@
 #define mozilla_NativeNfcManager_h__
 
 #include "DeviceHost.h"
-
-class NativeP2pDevice;
+#include "NativeP2pDevice.h"
+#include "NativeNfcTag.h"
 
 class NativeNfcManager : public DeviceHost
 {
@@ -22,6 +22,7 @@ public:
 
 private:
   NativeP2pDevice* mNativeP2pDevice;
+  NativeNfcTag* mNativeNfcTag;
 
   void initializeNativeStructure();
   bool doInitialize();

@@ -1,6 +1,5 @@
 
 #include "NativeNfcManager.h"
-#include "NativeP2pDevice.h"
 
 #include "NfcAdaptation.h"
 #include "SyncEvent.h"
@@ -61,7 +60,8 @@ static void nfaConnectionCallback (UINT8 event, tNFA_CONN_EVT_DATA *eventData);
 static void nfaDeviceManagementCallback (UINT8 event, tNFA_DM_CBACK_DATA *eventData);
 
 NativeNfcManager::NativeNfcManager() :
-  mNativeP2pDevice(NULL)
+  mNativeP2pDevice(NULL),
+  mNativeNfcTag(NULL)
 {
     initializeNativeStructure();
 }
@@ -70,17 +70,22 @@ NativeNfcManager::~NativeNfcManager()
 {
     // Dimi : TODO, use MACRO
     if (mNativeP2pDevice != NULL)    delete mNativeP2pDevice;
+    if (mNativeNfcTag != NULL)       delete mNativeNfcTag;
 }
 
 void NativeNfcManager::initializeNativeStructure()
 {
     mNativeP2pDevice = new NativeP2pDevice();
+    mNativeNfcTag = new NativeNfcTag();
 }
 
 void* NativeNfcManager::getNativeStruct(const char* name)
 {
     if (0 == strcmp(name, "NativeP2pDevice"))
         return reinterpret_cast<void*>(mNativeP2pDevice);
+    else if (0 == strcmp(name, "NativeNfcTag"))
+        return reinterpret_cast<void*>(mNativeNfcTag);
+
     return NULL;
 }
 
@@ -133,7 +138,7 @@ bool NativeNfcManager::doInitialize()
             // Dimi : Remove temporarily, implement in the future
             // SecureElement::getInstance().initialize (getNative(e, o));
             //nativeNfcTag_registerNdefTypeHandler ();
-            NfcTag::getInstance().initialize ();
+            NfcTag::getInstance().initialize (this);
 
             PeerToPeer::getInstance().initialize (this);
             PeerToPeer::getInstance().handleNfcOnOff (true);
@@ -243,6 +248,37 @@ void NativeNfcManager::enableDiscovery()
     PowerSwitch::getInstance ().setModeOn (PowerSwitch::DISCOVERY);
 
     ALOGD ("%s: exit", __FUNCTION__);
+}
+
+/*******************************************************************************
+**
+** Function:        handleRfDiscoveryEvent
+**
+** Description:     Handle RF-discovery events from the stack.
+**                  discoveredDevice: Discovered device.
+**
+** Returns:         None
+**
+*******************************************************************************/
+static void handleRfDiscoveryEvent (tNFC_RESULT_DEVT* discoveredDevice)
+{
+    if (discoveredDevice->more)
+    {
+        //there is more discovery notification coming
+        return;
+    }
+
+    bool isP2p = NfcTag::getInstance ().isP2pDiscovered ();
+    if (isP2p)
+    {
+        //select the peer that supports P2P
+        NfcTag::getInstance ().selectP2p();
+    }
+    else
+    {
+        //select the first of multiple tags that is discovered
+        NfcTag::getInstance ().selectFirstTag();
+    }
 }
 
 /*******************************************************************************
@@ -390,6 +426,8 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
         }
         else
         {
+            NfcTag::getInstance().connectionEventHandler(connEvent, eventData);
+            handleRfDiscoveryEvent(&eventData->disc_result.discovery_ntf);
         }
         break;
 
@@ -429,6 +467,13 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
              status,
              eventData->ndef_detect.protocol, eventData->ndef_detect.max_size,
              eventData->ndef_detect.cur_size, eventData->ndef_detect.flags);
+        NfcTag::getInstance().connectionEventHandler (connEvent, eventData);
+        // Dimi : To be implement, still think how to modify this part
+        /*
+        nativeNfcTag_doCheckNdefResult(status,
+            eventData->ndef_detect.max_size, eventData->ndef_detect.cur_size,
+            eventData->ndef_detect.flags);
+        */
         break;
 
     case NFA_DATA_EVT: // Data message received (for non-NDEF reads)

@@ -12,7 +12,7 @@ public:
   DeviceHost();
   virtual ~DeviceHost();
 
-  void notifyNdefMessageListeners();
+  void notifyNdefMessageListeners(void* pTag);
 
   void notifyTargetDeselected();
 

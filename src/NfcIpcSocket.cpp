@@ -234,6 +234,7 @@ void NfcIpcSocket::loop()
 }
 
 // Write NFC buffer to Gecko
+// Outgoing queue contain the data should be send to gecko
 void NfcIpcSocket::writeToOutgoingQueue(char *buffer, size_t length) {
   pthread_mutex_lock(&mReadMutex);
 
@@ -247,6 +248,7 @@ void NfcIpcSocket::writeToOutgoingQueue(char *buffer, size_t length) {
 
 
 // Write Gecko buffer to NFC
+// Incoming queue contains
 void NfcIpcSocket::writeToIncomingQueue(char *buffer, size_t length) {
   pthread_mutex_lock(&mWriteMutex);
 

@@ -21,12 +21,14 @@
 #pragma once
 #include "SyncEvent.h"
 #include "NfcUtil.h"
+#include "NativeNfcManager.h"
 
 extern "C"
 {
     #include "nfa_rw_api.h"
 }
 
+class NativeNfcTag;
 
 class NfcTag
 {
@@ -71,7 +73,7 @@ public:
     ** Returns:         None
     **
     *******************************************************************************/
-    void initialize ();
+    void initialize (NativeNfcManager* pNfcManager);
 
 
     /*******************************************************************************
@@ -246,6 +248,7 @@ private:
     struct timespec mLastKovioTime; // time of last Kovio tag activation
     UINT8 mLastKovioUid[NFC_KOVIO_MAX_LEN]; // uid of last Kovio tag activated
 
+    NativeNfcManager*     mNfcManager;
 
     /*******************************************************************************
     **
@@ -317,7 +320,7 @@ private:
     ** Returns:         None
     **
     *******************************************************************************/
-    void fillNativeNfcTagMembers1 ();
+    void fillNativeNfcTagMembers1 (NativeNfcTag* pNativeNfcTag);
 
 
     /*******************************************************************************
@@ -335,7 +338,7 @@ private:
     ** Returns:         None
     **
     *******************************************************************************/
-    void fillNativeNfcTagMembers2 ();
+    void fillNativeNfcTagMembers2 (NativeNfcTag* pNativeNfcTag);
 
 
     /*******************************************************************************
@@ -353,7 +356,7 @@ private:
     ** Returns:         None
     **
     *******************************************************************************/
-    void fillNativeNfcTagMembers3 ();
+    void fillNativeNfcTagMembers3 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVATED& activationData);
 
 
     /*******************************************************************************
@@ -371,7 +374,7 @@ private:
     ** Returns:         None
     **
     *******************************************************************************/
-    void fillNativeNfcTagMembers4 ();
+    void fillNativeNfcTagMembers4 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVATED& activationData);
 
 
     /*******************************************************************************
@@ -389,7 +392,7 @@ private:
     ** Returns:         None
     **
     *******************************************************************************/
-    void fillNativeNfcTagMembers5 ();
+    void fillNativeNfcTagMembers5 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVATED& activationData);
 
 
     /*******************************************************************************

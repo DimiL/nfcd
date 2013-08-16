@@ -19,8 +19,8 @@ public:
   void initialize();
   void loop();
 
-  void writeToOutgoingQueue(char *buffer, size_t length);
-  void writeToIncomingQueue(char *buffer, size_t length);
+  static void writeToOutgoingQueue(char *buffer, size_t length);
+  static void writeToIncomingQueue(char *buffer, size_t length);
 
 private:
   NfcIpcSocket();

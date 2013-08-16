@@ -13,8 +13,9 @@ DeviceHost::~DeviceHost()
 {
 }
 
-void DeviceHost::notifyNdefMessageListeners()
+void DeviceHost::notifyNdefMessageListeners(void* pTag)
 {
+  NfcService::nfc_service_send_MSG_NDEF_TAG(pTag);
 }
 
 void DeviceHost::notifyTargetDeselected()
@@ -27,7 +28,6 @@ void DeviceHost::notifyTransactionListeners()
 
 void DeviceHost::notifyLlcpLinkActivation(void* pDevice)
 {
-  ALOGE("DeviceHost::notifyLlcpLinkActivation");
   NfcService::nfc_service_send_MSG_LLCP_LINK_ACTIVATION(pDevice);
 }
 
