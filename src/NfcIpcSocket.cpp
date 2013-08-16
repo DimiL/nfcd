@@ -103,6 +103,14 @@ void* NfcIpcSocket::reader_thread(void *arg)
 /******************************************************************************
  * NfcIpcSocket class
  ******************************************************************************/
+NfcIpcSocket* NfcIpcSocket::sInstance = NULL;
+
+NfcIpcSocket* NfcIpcSocket::Instance() {
+    if (!sInstance)
+        sInstance = new NfcIpcSocket();
+    return sInstance;
+}
+
 NfcIpcSocket::NfcIpcSocket()
 {
 }

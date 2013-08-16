@@ -28,12 +28,12 @@ void DeviceHost::notifyTransactionListeners()
 void DeviceHost::notifyLlcpLinkActivation(void* pDevice)
 {
   ALOGE("DeviceHost::notifyLlcpLinkActivation");
-  nfc_service_send_MSG_LLCP_LINK_ACTIVATION(pDevice);
+  NfcService::nfc_service_send_MSG_LLCP_LINK_ACTIVATION(pDevice);
 }
 
 void DeviceHost::notifyLlcpLinkDeactivated(void* pDevice)
 {
-  nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(pDevice);
+  NfcService::nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(pDevice);
 }
 
 void DeviceHost::notifyLlcpLinkFirstPacketReceived()
@@ -42,10 +42,10 @@ void DeviceHost::notifyLlcpLinkFirstPacketReceived()
 
 void DeviceHost::notifySeFieldActivated()
 {
-  nfc_service_send_MSG_SE_FIELD_ACTIVATED();
+  NfcService::nfc_service_send_MSG_SE_FIELD_ACTIVATED();
 }
 
 void DeviceHost::notifySeFieldDeactivated()
 {
-  nfc_service_send_MSG_SE_FIELD_DEACTIVATED();
+  NfcService::nfc_service_send_MSG_SE_FIELD_DEACTIVATED();
 }

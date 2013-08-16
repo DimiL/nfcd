@@ -4,14 +4,26 @@
 
 #define MAX_NDEF_RECORD_SIZE 1024
 
-void nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice);
-void nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice);
-void nfc_service_send_MSG_NDEF_TAG();
-void nfc_service_send_MSG_SE_FIELD_ACTIVATED();
-void nfc_service_send_MSG_SE_FIELD_DEACTIVATED();
-void nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS();
+class NfcService{
+private:
+  static NfcService* sInstance;
 
-void init_nfc_service();
+public:
+  virtual ~NfcService();
+  void initialize();
+
+  static NfcService* Instance();
+
+  static void nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice);
+  static void nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice);
+  static void nfc_service_send_MSG_NDEF_TAG();
+  static void nfc_service_send_MSG_SE_FIELD_ACTIVATED();
+  static void nfc_service_send_MSG_SE_FIELD_DEACTIVATED();
+  static void nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS();
+
+private:
+  NfcService();
+};
 
 #endif
 

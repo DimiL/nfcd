@@ -9,11 +9,13 @@
 #include <time.h>
 
 class NfcIpcSocket{
-public:
+private:
+  static NfcIpcSocket* sInstance;
 
-  NfcIpcSocket();
+public:
   virtual ~NfcIpcSocket();
 
+  static NfcIpcSocket* Instance();
   void initialize();
   void loop();
 
@@ -21,6 +23,8 @@ public:
   void writeToIncomingQueue(char *buffer, size_t length);
 
 private:
+  NfcIpcSocket();
+
   pthread_t mReader_thread_id;
   pthread_t mWriter_thread_id;
 

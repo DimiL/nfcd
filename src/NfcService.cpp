@@ -26,14 +26,14 @@ typedef enum {
 
 static MSG_TYPE msg_type = MSG_UNDEFINED;
 
-void nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
+void NfcService::nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
 {
   msg_type = MSG_LLCP_LINK_ACTIVATION;
   linkDevice = pDevice;
   sem_post(&thread_sem);
 }
 
-void nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice)
+void NfcService::nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice)
 {
   ALOGD("nfc_service_send_MSG_LLCP_LINK_DEACTIVATION");
   msg_type = MSG_LLCP_LINK_DEACTIVATION;
@@ -41,25 +41,25 @@ void nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice)
   sem_post(&thread_sem);
 }
 
-void nfc_service_send_MSG_NDEF_TAG()
+void NfcService::nfc_service_send_MSG_NDEF_TAG()
 {
   msg_type = MSG_NDEF_TAG;
   sem_post(&thread_sem);
 }
 
-void nfc_service_send_MSG_SE_FIELD_ACTIVATED()
+void NfcService::nfc_service_send_MSG_SE_FIELD_ACTIVATED()
 {
   msg_type = MSG_SE_FIELD_ACTIVATED;
   sem_post(&thread_sem);
 }
 
-void nfc_service_send_MSG_SE_FIELD_DEACTIVATED()
+void NfcService::nfc_service_send_MSG_SE_FIELD_DEACTIVATED()
 {
   msg_type = MSG_SE_FIELD_DEACTIVATED;
   sem_post(&thread_sem);
 }
 
-void nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS()
+void NfcService::nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS()
 {
   msg_type = MSG_SE_NOTIFY_TRANSACTION_LISTENERS;
   sem_post(&thread_sem);
@@ -105,7 +105,23 @@ static void *service_thread(void *arg)
   return NULL;
 }
 
-void init_nfc_service()
+NfcService* NfcService::sInstance = NULL;
+
+NfcService* NfcService::Instance() {
+    if (!sInstance)
+        sInstance = new NfcService();
+    return sInstance;
+}
+
+NfcService::NfcService()
+{
+}
+
+NfcService::~NfcService()
+{
+}
+
+void NfcService::initialize()
 {
   if(sem_init(&thread_sem, 0, 0) == -1)
   {
