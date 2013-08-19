@@ -65,6 +65,11 @@ static void nfaDeviceManagementCallback (UINT8 event, tNFA_DM_CBACK_DATA *eventD
 static bool isPeerToPeer (tNFA_ACTIVATED& activated);
 static bool isListenMode(tNFA_ACTIVATED& activated);
 
+static UINT16 sCurrentConfigLen;
+static UINT8 sConfig[256];
+/////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
+
 NativeNfcManager::NativeNfcManager() :
   mNativeP2pDevice(NULL),
   mNativeNfcTag(NULL)
@@ -74,7 +79,7 @@ NativeNfcManager::NativeNfcManager() :
 
 NativeNfcManager::~NativeNfcManager()
 {
-    // Dimi : TODO, use MACRO
+    // Mozilla : TODO, use MACRO
     if (mNativeP2pDevice != NULL)    delete mNativeP2pDevice;
     if (mNativeNfcTag != NULL)       delete mNativeNfcTag;
 }
@@ -141,7 +146,7 @@ bool NativeNfcManager::doInitialize()
     {
         if (sIsNfaEnabled)
         {
-            // Dimi : Remove temporarily, implement in the future
+            // Mozilla : Remove temporarily, implement in the future
             // SecureElement::getInstance().initialize (getNative(e, o));
             //nativeNfcTag_registerNdefTypeHandler ();
             NfcTag::getInstance().initialize (this);
@@ -242,10 +247,7 @@ void NativeNfcManager::enableDiscovery()
         ALOGD ("%s: Enable p2pListening", __FUNCTION__);
         PeerToPeer::getInstance().enableP2pListening (true);
 
-        // Dimi : Remove SE related temporarily
-        //if NFC service has deselected the sec elem, then apply default routes
-        //if (!sIsSecElemSelected)
-        //    stat = SecureElement::getInstance().routeToDefault ();
+        // Mozilla : TODO : Implement SE related function
     }
 
     // Actually start discovery.
@@ -318,7 +320,11 @@ void nfaDeviceManagementCallback (UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
 
     case NFA_DM_DISABLE_EVT: /* Result of NFA_Disable */
         {
+            SyncEventGuard guard (sNfaDisableEvent);
             ALOGD ("%s: NFA_DM_DISABLE_EVT", __FUNCTION__);
+            sIsNfaEnabled = false;
+            sIsDisabling = false;
+            sNfaDisableEvent.notifyOne ();
         }
         break;
 
@@ -332,6 +338,21 @@ void nfaDeviceManagementCallback (UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
 
     case NFA_DM_GET_CONFIG_EVT: /* Result of NFA_GetConfig */
         ALOGD ("%s: NFA_DM_GET_CONFIG_EVT", __FUNCTION__);
+        {
+            SyncEventGuard guard (sNfaGetConfigEvent);
+            if (eventData->status == NFA_STATUS_OK &&
+                    eventData->get_config.tlv_size <= sizeof(sConfig))
+            {
+                sCurrentConfigLen = eventData->get_config.tlv_size;
+                memcpy(sConfig, eventData->get_config.param_tlvs, eventData->get_config.tlv_size);
+            }
+            else
+            {
+                ALOGE("%s: NFA_DM_GET_CONFIG failed", __FUNCTION__);
+                sCurrentConfigLen = 0;
+            }
+            sNfaGetConfigEvent.notifyOne();
+        }
         break;
 
     case NFA_DM_RF_FIELD_EVT:
@@ -343,11 +364,7 @@ void nfaDeviceManagementCallback (UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
 
         if (!sP2pActive && eventData->rf_field.status == NFA_STATUS_OK)
         {
-            // Dimi : Remove SE function temporarily
-            /*
-            SecureElement::getInstance().notifyRfFieldEvent (
-                    eventData->rf_field.rf_field_status == NFA_DM_RF_FIELD_ON);
-            */
+            // Mozilla : TODO : Implement SE related function
         }
         break;
 
@@ -358,10 +375,13 @@ void nfaDeviceManagementCallback (UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
                 ALOGD ("%s: NFA_DM_NFCC_TIMEOUT_EVT; abort all outstanding operations", __FUNCTION__);
             else
                 ALOGD ("%s: NFA_DM_NFCC_TRANSPORT_ERR_EVT; abort all outstanding operations", __FUNCTION__);
+            // Mozilla : TODO : Handle ERR or TIMEOUT evevnt
         }
         break;
 
     case NFA_DM_PWR_MODE_CHANGE_EVT:
+        // Mozilla : TODO : Handle evevnt
+        // PowerSwitch::getInstance ().deviceManagementCallback (dmEvent, eventData);
         break;
     default:
         ALOGD ("%s: unhandled event", __FUNCTION__);
@@ -473,7 +493,7 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
                 ALOGE ("%s: Failed to disable RF field events", __FUNCTION__);
             }
             // For the SE, consider the field to be on while p2p is active.
-            // Dimi : Implement SE related function
+            // Mozilla : TODO : Implement SE related function
         }
         else if (pn544InteropIsBusy() == false)
         {
@@ -484,7 +504,7 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
             // Send the RF Event.
             if (isListenMode(eventData->activated))
             {
-                // Dimi : TODO: Implement SE related function
+                // Mozilla : TODO : Implement SE related function
             }
         }
 
@@ -510,7 +530,7 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
         if ((eventData->deactivated.type == NFA_DEACTIVATE_TYPE_IDLE)
                 || (eventData->deactivated.type == NFA_DEACTIVATE_TYPE_DISCOVERY))
         {
-            // Dimi : TODO: Implement SE related function
+            // Mozilla : TODO : Implement SE related function
         }
 
         break;
@@ -536,7 +556,7 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
              eventData->ndef_detect.protocol, eventData->ndef_detect.max_size,
              eventData->ndef_detect.cur_size, eventData->ndef_detect.flags);
         NfcTag::getInstance().connectionEventHandler (connEvent, eventData);
-        // Dimi : To be implement, still think how to modify this part
+        // Mozilla : To be implement, still think how to modify this part
         /*
         nativeNfcTag_doCheckNdefResult(status,
             eventData->ndef_detect.max_size, eventData->ndef_detect.cur_size,
@@ -597,7 +617,7 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
         PeerToPeer::getInstance().llcpDeactivatedHandler (eventData->llcp_deactivated);
         break;
 
-    // Dimi : Compile error, to be fixed
+    // Mozilla : Compile error, to be fixed
     /*
     case NFA_LLCP_FIRST_PACKET_RECEIVED_EVT: // Received first packet over llcp
         ALOGD("%s: NFA_LLCP_FIRST_PACKET_RECEIVED_EVT", __FUNCTION__);
@@ -670,7 +690,7 @@ void startRfDiscovery(bool isStart)
 *******************************************************************************/
 void doStartupConfig()
 {
-    // Dimi : To be fixed, use correct nat
+    // Mozilla : To be fixed, use correct nat
     unsigned long num = 0;
     // struct nfc_jni_native_data *nat = getNative(0, 0);
     tNFA_STATUS stat = NFA_STATUS_FAILED;
