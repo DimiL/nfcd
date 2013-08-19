@@ -42,6 +42,11 @@ public:
 
   bool mIsPresent; // Whether the tag is known to be still present
 
+  static void nativeNfcTag_abortWaits ();
+  static void nativeNfcTag_doConnectStatus (bool isConnectOk);
+  static void nativeNfcTag_doDeactivateStatus (int status);
+  static void nativeNfcTag_resetPresenceCheck ();
+
 private:
 
 };

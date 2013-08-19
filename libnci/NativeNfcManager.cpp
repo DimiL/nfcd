@@ -6,6 +6,7 @@
 #include "PeerToPeer.h"
 #include "PowerSwitch.h"
 #include "NfcTag.h"
+#include "Pn544Interop.h"
 
 extern "C"
 {
@@ -19,6 +20,9 @@ extern "C"
 
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
+
+extern bool gIsTagDeactivating;
+extern bool gIsSelectingRfInterface;
 
 /*****************************************************************************
 **
@@ -58,6 +62,8 @@ static bool                 sP2pActive = false; // whether p2p was last active
 
 static void nfaConnectionCallback (UINT8 event, tNFA_CONN_EVT_DATA *eventData);
 static void nfaDeviceManagementCallback (UINT8 event, tNFA_DM_CBACK_DATA *eventData);
+static bool isPeerToPeer (tNFA_ACTIVATED& activated);
+static bool isListenMode(tNFA_ACTIVATED& activated);
 
 NativeNfcManager::NativeNfcManager() :
   mNativeP2pDevice(NULL),
@@ -432,7 +438,7 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
         break;
 
     case NFA_SELECT_RESULT_EVT: // NFC link/protocol discovery select response
-        //ALOGD("%s: NFA_SELECT_RESULT_EVT: status = %d, gIsSelectingRfInterface = %d, sIsDisabling=%d", __FUNCTION__, eventData->status, gIsSelectingRfInterface, sIsDisabling);
+        ALOGD("%s: NFA_SELECT_RESULT_EVT: status = %d, gIsSelectingRfInterface = %d, sIsDisabling=%d", __FUNCTION__, eventData->status, gIsSelectingRfInterface, sIsDisabling);
         break;
 
     case NFA_DEACTIVATE_FAIL_EVT:
@@ -440,11 +446,73 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
         break;
 
     case NFA_ACTIVATED_EVT: // NFC link/protocol activated
-        //ALOGD("%s: NFA_ACTIVATED_EVT: gIsSelectingRfInterface=%d, sIsDisabling=%d", __FUNCTION__, gIsSelectingRfInterface, sIsDisabling);
+        ALOGD("%s: NFA_ACTIVATED_EVT: gIsSelectingRfInterface=%d, sIsDisabling=%d", __FUNCTION__, gIsSelectingRfInterface, sIsDisabling);
+        if (sIsDisabling || !sIsNfaEnabled)
+            break;
+
+        NfcTag::getInstance().setActivationState ();
+        if (gIsSelectingRfInterface)
+        {
+            NativeNfcTag::nativeNfcTag_doConnectStatus(true);
+            break;
+        }
+
+        NativeNfcTag::nativeNfcTag_resetPresenceCheck();
+        if (isPeerToPeer(eventData->activated))
+        {
+            sP2pActive = true;
+            ALOGD("%s: NFA_ACTIVATED_EVT; is p2p", __FUNCTION__);
+            // Disable RF field events in case of p2p
+            UINT8  nfa_disable_rf_events[] = { 0x00 };
+            ALOGD ("%s: Disabling RF field events", __FUNCTION__);
+            status = NFA_SetConfig(NCI_PARAM_ID_RF_FIELD_INFO, sizeof(nfa_disable_rf_events),
+                    &nfa_disable_rf_events[0]);
+            if (status == NFA_STATUS_OK) {
+                ALOGD ("%s: Disabled RF field events", __FUNCTION__);
+            } else {
+                ALOGE ("%s: Failed to disable RF field events", __FUNCTION__);
+            }
+            // For the SE, consider the field to be on while p2p is active.
+            // Dimi : Implement SE related function
+        }
+        else if (pn544InteropIsBusy() == false)
+        {
+            NfcTag::getInstance().connectionEventHandler (connEvent, eventData);
+
+            // We know it is not activating for P2P.  If it activated in
+            // listen mode then it is likely for an SE transaction.
+            // Send the RF Event.
+            if (isListenMode(eventData->activated))
+            {
+                // Dimi : TODO: Implement SE related function
+            }
+        }
+
         break;
 
     case NFA_DEACTIVATED_EVT: // NFC link/protocol deactivated
-        //ALOGD("%s: NFA_DEACTIVATED_EVT   Type: %u, gIsTagDeactivating: %d", __FUNCTION__, eventData->deactivated.type,gIsTagDeactivating);
+        ALOGD("%s: NFA_DEACTIVATED_EVT   Type: %u, gIsTagDeactivating: %d", __FUNCTION__, eventData->deactivated.type,gIsTagDeactivating);
+        NfcTag::getInstance().setDeactivationState (eventData->deactivated);
+        if (eventData->deactivated.type != NFA_DEACTIVATE_TYPE_SLEEP)
+        {
+            NativeNfcTag::nativeNfcTag_resetPresenceCheck();
+            NfcTag::getInstance().connectionEventHandler (connEvent, eventData);
+            NativeNfcTag::nativeNfcTag_abortWaits();
+            NfcTag::getInstance().abort ();
+        }
+        else if (gIsTagDeactivating)
+        {
+            NativeNfcTag::nativeNfcTag_doDeactivateStatus(0);
+        }
+
+        // If RF is activated for what we think is a Secure Element transaction
+        // and it is deactivated to either IDLE or DISCOVERY mode, notify w/event.
+        if ((eventData->deactivated.type == NFA_DEACTIVATE_TYPE_IDLE)
+                || (eventData->deactivated.type == NFA_DEACTIVATE_TYPE_DISCOVERY))
+        {
+            // Dimi : TODO: Implement SE related function
+        }
+
         break;
 
     case NFA_TLV_DETECT_EVT: // TLV Detection complete
@@ -619,4 +687,39 @@ void doStartupConfig()
     }
 }
 
+/*******************************************************************************
+**
+** Function:        isPeerToPeer
+**
+** Description:     Whether the activation data indicates the peer supports NFC-DEP.
+**                  activated: Activation data.
+**
+** Returns:         True if the peer supports NFC-DEP.
+**
+*******************************************************************************/
+static bool isPeerToPeer (tNFA_ACTIVATED& activated)
+{
+    return activated.activate_ntf.protocol == NFA_PROTOCOL_NFC_DEP;
+}
+
+/*******************************************************************************
+**
+** Function:        isListenMode
+**
+** Description:     Indicates whether the activation data indicates it is
+**                  listen mode.
+**
+** Returns:         True if this listen mode.
+**
+*******************************************************************************/
+static bool isListenMode(tNFA_ACTIVATED& activated)
+{
+    return ((NFC_DISCOVERY_TYPE_LISTEN_A == activated.activate_ntf.rf_tech_param.mode)
+            || (NFC_DISCOVERY_TYPE_LISTEN_B == activated.activate_ntf.rf_tech_param.mode)
+            || (NFC_DISCOVERY_TYPE_LISTEN_F == activated.activate_ntf.rf_tech_param.mode)
+            || (NFC_DISCOVERY_TYPE_LISTEN_A_ACTIVE == activated.activate_ntf.rf_tech_param.mode)
+            || (NFC_DISCOVERY_TYPE_LISTEN_F_ACTIVE == activated.activate_ntf.rf_tech_param.mode)
+            || (NFC_DISCOVERY_TYPE_LISTEN_ISO15693 == activated.activate_ntf.rf_tech_param.mode)
+            || (NFC_DISCOVERY_TYPE_LISTEN_B_PRIME == activated.activate_ntf.rf_tech_param.mode));
+}
 

@@ -18,19 +18,20 @@ LOCAL_SRC_FILES := \
     src/NfcIpcSocket.cpp \
     src/NfcUtil.cpp \
     src/MessageHandler.cpp \
-    lib-nci/NativeNfcManager.cpp \
-    lib-nci/NativeLlcpConnectionlessSocket.cpp \
-    lib-nci/NativeLlcpSocket.cpp \
-    lib-nci/NativeLlcpServiceSocket.cpp \
-    lib-nci/NativeNfcSecureElement.cpp \
-    lib-nci/NativeP2pDevice.cpp \
-    lib-nci/NativeNfcTag.cpp \
-    lib-nci/Mutex.cpp \
-    lib-nci/CondVar.cpp \
-    lib-nci/PowerSwitch.cpp \
-    lib-nci/NfcTag.cpp \
-    lib-nci/PeerToPeer.cpp \
-    
+    libnci/NativeNfcManager.cpp \
+    libnci/NativeLlcpConnectionlessSocket.cpp \
+    libnci/NativeLlcpSocket.cpp \
+    libnci/NativeLlcpServiceSocket.cpp \
+    libnci/NativeNfcSecureElement.cpp \
+    libnci/NativeP2pDevice.cpp \
+    libnci/NativeNfcTag.cpp \
+    libnci/Mutex.cpp \
+    libnci/CondVar.cpp \
+    libnci/PowerSwitch.cpp \
+    libnci/NfcTag.cpp \
+    libnci/PeerToPeer.cpp \
+    libnci/Pn544Interop.cpp \
+    libnci/IntervalTimer.cpp \
 
 LOCAL_C_INCLUDES += \
     $(NFA)/include \
@@ -49,7 +50,7 @@ LOCAL_C_INCLUDES += \
     external/jansson/src \
     bionic \
     bionic/linker \
-    system/nfcd/lib-nci \
+    system/nfcd/libnci \
     system/nfcd/src \
 
 LOCAL_SHARED_LIBRARIES += \
