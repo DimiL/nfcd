@@ -6,6 +6,10 @@
 #define mozilla_NativeNfcTag_h__
 
 #include <vector>
+extern "C"
+{
+    #include "nfa_rw_api.h"
+}
 
 typedef unsigned char byte;
 
@@ -46,6 +50,9 @@ public:
   static void nativeNfcTag_doConnectStatus (bool isConnectOk);
   static void nativeNfcTag_doDeactivateStatus (int status);
   static void nativeNfcTag_resetPresenceCheck ();
+  static void nativeNfcTag_doCheckNdefResult (tNFA_STATUS status, uint32_t maxSize, uint32_t currentSize, uint8_t flags);
+  static void nativeNfcTag_registerNdefTypeHandler ();
+  static void nativeNfcTag_deregisterNdefTypeHandler ();
 
 private:
 

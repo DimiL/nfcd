@@ -146,9 +146,9 @@ bool NativeNfcManager::doInitialize()
     {
         if (sIsNfaEnabled)
         {
-            // Mozilla : Remove temporarily, implement in the future
+            // Mozilla : TODO : Implement SE related function
             // SecureElement::getInstance().initialize (getNative(e, o));
-            //nativeNfcTag_registerNdefTypeHandler ();
+            NativeNfcTag::nativeNfcTag_registerNdefTypeHandler ();
             NfcTag::getInstance().initialize (this);
 
             PeerToPeer::getInstance().initialize (this);
@@ -556,12 +556,9 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
              eventData->ndef_detect.protocol, eventData->ndef_detect.max_size,
              eventData->ndef_detect.cur_size, eventData->ndef_detect.flags);
         NfcTag::getInstance().connectionEventHandler (connEvent, eventData);
-        // Mozilla : To be implement, still think how to modify this part
-        /*
-        nativeNfcTag_doCheckNdefResult(status,
+        NativeNfcTag::nativeNfcTag_doCheckNdefResult(status,
             eventData->ndef_detect.max_size, eventData->ndef_detect.cur_size,
             eventData->ndef_detect.flags);
-        */
         break;
 
     case NFA_DATA_EVT: // Data message received (for non-NDEF reads)

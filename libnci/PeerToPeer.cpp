@@ -315,9 +315,8 @@ void PeerToPeer::llcpActivatedHandler (tNFA_LLCP_ACTIVATED& activated)
         return;
     }
     
-    // Dimi : To be fixed
     //no longer need to receive NDEF message from a tag
-    // android::nativeNfcTag_deregisterNdefTypeHandler ();
+    NativeNfcTag::nativeNfcTag_deregisterNdefTypeHandler ();
 
     if (activated.is_initiator == true) {
         ALOGE ("%s: p2p initiator", fn);

@@ -1,4 +1,6 @@
 #include "NfcService.h"
+#include "MessageHandler.h"
+#include "NativeNfcTag.h"
 
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
@@ -72,7 +74,9 @@ static void NfcService_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
 
 static void NfcService_MSG_NDEF_TAG(void* pTag)
 {
-  ALOGE("NfcService_MSG_NDEF_TAG"); 
+  ALOGE("NfcService_MSG_NDEF_TAG");
+  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(pTag);
+  MessageHandler::messageNotifyTechDiscovered(pNativeNfcTag);
 }
 
 static void *service_thread(void *arg)

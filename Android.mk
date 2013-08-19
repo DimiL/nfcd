@@ -60,7 +60,8 @@ LOCAL_SHARED_LIBRARIES += \
     libutils \
     liblog \
     libnfc-nci \
-    libstlport
+    libstlport \
+    libjansson \
 
 LOCAL_MODULE := nfcd
 LOCAL_MODULE_TAGS := debug
