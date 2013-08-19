@@ -4,10 +4,14 @@
 #include "NativeNfcTag.h"
 
 #include <jansson.h>
+#include <map>
+#include <string>
 
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
 #include <utils/Log.h>
+
+static std::map<std::string, int> gMessageTypeMap;
 
 /*
 void MessageHandler::nfcd_messaging_notifyNdefDiscovered(jobject msg)
@@ -71,6 +75,24 @@ void MessageHandler::nfcd_messaging_notifyNdefDiscovered(jobject msg)
   }
 }
 */
+
+void MessageHandler::initialize()
+{
+  // Initialize with private strings...
+  gMessageTypeMap["ndefDiscovered"] = NOTIFY_NDEF_DISCOVERED;
+  gMessageTypeMap["techDiscovered"] = NOTIFY_TECH_DISCOVERED;
+  gMessageTypeMap["transceiveReq"] = NOTIFY_TRANSCEIVE_REQ;
+  gMessageTypeMap["transceiveRsp"] = NOTIFY_TRANSCEIVE_RSP;
+  gMessageTypeMap["ndefWriteRequest"] = NOTIFY_NDEF_WRITE_REQUEST;
+  gMessageTypeMap["ndefDetailsRequest"] = NOTIFY_NDEF_DETAILS_REQUEST;
+  gMessageTypeMap["readNdef"] = NOTIFY_READ_NDEF;
+  gMessageTypeMap["ndefDisconnected"] = NOTIFY_NDEF_DISCONNECTED;
+  gMessageTypeMap["requestStatus"] = NOTIFY_REQUEST_STATUS;
+  gMessageTypeMap["ndefPushRequest"] = NOTIFY_NDEF_PUSH_REQUEST;
+  gMessageTypeMap["secureElementActivated"] = NOTIFY_SECURE_ELEMENT_ACTIVATE;
+  gMessageTypeMap["secureElementDeactivated"] = NOTIFY_SECURE_ELEMENT_DEACTIVATE;
+  gMessageTypeMap["secureElementTransaction"] = NOTIFY_SECURE_ELEMENT_TRANSACTION;
+}
 
 void MessageHandler::messageNotifyNdefDetails(int maxNdefMsgLength, int state)
 {
@@ -209,3 +231,93 @@ void MessageHandler::messageNotifySecureElementFieldDeactivated()
   }
 }
 
+void MessageHandler::processRequest(const char *input, size_t length)
+{
+  unsigned int messageType;
+
+  if (retrieveMessageType(input, length, &messageType)) {
+    ALOGI("MessageType: (%d)", messageType);
+
+    switch (messageType) {
+      case NOTIFY_NDEF_WRITE_REQUEST:
+        handleWriteNdef(input, length);
+        break;
+      case NOTIFY_NDEF_PUSH_REQUEST:
+        handleNdefPush(input, length);
+        break;
+      case NOTIFY_REQUEST_STATUS:
+      case NOTIFY_NDEF_DISCOVERED:
+      case NOTIFY_NDEF_DISCONNECTED:
+        break;
+      case NOTIFY_NDEF_DETAILS_REQUEST:
+        handleNdefDetailsRequest();
+        break;
+      case NOTIFY_READ_NDEF:
+        handleReadNdef();
+        break;
+      case NOTIFY_TRANSCEIVE_REQ:
+        handleTransceiveReq(input, length);
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+/**
+ * Retrieve Message Type id from JSON data.
+ */
+bool MessageHandler::retrieveMessageType(const char *input, size_t length, unsigned int *outTypeId)
+{
+  if (length == 0 && input == NULL)
+    return false;
+
+  bool ret = true;
+  json_error_t error;
+  json_t *root = json_loads(input, 0, &error);
+  json_t *item;
+  char *msgType = NULL;
+  if (!root) {
+    ALOGE("retrieveMessageType: unable to parse input: (%.*s)", length, input);
+    return false;
+  }
+
+  item = json_object_get(root, "type");
+  if (item != NULL && json_is_string(item)) {
+    msgType = (char*)json_string_value(item);
+  }
+
+  if (msgType) {
+    *outTypeId = gMessageTypeMap[msgType];
+  } else {
+    ret = false;
+  }
+  json_decref(root);
+
+  return ret;
+}
+
+bool MessageHandler::handleWriteNdef(const char *input, size_t length)
+{
+  return true;
+}
+
+bool MessageHandler::handleNdefPush(const char *input, size_t length)
+{
+  return true;
+}
+
+bool MessageHandler::handleNdefDetailsRequest()
+{
+  return true;
+}
+
+bool MessageHandler::handleReadNdef()
+{
+  return true;
+}
+
+bool MessageHandler::handleTransceiveReq(const char *input, size_t length)
+{
+  return true;
+}

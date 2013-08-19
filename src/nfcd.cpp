@@ -4,6 +4,7 @@
 #include "NfcService.h"
 #include "NfcIpcSocket.h"
 #include "DeviceHost.h"
+#include "MessageHandler.h"
 
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
@@ -13,6 +14,8 @@ int main() {
   // 1. Create Native NFC Manager and do initialize
   NativeNfcManager* pNativeNfcManager = new NativeNfcManager();
   pNativeNfcManager->initialize();
+
+  MessageHandler::initialize();
 
   // 2. Enable Discovery
   pNativeNfcManager->enableDiscovery();
