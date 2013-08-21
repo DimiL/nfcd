@@ -2,18 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_NativeNfcSecureElement_h__
-#define mozilla_NativeNfcSecureElement_h__
+#ifndef mozilla_LlcpSocket_h__
+#define mozilla_LlcpSocket_h__
 
-class NativeNfcSecureElement
+class LlcpSocket
 {
 public:
 
-  NativeNfcSecureElement();
-  virtual ~NativeNfcSecureElement();
+  LlcpSocket();
+  virtual ~LlcpSocket();
 
 private:
 
 };
 
-#endif // mozilla_NativeNfcSecureElement_h__
+#endif // mozilla_LlcpSocket_h__

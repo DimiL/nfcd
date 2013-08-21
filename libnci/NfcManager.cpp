@@ -1,5 +1,5 @@
 
-#include "NativeNfcManager.h"
+#include "NfcManager.h"
 
 #include "NfcAdaptation.h"
 #include "SyncEvent.h"
@@ -70,42 +70,42 @@ static UINT8 sConfig[256];
 /////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////
 
-NativeNfcManager::NativeNfcManager() :
-  mNativeP2pDevice(NULL),
+NfcManager::NfcManager() :
+  mP2pDevice(NULL),
   mNativeNfcTag(NULL)
 {
     initializeNativeStructure();
 }
 
-NativeNfcManager::~NativeNfcManager()
+NfcManager::~NfcManager()
 {
     // Mozilla : TODO, use MACRO
-    if (mNativeP2pDevice != NULL)    delete mNativeP2pDevice;
+    if (mP2pDevice != NULL)    delete mP2pDevice;
     if (mNativeNfcTag != NULL)       delete mNativeNfcTag;
 }
 
-void NativeNfcManager::initializeNativeStructure()
+void NfcManager::initializeNativeStructure()
 {
-    mNativeP2pDevice = new NativeP2pDevice();
+    mP2pDevice = new P2pDevice();
     mNativeNfcTag = new NativeNfcTag();
 }
 
-void* NativeNfcManager::getNativeStruct(const char* name)
+void* NfcManager::getNativeStruct(const char* name)
 {
-    if (0 == strcmp(name, "NativeP2pDevice"))
-        return reinterpret_cast<void*>(mNativeP2pDevice);
+    if (0 == strcmp(name, "P2pDevice"))
+        return reinterpret_cast<void*>(mP2pDevice);
     else if (0 == strcmp(name, "NativeNfcTag"))
         return reinterpret_cast<void*>(mNativeNfcTag);
 
     return NULL;
 }
 
-bool NativeNfcManager::initialize()
+bool NfcManager::initialize()
 {
     return doInitialize();
 }
 
-bool NativeNfcManager::doInitialize()
+bool NfcManager::doInitialize()
 {
     tNFA_STATUS stat = NFA_STATUS_OK;
 
@@ -196,7 +196,7 @@ TheEnd:
     return sIsNfaEnabled ? true : false;
 }
 
-void NativeNfcManager::enableDiscovery()
+void NfcManager::enableDiscovery()
 {
     tNFA_TECHNOLOGY_MASK tech_mask = DEFAULT_TECH_MASK;
     /*

@@ -2,26 +2,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_NativeNfcManager_h__
-#define mozilla_NativeNfcManager_h__
+#ifndef mozilla_NfcManager_h__
+#define mozilla_NfcManager_h__
 
 #include "DeviceHost.h"
-#include "NativeP2pDevice.h"
+#include "P2pDevice.h"
 #include "NativeNfcTag.h"
 
-class NativeNfcManager : public DeviceHost
+class NfcManager : public DeviceHost
 {
 public:
 
-  NativeNfcManager();
-  virtual ~NativeNfcManager();
+  NfcManager();
+  virtual ~NfcManager();
 
   bool initialize();
   void enableDiscovery();
   void* getNativeStruct(const char* name);
 
 private:
-  NativeP2pDevice* mNativeP2pDevice;
+  P2pDevice* mP2pDevice;
   NativeNfcTag* mNativeNfcTag;
 
   void initializeNativeStructure();

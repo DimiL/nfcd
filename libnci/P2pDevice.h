@@ -2,15 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_NativeP2pDevice_h__
-#define mozilla_NativeP2pDevice_h__
+#ifndef mozilla_P2pDevice_h__
+#define mozilla_P2pDevice_h__
 
-class NativeP2pDevice
+class P2pDevice
 {
 public:
 
-  NativeP2pDevice();
-  virtual ~NativeP2pDevice();
+  P2pDevice();
+  virtual ~P2pDevice();
 
   int mHandle;
   int mMode;
@@ -19,4 +19,4 @@ public:
 private:
 };
 
-#endif // mozilla_NativeP2pDevice_h__
+#endif // mozilla_P2pDevice_h__

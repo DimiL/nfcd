@@ -79,7 +79,7 @@ NfcTag& NfcTag::getInstance ()
 ** Returns:         None
 **
 *******************************************************************************/
-void NfcTag::initialize (NativeNfcManager* pNfcManager)
+void NfcTag::initialize (NfcManager* pNfcManager)
 {
     mNfcManager = pNfcManager;
 
@@ -849,7 +849,7 @@ void NfcTag::fillNativeNfcTagMembers4 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVAT
 **
 ** Description:     Fill NativeNfcTag's members: mUid.
 **                  The original Google's implementation is in nfc_jni_Discovery_notification_callback()
-**                  in com_android_nfc_NativeNfcManager.cpp;
+**                  in com_android_nfc_NfcManager.cpp;
 **                  e: JVM environment.
 **                  tag_cls: Java NativeNfcTag class.
 **                  tag: Java NativeNfcTag object.

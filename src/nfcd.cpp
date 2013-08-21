@@ -1,5 +1,5 @@
 #include "nfcd.h"
-#include "NativeNfcManager.h"
+#include "NfcManager.h"
 
 #include "NfcService.h"
 #include "NfcIpcSocket.h"
@@ -11,14 +11,14 @@
 
 int main() {
 
-  // 1. Create Native NFC Manager and do initialize
-  NativeNfcManager* pNativeNfcManager = new NativeNfcManager();
-  pNativeNfcManager->initialize();
+  // 1. Create NFC Manager and do initialize
+  NfcManager* pNfcManager = new NfcManager();
+  pNfcManager->initialize();
 
   MessageHandler::initialize();
 
   // 2. Enable Discovery
-  pNativeNfcManager->enableDiscovery();
+  pNfcManager->enableDiscovery();
 
   // 3. Create service thread to receive message from nfc library
   NfcService* pNfcService = NfcService::Instance();

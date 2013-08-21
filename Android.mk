@@ -20,12 +20,12 @@ LOCAL_SRC_FILES := \
     src/NfcIpcSocket.cpp \
     src/NfcUtil.cpp \
     src/MessageHandler.cpp \
-    libnci/NativeNfcManager.cpp \
-    libnci/NativeLlcpConnectionlessSocket.cpp \
-    libnci/NativeLlcpSocket.cpp \
-    libnci/NativeLlcpServiceSocket.cpp \
-    libnci/NativeNfcSecureElement.cpp \
-    libnci/NativeP2pDevice.cpp \
+    libnci/NfcManager.cpp \
+    libnci/LlcpConnectionlessSocket.cpp \
+    libnci/LlcpSocket.cpp \
+    libnci/LlcpServiceSocket.cpp \
+    libnci/NfcSecureElement.cpp \
+    libnci/P2pDevice.cpp \
     libnci/NativeNfcTag.cpp \
     libnci/Mutex.cpp \
     libnci/CondVar.cpp \

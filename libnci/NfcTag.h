@@ -21,7 +21,7 @@
 #pragma once
 #include "SyncEvent.h"
 #include "NfcUtil.h"
-#include "NativeNfcManager.h"
+#include "NfcManager.h"
 
 extern "C"
 {
@@ -73,7 +73,7 @@ public:
     ** Returns:         None
     **
     *******************************************************************************/
-    void initialize (NativeNfcManager* pNfcManager);
+    void initialize (NfcManager* pNfcManager);
 
 
     /*******************************************************************************
@@ -248,7 +248,7 @@ private:
     struct timespec mLastKovioTime; // time of last Kovio tag activation
     UINT8 mLastKovioUid[NFC_KOVIO_MAX_LEN]; // uid of last Kovio tag activated
 
-    NativeNfcManager*     mNfcManager;
+    NfcManager*     mNfcManager;
 
     /*******************************************************************************
     **
@@ -383,7 +383,7 @@ private:
     **
     ** Description:     Fill NativeNfcTag's members: mUid.
     **                  The original Google's implementation is in nfc_jni_Discovery_notification_callback()
-    **                  in com_android_nfc_NativeNfcManager.cpp;
+    **                  in com_android_nfc_NfcManager.cpp;
     **                  e: JVM environment.
     **                  tag_cls: Java NativeNfcTag class.
     **                  tag: Java NativeNfcTag object.

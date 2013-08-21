@@ -2,18 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_NativeLlcpSocket_h__
-#define mozilla_NativeLlcpSocket_h__
+#ifndef mozilla_LlcpServiceSocket_h__
+#define mozilla_LlcpServiceSocket_h__
 
-class NativeLlcpSocket
+class LlcpServiceSocket
 {
 public:
 
-  NativeLlcpSocket();
-  virtual ~NativeLlcpSocket();
+  LlcpServiceSocket();
+  virtual ~LlcpServiceSocket();
 
 private:
 
 };
 
-#endif // mozilla_NativeLlcpSocket_h__
+#endif  // mozilla_LlcpServiceSocket_h__

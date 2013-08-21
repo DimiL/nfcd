@@ -24,7 +24,7 @@
 #include "config.h"
 //#include "JavaClassConstants.h"
 //#include <ScopedLocalRef.h>
-#include "NativeP2pDevice.h";
+#include "P2pDevice.h";
 
 
 /* Some older PN544-based solutions would only send the first SYMM back
@@ -113,7 +113,7 @@ PeerToPeer& PeerToPeer::getInstance ()
 ** Returns:         None
 **
 *******************************************************************************/
-void PeerToPeer::initialize (NativeNfcManager* pNfcManager)
+void PeerToPeer::initialize (NfcManager* pNfcManager)
 {
     unsigned long num = 0;
 
@@ -307,10 +307,10 @@ void PeerToPeer::llcpActivatedHandler (tNFA_LLCP_ACTIVATED& activated)
     static const char fn [] = "PeerToPeer::llcpActivatedHandler";
     ALOGE ("%s: enter", fn);
 
-    NativeP2pDevice* pNativeP2pDevice = 
-        reinterpret_cast<NativeP2pDevice*>(mNfcManager->getNativeStruct("NativeP2pDevice"));
+    P2pDevice* pP2pDevice = 
+        reinterpret_cast<P2pDevice*>(mNfcManager->getNativeStruct("P2pDevice"));
 
-    if (pNativeP2pDevice == NULL) {
+    if (pP2pDevice == NULL) {
         ALOGE("%s : cannot get native p2p device class");
         return;
     }
@@ -320,15 +320,15 @@ void PeerToPeer::llcpActivatedHandler (tNFA_LLCP_ACTIVATED& activated)
 
     if (activated.is_initiator == true) {
         ALOGE ("%s: p2p initiator", fn);
-        pNativeP2pDevice->mMode = MODE_P2P_INITIATOR;
+        pP2pDevice->mMode = MODE_P2P_INITIATOR;
     } else {
         ALOGE ("%s: p2p target", fn);
-        pNativeP2pDevice->mMode = MODE_P2P_TARGET;
+        pP2pDevice->mMode = MODE_P2P_TARGET;
     }
 
-    pNativeP2pDevice->mHandle = 0x1234;
+    pP2pDevice->mHandle = 0x1234;
 
-    mNfcManager->notifyLlcpLinkActivation(reinterpret_cast<void*>(pNativeP2pDevice));
+    mNfcManager->notifyLlcpLinkActivation(reinterpret_cast<void*>(pP2pDevice));
 
     ALOGE ("%s: exit", fn);
 }
