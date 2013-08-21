@@ -9,9 +9,7 @@ LOCAL_PATH := $(call my-dir)
 # Build nfcd
 include $(CLEAR_VARS)
 
-VOB_COMPONENTS := external/libnfc-nci/src
-NFA := $(VOB_COMPONENTS)/nfa
-NFC := $(VOB_COMPONENTS)/nfc
+NFC_VENDOR := BROADCOM
 
 LOCAL_SRC_FILES := \
     src/nfcd.cpp \
@@ -19,25 +17,43 @@ LOCAL_SRC_FILES := \
     src/NfcService.cpp \
     src/NfcIpcSocket.cpp \
     src/NfcUtil.cpp \
-    src/MessageHandler.cpp \
-    libnci/NfcManager.cpp \
-    libnci/LlcpConnectionlessSocket.cpp \
-    libnci/LlcpSocket.cpp \
-    libnci/LlcpServiceSocket.cpp \
-    libnci/NfcSecureElement.cpp \
-    libnci/P2pDevice.cpp \
-    libnci/NativeNfcTag.cpp \
-    libnci/Mutex.cpp \
-    libnci/CondVar.cpp \
-    libnci/PowerSwitch.cpp \
-    libnci/NfcTag.cpp \
-    libnci/PeerToPeer.cpp \
-    libnci/Pn544Interop.cpp \
-    libnci/IntervalTimer.cpp
+    src/MessageHandler.cpp
+
+BROADCOM_SRC_FILES := \
+    src/broadcom/NfcManager.cpp \
+    src/broadcom/LlcpConnectionlessSocket.cpp \
+    src/broadcom/LlcpSocket.cpp \
+    src/broadcom/LlcpServiceSocket.cpp \
+    src/broadcom/NfcSecureElement.cpp \
+    src/broadcom/P2pDevice.cpp \
+    src/broadcom/NativeNfcTag.cpp \
+    src/broadcom/Mutex.cpp \
+    src/broadcom/CondVar.cpp \
+    src/broadcom/PowerSwitch.cpp \
+    src/broadcom/NfcTag.cpp \
+    src/broadcom/PeerToPeer.cpp \
+    src/broadcom/Pn544Interop.cpp \
+    src/broadcom/IntervalTimer.cpp
+
+ifeq ($(NFC_VENDOR),BROADCOM)
+LOCAL_SRC_FILES += $(BROADCOM_SRC_FILES)
+endif
 
 LOCAL_C_INCLUDES += \
-    $(LOCAL_PATH)/libnci \
     $(LOCAL_PATH)/src \
+    external/stlport/stlport \
+    external/openssl/include \
+    external/jansson/android \
+    external/jansson/src \
+    bionic
+
+ifeq ($(NFC_VENDOR),BROADCOM)
+VOB_COMPONENTS := external/libnfc-nci/src
+NFA := $(VOB_COMPONENTS)/nfa
+NFC := $(VOB_COMPONENTS)/nfc
+
+LOCAL_C_INCLUDES += \
+    $(LOCAL_PATH)/src/broadcom \
     $(NFA)/include \
     $(NFA)/brcm \
     $(NFC)/include \
@@ -47,12 +63,8 @@ LOCAL_C_INCLUDES += \
     $(VOB_COMPONENTS)/hal/int \
     $(VOB_COMPONENTS)/include \
     $(VOB_COMPONENTS)/gki/ulinux \
-    $(VOB_COMPONENTS)/gki/common \
-    external/stlport/stlport \
-    external/openssl/include \
-    external/jansson/android \
-    external/jansson/src \
-    bionic
+    $(VOB_COMPONENTS)/gki/common
+endif
 
 LOCAL_SHARED_LIBRARIES += \
     libicuuc \
@@ -60,9 +72,13 @@ LOCAL_SHARED_LIBRARIES += \
     libcutils \
     libutils \
     liblog \
-    libnfc-nci \
     libstlport \
     libjansson
+
+ifeq ($(NFC_VENDOR),BROADCOM)
+LOCAL_SHARED_LIBRARIES += \
+    libnfc-nci
+endif
 
 LOCAL_MODULE := nfcd
 LOCAL_MODULE_TAGS := debug
