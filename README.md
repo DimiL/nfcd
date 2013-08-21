@@ -1,14 +1,10 @@
 # nfcd
 
-Source struture:
+A daemon running on FirefoxOS to access NFC libraries.
 
-  android	JNI source files taken from Android 4.03 (https://android.googlesource.com/platform/packages/apps/Nfc.git
-		and https://android.googlesource.com/platform/frameworks/base.git). The sources are patched to allow SE
-		(Secure Element) handling from the SEEK for Android project (http://code.google.com/p/seek-for-android/)
-		wrapper Wrapper files that expose static functions defined in the android directory
+Firefox OS will communicate with this daemon by IPC, with messages defined in 
+src/NfcGonkMessage.h, to perfrom NFC functionalities.
 
-  jni		Simple layer emulating a JNI environment for the JNI source in android. jobject et al are patched in such
-		a way that it acts as a smart pointer to the referenced object.
-
-  src		Main implementation of nfcd. Socket code partially based on rilproxy. Nfc reading/writing based on Java
-		code from Android (https://android.googlesource.com/platform/frameworks/base.git)
+This daemon will link to native NFC library on the device, with porting layer
+is located in src/{nfc-chip-vendor}, currently the supported NFC chip is
+Broadcom.
