@@ -1,5 +1,9 @@
-#ifndef __NFC_MESSAGE_HANDLER_H__
-#define __NFC_MESSAGE_HANDLER_H__
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_nfcd_MessageHandler_h
+#define mozilla_nfcd_MessageHandler_h
 
 #include <stdio.h>
 
@@ -51,5 +55,4 @@ private:
   static bool handleTransceiveReq(const char *input, size_t length);
 };
 
-#endif
-
+#endif // mozilla_nfcd_MessageHandler_h

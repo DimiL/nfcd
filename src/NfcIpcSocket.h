@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_NfcIpcSocket_h__
-#define mozilla_NfcIpcSocket_h__
+#ifndef mozilla_nfcd_NfcIpcSocket_h
+#define mozilla_nfcd_NfcIpcSocket_h
 
 #include <pthread.h>
 #include <time.h>
@@ -25,19 +25,19 @@ public:
 private:
   NfcIpcSocket();
 
-  pthread_t mReader_thread_id;
-  pthread_t mWriter_thread_id;
+  pthread_t mReaderTid;
+  pthread_t mWriterTid;
 
   timespec mSleep_spec;
   timespec mSleep_spec_rem;
 
   static const size_t MAX_READ_SIZE = 1 << 10;
 
-  static void* writer_thread(void *arg);
-  static void* reader_thread(void *arg);
+  static void* writerThreadFunc(void *arg);
+  static void* readerThreadFunc(void *arg);
 
   void initSocket();
   int getListenSocket();
 };
 
-#endif
+#endif // mozilla_nfcd_NfcIpcSocket_h

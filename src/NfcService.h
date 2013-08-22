@@ -1,9 +1,11 @@
-#ifndef __NFC_SERVICE_H__
-#define __NFC_SERVICE_H__
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_nfcd_NfcService_h
+#define mozilla_nfcd_NfcService_h
 
 #include "NfcManager.h"
-
-#define MAX_NDEF_RECORD_SIZE 1024
 
 class NfcService{
 private:
@@ -29,5 +31,4 @@ private:
   NfcService();
 };
 
-#endif
-
+#endif // mozilla_nfcd_NfcService_h

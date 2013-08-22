@@ -1,6 +1,6 @@
-#include "NfcIpcSocket.h"
-#include "MessageHandler.h"
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -15,9 +15,11 @@
 #include <unistd.h>
 #include <queue>
 #include <string>
-
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
+
+#include "NfcIpcSocket.h"
+#include "MessageHandler.h"
 
 #define NFCD_SOCKET_NAME "nfcd"
 
@@ -32,14 +34,13 @@ static pthread_cond_t mWcond;
 
 static int nfcd_rw;
 
-
-/******************************************************************************
- * NFC IPC Threads:
- ******************************************************************************/
-// gecko -> nfcd
-// NFC queue from Gecko socket
-// Check incoming queue and process the message
-void* NfcIpcSocket::writer_thread(void *arg)
+/**
+ * NFC daemon reader Threads:
+ * gecko -> nfcd
+ * NFC queue from Gecko socket
+ * Check incoming queue and process the message
+ */
+void* NfcIpcSocket::readerThreadFunc(void *arg)
 {
   while (1) {
     pthread_mutex_lock(&mWriteMutex);
@@ -48,7 +49,7 @@ void* NfcIpcSocket::writer_thread(void *arg)
       std::string buff = mIncoming.front();
 
       if (buff.size() == 0) {
-        ALOGI("tag_writer_thread received an empty buffer.");
+        ALOGI("tag_writerThreadFunc received an empty buffer.");
         pthread_mutex_unlock(&mWriteMutex);
         continue;
       }
@@ -64,10 +65,13 @@ void* NfcIpcSocket::writer_thread(void *arg)
   return NULL;
 }
 
-// nfcd -> gecko
-// NFC queue to Gecko socket
-// Read from outgoing queue and write buffer to ipc socket
-void* NfcIpcSocket::reader_thread(void *arg)
+/**
+ * NFC daemon writer thread
+ * nfcd -> gecko
+ * NFC queue to Gecko socket
+ * Read from outgoing queue and write buffer to ipc socket
+ */
+void* NfcIpcSocket::writerThreadFunc(void *arg)
 {
   while (1) {
     pthread_mutex_lock(&mReadMutex);
@@ -102,9 +106,9 @@ void* NfcIpcSocket::reader_thread(void *arg)
   return NULL;
 }
 
-/******************************************************************************
- * NfcIpcSocket class
- ******************************************************************************/
+/**
+ * NfcIpcSocket
+ */
 NfcIpcSocket* NfcIpcSocket::sInstance = NULL;
 
 NfcIpcSocket* NfcIpcSocket::Instance() {
@@ -123,7 +127,7 @@ NfcIpcSocket::~NfcIpcSocket()
 
 void NfcIpcSocket::initialize()
 {
-  initSocket(); 
+  initSocket();
 }
 
 void NfcIpcSocket::initSocket()
@@ -135,16 +139,16 @@ void NfcIpcSocket::initSocket()
   pthread_cond_init(&mWcond, NULL);
 
   mSleep_spec.tv_sec = 0;
-  mSleep_spec.tv_nsec = 500*1000;
+  mSleep_spec.tv_nsec = 500 * 1000;
   mSleep_spec_rem.tv_sec = 0;
   mSleep_spec_rem.tv_nsec = 0;
 
-  if(pthread_create(&mReader_thread_id, NULL, reader_thread, NULL) != 0)
+  if(pthread_create(&mReaderTid, NULL, readerThreadFunc, NULL) != 0)
   {
       ALOGE("main tag reader pthread_create failed");
       abort();
   }
-  if(pthread_create(&mWriter_thread_id, NULL, writer_thread, NULL) != 0)
+  if(pthread_create(&mWriterTid, NULL, writerThreadFunc, NULL) != 0)
   {
       ALOGE("main tag writer pthread_create failed");
       abort();
@@ -152,22 +156,22 @@ void NfcIpcSocket::initSocket()
 }
 
 int NfcIpcSocket::getListenSocket() {
-  const int nfcd_conn = android_get_control_socket(NFCD_SOCKET_NAME);
-  if (nfcd_conn < 0) {
+  const int nfcdConn = android_get_control_socket(NFCD_SOCKET_NAME);
+  if (nfcdConn < 0) {
     ALOGE("Could not connect to %s socket: %s\n", NFCD_SOCKET_NAME, strerror(errno));
     return -1;
   }
 
-  if (listen(nfcd_conn, 4) != 0) {
+  if (listen(nfcdConn, 4) != 0) {
     return -1;
   }
-  return nfcd_conn;
+  return nfcdConn;
 }
 
 void NfcIpcSocket::loop()
 {
   bool connected = false;
-  int nfcd_conn;
+  int nfcdConn;
   int ret;
 
   while(1) {
@@ -175,14 +179,14 @@ void NfcIpcSocket::loop()
     socklen_t socklen = sizeof (peeraddr);
 
     if (!connected) {
-      nfcd_conn = getListenSocket();
-      if (nfcd_conn < 0) {
+      nfcdConn = getListenSocket();
+      if (nfcdConn < 0) {
         nanosleep(&mSleep_spec, &mSleep_spec_rem);
         continue;
       }
     }
 
-    nfcd_rw = accept(nfcd_conn, (struct sockaddr*)&peeraddr, &socklen);
+    nfcd_rw = accept(nfcdConn, (struct sockaddr*)&peeraddr, &socklen);
 
     if (nfcd_rw < 0 ) {
       ALOGE("Error on accept() errno:%d", errno);
