@@ -1,3 +1,11 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include <pthread.h>
+#include <semaphore.h>
+#include <stdlib.h>
+
 #include "NfcService.h"
 #include "MessageHandler.h"
 #include "NativeNfcTag.h"
@@ -5,10 +13,6 @@
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
 #include <utils/Log.h>
-
-#include <stdlib.h>
-#include <pthread.h>
-#include <semaphore.h>
 
 static pthread_t thread_id;
 static sem_t thread_sem;
@@ -88,7 +92,7 @@ static void NfcService_MSG_NDEF_TAG(void* pTag)
   gTag.msg = pNativeNfcTag;
 }
 
-static void *service_thread(void *arg)
+static void *serviceThreadFunc(void *arg)
 {
   pthread_setname_np(pthread_self(), "NFCService thread");
 
@@ -147,7 +151,7 @@ void NfcService::initialize()
     abort();
   }
 
-  if(pthread_create(&thread_id, NULL, service_thread, NULL) != 0)
+  if(pthread_create(&thread_id, NULL, serviceThreadFunc, NULL) != 0)
   {
     ALOGE("init_nfc_service pthread_create failed");
     abort();
