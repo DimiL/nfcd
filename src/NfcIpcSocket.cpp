@@ -1,4 +1,5 @@
 #include "NfcIpcSocket.h"
+#include "MessageHandler.h"
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -52,7 +53,8 @@ void* NfcIpcSocket::writer_thread(void *arg)
         continue;
       }
 
-      // Dimi : TODO, Message handling
+      MessageHandler::processRequest(buff.c_str(), buff.size());
+
       mIncoming.pop();
     } else {
       pthread_cond_wait(&mWcond, &mWriteMutex);

@@ -16,6 +16,13 @@ static sem_t thread_sem;
 static void* linkDevice;
 static void* nfcTag;
 
+typedef struct tagInfo {
+  NativeNfcTag* msg;
+  char* requestId;
+} tag;
+
+tag gTag;
+
 typedef enum {
   MSG_UNDEFINED = 0,
   MSG_LLCP_LINK_ACTIVATION,
@@ -69,14 +76,16 @@ void NfcService::nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS()
 
 static void NfcService_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
 {
-  ALOGE("NfcService_MSG_LLCP_LINK_ACTIVATION");
+  ALOGD("NfcService_MSG_LLCP_LINK_ACTIVATION");
 }
 
 static void NfcService_MSG_NDEF_TAG(void* pTag)
 {
-  ALOGE("NfcService_MSG_NDEF_TAG");
+  ALOGD("NfcService_MSG_NDEF_TAG");
   NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(pTag);
   MessageHandler::messageNotifyTechDiscovered(pNativeNfcTag);
+
+  gTag.msg = pNativeNfcTag;
 }
 
 static void *service_thread(void *arg)
@@ -92,7 +101,6 @@ static void *service_thread(void *arg)
 
     switch(msg_type) {
       case MSG_LLCP_LINK_ACTIVATION:
-        ALOGE("NFCService : receive message MSG_LLCP_LINK_ACTIVATION");
         NfcService_MSG_LLCP_LINK_ACTIVATION(linkDevice);
         break;
       case MSG_LLCP_LINK_DEACTIVATION:

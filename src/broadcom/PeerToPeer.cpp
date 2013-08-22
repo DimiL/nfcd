@@ -24,7 +24,7 @@
 #include "config.h"
 //#include "JavaClassConstants.h"
 //#include <ScopedLocalRef.h>
-#include "P2pDevice.h";
+#include "P2pDevice.h"
 
 
 /* Some older PN544-based solutions would only send the first SYMM back
@@ -35,8 +35,6 @@
  * timeout to 2000 ms, giving us enough time to complete the first connect.
  */
 #define LLCP_DATA_LINK_TIMEOUT    2000
-
-#define LOG_TAG "PeerToPeer"
 
 using namespace android;
 
@@ -311,7 +309,7 @@ void PeerToPeer::llcpActivatedHandler (tNFA_LLCP_ACTIVATED& activated)
         reinterpret_cast<P2pDevice*>(mNfcManager->getNativeStruct("P2pDevice"));
 
     if (pP2pDevice == NULL) {
-        ALOGE("%s : cannot get native p2p device class");
+        ALOGE("%s : cannot get native p2p device class", fn);
         return;
     }
     

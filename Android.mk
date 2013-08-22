@@ -17,7 +17,9 @@ LOCAL_SRC_FILES := \
     src/NfcService.cpp \
     src/NfcIpcSocket.cpp \
     src/NfcUtil.cpp \
-    src/MessageHandler.cpp
+    src/MessageHandler.cpp \
+    src/NdefMessage.cpp \
+    src/NdefRecord.cpp
 
 BROADCOM_SRC_FILES := \
     src/broadcom/NfcManager.cpp \
