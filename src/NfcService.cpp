@@ -124,6 +124,7 @@ static void *service_thread(void *arg)
 }
 
 NfcService* NfcService::sInstance = NULL;
+NfcManager* NfcService::sNfcManager = NULL;
 
 NfcService* NfcService::Instance() {
     if (!sInstance)
@@ -139,7 +140,7 @@ NfcService::~NfcService()
 {
 }
 
-void NfcService::initialize()
+void NfcService::initialize(NfcManager* pNfcManager)
 {
   if(sem_init(&thread_sem, 0, 0) == -1)
   {
@@ -152,4 +153,30 @@ void NfcService::initialize()
     ALOGE("init_nfc_service pthread_create failed");
     abort();
   }
+
+  sNfcManager = pNfcManager;
+}
+
+bool NfcService::handleReadNdef()
+{
+  NdefMessage* pNdefMessage = NULL;
+  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(sNfcManager->getNativeStruct("mNfcManager"));
+  pNdefMessage = pNativeNfcTag->findAndReadNdef();
+
+  if (pNdefMessage != NULL) {
+    MessageHandler::messageNotifyNdefDiscovered(pNdefMessage);
+  } else {
+    NativeNfcTag::nativeNfcTag_doDisconnect();
+    MessageHandler::messageNotifyNdefDisconnected();
+  }
+ 
+  while (NativeNfcTag::nativeNfcTag_doPresenceCheck()) {
+    // Tag present
+    sleep(1);
+  }
+
+  // Tag presence lost.
+  NativeNfcTag::nativeNfcTag_doDisconnect();
+  MessageHandler::messageNotifyNdefDisconnected();
+  return true;
 }

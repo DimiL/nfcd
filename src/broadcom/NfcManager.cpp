@@ -6,6 +6,7 @@
 #include "PeerToPeer.h"
 #include "PowerSwitch.h"
 #include "NfcTag.h"
+#include "config.h"
 #include "Pn544Interop.h"
 
 extern "C"
@@ -29,6 +30,7 @@ extern bool gIsSelectingRfInterface;
 ** public variables and functions
 **
 *****************************************************************************/
+int                     gGeneralTransceiveTimeout = 1000;
 void                    doStartupConfig ();
 void                    startRfDiscovery (bool isStart);
 
@@ -258,16 +260,6 @@ void NfcManager::enableDiscovery()
     ALOGD ("%s: exit", __FUNCTION__);
 }
 
-/*******************************************************************************
-**
-** Function:        handleRfDiscoveryEvent
-**
-** Description:     Handle RF-discovery events from the stack.
-**                  discoveredDevice: Discovered device.
-**
-** Returns:         None
-**
-*******************************************************************************/
 static void handleRfDiscoveryEvent (tNFC_RESULT_DEVT* discoveredDevice)
 {
     if (discoveredDevice->more)
@@ -289,17 +281,6 @@ static void handleRfDiscoveryEvent (tNFC_RESULT_DEVT* discoveredDevice)
     }
 }
 
-/*******************************************************************************
-**
-** Function:        nfaDeviceManagementCallback
-**
-** Description:     Receive device management events from stack.
-**                  dmEvent: Device-management event ID.
-**                  eventData: Data associated with event ID.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void nfaDeviceManagementCallback (UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
 {
     ALOGD("nfaDeviceManagementCallback >>");
@@ -389,17 +370,6 @@ void nfaDeviceManagementCallback (UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
     }
 }
 
-/*******************************************************************************
-**
-** Function:        nfaConnectionCallback
-**
-** Description:     Receive connection-related events from stack.
-**                  connEvent: Event code.
-**                  eventData: Event data.
-**
-** Returns:         None
-**
-*******************************************************************************/
 static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData)
 {
     tNFA_STATUS status = NFA_STATUS_FAILED;
@@ -648,16 +618,6 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
     }
 }
 
-/*******************************************************************************
-**
-** Function:        startRfDiscovery
-**
-** Description:     Ask stack to start polling and listening for devices.
-**                  isStart: Whether to start.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void startRfDiscovery(bool isStart)
 {
     tNFA_STATUS status = NFA_STATUS_FAILED;
@@ -676,15 +636,6 @@ void startRfDiscovery(bool isStart)
     }
 }
 
-/*******************************************************************************
-**
-** Function:        doStartupConfig
-**
-** Description:     Configure the NFC controller.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void doStartupConfig()
 {
     // Mozilla : To be fixed, use correct nat
@@ -704,31 +655,56 @@ void doStartupConfig()
     }
 }
 
-/*******************************************************************************
-**
-** Function:        isPeerToPeer
-**
-** Description:     Whether the activation data indicates the peer supports NFC-DEP.
-**                  activated: Activation data.
-**
-** Returns:         True if the peer supports NFC-DEP.
-**
-*******************************************************************************/
+bool nfcManager_isNfcActive()
+{
+    return sIsNfaEnabled;
+}
+
+void startStopPolling (bool isStartPolling)
+{
+    ALOGD ("%s: enter; isStart=%u", __FUNCTION__, isStartPolling);
+    tNFA_STATUS stat = NFA_STATUS_FAILED;
+
+    startRfDiscovery (false);
+    if (isStartPolling)
+    {
+        tNFA_TECHNOLOGY_MASK tech_mask = DEFAULT_TECH_MASK;
+        unsigned long num = 0;
+        if (GetNumValue(NAME_POLLING_TECH_MASK, &num, sizeof(num)))
+            tech_mask = num;
+
+        SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+        ALOGD ("%s: enable polling", __FUNCTION__);
+        stat = NFA_EnablePolling (tech_mask);
+        if (stat == NFA_STATUS_OK)
+        {
+            ALOGD ("%s: wait for enable event", __FUNCTION__);
+            sNfaEnableDisablePollingEvent.wait (); //wait for NFA_POLL_ENABLED_EVT
+        }
+        else
+            ALOGE ("%s: fail enable polling; error=0x%X", __FUNCTION__, stat);
+    }
+    else
+    {
+        SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+        ALOGD ("%s: disable polling", __FUNCTION__);
+        stat = NFA_DisablePolling ();
+        if (stat == NFA_STATUS_OK)
+        {
+            sNfaEnableDisablePollingEvent.wait (); //wait for NFA_POLL_DISABLED_EVT
+        }
+        else
+            ALOGE ("%s: fail disable polling; error=0x%X", __FUNCTION__, stat);
+    }
+    startRfDiscovery (true);
+    ALOGD ("%s: exit", __FUNCTION__);
+}
+
 static bool isPeerToPeer (tNFA_ACTIVATED& activated)
 {
     return activated.activate_ntf.protocol == NFA_PROTOCOL_NFC_DEP;
 }
 
-/*******************************************************************************
-**
-** Function:        isListenMode
-**
-** Description:     Indicates whether the activation data indicates it is
-**                  listen mode.
-**
-** Returns:         True if this listen mode.
-**
-*******************************************************************************/
 static bool isListenMode(tNFA_ACTIVATED& activated)
 {
     return ((NFC_DISCOVERY_TYPE_LISTEN_A == activated.activate_ntf.rf_tech_param.mode)

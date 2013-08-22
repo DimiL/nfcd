@@ -65,7 +65,8 @@ public:
   static void nativeNfcTag_doCheckNdefResult (tNFA_STATUS status, uint32_t maxSize, uint32_t currentSize, uint8_t flags);
   static void nativeNfcTag_registerNdefTypeHandler ();
   static void nativeNfcTag_deregisterNdefTypeHandler ();
-
+  static bool nativeNfcTag_doPresenceCheck ();
+  static bool nativeNfcTag_doDisconnect ();
 private:
 
   static int reSelect (tNFA_INTF_TYPE rfInterface);

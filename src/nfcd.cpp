@@ -22,7 +22,7 @@ int main() {
 
   // 3. Create service thread to receive message from nfc library
   NfcService* pNfcService = NfcService::Instance();
-  pNfcService->initialize();
+  pNfcService->initialize(pNfcManager);
 
   // 4. Create IPC socket & main thread will enter while loop to read data from socket
   NfcIpcSocket* pNfcIpcSocket = NfcIpcSocket::Instance();

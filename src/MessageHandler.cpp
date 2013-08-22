@@ -1,7 +1,10 @@
 #include "MessageHandler.h"
+#include "NfcService.h"
 #include "NfcIpcSocket.h"
 #include "NfcUtil.h"
 #include "NativeNfcTag.h"
+#include "NdefMessage.h"
+#include "NdefRecord.h"
 
 #include <jansson.h>
 #include <map>
@@ -12,69 +15,6 @@
 #include <utils/Log.h>
 
 static std::map<std::string, int> gMessageTypeMap;
-
-/*
-void MessageHandler::nfcd_messaging_notifyNdefDiscovered(jobject msg)
-{
-  CLASS_NdefMessage* ndefMsg = (CLASS_NdefMessage*) msg.getReferent();
-  jint recordLength = dummyEnv->GetArrayLength(ndefMsg->mRecords);
-  LOGD("Creating JSON for %d records", recordLength);
-
-  json_t * records[recordLength];
-  int total = 0;
-  for(int i=0; i<recordLength; i++) {
-    //Get payload length
-    CLASS_NdefRecord* record = (CLASS_NdefRecord*) dummyEnv->GetObjectArrayElement(ndefMsg->mRecords, 0).getReferent();
-
-    jint payloadLength = dummyEnv->GetArrayLength((jbyteArray) record->mPayload);
-    char* payload = encodeBase64((char*) dummyEnv->GetByteArrayElements((jbyteArray) record->mPayload, JNI_FALSE), payloadLength);
-    LOGD("Payload: %s", payload);
-
-    jint typeLength = dummyEnv->GetArrayLength((jbyteArray) record->mType);
-    char* type = encodeBase64((char*) dummyEnv->GetByteArrayElements((jbyteArray) record->mType, JNI_FALSE), typeLength);
-    LOGD("Type: %s", type);
-
-    jint idLength = dummyEnv->GetArrayLength((jbyteArray) record->mId);
-    char* id = encodeBase64((char*) dummyEnv->GetByteArrayElements((jbyteArray) record->mId, JNI_FALSE), idLength);
-    LOGD("Id: %s", id);
-
-    records[i] = json_object();
-    LOGD("Id: %s", id);
-
-    //TODO: verify this is safe or introduce smarter conversion
-    char* tnf = (char*) NFCD_MALLOC(2);
-    tnf[0] = '0' + record->mTnf;
-    tnf[1] = '\0';
-    LOGD("Id: %s", id);
-
-    json_object_set_new(records[i], "tnf",  json_string(tnf));
-    json_object_set_new(records[i], "type", json_string(type));
-    json_object_set_new(records[i], "id", json_string(id));
-    json_object_set_new(records[i], "payload", json_string(payload));
-  }
-
-  LOGD("Constructing complete JSON message");
-  json_t* root = json_object();
-  json_object_set_new(root, "type", json_string("ndefDiscovered"));
-
-  json_t* jsonArray = json_array();
-  for(int i=0; i<recordLength; i++) {
-    json_array_append(jsonArray, records[i]);
-  }
-
-  json_t* content = json_object();
-  json_object_set_new(content, "records", jsonArray);
-  json_object_set_new(root, "content", content);
-
-  char *rendered = json_dumps(root, JSON_PRESERVE_ORDER);
-  size_t len = strlen(rendered);
-  LOGD("Writing JSON message to socket \"%.*s\"", len, rendered);
-  json_decref(root);
-  if (rendered) {
-    writeToSocket(rendered, len);
-  }
-}
-*/
 
 void MessageHandler::initialize()
 {
@@ -92,6 +32,73 @@ void MessageHandler::initialize()
   gMessageTypeMap["secureElementActivated"] = NOTIFY_SECURE_ELEMENT_ACTIVATE;
   gMessageTypeMap["secureElementDeactivated"] = NOTIFY_SECURE_ELEMENT_DEACTIVATE;
   gMessageTypeMap["secureElementTransaction"] = NOTIFY_SECURE_ELEMENT_TRANSACTION;
+}
+
+void MessageHandler::messageNotifyNdefDiscovered(NdefMessage* ndefMsg)
+{
+  int recordLength = ndefMsg->mRecords.size();
+  ALOGD("Creating JSON for %d records", recordLength);
+
+  json_t * records[recordLength];
+  int total = 0;
+  char* buf = NULL;
+
+  // Mozilla : TODO : check if there is memory leak here
+  for(int i = 0; i < recordLength; i++) {
+    //Get payload length
+    NdefRecord* record = &ndefMsg->mRecords[i];
+    
+    int payloadLength = record->mPayload.size();
+    buf = new char(payloadLength);
+    for(int idx = 0; idx < payloadLength; idx++)  buf[idx] = record->mPayload[idx];
+    char* payload = NfcUtil::encodeBase64(buf, payloadLength);
+    ALOGD("Payload: %s", payload);
+    
+    int typeLength = record->mType.size();
+    buf = new char(typeLength);
+    for(int idx = 0; idx < typeLength; idx++)  buf[idx] = record->mType[idx];
+    char* type = NfcUtil::encodeBase64(buf, typeLength);
+    ALOGD("Type: %s", type);
+
+    int idLength = record->mId.size();
+    buf = new char(idLength);
+    for(int idx = 0; idx < idLength; idx++)  buf[idx] = record->mId[idx];
+    char* id = NfcUtil::encodeBase64(buf, idLength);
+    ALOGD("Id: %s", id);
+
+    records[i] = json_object();
+
+    //TODO: verify this is safe or introduce smarter conversion
+    char* tnf = (char*) malloc(2);
+    tnf[0] = '0' + record->mTnf;
+    tnf[1] = '\0';
+
+    json_object_set_new(records[i], "tnf",  json_string(tnf));
+    json_object_set_new(records[i], "type", json_string(type));
+    json_object_set_new(records[i], "id", json_string(id));
+    json_object_set_new(records[i], "payload", json_string(payload));
+  }
+
+  ALOGD("Constructing complete JSON message");
+  json_t* root = json_object();
+  json_object_set_new(root, "type", json_string("ndefDiscovered"));
+
+  json_t* jsonArray = json_array();
+  for(int i=0; i<recordLength; i++) {
+    json_array_append(jsonArray, records[i]);
+  }
+
+  json_t* content = json_object();
+  json_object_set_new(content, "records", jsonArray);
+  json_object_set_new(root, "content", content);
+
+  char *rendered = json_dumps(root, JSON_PRESERVE_ORDER);
+  size_t len = strlen(rendered);
+  ALOGD("Writing JSON message to socket \"%.*s\"", len, rendered);
+  json_decref(root);
+  if (rendered) {
+    NfcIpcSocket::writeToOutgoingQueue(rendered, strlen(rendered));
+  }
 }
 
 void MessageHandler::messageNotifyNdefDetails(int maxNdefMsgLength, int state)
@@ -112,6 +119,11 @@ void MessageHandler::messageNotifyNdefDetails(int maxNdefMsgLength, int state)
   if (rendered) {
     NfcIpcSocket::writeToOutgoingQueue(rendered, strlen(rendered));
   }
+}
+
+void MessageHandler::messageNotifyNdefDisconnected()
+{
+  MessageHandler::messageNotifyNdefDisconnected(NULL);
 }
 
 void MessageHandler::messageNotifyNdefDisconnected(const char *message)
@@ -314,6 +326,7 @@ bool MessageHandler::handleNdefDetailsRequest()
 
 bool MessageHandler::handleReadNdef()
 {
+  NfcService::handleReadNdef();
   return true;
 }
 

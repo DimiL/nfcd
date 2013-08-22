@@ -75,7 +75,8 @@ LOCAL_SHARED_LIBRARIES += \
     libutils \
     liblog \
     libstlport \
-    libjansson
+    libcrypto \
+    libjansson 
 
 ifeq ($(NFC_VENDOR),BROADCOM)
 LOCAL_SHARED_LIBRARIES += \

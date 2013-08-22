@@ -28,11 +28,8 @@
 #include "IntervalTimer.h"
 #include "Mutex.h"
 #include "NfcTag.h"
-namespace android
-{
-    extern void startStopPolling (bool isStartPolling);
-}
 
+extern void startStopPolling (bool isStartPolling);
 
 /*****************************************************************************
 **
@@ -64,7 +61,7 @@ void pn544InteropStopPolling ()
     ALOGD ("%s: enter", __FUNCTION__);
     gMutex.lock ();
     gTimer.kill ();
-    android::startStopPolling (false);
+    startStopPolling (false);
     gIsBusy = true;
     gAbortNow = false;
     gTimer.set (gIntervalTime, pn544InteropStartPolling); //after some time, start polling again
@@ -99,7 +96,7 @@ void pn544InteropStartPolling (union sigval)
     if (state == NfcTag::Idle)
     {
         ALOGD ("%s: start polling", __FUNCTION__);
-        android::startStopPolling (true);
+        startStopPolling (true);
         gIsBusy = false;
     }
     else

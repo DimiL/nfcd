@@ -22,6 +22,9 @@ extern "C"
     #include "rw_api.h"
 }
 
+extern bool nfcManager_isNfcActive();
+extern int gGeneralTransceiveTimeout;
+
 /*****************************************************************************
 **
 ** public variables and functions
@@ -239,20 +242,6 @@ int NativeNfcTag::connectWithStatus(int technology)
     return status;
 }
 
-void NativeNfcTag::readNdef(std::vector<uint8_t>& buf) {
-    pthread_mutex_lock(&mMutex);
-    nativeNfcTag_doRead(buf);
-    pthread_mutex_unlock(&mMutex);
-}
-
-int NativeNfcTag::checkNdefWithStatus(int ndefinfo[]) {
-    int status = -1;
-    pthread_mutex_lock(&mMutex);
-    status = nativeNfcTag_doCheckNdef(ndefinfo);
-    pthread_mutex_unlock(&mMutex);
-    return status;
-}
-
 void NativeNfcTag::nativeNfcTag_doRead (std::vector<uint8_t>& buf)
 {
     ALOGD ("%s: enter", __FUNCTION__);
@@ -302,7 +291,7 @@ void NativeNfcTag::nativeNfcTag_doRead (std::vector<uint8_t>& buf)
     return;
 }
 
-int nativeNfcTag_doCheckNdef (int ndefInfo[])
+int NativeNfcTag::nativeNfcTag_doCheckNdef (int ndefInfo[])
 {
     tNFA_STATUS status = NFA_STATUS_FAILED;
 
@@ -579,6 +568,70 @@ TheEnd:
     return retCode;
 }
 
+bool NativeNfcTag::nativeNfcTag_doPresenceCheck ()
+{
+    ALOGD ("%s", __FUNCTION__);
+    tNFA_STATUS status = NFA_STATUS_OK;
+    bool isPresent = false;
+
+    // Special case for Kovio.  The deactivation would have already occurred
+    // but was ignored so that normal tag opertions could complete.  Now we
+    // want to process as if the deactivate just happened.
+    if (NfcTag::getInstance ().mTechList [0] == TARGET_TYPE_KOVIO_BARCODE)
+    {
+        ALOGD ("%s: Kovio, force deactivate handling", __FUNCTION__);
+        tNFA_DEACTIVATED deactivated = {NFA_DEACTIVATE_TYPE_IDLE};
+
+        NfcTag::getInstance().setDeactivationState (deactivated);
+        nativeNfcTag_resetPresenceCheck();
+        NfcTag::getInstance().connectionEventHandler (NFA_DEACTIVATED_EVT, NULL);
+        nativeNfcTag_abortWaits();
+        NfcTag::getInstance().abort ();
+
+        return false;
+    }
+
+    if (nfcManager_isNfcActive() == false)
+    {
+        ALOGD ("%s: NFC is no longer active.", __FUNCTION__);
+        return false;
+    }
+
+    if (NfcTag::getInstance ().getActivationState () != NfcTag::Active)
+    {
+        ALOGD ("%s: tag already deactivated", __FUNCTION__);
+        return false;
+    }
+
+    if (sem_init (&sPresenceCheckSem, 0, 0) == -1)
+    {
+        ALOGE ("%s: semaphore creation failed (errno=0x%08x)", __FUNCTION__, errno);
+        return false;
+    }
+
+    status = NFA_RwPresenceCheck ();
+    if (status == NFA_STATUS_OK)
+    {
+        if (sem_wait (&sPresenceCheckSem))
+        {
+            ALOGE ("%s: failed to wait (errno=0x%08x)", __FUNCTION__, errno);
+        }
+        else
+        {
+            isPresent = (sCountTagAway > 3) ? false : true;
+        }
+    }
+
+    if (sem_destroy (&sPresenceCheckSem))
+    {
+        ALOGE ("Failed to destroy check NDEF semaphore (errno=0x%08x)", errno);
+    }
+
+    if (isPresent == false)
+        ALOGD ("%s: tag absent ????", __FUNCTION__);
+    return isPresent;
+}
+
 int NativeNfcTag::reSelect (tNFA_INTF_TYPE rfInterface)
 {
     ALOGD ("%s: enter; rf intf = %d", __FUNCTION__, rfInterface);
@@ -686,4 +739,40 @@ bool NativeNfcTag::switchRfInterface (tNFA_INTF_TYPE rfInterface)
 
     sRfInterfaceMutex.unlock ();
     return rVal;
+}
+
+bool NativeNfcTag::nativeNfcTag_doDisconnect ()
+{
+    ALOGD ("%s: enter", __FUNCTION__);
+    tNFA_STATUS nfaStat = NFA_STATUS_OK;
+
+    gGeneralTransceiveTimeout = DEFAULT_GENERAL_TRANS_TIMEOUT;
+
+    if (NfcTag::getInstance ().getActivationState () != NfcTag::Active)
+    {
+        ALOGE ("%s: tag already deactivated", __FUNCTION__);
+        goto TheEnd;
+    }
+
+    nfaStat = NFA_Deactivate (FALSE);
+    if (nfaStat != NFA_STATUS_OK)
+        ALOGE ("%s: deactivate failed; error=0x%X", __FUNCTION__, nfaStat);
+
+TheEnd:
+    ALOGD ("%s: exit", __FUNCTION__);
+    return (nfaStat == NFA_STATUS_OK) ? true : false;
+}
+
+void NativeNfcTag::readNdef(std::vector<uint8_t>& buf) {
+    pthread_mutex_lock(&mMutex);
+    nativeNfcTag_doRead(buf);
+    pthread_mutex_unlock(&mMutex);
+}
+
+int NativeNfcTag::checkNdefWithStatus(int ndefinfo[]) {
+    int status = -1;
+    pthread_mutex_lock(&mMutex);
+    status = nativeNfcTag_doCheckNdef(ndefinfo);
+    pthread_mutex_unlock(&mMutex);
+    return status;
 }

@@ -22,12 +22,15 @@ enum {
 };
 
 class NativeNfcTag;
+class NdefMessage;
 
 class MessageHandler{
 public:
   static void initialize();
 
+  static void messageNotifyNdefDiscovered(NdefMessage* ndefMsg);
   static void messageNotifyNdefDetails(int maxNdefMsgLength, int state);
+  static void messageNotifyNdefDisconnected();
   static void messageNotifyNdefDisconnected(const char *message);
   static void messageNotifyTechDiscovered(NativeNfcTag* pNativeNfcTag);
   static void messageNotifyRequestStatus(const char *requestId, int status, char *message);
