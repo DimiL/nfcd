@@ -1,4 +1,0 @@
-This is only a temporarily directory to store necessary library
-
-- libnfc-nci.so should be pushed to system/lib
-- nfc_nci.mako.so should be pushed to system/lib/hw
