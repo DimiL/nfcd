@@ -182,5 +182,7 @@ bool NfcService::handleReadNdef()
   NativeNfcTag::nativeNfcTag_doDisconnect();
   MessageHandler::messageNotifyNdefDisconnected();
 
+  delete pNdefMessage;
+
   return true;
 }
