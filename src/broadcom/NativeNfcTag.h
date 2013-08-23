@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_NativeNfcTag_h__
-#define mozilla_NativeNfcTag_h__
+#ifndef mozilla_nfcd_NativeNfcTag_h
+#define mozilla_nfcd_NativeNfcTag_h
 
 #include <pthread.h>
 #include <vector>
@@ -73,4 +73,4 @@ private:
   static bool switchRfInterface(tNFA_INTF_TYPE rfInterface);
 };
 
-#endif // mozilla_NativeNfcTag_h__
+#endif // mozilla_nfcd_NativeNfcTag_h

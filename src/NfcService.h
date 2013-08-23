@@ -13,7 +13,7 @@ private:
   static NfcManager* sNfcManager;
 
 public:
-  virtual ~NfcService();
+  ~NfcService();
   void initialize(NfcManager* pNfcManager);
 
   static NfcService* Instance();

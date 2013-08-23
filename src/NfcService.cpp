@@ -163,9 +163,8 @@ void NfcService::initialize(NfcManager* pNfcManager)
 
 bool NfcService::handleReadNdef()
 {
-  NdefMessage* pNdefMessage = NULL;
-  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(sNfcManager->getNativeStruct("mNfcManager"));
-  pNdefMessage = pNativeNfcTag->findAndReadNdef();
+  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(sNfcManager->getNativeStruct("NativeNfcTag"));
+  NdefMessage* pNdefMessage = pNativeNfcTag->findAndReadNdef();
 
   if (pNdefMessage != NULL) {
     MessageHandler::messageNotifyNdefDiscovered(pNdefMessage);
@@ -182,5 +181,6 @@ bool NfcService::handleReadNdef()
   // Tag presence lost.
   NativeNfcTag::nativeNfcTag_doDisconnect();
   MessageHandler::messageNotifyNdefDisconnected();
+
   return true;
 }

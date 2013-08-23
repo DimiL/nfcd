@@ -326,8 +326,7 @@ bool MessageHandler::handleNdefDetailsRequest()
 
 bool MessageHandler::handleReadNdef()
 {
-  NfcService::handleReadNdef();
-  return true;
+  return NfcService::handleReadNdef();
 }
 
 bool MessageHandler::handleTransceiveReq(const char *input, size_t length)

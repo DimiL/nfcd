@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_NdefRecord_h__
-#define mozilla_NdefRecord_h__
+#ifndef mozilla_nfcd_NdefRecord_h
+#define mozilla_nfcd_NdefRecord_h
 
 #include <vector>
 

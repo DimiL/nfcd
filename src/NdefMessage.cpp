@@ -5,3 +5,8 @@ NdefMessage::NdefMessage(std::vector<uint8_t>& buf)
   NdefRecord::parse(buf, false, mRecords);
 }
 
+NdefMessage::~NdefMessage()
+{
+  mRecords.clear();
+}
+

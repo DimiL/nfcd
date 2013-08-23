@@ -13,7 +13,7 @@ private:
   static NfcIpcSocket* sInstance;
 
 public:
-  virtual ~NfcIpcSocket();
+  ~NfcIpcSocket();
 
   static NfcIpcSocket* Instance();
   void initialize();
