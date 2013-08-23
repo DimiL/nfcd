@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "MessageHandler.h"
 #include "NfcService.h"
 #include "NfcIpcSocket.h"
@@ -19,21 +23,22 @@ static std::map<std::string, int> gMessageTypeMap;
 void MessageHandler::initialize()
 {
   // Initialize with private strings...
-  gMessageTypeMap["ndefDiscovered"] = NOTIFY_NDEF_DISCOVERED;
-  gMessageTypeMap["techDiscovered"] = NOTIFY_TECH_DISCOVERED;
-  gMessageTypeMap["transceiveReq"] = NOTIFY_TRANSCEIVE_REQ;
-  gMessageTypeMap["transceiveRsp"] = NOTIFY_TRANSCEIVE_RSP;
-  gMessageTypeMap["ndefWriteRequest"] = NOTIFY_NDEF_WRITE_REQUEST;
-  gMessageTypeMap["ndefDetailsRequest"] = NOTIFY_NDEF_DETAILS_REQUEST;
-  gMessageTypeMap["readNdef"] = NOTIFY_READ_NDEF;
-  gMessageTypeMap["ndefDisconnected"] = NOTIFY_NDEF_DISCONNECTED;
-  gMessageTypeMap["requestStatus"] = NOTIFY_REQUEST_STATUS;
-  gMessageTypeMap["ndefPushRequest"] = NOTIFY_NDEF_PUSH_REQUEST;
-  gMessageTypeMap["secureElementActivated"] = NOTIFY_SECURE_ELEMENT_ACTIVATE;
-  gMessageTypeMap["secureElementDeactivated"] = NOTIFY_SECURE_ELEMENT_DEACTIVATE;
-  gMessageTypeMap["secureElementTransaction"] = NOTIFY_SECURE_ELEMENT_TRANSACTION;
+//  gMessageTypeMap["ndefDiscovered"] = NOTIFY_NDEF_DISCOVERED;
+  gMessageTypeMap["techDiscovered"] = NFC_NOTIFICATION_TECH_DISCOVERED;
+//  gMessageTypeMap["transceiveReq"] = NOTIFY_TRANSCEIVE_REQ;
+//  gMessageTypeMap["transceiveRsp"] = NOTIFY_TRANSCEIVE_RSP;
+//  gMessageTypeMap["ndefWriteRequest"] = NOTIFY_NDEF_WRITE_REQUEST;
+//  gMessageTypeMap["ndefDetailsRequest"] = NOTIFY_NDEF_DETAILS_REQUEST;
+  gMessageTypeMap["readNdef"] = NFC_REQUEST_READ_NDEF;
+//  gMessageTypeMap["ndefDisconnected"] = NOTIFY_NDEF_DISCONNECTED;
+//  gMessageTypeMap["requestStatus"] = NOTIFY_REQUEST_STATUS;
+//  gMessageTypeMap["ndefPushRequest"] = NOTIFY_NDEF_PUSH_REQUEST;
+//  gMessageTypeMap["secureElementActivated"] = NOTIFY_SECURE_ELEMENT_ACTIVATE;
+//  gMessageTypeMap["secureElementDeactivated"] = NOTIFY_SECURE_ELEMENT_DEACTIVATE;
+//  gMessageTypeMap["secureElementTransaction"] = NOTIFY_SECURE_ELEMENT_TRANSACTION;
 }
 
+#if 0
 void MessageHandler::messageNotifyNdefDiscovered(NdefMessage* ndefMsg)
 {
   int recordLength = ndefMsg->mRecords.size();
@@ -47,13 +52,13 @@ void MessageHandler::messageNotifyNdefDiscovered(NdefMessage* ndefMsg)
   for(int i = 0; i < recordLength; i++) {
     //Get payload length
     NdefRecord* record = &ndefMsg->mRecords[i];
-    
+
     int payloadLength = record->mPayload.size();
     buf = new char(payloadLength);
     for(int idx = 0; idx < payloadLength; idx++)  buf[idx] = record->mPayload[idx];
     char* payload = NfcUtil::encodeBase64(buf, payloadLength);
     ALOGD("Payload: %s", payload);
-    
+
     int typeLength = record->mType.size();
     buf = new char(typeLength);
     for(int idx = 0; idx < typeLength; idx++)  buf[idx] = record->mType[idx];
@@ -94,13 +99,14 @@ void MessageHandler::messageNotifyNdefDiscovered(NdefMessage* ndefMsg)
 
   char *rendered = json_dumps(root, JSON_PRESERVE_ORDER);
   size_t len = strlen(rendered);
-  ALOGD("Writing JSON message to socket \"%.*s\"", len, rendered);
   json_decref(root);
   if (rendered) {
-    NfcIpcSocket::writeToOutgoingQueue(rendered, strlen(rendered));
+    sendResponse(rendered, strlen(rendered));
   }
 }
+#endif
 
+#if 0 
 void MessageHandler::messageNotifyNdefDetails(int maxNdefMsgLength, int state)
 {
   //Create JSON record
@@ -115,9 +121,8 @@ void MessageHandler::messageNotifyNdefDetails(int maxNdefMsgLength, int state)
 
   char *rendered = json_dumps(root, JSON_PRESERVE_ORDER);
   json_decref(root);
-  ALOGD("%s rendered ", rendered);
   if (rendered) {
-    NfcIpcSocket::writeToOutgoingQueue(rendered, strlen(rendered));
+    sendResponse(rendered, strlen(rendered));
   }
 }
 
@@ -141,12 +146,15 @@ void MessageHandler::messageNotifyNdefDisconnected(const char *message)
   json_decref(root);
 
   if (rendered) {
-    NfcIpcSocket::writeToOutgoingQueue(rendered, strlen(rendered));
+    sendResponse(rendered, strlen(rendered));
   }
 }
+#endif
 
-void MessageHandler::messageNotifyTechDiscovered(NativeNfcTag* pNativeNfcTag)
-{  
+void MessageHandler::notifyTechDiscovered(void* data)
+{
+
+  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(data);
   json_t *root,*content;
   json_t* jsonTechArray = json_array();
   int i = 0;
@@ -178,10 +186,11 @@ void MessageHandler::messageNotifyTechDiscovered(NativeNfcTag* pNativeNfcTag)
   json_decref(root);
 
   if (rendered) {
-    NfcIpcSocket::writeToOutgoingQueue(rendered, strlen(rendered));
+    sendResponse(rendered, strlen(rendered));
   }
 }
 
+#if 0
 void MessageHandler::messageNotifyRequestStatus(const char *requestId, int status, char *message)
 {
   //Create JSON record
@@ -203,7 +212,7 @@ void MessageHandler::messageNotifyRequestStatus(const char *requestId, int statu
   json_decref(root);
   // Write rendered message to nfcd gecko (pass raw pointer ownership):
   if (rendered) {
-    NfcIpcSocket::writeToOutgoingQueue(rendered, strlen(rendered));
+    sendResponse(rendered, strlen(rendered));
   }
 }
 
@@ -216,12 +225,11 @@ void MessageHandler::messageNotifySecureElementFieldActivated()
   json_object_set_new(root, "content", content=json_object()); // Empty content body
 
   char *rendered = json_dumps(root, JSON_PRESERVE_ORDER);
-  ALOGD("=== SecureElement Activated: (%s) ===", rendered);
 
   json_decref(root);
   // Write rendered message to nfcd gecko (pass raw pointer ownership):
   if (rendered) {
-    NfcIpcSocket::writeToOutgoingQueue(rendered, strlen(rendered));
+    sendResponse(rendered, strlen(rendered));
   }
 }
 
@@ -234,15 +242,16 @@ void MessageHandler::messageNotifySecureElementFieldDeactivated()
   json_object_set_new(root, "content", content=json_object()); // Empty content body
 
   char *rendered = json_dumps(root, JSON_PRESERVE_ORDER);
-  ALOGD("=== SecureElement Deactivated: (%s) ===", rendered);
 
   json_decref(root);
   // Write rendered message to nfcd gecko (pass raw pointer ownership):
   if (rendered) {
-    NfcIpcSocket::writeToOutgoingQueue(rendered, strlen(rendered));
+    sendResponse(rendered, strlen(rendered));
   }
 }
+#endif
 
+// static
 void MessageHandler::processRequest(const char *input, size_t length)
 {
   unsigned int messageType;
@@ -251,29 +260,55 @@ void MessageHandler::processRequest(const char *input, size_t length)
     ALOGI("MessageType: (%d)", messageType);
 
     switch (messageType) {
-      case NOTIFY_NDEF_WRITE_REQUEST:
-        handleWriteNdef(input, length);
+//      case NOTIFY_NDEF_WRITE_REQUEST:
+//        handleWriteNdef(input, length);
+//        break;
+//      case NOTIFY_NDEF_PUSH_REQUEST:
+//        handleNdefPush(input, length);
+//        break;
+//      case NOTIFY_REQUEST_STATUS:
+//      case NOTIFY_NDEF_DISCOVERED:
+//      case NOTIFY_NDEF_DISCONNECTED:
+//        break;
+//      case NOTIFY_NDEF_DETAILS_REQUEST:
+//        handleNdefDetailsRequest();
+//        break;
+      case NFC_REQUEST_READ_NDEF:
+        handleReadNdefRequest();
         break;
-      case NOTIFY_NDEF_PUSH_REQUEST:
-        handleNdefPush(input, length);
-        break;
-      case NOTIFY_REQUEST_STATUS:
-      case NOTIFY_NDEF_DISCOVERED:
-      case NOTIFY_NDEF_DISCONNECTED:
-        break;
-      case NOTIFY_NDEF_DETAILS_REQUEST:
-        handleNdefDetailsRequest();
-        break;
-      case NOTIFY_READ_NDEF:
-        handleReadNdef();
-        break;
-      case NOTIFY_TRANSCEIVE_REQ:
-        handleTransceiveReq(input, length);
-        break;
+//      case NOTIFY_TRANSCEIVE_REQ:
+//        handleTransceiveReq(input, length);
+//        break;
       default:
         break;
     }
   }
+}
+
+// static
+void MessageHandler::processResponse(NfcRequest request, void* data)
+{
+  switch (request) {
+    case NFC_REQUEST_READ_NDEF:
+      handleReadNdefResponse(data);
+      break;
+  }
+}
+
+// static
+void MessageHandler::processNotification(NfcNotification notification, void* data)
+{
+  switch (notification) {
+    case NFC_NOTIFICATION_TECH_DISCOVERED:
+      notifyTechDiscovered(data);
+      break;
+  }
+}
+
+// static
+void MessageHandler::sendResponse(char* data, size_t length)
+{
+  NfcIpcSocket::writeToOutgoingQueue(data, length);
 }
 
 /**
@@ -309,6 +344,7 @@ bool MessageHandler::retrieveMessageType(const char *input, size_t length, unsig
   return ret;
 }
 
+#if 0
 bool MessageHandler::handleWriteNdef(const char *input, size_t length)
 {
   return true;
@@ -323,13 +359,19 @@ bool MessageHandler::handleNdefDetailsRequest()
 {
   return true;
 }
+#endif
 
-bool MessageHandler::handleReadNdef()
+bool MessageHandler::handleReadNdefRequest()
 {
   return NfcService::handleReadNdef();
 }
 
-bool MessageHandler::handleTransceiveReq(const char *input, size_t length)
+bool MessageHandler::handleReadNdefResponse(void* data)
 {
-  return true;
+  return false;
 }
+
+//bool MessageHandler::handleTransceiveReq(const char *input, size_t length)
+//{
+//  return true;
+//}

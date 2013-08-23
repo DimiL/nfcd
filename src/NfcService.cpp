@@ -6,9 +6,10 @@
 #include <semaphore.h>
 #include <stdlib.h>
 
-#include "NfcService.h"
 #include "MessageHandler.h"
 #include "NativeNfcTag.h"
+#include "NfcGonkMessage.h"
+#include "NfcService.h"
 
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
@@ -87,7 +88,7 @@ static void NfcService_MSG_NDEF_TAG(void* pTag)
 {
   ALOGD("NfcService_MSG_NDEF_TAG");
   NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(pTag);
-  MessageHandler::messageNotifyTechDiscovered(pNativeNfcTag);
+  MessageHandler::processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, pNativeNfcTag);
 
   gTag.msg = pNativeNfcTag;
 }
@@ -167,10 +168,11 @@ bool NfcService::handleReadNdef()
   NdefMessage* pNdefMessage = pNativeNfcTag->findAndReadNdef();
 
   if (pNdefMessage != NULL) {
-    MessageHandler::messageNotifyNdefDiscovered(pNdefMessage);
+    MessageHandler::processResponse(NFC_REQUEST_READ_NDEF, pNdefMessage);
+//    MessageHandler::messageNotifyNdefDiscovered(pNdefMessage);
   } else {
     NativeNfcTag::nativeNfcTag_doDisconnect();
-    MessageHandler::messageNotifyNdefDisconnected();
+//    MessageHandler::messageNotifyNdefDisconnected();
   }
  
   while (NativeNfcTag::nativeNfcTag_doPresenceCheck()) {
@@ -180,7 +182,7 @@ bool NfcService::handleReadNdef()
 
   // Tag presence lost.
   NativeNfcTag::nativeNfcTag_doDisconnect();
-  MessageHandler::messageNotifyNdefDisconnected();
+//  MessageHandler::messageNotifyNdefDisconnected();
 
   delete pNdefMessage;
 

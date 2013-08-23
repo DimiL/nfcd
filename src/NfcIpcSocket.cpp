@@ -35,7 +35,7 @@ static pthread_cond_t mWcond;
 static int nfcd_rw;
 
 /**
- * NFC daemon reader Threads:
+ * NFC daemon reader Thread
  * gecko -> nfcd
  * NFC queue from Gecko socket
  * Check incoming queue and process the message
