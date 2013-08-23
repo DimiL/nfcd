@@ -1,6 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include <map>
+#include <string>
 
 #include "MessageHandler.h"
 #include "NfcService.h"
@@ -11,8 +13,7 @@
 #include "NdefRecord.h"
 
 #include <jansson.h>
-#include <map>
-#include <string>
+#include <binder/Parcel.h>
 
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
@@ -155,6 +156,7 @@ void MessageHandler::notifyTechDiscovered(void* data)
 {
 
   NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(data);
+
   json_t *root,*content;
   json_t* jsonTechArray = json_array();
   int i = 0;
@@ -254,34 +256,42 @@ void MessageHandler::messageNotifySecureElementFieldDeactivated()
 // static
 void MessageHandler::processRequest(const char *input, size_t length)
 {
-  unsigned int messageType;
+  Parcel p;
+  unsigned int request, token;
+  status_t status;
 
-  if (retrieveMessageType(input, length, &messageType)) {
-    ALOGI("MessageType: (%d)", messageType);
+  p.setData(input, length);
 
-    switch (messageType) {
-//      case NOTIFY_NDEF_WRITE_REQUEST:
-//        handleWriteNdef(input, length);
-//        break;
-//      case NOTIFY_NDEF_PUSH_REQUEST:
-//        handleNdefPush(input, length);
-//        break;
-//      case NOTIFY_REQUEST_STATUS:
-//      case NOTIFY_NDEF_DISCOVERED:
-//      case NOTIFY_NDEF_DISCONNECTED:
-//        break;
-//      case NOTIFY_NDEF_DETAILS_REQUEST:
-//        handleNdefDetailsRequest();
-//        break;
-      case NFC_REQUEST_READ_NDEF:
-        handleReadNdefRequest();
-        break;
-//      case NOTIFY_TRANSCEIVE_REQ:
-//        handleTransceiveReq(input, length);
-//        break;
-      default:
-        break;
-    }
+  status = p.readInt32(&request);
+  status = p.readInt32(&token);
+
+  if (status != 0) {
+    ALOGE("Invalid request block");
+    return;
+  }
+
+  switch (request) {
+//    case NOTIFY_NDEF_WRITE_REQUEST:
+//      handleWriteNdef(input, length);
+//      break;
+//    case NOTIFY_NDEF_PUSH_REQUEST:
+//      handleNdefPush(input, length);
+//      break;
+//    case NOTIFY_REQUEST_STATUS:
+//    case NOTIFY_NDEF_DISCOVERED:
+//    case NOTIFY_NDEF_DISCONNECTED:
+//      break;
+//    case NOTIFY_NDEF_DETAILS_REQUEST:
+//      handleNdefDetailsRequest();
+//      break;
+    case NFC_REQUEST_READ_NDEF:
+      handleReadNdefRequest();
+      break;
+//    case NOTIFY_TRANSCEIVE_REQ:
+//      handleTransceiveReq(input, length);
+//      break;
+    default:
+      break;
   }
 }
 
@@ -311,39 +321,6 @@ void MessageHandler::sendResponse(char* data, size_t length)
   NfcIpcSocket::writeToOutgoingQueue(data, length);
 }
 
-/**
- * Retrieve Message Type id from JSON data.
- */
-bool MessageHandler::retrieveMessageType(const char *input, size_t length, unsigned int *outTypeId)
-{
-  if (length == 0 && input == NULL)
-    return false;
-
-  bool ret = true;
-  json_error_t error;
-  json_t *root = json_loads(input, 0, &error);
-  json_t *item;
-  char *msgType = NULL;
-  if (!root) {
-    ALOGE("retrieveMessageType: unable to parse input: (%.*s)", length, input);
-    return false;
-  }
-
-  item = json_object_get(root, "type");
-  if (item != NULL && json_is_string(item)) {
-    msgType = (char*)json_string_value(item);
-  }
-
-  if (msgType) {
-    *outTypeId = gMessageTypeMap[msgType];
-  } else {
-    ret = false;
-  }
-  json_decref(root);
-
-  return ret;
-}
-
 #if 0
 bool MessageHandler::handleWriteNdef(const char *input, size_t length)
 {
@@ -363,6 +340,7 @@ bool MessageHandler::handleNdefDetailsRequest()
 
 bool MessageHandler::handleReadNdefRequest()
 {
+  //TODO read SessionId
   return NfcService::handleReadNdef();
 }
 

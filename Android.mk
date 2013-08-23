@@ -76,7 +76,8 @@ LOCAL_SHARED_LIBRARIES += \
     liblog \
     libstlport \
     libcrypto \
-    libjansson 
+    libjansson \
+    libbinder 
 
 ifeq ($(NFC_VENDOR),BROADCOM)
 LOCAL_SHARED_LIBRARIES += \

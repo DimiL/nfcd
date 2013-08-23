@@ -40,7 +40,7 @@ public:
 private:
   MessageHandler();
 
-  static bool retrieveMessageType(const char *input, size_t length, unsigned int *outTypeId);
+//  static bool retrieveMessageType(const char *input, size_t length, unsigned int *outTypeId);
 
 //  static void messageNotifyNdefDiscovered(NdefMessage* ndefMsg);
 //  static void messageNotifyNdefDetails(int maxNdefMsgLength, int state);
