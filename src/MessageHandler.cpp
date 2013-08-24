@@ -11,13 +11,13 @@
 #include "NativeNfcTag.h"
 #include "NdefMessage.h"
 #include "NdefRecord.h"
-
 #include <jansson.h>
-#include <binder/Parcel.h>
 
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
 #include <utils/Log.h>
+
+using android::Parcel;
 
 static std::map<std::string, int> gMessageTypeMap;
 
@@ -188,7 +188,7 @@ void MessageHandler::notifyTechDiscovered(void* data)
   json_decref(root);
 
   if (rendered) {
-    sendResponse(rendered, strlen(rendered));
+    sendResponse((uint8_t*)rendered, strlen(rendered));
   }
 }
 
@@ -254,17 +254,19 @@ void MessageHandler::messageNotifySecureElementFieldDeactivated()
 #endif
 
 // static
-void MessageHandler::processRequest(const char *input, size_t length)
+void MessageHandler::processRequest(const uint8_t* data, size_t length)
 {
-  Parcel p;
-  unsigned int request, token;
-  status_t status;
+  Parcel parcel;
+  int32_t size, request, token;
+  uint32_t status;
 
-  p.setData(input, length);
+  parcel.setData((uint8_t*)data, length);
 
-  status = p.readInt32(&request);
-  status = p.readInt32(&token);
+  status = parcel.readInt32(&size);
+  status = parcel.readInt32(&request);
+  status = parcel.readInt32(&token);
 
+  ALOGD("processRequest size=%u, request=%u, token=%u", size, request, token);
   if (status != 0) {
     ALOGE("Invalid request block");
     return;
@@ -285,7 +287,7 @@ void MessageHandler::processRequest(const char *input, size_t length)
 //      handleNdefDetailsRequest();
 //      break;
     case NFC_REQUEST_READ_NDEF:
-      handleReadNdefRequest();
+      handleReadNdefRequest(parcel);
       break;
 //    case NOTIFY_TRANSCEIVE_REQ:
 //      handleTransceiveReq(input, length);
@@ -298,9 +300,14 @@ void MessageHandler::processRequest(const char *input, size_t length)
 // static
 void MessageHandler::processResponse(NfcRequest request, void* data)
 {
+  Parcel parcel;
+  parcel.writeInt32(NFCC_MESSAGE_RESPONSE);
+  parcel.writeInt32(0); //token
+  parcel.writeInt32(0); //error code
+
   switch (request) {
     case NFC_REQUEST_READ_NDEF:
-      handleReadNdefResponse(data);
+      handleReadNdefResponse(parcel, data);
       break;
   }
 }
@@ -316,7 +323,7 @@ void MessageHandler::processNotification(NfcNotification notification, void* dat
 }
 
 // static
-void MessageHandler::sendResponse(char* data, size_t length)
+void MessageHandler::sendResponse(uint8_t* data, size_t length)
 {
   NfcIpcSocket::writeToOutgoingQueue(data, length);
 }
@@ -338,14 +345,39 @@ bool MessageHandler::handleNdefDetailsRequest()
 }
 #endif
 
-bool MessageHandler::handleReadNdefRequest()
+bool MessageHandler::handleReadNdefRequest(Parcel& parcel)
 {
   //TODO read SessionId
   return NfcService::handleReadNdef();
 }
 
-bool MessageHandler::handleReadNdefResponse(void* data)
+bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
 {
+  NdefMessage* ndef = reinterpret_cast<NdefMessage*>(data);
+  //TODO write SessionId
+  int numRecords = ndef->mRecords.size();
+  parcel.writeInt32(numRecords);
+
+  for (int i = 0; i < numRecords; i++) {
+    NdefRecord &record = ndef->mRecords[i];
+
+    parcel.writeInt32(record.mTnf);
+
+    uint32_t typeLength = record.mType.size();
+    parcel.writeInt32(typeLength);
+//    parcel.write(record.mType, typeLength);
+
+    uint8_t idLength = record.mId.size();
+    parcel.writeInt32(idLength);
+//    parcel.write(record.mId, idLength;
+
+    uint32_t payloadLength = record.mPayload.size();
+    parcel.writeInt32(payloadLength);
+//    parcel.write(record.mPayload, payloadLength);
+  }
+
+  //TODO check when will parcel release data.
+  sendResponse(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
   return false;
 }
 

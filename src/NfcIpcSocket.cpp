@@ -54,7 +54,7 @@ void* NfcIpcSocket::readerThreadFunc(void *arg)
         continue;
       }
 
-      MessageHandler::processRequest(buff.c_str(), buff.size());
+      MessageHandler::processRequest((uint8_t*)buff.c_str(), buff.size());
 
       mIncoming.pop();
     } else {
@@ -212,7 +212,7 @@ void NfcIpcSocket::loop()
       if(fds[0].revents > 0) {
         fds[0].revents = 0;
 
-        char data[MAX_READ_SIZE] = {0};
+        uint8_t data[MAX_READ_SIZE] = {0};
         ssize_t bytes_sent = read(nfcd_rw, data, MAX_READ_SIZE);
         data[bytes_sent] = 0;
         ALOGD("# of bytes to be sent... %d", bytes_sent);
@@ -241,11 +241,11 @@ void NfcIpcSocket::loop()
 
 // Write NFC buffer to Gecko
 // Outgoing queue contain the data should be send to gecko
-void NfcIpcSocket::writeToOutgoingQueue(char *buffer, size_t length) {
+void NfcIpcSocket::writeToOutgoingQueue(uint8_t* buffer, size_t length) {
   pthread_mutex_lock(&mReadMutex);
 
   if (buffer != NULL && length > 0) {
-    mOutgoing.push(std::string(buffer, length));
+    mOutgoing.push(std::string((char*)buffer, length));
     free(buffer);
     pthread_cond_signal(&mRcond);
   }
@@ -255,11 +255,11 @@ void NfcIpcSocket::writeToOutgoingQueue(char *buffer, size_t length) {
 
 // Write Gecko buffer to NFC
 // Incoming queue contains
-void NfcIpcSocket::writeToIncomingQueue(char *buffer, size_t length) {
+void NfcIpcSocket::writeToIncomingQueue(uint8_t* buffer, size_t length) {
   pthread_mutex_lock(&mWriteMutex);
 
   if (buffer != NULL && length > 0) {
-    mIncoming.push(std::string(buffer, length));
+    mIncoming.push(std::string((char*)buffer, length));
     free(buffer);
     pthread_cond_signal(&mWcond);
   }
