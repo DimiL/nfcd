@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include "NfcGonkMessage.h"
+#include <binder/Parcel.h>
 
 //enum {
 //  NOTIFY_NDEF_DISCOVERED = 1,
@@ -33,7 +34,7 @@ class MessageHandler {
 public:
   static void initialize();
 
-  static void processRequest(const char *data, size_t length);
+  static void processRequest(const uint8_t* data, size_t length);
   static void processResponse(NfcRequest request, void* data);
   static void processNotification(NfcNotification notification, void* data);
 
@@ -54,11 +55,11 @@ private:
 //  static bool handleWriteNdef(const char *input, size_t length);
 //  static bool handleNdefPush(const char *input, size_t length);
 //  static bool handleNdefDetailsRequest();
-  static bool handleReadNdefRequest();
-  static bool handleReadNdefResponse(void* data);
+  static bool handleReadNdefRequest(android::Parcel& parcel);
+  static bool handleReadNdefResponse(android::Parcel& parcel, void* data);
 //  static bool handleTransceiveReq(const char *input, size_t length);
 
-  static void sendResponse(char *input, size_t length);
+  static void sendResponse(uint8_t* data, size_t length);
 };
 
 #endif // mozilla_nfcd_MessageHandler_h
