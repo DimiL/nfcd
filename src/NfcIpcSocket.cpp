@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <linux/prctl.h>
 #include <cutils/sockets.h>
+#include <cutils/record_stream.h>
 #include <unistd.h>
 #include <queue>
 #include <string>
@@ -22,9 +23,20 @@
 #include "MessageHandler.h"
 
 #define NFCD_SOCKET_NAME "nfcd"
+#define MAX_COMMAND_BYTES (8 * 1024)
 
-static std::queue<std::string> mOutgoing;
-static std::queue<std::string> mIncoming;
+class Buffer {
+public:
+  Buffer(void* data, size_t dataLen) :
+    mData(data), mDataLen(dataLen) {}
+  size_t size() {return mDataLen;}
+  void* data() {return mData;}
+  void* mData;
+  size_t mDataLen;
+};
+
+static std::queue<Buffer> mOutgoing;
+static std::queue<Buffer> mIncoming;
 
 static pthread_mutex_t mReadMutex;
 static pthread_mutex_t mWriteMutex;
@@ -32,7 +44,7 @@ static pthread_mutex_t mWriteMutex;
 static pthread_cond_t mRcond;
 static pthread_cond_t mWcond;
 
-static int nfcd_rw;
+static int nfcdRw;
 
 /**
  * NFC daemon reader Thread
@@ -46,15 +58,15 @@ void* NfcIpcSocket::readerThreadFunc(void *arg)
     pthread_mutex_lock(&mWriteMutex);
 
     if (!mIncoming.empty()) {
-      std::string buff = mIncoming.front();
+      Buffer buffer = mIncoming.front();
 
-      if (buff.size() == 0) {
-        ALOGI("tag_writerThreadFunc received an empty buffer.");
+      if (buffer.size() == 0) {
+        ALOGI("tag_writerThreadFunc received an empty bufferer.");
         pthread_mutex_unlock(&mWriteMutex);
         continue;
       }
 
-      MessageHandler::processRequest((uint8_t*)buff.c_str(), buff.size());
+      MessageHandler::processRequest((uint8_t*)buffer.data(), buffer.size());
 
       mIncoming.pop();
     } else {
@@ -76,16 +88,16 @@ void* NfcIpcSocket::writerThreadFunc(void *arg)
   while (1) {
     pthread_mutex_lock(&mReadMutex);
     while (!mOutgoing.empty()) {
-      std::string buffer = mOutgoing.front();
+      Buffer buffer = mOutgoing.front();
 
       size_t write_offset = 0;
       size_t len = buffer.size() + 1;
       size_t written = 0;
 
-      ALOGD("Writing %d bytes to gecko (%.*s)", buffer.size(), buffer.size(), buffer.c_str());
+      ALOGD("Writing %d bytes to gecko (%.*s)", buffer.size(), buffer.size(), buffer.data());
       while (write_offset < len) {
         do {
-          written = write (nfcd_rw, buffer.c_str() + write_offset,
+          written = write (nfcdRw, buffer.data() + write_offset,
                            len - write_offset);
         } while (written < 0 && errno == EINTR);
 
@@ -186,15 +198,15 @@ void NfcIpcSocket::loop()
       }
     }
 
-    nfcd_rw = accept(nfcdConn, (struct sockaddr*)&peeraddr, &socklen);
+    nfcdRw = accept(nfcdConn, (struct sockaddr*)&peeraddr, &socklen);
 
-    if (nfcd_rw < 0 ) {
+    if (nfcdRw < 0 ) {
       ALOGE("Error on accept() errno:%d", errno);
       /* start listening for new connections again */
       continue;
     }
 
-    ret = fcntl(nfcd_rw, F_SETFL, O_NONBLOCK);
+    ret = fcntl(nfcdRw, F_SETFL, O_NONBLOCK);
     if (ret < 0) {
       ALOGE ("Error setting O_NONBLOCK errno:%d", errno);
     }
@@ -202,8 +214,10 @@ void NfcIpcSocket::loop()
     ALOGD("Socket connected");
     connected = true;
 
+    RecordStream *rs = record_stream_new(nfcdRw, MAX_COMMAND_BYTES);
+
     struct pollfd fds[1];
-    fds[0].fd = nfcd_rw;
+    fds[0].fd = nfcdRw;
     fds[0].events = POLLIN;
     fds[0].revents = 0;
 
@@ -212,55 +226,48 @@ void NfcIpcSocket::loop()
       if(fds[0].revents > 0) {
         fds[0].revents = 0;
 
-        uint8_t data[MAX_READ_SIZE] = {0};
-        ssize_t bytes_sent = read(nfcd_rw, data, MAX_READ_SIZE);
-        data[bytes_sent] = 0;
-        ALOGD("# of bytes to be sent... %d", bytes_sent);
-        if (bytes_sent <= 0) {
-          if (bytes_sent == -1) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-              // try again....
-              continue;
-            }
-          } else {
-            ALOGE("Failed to read from nfcd socket, closing...");
-            connected = 0;
-            break;
-          }
+        void* data;
+        size_t dataLen;
+        int ret = record_stream_get_next(rs, &data, &dataLen);
+        ALOGD("# of bytes to be sent... %d data=%p ret=%d", dataLen, data, ret);
+        if (ret == 0 && data == NULL) {
+          // end-of-stream
+          break;
+        } else if (ret < 0) {
+          break;
         }
-
-        ALOGD("Received message (%s)", data);
-        writeToIncomingQueue(data, bytes_sent);
+        writeToIncomingQueue((uint8_t*)data, dataLen);
       }
     }
-    close(nfcd_rw);
+    close(nfcdRw);
   }
 
   return;
 }
 
-// Write NFC buffer to Gecko
+// Write NFC data to Gecko
 // Outgoing queue contain the data should be send to gecko
-void NfcIpcSocket::writeToOutgoingQueue(uint8_t* buffer, size_t length) {
+void NfcIpcSocket::writeToOutgoingQueue(uint8_t* data, size_t dataLen) {
+  ALOGD("%s enter, data=%p, dataLen=%d", __func__, data, dataLen);
   pthread_mutex_lock(&mReadMutex);
 
-  if (buffer != NULL && length > 0) {
-    mOutgoing.push(std::string((char*)buffer, length));
-    free(buffer);
+  if (data != NULL && dataLen > 0) {
+    Buffer buffer(data, dataLen);
+    mOutgoing.push(buffer);
     pthread_cond_signal(&mRcond);
   }
   pthread_mutex_unlock(&mReadMutex);
 }
 
-
-// Write Gecko buffer to NFC
+// Write Gecko data to NFC
 // Incoming queue contains
-void NfcIpcSocket::writeToIncomingQueue(uint8_t* buffer, size_t length) {
+void NfcIpcSocket::writeToIncomingQueue(uint8_t* data, size_t dataLen) {
+  ALOGD("%s enter, data=%p, dataLen=%d", __func__, data, dataLen);
   pthread_mutex_lock(&mWriteMutex);
 
-  if (buffer != NULL && length > 0) {
-    mIncoming.push(std::string((char*)buffer, length));
-    free(buffer);
+  if (data != NULL && dataLen > 0) {
+    Buffer buffer(data, dataLen);
+    mIncoming.push(buffer);
     pthread_cond_signal(&mWcond);
   }
   pthread_mutex_unlock(&mWriteMutex);

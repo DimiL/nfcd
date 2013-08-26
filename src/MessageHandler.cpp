@@ -152,11 +152,20 @@ void MessageHandler::messageNotifyNdefDisconnected(const char *message)
 }
 #endif
 
-void MessageHandler::notifyTechDiscovered(void* data)
+void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
 {
 
   NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(data);
 
+  //TODO write SessionId.
+  int numberOfTech = pNativeNfcTag->mTechList.size();
+  parcel.writeInt32(numberOfTech);
+  for (int i = 0; i < numberOfTech; i++) {
+    parcel.writeInt32(pNativeNfcTag->mTechList[i]);
+  }
+  sendResponse(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
+
+#if 0
   json_t *root,*content;
   json_t* jsonTechArray = json_array();
   int i = 0;
@@ -190,6 +199,7 @@ void MessageHandler::notifyTechDiscovered(void* data)
   if (rendered) {
     sendResponse((uint8_t*)rendered, strlen(rendered));
   }
+#endif
 }
 
 #if 0
@@ -257,16 +267,15 @@ void MessageHandler::messageNotifySecureElementFieldDeactivated()
 void MessageHandler::processRequest(const uint8_t* data, size_t length)
 {
   Parcel parcel;
-  int32_t size, request, token;
+  int32_t sizeLe, size, request, token;
   uint32_t status;
 
+  ALOGD("%s enter data=%p, length=%d", __func__, data, length);
   parcel.setData((uint8_t*)data, length);
-
-  status = parcel.readInt32(&size);
   status = parcel.readInt32(&request);
   status = parcel.readInt32(&token);
 
-  ALOGD("processRequest size=%u, request=%u, token=%u", size, request, token);
+  ALOGD("processRequest length=%u, request=%u, token=%u", length, request, token);
   if (status != 0) {
     ALOGE("Invalid request block");
     return;
@@ -315,9 +324,13 @@ void MessageHandler::processResponse(NfcRequest request, void* data)
 // static
 void MessageHandler::processNotification(NfcNotification notification, void* data)
 {
+  Parcel parcel;
+  parcel.writeInt32(NFCC_MESSAGE_NOTIFICATION);
+  parcel.writeInt32(notification);
+
   switch (notification) {
     case NFC_NOTIFICATION_TECH_DISCOVERED:
-      notifyTechDiscovered(data);
+      notifyTechDiscovered(parcel, data);
       break;
   }
 }
@@ -361,19 +374,25 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
   for (int i = 0; i < numRecords; i++) {
     NdefRecord &record = ndef->mRecords[i];
 
-    parcel.writeInt32(record.mTnf);
+    parcel.write(&record.mTnf, 1);
 
     uint32_t typeLength = record.mType.size();
     parcel.writeInt32(typeLength);
-//    parcel.write(record.mType, typeLength);
+    for (int j = 0; j < typeLength; j++) {
+      parcel.write(&record.mType[j], 1);
+    }
 
     uint8_t idLength = record.mId.size();
-    parcel.writeInt32(idLength);
-//    parcel.write(record.mId, idLength;
+    parcel.write(&idLength, 1);
+    for (int j = 0; j < idLength; j++) {
+      parcel.write(&record.mId[j], 1);
+    }
 
     uint32_t payloadLength = record.mPayload.size();
     parcel.writeInt32(payloadLength);
-//    parcel.write(record.mPayload, payloadLength);
+    for (int j = 0; j < payloadLength; j++) {
+      parcel.write(&record.mPayload[j], 1);
+    }
   }
 
   //TODO check when will parcel release data.

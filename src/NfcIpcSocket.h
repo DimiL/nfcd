@@ -19,8 +19,8 @@ public:
   void initialize();
   void loop();
 
-  static void writeToOutgoingQueue(uint8_t *buffer, size_t length);
-  static void writeToIncomingQueue(uint8_t *buffer, size_t length);
+  static void writeToOutgoingQueue(uint8_t *data, size_t dataLen);
+  static void writeToIncomingQueue(uint8_t *data, size_t dataLen);
 
 private:
   NfcIpcSocket();
@@ -30,8 +30,6 @@ private:
 
   timespec mSleep_spec;
   timespec mSleep_spec_rem;
-
-  static const size_t MAX_READ_SIZE = 1 << 10;
 
   static void* writerThreadFunc(void *arg);
   static void* readerThreadFunc(void *arg);
