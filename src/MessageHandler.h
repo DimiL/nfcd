@@ -47,7 +47,7 @@ private:
 //  static void messageNotifyNdefDetails(int maxNdefMsgLength, int state);
 //  static void messageNotifyNdefDisconnected();
 //  static void messageNotifyNdefDisconnected(const char *message);
-  static void notifyTechDiscovered(void* data);
+  static void notifyTechDiscovered(android::Parcel& parcel, void* data);
 //  static void messageNotifyRequestStatus(const char *requestId, int status, char *message);
 //  static void messageNotifySecureElementFieldActivated();
 //  static void messageNotifySecureElementFieldDeactivated();
