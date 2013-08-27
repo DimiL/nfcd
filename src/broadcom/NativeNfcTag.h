@@ -45,6 +45,7 @@ public:
 
   static void nativeNfcTag_doRead (std::vector<uint8_t>& buf);
   static int nativeNfcTag_doCheckNdef (int ndefInfo[]);
+  static bool nativeNfcTag_doWrite (std::vector<uint8_t>& buf);
 
   // mConnectedTechIndex stores to which technology
   // the upper layer stack is connected. Note that

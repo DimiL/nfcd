@@ -770,6 +770,89 @@ TheEnd:
     return (nfaStat == NFA_STATUS_OK) ? true : false;
 }
 
+bool NativeNfcTag::nativeNfcTag_doWrite (std::vector<uint8_t>& buf)
+{
+    bool result = false;
+    tNFA_STATUS status = 0;
+    const int maxBufferSize = 1024;
+    UINT8 buffer[maxBufferSize] = { 0 };
+    UINT32 curDataSize = 0;
+ 
+    uint8_t* p_data = reinterpret_cast<uint8_t*>(malloc(buf.size()));
+    for (uint8_t idx = 0; idx < buf.size(); idx++)
+        p_data[idx] = buf[idx];
+
+    ALOGD ("%s: enter; len = %zu", __FUNCTION__, buf.size());
+
+    /* Create the write semaphore */
+    if (sem_init (&sWriteSem, 0, 0) == -1)
+    {
+        ALOGE ("%s: semaphore creation failed (errno=0x%08x)", __FUNCTION__, errno);
+        free(p_data);
+        return false;
+    }
+
+    sWriteWaitingForComplete = true;
+    if (sCheckNdefStatus == NFA_STATUS_FAILED)
+    {
+        //if tag does not contain a NDEF message
+        //and tag is capable of storing NDEF message
+        if (sCheckNdefCapable)
+        {
+            ALOGD ("%s: try format", __FUNCTION__);
+            sem_init (&sFormatSem, 0, 0);
+            sFormatOk = false;
+            status = NFA_RwFormatTag ();
+            sem_wait (&sFormatSem);
+            sem_destroy (&sFormatSem);
+            if (sFormatOk == false) //if format operation failed
+                goto TheEnd;
+        }
+        ALOGD ("%s: try write", __FUNCTION__);
+        status = NFA_RwWriteNDef (p_data, buf.size());
+    }
+    else if (buf.size() == 0)
+    {
+        //if (NXP TagWriter wants to erase tag) then create and write an empty ndef message
+        NDEF_MsgInit (buffer, maxBufferSize, &curDataSize);
+        status = NDEF_MsgAddRec (buffer, maxBufferSize, &curDataSize, NDEF_TNF_EMPTY, NULL, 0, NULL, 0, NULL, 0);
+        ALOGD ("%s: create empty ndef msg; status=%u; size=%lu", __FUNCTION__, status, curDataSize);
+        status = NFA_RwWriteNDef (buffer, curDataSize);
+    }
+    else
+    {
+        ALOGD ("%s: NFA_RwWriteNDef", __FUNCTION__);
+        status = NFA_RwWriteNDef (p_data, buf.size());
+    }
+
+    if (status != NFA_STATUS_OK)
+    {
+        ALOGE ("%s: write/format error=%d", __FUNCTION__, status);
+        goto TheEnd;
+    }
+
+    /* Wait for write completion status */
+    sWriteOk = false;
+    if (sem_wait (&sWriteSem))
+    {
+        ALOGE ("%s: wait semaphore (errno=0x%08x)", __FUNCTION__, errno);
+        goto TheEnd;
+    }
+
+    result = sWriteOk;
+
+TheEnd:
+    /* Destroy semaphore */
+    if (sem_destroy (&sWriteSem))
+    {
+        ALOGE ("%s: failed destroy semaphore (errno=0x%08x)", __FUNCTION__, errno);
+    }
+    sWriteWaitingForComplete = false;
+    ALOGD ("%s: exit; result=%d", __FUNCTION__, result);
+    free(p_data);
+    return result;
+}
+
 void NativeNfcTag::readNdef(std::vector<uint8_t>& buf) {
     pthread_mutex_lock(&mMutex);
     nativeNfcTag_doRead(buf);
