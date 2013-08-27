@@ -35,7 +35,7 @@ public:
   static void initialize();
 
   static void processRequest(const uint8_t* data, size_t length);
-  static void processResponse(NfcRequest request, void* data);
+  static void processResponse(NfcRequest request, int token, void* data);
   static void processNotification(NfcNotification notification, void* data);
 
 private:
@@ -55,9 +55,10 @@ private:
 //  static bool handleWriteNdef(const char *input, size_t length);
 //  static bool handleNdefPush(const char *input, size_t length);
 //  static bool handleNdefDetailsRequest();
-  static bool handleReadNdefRequest(android::Parcel& parcel);
-  static bool handleConnectRequest(android::Parcel& parcel); 
+  static bool handleReadNdefRequest(android::Parcel& parcel, int token);
+  static bool handleConnectRequest(android::Parcel& parcel, int token); 
   static bool handleReadNdefResponse(android::Parcel& parcel, void* data);
+  static bool handleConnectResponse(android::Parcel& parcel);
 //  static bool handleTransceiveReq(const char *input, size_t length);
 
   static void sendResponse(uint8_t* data, size_t length);

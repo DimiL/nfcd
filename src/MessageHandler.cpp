@@ -296,10 +296,10 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
 //      handleNdefDetailsRequest();
 //      break;
     case NFC_REQUEST_READ_NDEF:
-      handleReadNdefRequest(parcel);
+      handleReadNdefRequest(parcel, token);
       break;
     case NFC_REQUEST_CONNECT:
-      handleConnectRequest(parcel);
+      handleConnectRequest(parcel, token);
       break;
 //    case NOTIFY_TRANSCEIVE_REQ:
 //      handleTransceiveReq(input, dataLen);
@@ -310,16 +310,19 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
 }
 
 // static
-void MessageHandler::processResponse(NfcRequest request, void* data)
+void MessageHandler::processResponse(NfcRequest request, int token, void* data)
 {
   Parcel parcel;
   parcel.writeInt32(NFCC_MESSAGE_RESPONSE);
-  parcel.writeInt32(0); //token
+  parcel.writeInt32(token); //token
   parcel.writeInt32(0); //error code
 
   switch (request) {
     case NFC_REQUEST_READ_NDEF:
       handleReadNdefResponse(parcel, data);
+      break;
+    case NFC_REQUEST_CONNECT:
+      handleConnectResponse(parcel);
       break;
   }
 }
@@ -361,16 +364,17 @@ bool MessageHandler::handleNdefDetailsRequest()
 }
 #endif
 
-bool MessageHandler::handleReadNdefRequest(Parcel& parcel)
+bool MessageHandler::handleReadNdefRequest(Parcel& parcel, int token)
 {
   //TODO read SessionId
-  return NfcService::handleReadNdef();
+  return NfcService::handleReadNdef(token);
 }
 
-bool MessageHandler::handleConnectRequest(Parcel& parcel)
+bool MessageHandler::handleConnectRequest(Parcel& parcel, int token)
 {
   int32_t techType = parcel.readInt32();
   ALOGD("%s techType=%d", __func__, techType);
+  NfcService::handleConnect(techType, token);
   return false;
 }
 
@@ -408,6 +412,12 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
   //TODO check when will parcel release data.
   sendResponse(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
   return false;
+}
+
+bool MessageHandler::handleConnectResponse(Parcel& parcel)
+{
+  sendResponse(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
+  return true;
 }
 
 //bool MessageHandler::handleTransceiveReq(const char *input, size_t length)

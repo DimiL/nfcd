@@ -162,20 +162,21 @@ void NfcService::initialize(NfcManager* pNfcManager)
   sNfcManager = pNfcManager;
 }
 
-int NfcService::handleConnect(int technology)
+int NfcService::handleConnect(int technology, int token)
 {
   NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(sNfcManager->getNativeStruct("NativeNfcTag"));
   int status = pNativeNfcTag->connectWithStatus(technology);
+  MessageHandler::processResponse(NFC_REQUEST_CONNECT, token, NULL);
   return status;
 }
 
-bool NfcService::handleReadNdef()
+bool NfcService::handleReadNdef(int token)
 {
   NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(sNfcManager->getNativeStruct("NativeNfcTag"));
   NdefMessage* pNdefMessage = pNativeNfcTag->findAndReadNdef();
 
   if (pNdefMessage != NULL) {
-    MessageHandler::processResponse(NFC_REQUEST_READ_NDEF, pNdefMessage);
+    MessageHandler::processResponse(NFC_REQUEST_READ_NDEF, token, pNdefMessage);
   } else {
   }
  
