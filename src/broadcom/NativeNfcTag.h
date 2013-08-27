@@ -38,6 +38,7 @@ public:
   int mConnectedHandle;
 
   NdefMessage* findAndReadNdef();
+  int reconnectWithStatus(int technology);
   int connectWithStatus(int technology);
   void readNdef(std::vector<uint8_t>& buf);
   int checkNdefWithStatus(int ndefinfo[]);

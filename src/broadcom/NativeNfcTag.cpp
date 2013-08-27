@@ -185,6 +185,15 @@ NdefMessage* NativeNfcTag::findAndReadNdef()
     return pNdefMsg;
 }
 
+int NativeNfcTag::reconnectWithStatus(int technology)
+{
+  int status = -1;
+  pthread_mutex_lock(&mMutex);
+  status = nativeNfcTag_doConnect(technology);
+  pthread_mutex_unlock(&mMutex);
+  return status;
+}
+
 int NativeNfcTag::connectWithStatus(int technology)
 {
     int status = -1;
@@ -211,8 +220,7 @@ int NativeNfcTag::connectWithStatus(int technology)
                 else {
                     // Connect to a tech with a different handle
                     ALOGE("NfcTag: Connect to a tech with a different handle");
-                    // Mozilla : TODO : Implement reconnect
-                    //status = reconnectWithStatus(i);
+                    status = reconnectWithStatus(i);
                 }
                 if (status == 0) {
                     mConnectedHandle = mTechHandles[i];
@@ -229,12 +237,11 @@ int NativeNfcTag::connectWithStatus(int technology)
                     (technology == TagTechnology::NDEF_FORMATABLE)) {
                     i = 0;
                 }
-                // Mozilla : TODO : Implement reconnect
-                /*
+
                 status = reconnectWithStatus(i);
                 if (status == 0) {
                     mConnectedTechIndex = i;
-                }*/
+                }
             }
             break;
         }

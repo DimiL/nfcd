@@ -1,18 +1,6 @@
-/*
- * Copyright (C) 2012 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  *  Tag-reading, tag-writing operations.
@@ -27,15 +15,6 @@ extern "C"
 }
 
 
-/*******************************************************************************
-**
-** Function:        NfcTag
-**
-** Description:     Initialize member variables.
-**
-** Returns:         None
-**
-*******************************************************************************/
 NfcTag::NfcTag ()
 :   mActivationState (Idle),
     mProtocol(NFC_PROTOCOL_UNKNOWN),
@@ -52,33 +31,12 @@ NfcTag::NfcTag ()
     memset(mLastKovioUid, 0, NFC_KOVIO_MAX_LEN);
 }
 
-
-/*******************************************************************************
-**
-** Function:        getInstance
-**
-** Description:     Get a reference to the singleton NfcTag object.
-**
-** Returns:         Reference to NfcTag object.
-**
-*******************************************************************************/
 NfcTag& NfcTag::getInstance ()
 {
     static NfcTag tag;
     return tag;
 }
 
-
-/*******************************************************************************
-**
-** Function:        initialize
-**
-** Description:     Reset member variables.
-**
-**
-** Returns:         None
-**
-*******************************************************************************/
 void NfcTag::initialize (NfcManager* pNfcManager)
 {
     mNfcManager = pNfcManager;
@@ -91,48 +49,17 @@ void NfcTag::initialize (NfcManager* pNfcManager)
     resetTechnologies ();
 }
 
-
-/*******************************************************************************
-**
-** Function:        abort
-**
-** Description:     Unblock all operations.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void NfcTag::abort ()
 {
     SyncEventGuard g (mReadCompleteEvent);
     mReadCompleteEvent.notifyOne ();
 }
 
-
-/*******************************************************************************
-**
-** Function:        getActivationState
-**
-** Description:     What is the current state: Idle, Sleep, or Activated.
-**
-** Returns:         Idle, Sleep, or Activated.
-**
-*******************************************************************************/
 NfcTag::ActivationState NfcTag::getActivationState ()
 {
     return mActivationState;
 }
 
-
-/*******************************************************************************
-**
-** Function:        setDeactivationState
-**
-** Description:     Set the current state: Idle or Sleep.
-**                  deactivated: state of deactivation.
-**
-** Returns:         None.
-**
-*******************************************************************************/
 void NfcTag::setDeactivationState (tNFA_DEACTIVATED& deactivated)
 {
     static const char fn [] = "NfcTag::setDeactivationState";
@@ -143,16 +70,6 @@ void NfcTag::setDeactivationState (tNFA_DEACTIVATED& deactivated)
     ALOGD ("%s: state=%u", fn, mActivationState);
 }
 
-
-/*******************************************************************************
-**
-** Function:        setActivationState
-**
-** Description:     Set the current state to Active.
-**
-** Returns:         None.
-**
-*******************************************************************************/
 void NfcTag::setActivationState ()
 {
     static const char fn [] = "NfcTag::setActivationState";
@@ -161,30 +78,11 @@ void NfcTag::setActivationState ()
     ALOGD ("%s: state=%u", fn, mActivationState);
 }
 
-
-/*******************************************************************************
-**
-** Function:        getProtocol
-**
-** Description:     Get the protocol of the current tag.
-**
-** Returns:         Protocol number.
-**
-*******************************************************************************/
 tNFC_PROTOCOL NfcTag::getProtocol()
 {
     return mProtocol;
 }
 
-/*******************************************************************************
-**
-** Function         TimeDiff
-**
-** Description      Computes time difference in milliseconds.
-**
-** Returns          Time difference in milliseconds
-**
-*******************************************************************************/
 UINT32 TimeDiff(timespec start, timespec end)
 {
     timespec temp;
@@ -202,19 +100,6 @@ UINT32 TimeDiff(timespec start, timespec end)
     return (temp.tv_sec * 1000) + (temp.tv_nsec / 1000000);
 }
 
-/*******************************************************************************
-**
-** Function:        IsSameKovio
-**
-** Description:     Checks if tag activate is the same (UID) Kovio tag previously
-**                  activated.  This is needed due to a problem with some Kovio
-**                  tags re-activating multiple times.
-**                  activationData: data from activation.
-**
-** Returns:         true if the activation is from the same tag previously
-**                  activated, false otherwise
-**
-*******************************************************************************/
 bool NfcTag::IsSameKovio(tNFA_ACTIVATED& activationData)
 {
     static const char fn [] = "NfcTag::IsSameKovio";
@@ -257,17 +142,6 @@ bool NfcTag::IsSameKovio(tNFA_ACTIVATED& activationData)
     return rVal;
 }
 
-/*******************************************************************************
-**
-** Function:        discoverTechnologies
-**
-** Description:     Discover the technologies that NFC service needs by interpreting
-**                  the data strucutures from the stack.
-**                  activationData: data from activation.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void NfcTag::discoverTechnologies (tNFA_ACTIVATED& activationData)
 {
     static const char fn [] = "NfcTag::discoverTechnologies (activation)";
@@ -368,18 +242,6 @@ void NfcTag::discoverTechnologies (tNFA_ACTIVATED& activationData)
     ALOGD ("%s: exit", fn);
 }
 
-
-/*******************************************************************************
-**
-** Function:        discoverTechnologies
-**
-** Description:     Discover the technologies that NFC service needs by interpreting
-**                  the data strucutures from the stack.
-**                  discoveryData: data from discovery events(s).
-**
-** Returns:         None
-**
-*******************************************************************************/
 void NfcTag::discoverTechnologies (tNFA_DISC_RESULT& discoveryData)
 {
     static const char fn [] = "NfcTag::discoverTechnologies (discovery)";
@@ -475,19 +337,6 @@ TheEnd:
     ALOGD ("%s: exit", fn);
 }
 
-
-/*******************************************************************************
-**
-** Function:        createNativeNfcTag
-**
-** Description:     Create a brand new Java NativeNfcTag object;
-**                  fill the objects's member variables with data;
-**                  notify NFC service;
-**                  activationData: data from activation.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void NfcTag::createNativeNfcTag (tNFA_ACTIVATED& activationData)
 {
     static const char fn [] = "NfcTag::createNativeNfcTag";
@@ -523,19 +372,6 @@ void NfcTag::createNativeNfcTag (tNFA_ACTIVATED& activationData)
     ALOGD ("%s: exit", fn);
 }
 
-
-/*******************************************************************************
-**
-** Function:        fillNativeNfcTagMembers1
-**
-** Description:     Fill NativeNfcTag's members: mProtocols, mTechList, mTechHandles, mTechLibNfcTypes.
-**                  e: JVM environment.
-**                  tag_cls: Java NativeNfcTag class.
-**                  tag: Java NativeNfcTag object.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void NfcTag::fillNativeNfcTagMembers1 (NativeNfcTag* pNativeNfcTag)
 {
     static const char fn [] = "NfcTag::fillNativeNfcTagMembers1";
@@ -552,22 +388,6 @@ void NfcTag::fillNativeNfcTagMembers1 (NativeNfcTag* pNativeNfcTag)
    }   
 }
 
-
-/*******************************************************************************
-**
-** Function:        fillNativeNfcTagMembers2
-**
-** Description:     Fill NativeNfcTag's members: mConnectedTechIndex or mConnectedTechnology.
-**                  The original Google's implementation is in set_target_pollBytes(
-**                  in com_android_nfc_NativeNfcTag.cpp;
-**                  e: JVM environment.
-**                  tag_cls: Java NativeNfcTag class.
-**                  tag: Java NativeNfcTag object.
-**                  activationData: data from activation.
-**
-** Returns:         None
-**
-*******************************************************************************/
 //fill NativeNfcTag's members: mHandle, mConnectedTechnology
 void NfcTag::fillNativeNfcTagMembers2 (NativeNfcTag* pNativeNfcTag)
 {
@@ -577,22 +397,6 @@ void NfcTag::fillNativeNfcTagMembers2 (NativeNfcTag* pNativeNfcTag)
     pNativeNfcTag->mConnectedTechIndex = 0;
 }
 
-
-/*******************************************************************************
-**
-** Function:        fillNativeNfcTagMembers3
-**
-** Description:     Fill NativeNfcTag's members: mTechPollBytes.
-**                  The original Google's implementation is in set_target_pollBytes(
-**                  in com_android_nfc_NativeNfcTag.cpp;
-**                  e: JVM environment.
-**                  tag_cls: Java NativeNfcTag class.
-**                  tag: Java NativeNfcTag object.
-**                  activationData: data from activation.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void NfcTag::fillNativeNfcTagMembers3 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVATED& activationData)
 {
     static const char fn [] = "NfcTag::fillNativeNfcTagMembers3";
@@ -702,22 +506,6 @@ void NfcTag::fillNativeNfcTagMembers3 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVAT
 
 }
 
-
-/*******************************************************************************
-**
-** Function:        fillNativeNfcTagMembers4
-**
-** Description:     Fill NativeNfcTag's members: mTechActBytes.
-**                  The original Google's implementation is in set_target_activationBytes()
-**                  in com_android_nfc_NativeNfcTag.cpp;
-**                  e: JVM environment.
-**                  tag_cls: Java NativeNfcTag class.
-**                  tag: Java NativeNfcTag object.
-**                  activationData: data from activation.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void NfcTag::fillNativeNfcTagMembers4 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVATED& activationData)
 {
     static const char fn [] = "NfcTag::fillNativeNfcTagMembers4";
@@ -842,22 +630,6 @@ void NfcTag::fillNativeNfcTagMembers4 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVAT
     } //for: every technology in the array
 }
 
-
-/*******************************************************************************
-**
-** Function:        fillNativeNfcTagMembers5
-**
-** Description:     Fill NativeNfcTag's members: mUid.
-**                  The original Google's implementation is in nfc_jni_Discovery_notification_callback()
-**                  in com_android_nfc_NfcManager.cpp;
-**                  e: JVM environment.
-**                  tag_cls: Java NativeNfcTag class.
-**                  tag: Java NativeNfcTag object.
-**                  activationData: data from activation.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void NfcTag::fillNativeNfcTagMembers5 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVATED& activationData)
 {
     static const char fn [] = "NfcTag::fillNativeNfcTagMembers5";
@@ -931,16 +703,6 @@ void NfcTag::fillNativeNfcTagMembers5 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVAT
     pNativeNfcTag->mUid.push_back(uid);
 }
 
-
-/*******************************************************************************
-**
-** Function:        isP2pDiscovered
-**
-** Description:     Does the peer support P2P?
-**
-** Returns:         True if the peer supports P2P.
-**
-*******************************************************************************/
 bool NfcTag::isP2pDiscovered ()
 {
     static const char fn [] = "NfcTag::isP2pDiscovered";
@@ -960,16 +722,6 @@ bool NfcTag::isP2pDiscovered ()
     return retval;
 }
 
-
-/*******************************************************************************
-**
-** Function:        selectP2p
-**
-** Description:     Select the preferred P2P technology if there is a choice.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void NfcTag::selectP2p()
 {
     static const char fn [] = "NfcTag::selectP2p";
@@ -1010,16 +762,6 @@ void NfcTag::selectP2p()
     resetTechnologies ();
 }
 
-
-/*******************************************************************************
-**
-** Function:        resetTechnologies
-**
-** Description:     Clear all data related to the technology, protocol of the tag.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void NfcTag::resetTechnologies ()
 {
     static const char fn [] = "NfcTag::resetTechnologies";
@@ -1031,16 +773,6 @@ void NfcTag::resetTechnologies ()
     memset (mTechParams, 0, sizeof(mTechParams));
 }
 
-
-/*******************************************************************************
-**
-** Function:        selectFirstTag
-**
-** Description:     When multiple tags are discovered, just select the first one to activate.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void NfcTag::selectFirstTag ()
 {
     static const char fn [] = "NfcTag::selectFirstTag";
@@ -1062,16 +794,6 @@ void NfcTag::selectFirstTag ()
         ALOGE ("%s: fail select; error=0x%X", fn, stat);
 }
 
-
-/*******************************************************************************
-**
-** Function:        getT1tMaxMessageSize
-**
-** Description:     Get the maximum size (octet) that a T1T can store.
-**
-** Returns:         Maximum size in octets.
-**
-*******************************************************************************/
 int NfcTag::getT1tMaxMessageSize ()
 {
     static const char fn [] = "NfcTag::getT1tMaxMessageSize";
@@ -1084,17 +806,6 @@ int NfcTag::getT1tMaxMessageSize ()
     return mtT1tMaxMessageSize;
 }
 
-
-/*******************************************************************************
-**
-** Function:        calculateT1tMaxMessageSize
-**
-** Description:     Calculate type-1 tag's max message size based on header ROM bytes.
-**                  activate: reference to activation data.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void NfcTag::calculateT1tMaxMessageSize (tNFA_ACTIVATED& activate)
 {
     static const char fn [] = "NfcTag::calculateT1tMaxMessageSize";
@@ -1122,16 +833,6 @@ void NfcTag::calculateT1tMaxMessageSize (tNFA_ACTIVATED& activate)
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        isMifareUltralight
-**
-** Description:     Whether the currently activated tag is Mifare Ultralight.
-**
-** Returns:         True if tag is Mifare Ultralight.
-**
-*******************************************************************************/
 bool NfcTag::isMifareUltralight ()
 {
     static const char fn [] = "NfcTag::isMifareUltralight";
@@ -1169,20 +870,6 @@ bool NfcTag::isMifareUltralight ()
     return retval;
 }
 
-
-/*******************************************************************************
-**
-** Function:        isT2tNackResponse
-**
-** Description:     Whether the response is a T2T NACK response.
-**                  See NFC Digital Protocol Technical Specification (2010-11-17).
-**                  Chapter 9 (Type 2 Tag Platform), section 9.6 (READ).
-**                  response: buffer contains T2T response.
-**                  responseLen: length of the response.
-**
-** Returns:         True if the response is NACK
-**
-*******************************************************************************/
 bool NfcTag::isT2tNackResponse (const UINT8* response, UINT32 responseLen)
 {
     static const char fn [] = "NfcTag::isT2tNackResponse";
@@ -1199,33 +886,11 @@ bool NfcTag::isT2tNackResponse (const UINT8* response, UINT32 responseLen)
     return isNack;
 }
 
-
-/*******************************************************************************
-**
-** Function:        isNdefDetectionTimedOut
-**
-** Description:     Whether NDEF-detection algorithm timed out.
-**
-** Returns:         True if NDEF-detection algorithm timed out.
-**
-*******************************************************************************/
 bool NfcTag::isNdefDetectionTimedOut ()
 {
     return mNdefDetectionTimedOut;
 }
 
-
-/*******************************************************************************
-**
-** Function:        connectionEventHandler
-**
-** Description:     Handle connection-related events.
-**                  event: event code.
-**                  data: pointer to event data.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void NfcTag::connectionEventHandler (UINT8 event, tNFA_CONN_EVT_DATA* data)
 {
     static const char fn [] = "NfcTag::connectionEventHandler";
