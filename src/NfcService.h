@@ -25,6 +25,7 @@ public:
   static void nfc_service_send_MSG_SE_FIELD_DEACTIVATED();
   static void nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS();
 
+  static bool handleDisconnect();
   static int handleConnect(int technology);
   static bool handleReadNdef();
 

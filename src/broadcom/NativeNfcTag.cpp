@@ -189,6 +189,21 @@ NdefMessage* NativeNfcTag::findAndReadNdef()
     return pNdefMsg;
 }
 
+bool NativeNfcTag::disconnect()
+{
+  bool result = false;
+
+  mIsPresent = false;
+
+  pthread_mutex_lock(&mMutex);
+  result = nativeNfcTag_doDisconnect();
+  pthread_mutex_unlock(&mMutex);
+
+  mConnectedTechIndex = -1;
+  mConnectedHandle = -1;
+  return result;
+}
+
 int NativeNfcTag::reconnectWithStatus(int technology)
 {
   int status = -1;

@@ -42,6 +42,7 @@ public:
   int connectWithStatus(int technology);
   void readNdef(std::vector<uint8_t>& buf);
   int checkNdefWithStatus(int ndefinfo[]);
+  bool disconnect();  
 
   static void nativeNfcTag_doRead (std::vector<uint8_t>& buf);
   static int nativeNfcTag_doCheckNdef (int ndefInfo[]);

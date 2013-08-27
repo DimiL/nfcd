@@ -162,6 +162,13 @@ void NfcService::initialize(NfcManager* pNfcManager)
   sNfcManager = pNfcManager;
 }
 
+bool NfcService::handleDisconnect()
+{
+  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(sNfcManager->getNativeStruct("NativeNfcTag"));
+  bool result = pNativeNfcTag->disconnect();
+  return result;
+}
+
 int NfcService::handleConnect(int technology)
 {
   NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(sNfcManager->getNativeStruct("NativeNfcTag"));
