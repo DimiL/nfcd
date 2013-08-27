@@ -264,18 +264,18 @@ void MessageHandler::messageNotifySecureElementFieldDeactivated()
 #endif
 
 // static
-void MessageHandler::processRequest(const uint8_t* data, size_t length)
+void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
 {
   Parcel parcel;
   int32_t sizeLe, size, request, token;
   uint32_t status;
 
-  ALOGD("%s enter data=%p, length=%d", __func__, data, length);
-  parcel.setData((uint8_t*)data, length);
+  ALOGD("%s enter data=%p, dataLen=%d", __func__, data, dataLen);
+  parcel.setData((uint8_t*)data, dataLen);
   status = parcel.readInt32(&request);
   status = parcel.readInt32(&token);
 
-  ALOGD("processRequest length=%u, request=%u, token=%u", length, request, token);
+  ALOGD("processRequest dataLen=%u, request=%u, token=%u", dataLen, request, token);
   if (status != 0) {
     ALOGE("Invalid request block");
     return;
@@ -283,10 +283,10 @@ void MessageHandler::processRequest(const uint8_t* data, size_t length)
 
   switch (request) {
 //    case NOTIFY_NDEF_WRITE_REQUEST:
-//      handleWriteNdef(input, length);
+//      handleWriteNdef(input, dataLen);
 //      break;
 //    case NOTIFY_NDEF_PUSH_REQUEST:
-//      handleNdefPush(input, length);
+//      handleNdefPush(input, dataLen);
 //      break;
 //    case NOTIFY_REQUEST_STATUS:
 //    case NOTIFY_NDEF_DISCOVERED:
@@ -298,8 +298,11 @@ void MessageHandler::processRequest(const uint8_t* data, size_t length)
     case NFC_REQUEST_READ_NDEF:
       handleReadNdefRequest(parcel);
       break;
+    case NFC_REQUEST_CONNECT:
+      handleConnectRequest(parcel);
+      break;
 //    case NOTIFY_TRANSCEIVE_REQ:
-//      handleTransceiveReq(input, length);
+//      handleTransceiveReq(input, dataLen);
 //      break;
     default:
       break;
@@ -336,9 +339,9 @@ void MessageHandler::processNotification(NfcNotification notification, void* dat
 }
 
 // static
-void MessageHandler::sendResponse(uint8_t* data, size_t length)
+void MessageHandler::sendResponse(uint8_t* data, size_t dataLen)
 {
-  NfcIpcSocket::writeToOutgoingQueue(data, length);
+  NfcIpcSocket::writeToOutgoingQueue(data, dataLen);
 }
 
 #if 0
@@ -362,6 +365,13 @@ bool MessageHandler::handleReadNdefRequest(Parcel& parcel)
 {
   //TODO read SessionId
   return NfcService::handleReadNdef();
+}
+
+bool MessageHandler::handleConnectRequest(Parcel& parcel)
+{
+  int32_t techType = parcel.readInt32();
+  ALOGD("%s techType=%d", __func__, techType);
+  return false;
 }
 
 bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
