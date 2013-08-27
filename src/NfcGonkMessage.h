@@ -97,7 +97,7 @@ typedef struct {
 
   //TODO : For Short Record, length is only 1 byte.
   uint32_t payloadLength;
-  uint8_t payload;
+  uint8_t* payload;
 } NdefRecordPdu;
 
 /**
