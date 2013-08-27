@@ -90,23 +90,23 @@ void* NfcIpcSocket::writerThreadFunc(void *arg)
     while (!mOutgoing.empty()) {
       Buffer buffer = mOutgoing.front();
 
-      size_t write_offset = 0;
-      size_t len = buffer.size() + 1;
+      size_t writeOffset = 0;
+      size_t len = buffer.size();
       size_t written = 0;
 
       //TODO update this
       size_t size = __builtin_bswap32(buffer.size());
       write(nfcdRw, (void*)&size, sizeof(uint32_t));
 
-      ALOGD("Writing %d bytes to gecko (%.*s) sizeof(size_t)=%d", buffer.size(), buffer.size(), buffer.data(), sizeof(size_t));
-      while (write_offset < len) {
+      ALOGD("Writing %d bytes to gecko ", buffer.size());
+      while (writeOffset < len) {
         do {
-          written = write (nfcdRw, buffer.data() + write_offset,
-                           len - write_offset);
+          written = write (nfcdRw, buffer.data() + writeOffset,
+                           len - writeOffset);
         } while (written < 0 && errno == EINTR);
 
         if (written >= 0) {
-          write_offset += written;
+          writeOffset += written;
         } else {
           ALOGE("Response: unexpected error on write errno:%d", errno);
           break;
