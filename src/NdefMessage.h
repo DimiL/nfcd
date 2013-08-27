@@ -11,9 +11,9 @@
 class NdefMessage{
 public:
   NdefMessage();
-  NdefMessage(std::vector<uint8_t>& buf);
-
   ~NdefMessage();
+
+  bool init(std::vector<uint8_t>& buf);
 
   std::vector<NdefRecord> mRecords;
 };

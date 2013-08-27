@@ -20,7 +20,7 @@ NdefRecord::~NdefRecord()
 {
 }
 
-void NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<NdefRecord>& records)
+bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<NdefRecord>& records)
 {
   std::vector<uint8_t> type;
   std::vector<uint8_t> id;
@@ -43,22 +43,22 @@ void NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
 
     if (!mb && records.size() == 0 && !inChunk && !ignoreMbMe) {
       ALOGE("expected MB flag");
-      return;
+      return false;
     } else if (mb && records.size() != 0 && !ignoreMbMe) {
       ALOGE("unexpected MB flag");
-      return;
+      return false;
     } else if (inChunk && il) {
       ALOGE("unexpected IL flag in non-leading chunk");
-      return;
+      return false;
     } else if (cf && me) {
       ALOGE("unexpected ME flag in non-trailing chunk");
-      return;
+      return false ;
     } else if (inChunk && tnf != NdefRecord::TNF_UNCHANGED) {
       ALOGE("expected TNF_UNCHANGED in non-leading chunk");
-      return;
+      return false ;
     } else if (!inChunk && tnf == NdefRecord::TNF_UNCHANGED) {
       ALOGE("unexpected TNF_UNCHANGED in first chunk or unchunked record");
-      return;
+      return false;
     }
 
     uint32_t typeLength = buf[index++] & 0xFF;
@@ -76,7 +76,7 @@ void NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
 
     if (inChunk && typeLength != 0) {
       ALOGE("expected zero-length type in non-leading chunk");
-      return;
+      return false;
     }
 
     if (!inChunk) {
@@ -89,7 +89,7 @@ void NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
     }
 
     if (!ensureSanePayloadSize(payloadLength)) {
-      return;
+      return false;
     }
 
     for (uint32_t idx = 0; idx < payloadLength; idx++) {
@@ -112,7 +112,7 @@ void NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
         payloadLength += chunks[idx].size();
       }
       if (!ensureSanePayloadSize(payloadLength)) {
-        return;
+        return false;
       }
 
       for(uint32_t i = 0; i < chunks.size(); i++) {
@@ -132,7 +132,7 @@ void NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
 
     bool isValid = validateTnf(tnf, type, id, payload);
     if (isValid == false) {
-      return;
+      return false;
     }
 
     NdefRecord record(tnf, type, id, payload);
@@ -142,7 +142,7 @@ void NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
       break;
     }
   }
-  return;
+  return true;
 }
 
 bool NdefRecord::ensureSanePayloadSize(long size)

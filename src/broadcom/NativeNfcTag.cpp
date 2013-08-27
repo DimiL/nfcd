@@ -168,10 +168,14 @@ NdefMessage* NativeNfcTag::findAndReadNdef()
         std::vector<uint8_t> buf;
         readNdef(buf);
         if (buf.size() != 0) {
-            pNdefMsg = new NdefMessage(buf);
-            // Mozilla : TODO : Implement addNdefTechnology and reconnt
-            // addNdefTechnology
-            // reconnect();
+            pNdefMsg = new NdefMessage();
+            if (pNdefMsg->init(buf)) {
+                // TODO : Implement addNdefTechnology and reconnt
+                // addNdefTechnology
+                // reconnect();
+            } else {
+                generateEmptyNdef = true;
+            }
         } else {
             generateEmptyNdef = true;
         }
@@ -219,7 +223,7 @@ int NativeNfcTag::connectWithStatus(int technology)
                 }
                 else {
                     // Connect to a tech with a different handle
-                    ALOGE("NfcTag: Connect to a tech with a different handle");
+                    ALOGD("NfcTag: Connect to a tech with a different handle");
                     status = reconnectWithStatus(i);
                 }
                 if (status == 0) {
@@ -421,6 +425,24 @@ void NativeNfcTag::nativeNfcTag_abortWaits ()
     sem_post (&sCheckNdefSem);
     sem_post (&sPresenceCheckSem);
     sem_post (&sMakeReadonlySem);
+}
+
+void NativeNfcTag::nativeNfcTag_doReadCompleted (tNFA_STATUS status)
+{
+    ALOGD ("%s: status=0x%X; is reading=%u", __FUNCTION__, status, sIsReadingNdefMessage);
+
+    if (sIsReadingNdefMessage == false)
+        return; //not reading NDEF message right now, so just return
+
+    if (status != NFA_STATUS_OK)
+    {
+        sReadDataLen = 0;
+        if (sReadData)
+            free (sReadData);
+        sReadData = NULL;
+    }
+    SyncEventGuard g (sReadEvent);
+    sReadEvent.notifyOne ();
 }
 
 void NativeNfcTag::nativeNfcTag_doConnectStatus (bool isConnectOk)

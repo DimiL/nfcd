@@ -23,7 +23,7 @@ public:
   NdefRecord(uint16_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload);
   ~NdefRecord();
 
-  static void parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<NdefRecord>& records);
+  static bool parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<NdefRecord>& records);
   static bool ensureSanePayloadSize(long size);
   static bool validateTnf(uint16_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload);
 

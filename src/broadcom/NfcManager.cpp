@@ -546,6 +546,8 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
 
     case NFA_READ_CPLT_EVT: // NDEF-read or tag-specific-read completed
         ALOGD("%s: NFA_READ_CPLT_EVT: status = 0x%X", __FUNCTION__, eventData->status);
+        NativeNfcTag::nativeNfcTag_doReadCompleted (eventData->status);
+        NfcTag::getInstance().connectionEventHandler (connEvent, eventData);
         break;
 
     case NFA_WRITE_CPLT_EVT: // Write completed
