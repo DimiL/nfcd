@@ -4,7 +4,7 @@
 #define LOG_TAG "nfcd"
 #include <utils/Log.h>
 
-NdefRecord::NdefRecord(uint16_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload)
+NdefRecord::NdefRecord(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload)
 {
   mTnf = tnf;
   
@@ -27,7 +27,7 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
   std::vector<uint8_t> payload;
   bool inChunk = false;
   std::vector<std::vector<uint8_t> > chunks;
-  uint16_t chunkTnf = -1;
+  uint8_t chunkTnf = -1;
   bool me = false;
   uint32_t index = 0;
 
@@ -39,7 +39,7 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
     bool cf = (flag & NdefRecord::FLAG_CF) != 0;
     bool sr = (flag & NdefRecord::FLAG_SR) != 0;
     bool il = (flag & NdefRecord::FLAG_IL) != 0;
-    uint16_t tnf = (uint16_t)(flag & 0x07);
+    uint8_t tnf = flag & 0x07;
 
     if (!mb && records.size() == 0 && !inChunk && !ignoreMbMe) {
       ALOGE("expected MB flag");
@@ -155,7 +155,7 @@ bool NdefRecord::ensureSanePayloadSize(long size)
 }
 
 
-bool NdefRecord::validateTnf(uint16_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload)
+bool NdefRecord::validateTnf(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload)
 {
   bool isValid = true;
   switch (tnf) {

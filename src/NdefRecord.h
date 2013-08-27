@@ -10,25 +10,25 @@
 class NdefRecord {
 
 public:
-  static const uint16_t TNF_EMPTY = 0x00;
-  static const uint16_t TNF_WELL_KNOWN = 0x01;
-  static const uint16_t TNF_MIME_MEDIA = 0x02;
-  static const uint16_t TNF_ABSOLUTE_URI = 0x03;
-  static const uint16_t TNF_EXTERNAL_TYPE = 0x04;
-  static const uint16_t TNF_UNKNOWN = 0x05;
-  static const uint16_t TNF_UNCHANGED = 0x06;
-  static const uint16_t TNF_RESERVED = 0x07;
+  static const uint8_t TNF_EMPTY = 0x00;
+  static const uint8_t TNF_WELL_KNOWN = 0x01;
+  static const uint8_t TNF_MIME_MEDIA = 0x02;
+  static const uint8_t TNF_ABSOLUTE_URI = 0x03;
+  static const uint8_t TNF_EXTERNAL_TYPE = 0x04;
+  static const uint8_t TNF_UNKNOWN = 0x05;
+  static const uint8_t TNF_UNCHANGED = 0x06;
+  static const uint8_t TNF_RESERVED = 0x07;
 
   NdefRecord();
-  NdefRecord(uint16_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload);
+  NdefRecord(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload);
   ~NdefRecord();
 
   static bool parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<NdefRecord>& records);
   static bool ensureSanePayloadSize(long size);
-  static bool validateTnf(uint16_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload);
+  static bool validateTnf(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload);
 
   uint8_t mFlags;
-  uint16_t mTnf;
+  uint8_t mTnf;
   std::vector<uint8_t> mType;
   std::vector<uint8_t> mId;
   std::vector<uint8_t> mPayload;
