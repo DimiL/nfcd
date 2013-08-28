@@ -43,6 +43,7 @@ public:
   void readNdef(std::vector<uint8_t>& buf);
   int checkNdefWithStatus(int ndefinfo[]);
   bool disconnect();  
+  bool presenceCheck();
 
   static void nativeNfcTag_doRead (std::vector<uint8_t>& buf);
   static int nativeNfcTag_doCheckNdef (int ndefInfo[]);
@@ -66,6 +67,8 @@ public:
   static void nativeNfcTag_doDeactivateStatus (int status);
   static int nativeNfcTag_doConnect (int targetHandle);
   static void nativeNfcTag_resetPresenceCheck ();
+  static void nativeNfcTag_doPresenceCheckResult (tNFA_STATUS status);
+
   static void nativeNfcTag_doCheckNdefResult (tNFA_STATUS status, uint32_t maxSize, uint32_t currentSize, uint8_t flags);
   static void nativeNfcTag_registerNdefTypeHandler ();
   static void nativeNfcTag_deregisterNdefTypeHandler ();

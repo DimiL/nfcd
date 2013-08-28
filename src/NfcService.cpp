@@ -91,6 +91,11 @@ static void NfcService_MSG_NDEF_TAG(void* pTag)
   MessageHandler::processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, pNativeNfcTag);
 
   gTag.msg = pNativeNfcTag;
+
+  // TODO : check if check tag presence here is correct
+  while (pNativeNfcTag->presenceCheck()) {
+    sleep(1);
+  }
 }
 
 static void *serviceThreadFunc(void *arg)

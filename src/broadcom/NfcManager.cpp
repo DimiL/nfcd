@@ -595,6 +595,7 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
 
     case NFA_PRESENCE_CHECK_EVT:
         ALOGD("%s: NFA_PRESENCE_CHECK_EVT", __FUNCTION__);
+        NativeNfcTag::nativeNfcTag_doPresenceCheckResult (eventData->status);
         break;
 
     case NFA_FORMAT_CPLT_EVT:
