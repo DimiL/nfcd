@@ -484,6 +484,17 @@ void NativeNfcTag::nativeNfcTag_resetPresenceCheck ()
     sCountTagAway = 0;
 }
 
+void NativeNfcTag::nativeNfcTag_doPresenceCheckResult (tNFA_STATUS status)
+{
+    if (status == NFA_STATUS_OK)
+        sCountTagAway = 0;
+    else
+        sCountTagAway++;
+    if (sCountTagAway > 0)
+        ALOGD ("%s: sCountTagAway=%d", __FUNCTION__, sCountTagAway);
+    sem_post (&sPresenceCheckSem);
+}
+
 void NativeNfcTag::nativeNfcTag_doCheckNdefResult (tNFA_STATUS status, uint32_t maxSize, uint32_t currentSize, uint8_t flags)
 {
     //this function's flags parameter is defined using the following macros
@@ -887,6 +898,14 @@ TheEnd:
     sWriteWaitingForComplete = false;
     ALOGD ("%s: exit; result=%d", __FUNCTION__, result);
     free(p_data);
+    return result;
+}
+
+bool NativeNfcTag::presenceCheck() {
+    bool result;
+    pthread_mutex_lock(&mMutex);
+    result = nativeNfcTag_doPresenceCheck();
+    pthread_mutex_unlock(&mMutex);
     return result;
 }
 
