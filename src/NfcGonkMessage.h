@@ -87,17 +87,16 @@ typedef enum {
  * @see NFCForum-TS-NDEF, clause 3.2
  */
 typedef struct {
-  uint8_t tnf;
+  uint32_t tnf;
 
   uint32_t typeLength;
-  uint8_t* type;
+  uint32_t* type;
 
-  uint8_t idLength;
-  uint8_t* id;
+  uint32_t idLength;
+  uint32_t* id;
 
-  //TODO : For Short Record, length is only 1 byte.
   uint32_t payloadLength;
-  uint8_t* payload;
+  uint32_t* payload;
 } NdefRecordPdu;
 
 /**

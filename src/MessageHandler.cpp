@@ -388,24 +388,31 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
   for (int i = 0; i < numRecords; i++) {
     NdefRecord &record = ndef->mRecords[i];
 
-    parcel.write(&record.mTnf, 1);
+    ALOGD("tnf=%u",record.mTnf);
+    parcel.writeInt32(record.mTnf);
 
     uint32_t typeLength = record.mType.size();
+    ALOGD("typeLength=%u",typeLength);
     parcel.writeInt32(typeLength);
     for (int j = 0; j < typeLength; j++) {
-      parcel.write(&record.mType[j], 1);
+      ALOGD("mType %d = %u", j, record.mType[j]);
+      parcel.writeInt32(record.mType[j]);
     }
 
     uint8_t idLength = record.mId.size();
-    parcel.write(&idLength, 1);
+    ALOGD("idLength=%d",idLength);
+    parcel.writeInt32(idLength);
     for (int j = 0; j < idLength; j++) {
-      parcel.write(&record.mId[j], 1);
+      ALOGD("mId %d = %u", j, record.mId[j]);
+      parcel.writeInt32(record.mId[j]);
     }
 
     uint32_t payloadLength = record.mPayload.size();
+    ALOGD("payloadLength=%d",payloadLength);
     parcel.writeInt32(payloadLength);
     for (int j = 0; j < payloadLength; j++) {
-      parcel.write(&record.mPayload[j], 1);
+      ALOGD("mPayload %d = %u", j, record.mPayload[j]);
+      parcel.writeInt32(record.mPayload[j]);
     }
   }
 
