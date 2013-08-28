@@ -93,9 +93,12 @@ static void NfcService_MSG_NDEF_TAG(void* pTag)
   gTag.msg = pNativeNfcTag;
 
   // TODO : check if check tag presence here is correct
+  // For android. it use startPresenceChecking API in NativeNfcTag.java
   while (pNativeNfcTag->presenceCheck()) {
     sleep(1);
   }
+
+  pNativeNfcTag->disconnect();
 }
 
 static void *serviceThreadFunc(void *arg)
