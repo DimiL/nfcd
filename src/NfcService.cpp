@@ -199,3 +199,13 @@ bool NfcService::handleReadNdef(int token)
 
   return true;
 }
+
+bool NfcService::handleWriteNdef(NdefMessage& ndef, int token)
+{
+  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(sNfcManager->getNativeStruct("NativeNfcTag"));
+  bool result = pNativeNfcTag->writeNdef(ndef);
+
+  MessageHandler::processResponse(NFC_REQUEST_WRITE_NDEF, token, NULL);
+
+  return true;
+}

@@ -14,6 +14,7 @@ public:
   ~NdefMessage();
 
   bool init(std::vector<uint8_t>& buf);
+  void toByteArray(std::vector<uint8_t>& buf);
 
   std::vector<NdefRecord> mRecords;
 };

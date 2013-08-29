@@ -41,7 +41,7 @@ public:
   int reconnectWithStatus(int technology);
   int connectWithStatus(int technology);
   void readNdef(std::vector<uint8_t>& buf);
-  bool writeNdef(std::vector<uint8_t>& buf);
+  bool writeNdef(NdefMessage& ndef);
   int checkNdefWithStatus(int ndefinfo[]);
   bool disconnect();  
   bool presenceCheck();
@@ -64,6 +64,7 @@ public:
 
   static void nativeNfcTag_abortWaits ();
   static void nativeNfcTag_doReadCompleted (tNFA_STATUS status);
+  static void nativeNfcTag_doWriteStatus (bool isWriteOk);
   static void nativeNfcTag_doConnectStatus (bool isConnectOk);
   static void nativeNfcTag_doDeactivateStatus (int status);
   static int nativeNfcTag_doConnect (int targetHandle);

@@ -325,6 +325,16 @@ void NativeNfcTag::nativeNfcTag_doRead (std::vector<uint8_t>& buf)
     return;
 }
 
+void NativeNfcTag::nativeNfcTag_doWriteStatus (bool isWriteOk)
+{
+    if (sWriteWaitingForComplete != false)
+    {
+        sWriteWaitingForComplete = false;
+        sWriteOk = isWriteOk;
+        sem_post (&sWriteSem);
+    }
+}
+
 int NativeNfcTag::nativeNfcTag_doCheckNdef (int ndefInfo[])
 {
     tNFA_STATUS status = NFA_STATUS_FAILED;
@@ -931,8 +941,10 @@ int NativeNfcTag::checkNdefWithStatus(int ndefinfo[]) {
     return status;
 }
 
-bool NativeNfcTag::writeNdef(std::vector<uint8_t>& buf) {
+bool NativeNfcTag::writeNdef(NdefMessage& ndef) {
     bool result;
+    std::vector<uint8_t> buf;
+    ndef.toByteArray(buf);
     pthread_mutex_lock(&mMutex);
     result = nativeNfcTag_doWrite(buf);
     pthread_mutex_unlock(&mMutex);

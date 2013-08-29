@@ -552,6 +552,7 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
 
     case NFA_WRITE_CPLT_EVT: // Write completed
         ALOGD("%s: NFA_WRITE_CPLT_EVT: status = %d", __FUNCTION__, eventData->status);
+        NativeNfcTag::nativeNfcTag_doWriteStatus (eventData->status == NFA_STATUS_OK);
         break;
 
     case NFA_SET_TAG_RO_EVT: // Tag set as Read only

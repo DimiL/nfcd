@@ -188,3 +188,39 @@ bool NdefRecord::validateTnf(uint8_t tnf, std::vector<uint8_t>& type, std::vecto
   }
   return isValid;
 }
+
+void NdefRecord::writeToByteBuffer(std::vector<uint8_t>& buf, bool mb, bool me)
+{
+  bool sr = mPayload.size() < 256;
+  bool il = mId.size() > 0;
+
+  uint8_t flags = (uint8_t)((mb ? NdefRecord::FLAG_MB : 0) | 
+                            (me ? NdefRecord::FLAG_ME : 0) |
+                            (sr ? NdefRecord::FLAG_SR : 0) |
+                            (il ? NdefRecord::FLAG_IL : 0) | mTnf);
+  buf.push_back(flags);
+
+  buf.push_back((uint8_t)mType.size());
+  if (sr) {
+    buf.push_back((uint8_t)mPayload.size());
+  } else {
+    // TODO : check this
+    buf.push_back((mPayload.size() >> 24) & 0xff);
+    buf.push_back((mPayload.size() >> 16) & 0xff);
+    buf.push_back((mPayload.size() >>  8) & 0xff);
+    buf.push_back(mPayload.size() & 0xff);
+  }
+  if (il) {
+    buf.push_back((uint8_t)mId.size());
+  }
+
+  for (int i = 0; i < mType.size(); i++) {
+    buf.push_back(mType[i]);
+  }
+  for (int i = 0; i < mId.size(); i++) {
+    buf.push_back(mId[i]);
+  }
+  for (int i = 0; i < mPayload.size(); i++) {
+    buf.push_back(mPayload[i]);
+  }
+}

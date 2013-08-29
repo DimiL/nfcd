@@ -28,6 +28,7 @@ public:
   static bool handleDisconnect();
   static int handleConnect(int technology, int token);
   static bool handleReadNdef(int token);
+  static bool handleWriteNdef(NdefMessage& ndef, int token);
 
 private:
   NfcService();
