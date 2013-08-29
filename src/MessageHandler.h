@@ -29,6 +29,7 @@ private:
 //  static bool handleNdefPush(const char *input, size_t length);
 //  static bool handleNdefDetailsRequest();
   static bool handleReadNdefRequest(android::Parcel& parcel, int token);
+  static bool handleWriteNdefRequest(android::Parcel& parcel, int token);
   static bool handleConnectRequest(android::Parcel& parcel, int token); 
   static bool handleCloseRequest(android::Parcel& parcel, int token);
 

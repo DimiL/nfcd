@@ -59,6 +59,9 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
     case NFC_REQUEST_READ_NDEF:
       handleReadNdefRequest(parcel, token);
       break;
+    case NFC_REQUEST_WRITE_NDEF:
+      handleWriteNdefRequest(parcel, token);
+      break;
     case NFC_REQUEST_CONNECT:
       handleConnectRequest(parcel, token);
       break;
@@ -131,6 +134,53 @@ bool MessageHandler::handleReadNdefRequest(Parcel& parcel, int token)
 {
   //TODO read SessionId
   return NfcService::handleReadNdef(token);
+}
+
+bool MessageHandler::handleWriteNdefRequest(Parcel& parcel, int token)
+{
+  //TODO read SessionId
+  NdefMessagePdu ndefMessagePdu;
+  NdefMessage ndefMessage;
+
+  uint32_t numRecords = parcel.readInt32();
+  ndefMessagePdu.numRecords = numRecords;
+  ndefMessagePdu.records = new NdefRecordPdu[numRecords];
+
+  for (uint32_t i = 0; i < numRecords; i++) {
+    ndefMessagePdu.records[i].tnf = parcel.readInt32();
+
+    uint32_t typeLength = parcel.readInt32();
+    ndefMessagePdu.records[i].typeLength = typeLength;
+    ndefMessagePdu.records[i].type = new uint32_t[typeLength];
+    for (uint32_t j = 0; j < typeLength; j++) {
+      ndefMessagePdu.records[i].type[j] = parcel.readInt32();
+    }
+
+    uint32_t idLength = parcel.readInt32();
+    ndefMessagePdu.records[i].idLength = idLength;
+    ndefMessagePdu.records[i].id = new uint32_t[idLength];
+    for (uint32_t j = 0; j < idLength; j++) {
+      ndefMessagePdu.records[i].id[j] = parcel.readInt32();
+    }
+
+    uint32_t payloadLength = parcel.readInt32();
+    ndefMessagePdu.records[i].payloadLength = payloadLength;
+    ndefMessagePdu.records[i].payload = new uint32_t[payloadLength];
+    for (uint32_t j = 0; j < payloadLength; j++) {
+      ndefMessagePdu.records[i].payload[j] = parcel.readInt32();
+    }
+  }
+
+  NfcUtil::convertNdefPduToNdefMessage(ndefMessagePdu, ndefMessage);
+
+  for (uint32_t i = 0; i < numRecords; i++) {
+    delete[] ndefMessagePdu.records[i].type;
+    delete[] ndefMessagePdu.records[i].id;
+    delete[] ndefMessagePdu.records[i].payload;
+  }
+  delete[] ndefMessagePdu.records;
+  
+  return NfcService::handleWriteNdef(ndefMessage, token);
 }
 
 bool MessageHandler::handleConnectRequest(Parcel& parcel, int token)
