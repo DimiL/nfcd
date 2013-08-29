@@ -41,6 +41,7 @@ public:
   int reconnectWithStatus(int technology);
   int connectWithStatus(int technology);
   void readNdef(std::vector<uint8_t>& buf);
+  bool writeNdef(std::vector<uint8_t>& buf);
   int checkNdefWithStatus(int ndefinfo[]);
   bool disconnect();  
   bool presenceCheck();

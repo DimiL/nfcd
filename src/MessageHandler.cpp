@@ -23,18 +23,18 @@ void MessageHandler::initialize()
 {
 }
 
-void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
+void MessageHandler::notifyTechDiscovered(Parcel* parcel, void* data)
 {
 
   NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(data);
 
   //TODO write SessionId.
   int numberOfTech = pNativeNfcTag->mTechList.size();
-  parcel.writeInt32(numberOfTech);
+  parcel->writeInt32(numberOfTech);
   for (int i = 0; i < numberOfTech; i++) {
-    parcel.writeInt32(pNativeNfcTag->mTechList[i]);
+    parcel->writeInt32(pNativeNfcTag->mTechList[i]);
   }
-  sendResponse(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
+  sendResponse(parcel);
 }
 
 // static
@@ -75,10 +75,10 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
 void MessageHandler::processResponse(NfcRequest request, int token, void* data)
 {
   ALOGV("%s enter request=%d, token=%d ", __func__, request, token);
-  Parcel parcel;
-  parcel.writeInt32(NFCC_MESSAGE_RESPONSE);
-  parcel.writeInt32(token);
-  parcel.writeInt32(0); //error code
+  Parcel* parcel = new Parcel();
+  parcel->writeInt32(NFCC_MESSAGE_RESPONSE);
+  parcel->writeInt32(token);
+  parcel->writeInt32(0); //error code
 
   switch (request) {
     case NFC_REQUEST_READ_NDEF:
@@ -93,9 +93,9 @@ void MessageHandler::processResponse(NfcRequest request, int token, void* data)
 // static
 void MessageHandler::processNotification(NfcNotification notification, void* data)
 {
-  Parcel parcel;
-  parcel.writeInt32(NFCC_MESSAGE_NOTIFICATION);
-  parcel.writeInt32(notification);
+  Parcel* parcel = new Parcel();
+  parcel->writeInt32(NFCC_MESSAGE_NOTIFICATION);
+  parcel->writeInt32(notification);
 
   switch (notification) {
     case NFC_NOTIFICATION_TECH_DISCOVERED:
@@ -105,9 +105,9 @@ void MessageHandler::processNotification(NfcNotification notification, void* dat
 }
 
 // static
-void MessageHandler::sendResponse(uint8_t* data, size_t dataLen)
+void MessageHandler::sendResponse(Parcel* parcel)
 {
-  NfcIpcSocket::writeToOutgoingQueue(data, dataLen);
+  NfcIpcSocket::writeToOutgoingQueue(parcel);
 }
 
 #if 0
@@ -146,51 +146,51 @@ bool MessageHandler::handleCloseRequest(Parcel& parcel, int token)
   return false;
 }
 
-bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
+bool MessageHandler::handleReadNdefResponse(Parcel* parcel, void* data)
 {
   NdefMessage* ndef = reinterpret_cast<NdefMessage*>(data);
   //TODO write SessionId
   int numRecords = ndef->mRecords.size();
-  parcel.writeInt32(numRecords);
+  parcel->writeInt32(numRecords);
 
   for (int i = 0; i < numRecords; i++) {
     NdefRecord &record = ndef->mRecords[i];
 
     ALOGV("tnf=%u",record.mTnf);
-    parcel.writeInt32(record.mTnf);
+    parcel->writeInt32(record.mTnf);
 
     uint32_t typeLength = record.mType.size();
     ALOGV("typeLength=%u",typeLength);
-    parcel.writeInt32(typeLength);
+    parcel->writeInt32(typeLength);
     for (int j = 0; j < typeLength; j++) {
       ALOGV("mType %d = %u", j, record.mType[j]);
-      parcel.writeInt32(record.mType[j]);
+      parcel->writeInt32(record.mType[j]);
     }
 
     uint8_t idLength = record.mId.size();
     ALOGV("idLength=%d",idLength);
-    parcel.writeInt32(idLength);
+    parcel->writeInt32(idLength);
     for (int j = 0; j < idLength; j++) {
       ALOGV("mId %d = %u", j, record.mId[j]);
-      parcel.writeInt32(record.mId[j]);
+      parcel->writeInt32(record.mId[j]);
     }
 
     uint32_t payloadLength = record.mPayload.size();
     ALOGV("payloadLength=%d",payloadLength);
-    parcel.writeInt32(payloadLength);
+    parcel->writeInt32(payloadLength);
     for (int j = 0; j < payloadLength; j++) {
       ALOGV("mPayload %d = %u", j, record.mPayload[j]);
-      parcel.writeInt32(record.mPayload[j]);
+      parcel->writeInt32(record.mPayload[j]);
     }
   }
 
   //TODO check when will parcel release data.
-  sendResponse(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
+  sendResponse(parcel);
   return false;
 }
 
-bool MessageHandler::handleConnectResponse(Parcel& parcel)
+bool MessageHandler::handleConnectResponse(Parcel* parcel)
 {
-  sendResponse(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
+  sendResponse(parcel);
   return true;
 }

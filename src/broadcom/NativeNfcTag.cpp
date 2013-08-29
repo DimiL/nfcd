@@ -201,6 +201,14 @@ bool NativeNfcTag::disconnect()
 
   mConnectedTechIndex = -1;
   mConnectedHandle = -1;
+
+  mTechList.clear();
+  mTechHandles.clear();
+  mTechLibNfcTypes.clear();
+  mTechPollBytes.clear();
+  mTechActBytes.clear();
+  mUid.clear();
+
   return result;
 }
 
@@ -921,4 +929,12 @@ int NativeNfcTag::checkNdefWithStatus(int ndefinfo[]) {
     status = nativeNfcTag_doCheckNdef(ndefinfo);
     pthread_mutex_unlock(&mMutex);
     return status;
+}
+
+bool NativeNfcTag::writeNdef(std::vector<uint8_t>& buf) {
+    bool result;
+    pthread_mutex_lock(&mMutex);
+    result = nativeNfcTag_doWrite(buf);
+    pthread_mutex_unlock(&mMutex);
+    return result;
 }

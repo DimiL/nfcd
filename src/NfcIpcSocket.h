@@ -7,6 +7,7 @@
 
 #include <pthread.h>
 #include <time.h>
+#include <binder/Parcel.h>
 
 class NfcIpcSocket{
 private:
@@ -19,7 +20,7 @@ public:
   void initialize();
   void loop();
 
-  static void writeToOutgoingQueue(uint8_t *data, size_t dataLen);
+  static void writeToOutgoingQueue(android::Parcel* parcel);
   static void writeToIncomingQueue(uint8_t *data, size_t dataLen);
 
 private:

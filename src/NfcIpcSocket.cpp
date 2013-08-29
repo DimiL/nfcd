@@ -25,6 +25,8 @@
 #define NFCD_SOCKET_NAME "nfcd"
 #define MAX_COMMAND_BYTES (8 * 1024)
 
+using android::Parcel;
+
 class Buffer {
 public:
   Buffer(void* data, size_t dataLen) :
@@ -35,7 +37,7 @@ public:
   size_t mDataLen;
 };
 
-static std::queue<Buffer> mOutgoing;
+static std::queue<Parcel*> mOutgoing;
 static std::queue<Buffer> mIncoming;
 
 static pthread_mutex_t mReadMutex;
@@ -88,20 +90,20 @@ void* NfcIpcSocket::writerThreadFunc(void *arg)
   while (1) {
     pthread_mutex_lock(&mReadMutex);
     while (!mOutgoing.empty()) {
-      Buffer buffer = mOutgoing.front();
+      Parcel* parcel = mOutgoing.front();
 
       size_t writeOffset = 0;
-      size_t len = buffer.size();
+      size_t len = parcel->dataSize();
       size_t written = 0;
 
       //TODO update this
-      size_t size = __builtin_bswap32(buffer.size());
+      size_t size = __builtin_bswap32(parcel->dataSize());
       write(nfcdRw, (void*)&size, sizeof(uint32_t));
 
-      ALOGD("Writing %d bytes to gecko ", buffer.size());
+      ALOGD("Writing %d bytes to gecko ", parcel->dataSize());
       while (writeOffset < len) {
         do {
-          written = write (nfcdRw, buffer.data() + writeOffset,
+          written = write (nfcdRw, parcel->data() + writeOffset,
                            len - writeOffset);
         } while (written < 0 && errno == EINTR);
 
@@ -113,6 +115,8 @@ void* NfcIpcSocket::writerThreadFunc(void *arg)
         }
       }
       mOutgoing.pop();
+
+      delete parcel;
     }
     while (mOutgoing.empty()) {
       pthread_cond_wait(&mRcond, &mReadMutex);
@@ -252,13 +256,12 @@ void NfcIpcSocket::loop()
 
 // Write NFC data to Gecko
 // Outgoing queue contain the data should be send to gecko
-void NfcIpcSocket::writeToOutgoingQueue(uint8_t* data, size_t dataLen) {
-  ALOGD("%s enter, data=%p, dataLen=%d", __func__, data, dataLen);
+void NfcIpcSocket::writeToOutgoingQueue(Parcel* parcel) {
+  ALOGD("%s enter, data=%p, dataLen=%d", __func__, parcel->data(), parcel->dataSize());
   pthread_mutex_lock(&mReadMutex);
 
-  if (data != NULL && dataLen > 0) {
-    Buffer buffer(data, dataLen);
-    mOutgoing.push(buffer);
+  if (parcel->data() != NULL && parcel->dataSize() > 0) {
+    mOutgoing.push(parcel);
     pthread_cond_signal(&mRcond);
   }
   pthread_mutex_unlock(&mReadMutex);
