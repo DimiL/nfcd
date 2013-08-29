@@ -21,6 +21,7 @@ public:
 
   NdefRecord();
   NdefRecord(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload);
+  NdefRecord(uint8_t tnf, uint32_t typeLength, uint32_t* type, uint32_t idLength, uint32_t* id, uint32_t payloadLength, uint32_t* payload);
   ~NdefRecord();
 
   static bool parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<NdefRecord>& records);

@@ -62,7 +62,8 @@ char* NfcUtil::decodeBase64(unsigned char *input, size_t length, size_t *out_len
   return buffer;
 }
 
-char* NfcUtil::getTechString(int techIndex) {
+char* NfcUtil::getTechString(int techIndex) 
+{
   switch(techIndex) {
     case 1: return "NFC_A";
     case 2: return "NFC_B";
@@ -77,4 +78,11 @@ char* NfcUtil::getTechString(int techIndex) {
     default : break;
   }
   return NULL;
+}
+
+void NfcUtil::convertNdefPduToNdefMessage(NdefMessagePdu& ndefPdu, NdefMessage& ndefMessage) {
+  for (uint32_t i = 0; i < ndefPdu.numRecords; i++) {
+    NdefRecordPdu& record = ndefPdu.records[i];
+    ndefMessage.mRecords.push_back(NdefRecord(record.tnf, record.typeLength, record.type, record.idLength, record.id, record.payloadLength, record.payload));
+  }
 }

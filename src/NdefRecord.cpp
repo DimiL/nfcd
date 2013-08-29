@@ -16,6 +16,21 @@ NdefRecord::NdefRecord(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint
     mPayload.push_back(payload[i]);
 }
 
+NdefRecord::NdefRecord(uint8_t tnf, uint32_t typeLength, uint32_t* type, uint32_t idLength, uint32_t* id, uint32_t payloadLength, uint32_t* payload)
+{
+  mTnf = tnf;
+
+  for (uint32_t i = 0; i < typeLength; i++) {
+    mType.push_back((uint8_t)type[i]);
+  }
+  for (uint32_t i = 0; i < idLength; i++) {
+    mId.push_back((uint8_t)id[i]);
+  }
+  for (uint32_t i = 0; i < payloadLength; i++) {
+    mPayload.push_back((uint8_t)payload[i]);
+  }
+}
+
 NdefRecord::~NdefRecord()
 {
 }
