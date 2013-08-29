@@ -30,6 +30,8 @@ private:
 //  static bool handleNdefDetailsRequest();
   static bool handleReadNdefRequest(android::Parcel& parcel, int token);
   static bool handleConnectRequest(android::Parcel& parcel, int token); 
+  static bool handleCloseRequest(android::Parcel& parcel, int token);
+
   static bool handleReadNdefResponse(android::Parcel& parcel, void* data);
   static bool handleConnectResponse(android::Parcel& parcel);
 //  static bool handleTransceiveReq(const char *input, size_t length);

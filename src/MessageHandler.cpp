@@ -62,6 +62,9 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
     case NFC_REQUEST_CONNECT:
       handleConnectRequest(parcel, token);
       break;
+    case NFC_REQUEST_CLOSE:
+      handleCloseRequest(parcel, token);
+      break;
     default:
       ALOGE("Unhandled Request %d", request);
       break;
@@ -71,6 +74,7 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
 // static
 void MessageHandler::processResponse(NfcRequest request, int token, void* data)
 {
+  ALOGV("%s enter request=%d, token=%d ", __func__, request, token);
   Parcel parcel;
   parcel.writeInt32(NFCC_MESSAGE_RESPONSE);
   parcel.writeInt32(token);
@@ -134,6 +138,11 @@ bool MessageHandler::handleConnectRequest(Parcel& parcel, int token)
   int32_t techType = parcel.readInt32();
   ALOGD("%s techType=%d", __func__, techType);
   NfcService::handleConnect(techType, token);
+  return false;
+}
+
+bool MessageHandler::handleCloseRequest(Parcel& parcel, int token)
+{
   return false;
 }
 
