@@ -169,7 +169,6 @@ bool NdefRecord::ensureSanePayloadSize(long size)
   return true;
 }
 
-
 bool NdefRecord::validateTnf(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload)
 {
   bool isValid = true;
@@ -229,13 +228,10 @@ void NdefRecord::writeToByteBuffer(std::vector<uint8_t>& buf, bool mb, bool me)
     buf.push_back((uint8_t)mId.size());
   }
 
-  for (int i = 0; i < mType.size(); i++) {
+  for (int i = 0; i < mType.size(); i++)
     buf.push_back(mType[i]);
-  }
-  for (int i = 0; i < mId.size(); i++) {
+  for (int i = 0; i < mId.size(); i++)
     buf.push_back(mId[i]);
-  }
-  for (int i = 0; i < mPayload.size(); i++) {
+  for (int i = 0; i < mPayload.size(); i++)
     buf.push_back(mPayload[i]);
-  }
 }
