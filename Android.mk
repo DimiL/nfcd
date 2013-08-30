@@ -13,13 +13,10 @@ NFC_VENDOR := BROADCOM
 
 LOCAL_SRC_FILES := \
     src/nfcd.cpp \
-    src/DeviceHost.cpp \
     src/NfcService.cpp \
     src/NfcIpcSocket.cpp \
     src/NfcUtil.cpp \
-    src/MessageHandler.cpp \
-    src/NdefMessage.cpp \
-    src/NdefRecord.cpp
+    src/MessageHandler.cpp
 
 BROADCOM_SRC_FILES := \
     src/broadcom/NfcManager.cpp \
@@ -37,9 +34,16 @@ BROADCOM_SRC_FILES := \
     src/broadcom/Pn544Interop.cpp \
     src/broadcom/IntervalTimer.cpp
 
+INTERFACE_SRC_FILES := \
+    src/interface/DeviceHost.cpp \
+    src/interface/NdefMessage.cpp \
+    src/interface/NdefRecord.cpp
+
 ifeq ($(NFC_VENDOR),BROADCOM)
 LOCAL_SRC_FILES += $(BROADCOM_SRC_FILES)
 endif
+
+LOCAL_SRC_FILES += $(INTERFACE_SRC_FILES)
 
 LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/src \
@@ -56,6 +60,7 @@ NFC := $(VOB_COMPONENTS)/nfc
 
 LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/src/broadcom \
+    $(LOCAL_PATH)/src/interface \
     $(NFA)/include \
     $(NFA)/brcm \
     $(NFC)/include \
