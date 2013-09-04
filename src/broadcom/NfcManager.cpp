@@ -255,6 +255,51 @@ void NfcManager::enableDiscovery()
     ALOGD ("%s: exit", __FUNCTION__);
 }
 
+void NfcManager::disableDiscovery ()
+{
+    tNFA_STATUS status = NFA_STATUS_OK;
+    ALOGD ("%s: enter;", __FUNCTION__);
+
+    pn544InteropAbortNow ();
+    if (sDiscoveryEnabled == false)
+    {
+        ALOGD ("%s: already disabled", __FUNCTION__);
+        goto TheEnd;
+    }
+
+    // Stop RF Discovery.
+    startRfDiscovery (false);
+
+    if (sDiscoveryEnabled)
+    {
+        SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+        status = NFA_DisablePolling ();
+        if (status == NFA_STATUS_OK)
+        {
+            sDiscoveryEnabled = false;
+            sNfaEnableDisablePollingEvent.wait (); //wait for NFA_POLL_DISABLED_EVT
+        }
+        else
+            ALOGE ("%s: Failed to disable polling; error=0x%X", __FUNCTION__, status);
+    }
+
+    PeerToPeer::getInstance().enableP2pListening (false);
+
+    //if nothing is active after this, then tell the controller to power down
+    if (! PowerSwitch::getInstance ().setModeOff (PowerSwitch::DISCOVERY))
+        PowerSwitch::getInstance ().setLevel (PowerSwitch::LOW_POWER);
+
+    // We may have had RF field notifications that did not cause
+    // any activate/deactive events. For example, caused by wireless
+    // charging orbs. Those may cause us to go to sleep while the last
+    // field event was indicating a field. To prevent sticking in that
+    // state, always reset the rf field status when we disable discovery.
+    // TODO : Implement SE
+    // SecureElement::getInstance().resetRfFieldStatus();
+TheEnd:
+    ALOGD ("%s: exit", __FUNCTION__);
+}
+
 static void handleRfDiscoveryEvent (tNFC_RESULT_DEVT* discoveredDevice)
 {
     if (discoveredDevice->more)

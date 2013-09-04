@@ -11,6 +11,7 @@ public:
 
   virtual bool initialize() = 0;
   virtual void enableDiscovery() = 0;
+  virtual void disableDiscovery() = 0;
   virtual void* queryInterface(const char* name) = 0;
 };
 

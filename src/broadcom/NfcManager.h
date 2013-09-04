@@ -18,6 +18,7 @@ public:
 
   bool initialize();
   void enableDiscovery();
+  void disableDiscovery();
   void* queryInterface(const char* name);
 
 private:
