@@ -212,7 +212,12 @@ void PeerToPeer::llcpDeactivatedHandler (tNFA_LLCP_DEACTIVATED& /*deactivated*/)
 
 void PeerToPeer::llcpFirstPacketHandler ()
 {
+    static const char fn [] = "PeerToPeer::llcpFirstPacketHandler";
+    ALOGD ("%s: enter", fn);
     // TODO : implemented
+    ALOGE ("Unimplement function %s", fn);
+
+    ALOGD ("%s: exit", fn);
 }
 
 bool PeerToPeer::accept (tJNI_HANDLE serverJniHandle, tJNI_HANDLE connJniHandle, int maxInfoUnit, int recvWindow)

@@ -53,6 +53,8 @@ public:
   static void nativeNfcTag_deregisterNdefTypeHandler ();
   static bool nativeNfcTag_doPresenceCheck ();
   static bool nativeNfcTag_doDisconnect ();
+  static void nativeNfcTag_doMakeReadonlyResult (tNFA_STATUS status);
+  static bool nativeNfcTag_doMakeReadonly ();
 
 private:
   pthread_mutex_t mMutex;
