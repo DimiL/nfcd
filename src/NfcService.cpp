@@ -20,6 +20,8 @@ static sem_t thread_sem;
 
 static void* linkDevice;
 static void* nfcTag;
+//TODO needs better handling here.
+static int sToken;
 
 typedef struct tagInfo {
   NativeNfcTag* msg;
@@ -35,13 +37,15 @@ typedef enum {
   MSG_NDEF_TAG,
   MSG_SE_FIELD_ACTIVATED,
   MSG_SE_FIELD_DEACTIVATED,
-  MSG_SE_NOTIFY_TRANSACTION_LISTENERS
+  MSG_SE_NOTIFY_TRANSACTION_LISTENERS,
+  MSG_READ_NDEF,
 } MSG_TYPE;
 
 static MSG_TYPE msg_type = MSG_UNDEFINED;
 
 void NfcService::nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
 {
+  ALOGD("%s enter", __func__);
   msg_type = MSG_LLCP_LINK_ACTIVATION;
   linkDevice = pDevice;
   sem_post(&thread_sem);
@@ -49,6 +53,7 @@ void NfcService::nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
 
 void NfcService::nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice)
 {
+  ALOGD("%s enter", __func__);
   msg_type = MSG_LLCP_LINK_DEACTIVATION;
   linkDevice = pDevice;
   sem_post(&thread_sem);
@@ -56,6 +61,7 @@ void NfcService::nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice)
 
 void NfcService::nfc_service_send_MSG_NDEF_TAG(void* pTag)
 {
+  ALOGD("%s enter", __func__);
   msg_type = MSG_NDEF_TAG;
   nfcTag = pTag;
   sem_post(&thread_sem);
@@ -63,18 +69,21 @@ void NfcService::nfc_service_send_MSG_NDEF_TAG(void* pTag)
 
 void NfcService::nfc_service_send_MSG_SE_FIELD_ACTIVATED()
 {
+  ALOGD("%s enter", __func__);
   msg_type = MSG_SE_FIELD_ACTIVATED;
   sem_post(&thread_sem);
 }
 
 void NfcService::nfc_service_send_MSG_SE_FIELD_DEACTIVATED()
 {
+  ALOGD("%s enter", __func__);
   msg_type = MSG_SE_FIELD_DEACTIVATED;
   sem_post(&thread_sem);
 }
 
 void NfcService::nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS()
 {
+  ALOGD("%s enter", __func__);
   msg_type = MSG_SE_NOTIFY_TRANSACTION_LISTENERS;
   sem_post(&thread_sem);
 }
@@ -84,13 +93,9 @@ static void NfcService_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
   ALOGD("NfcService_MSG_LLCP_LINK_ACTIVATION");
 }
 
-static void NfcService_MSG_NDEF_TAG(void* pTag)
+void *pollingThreadFunc(void *arg)
 {
-  ALOGD("NfcService_MSG_NDEF_TAG");
-  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(pTag);
-  MessageHandler::processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, pNativeNfcTag);
-
-  gTag.msg = pNativeNfcTag;
+  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(arg);
 
   // TODO : check if check tag presence here is correct
   // For android. it use startPresenceChecking API in NativeNfcTag.java
@@ -99,6 +104,18 @@ static void NfcService_MSG_NDEF_TAG(void* pTag)
   }
 
   pNativeNfcTag->disconnect();
+  return NULL;
+}
+
+static void NfcService_MSG_NDEF_TAG(void* pTag)
+{
+  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(pTag);
+  MessageHandler::processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, pNativeNfcTag);
+
+  gTag.msg = pNativeNfcTag;
+
+  pthread_t tid;
+  pthread_create(&tid, NULL, pollingThreadFunc, pNativeNfcTag);
 }
 
 static void *serviceThreadFunc(void *arg)
@@ -112,6 +129,7 @@ static void *serviceThreadFunc(void *arg)
       abort();
     }
 
+    ALOGD("NFCService msg=%d", msg_type);
     switch(msg_type) {
       case MSG_LLCP_LINK_ACTIVATION:
         NfcService_MSG_LLCP_LINK_ACTIVATION(linkDevice);
@@ -126,6 +144,9 @@ static void *serviceThreadFunc(void *arg)
       case MSG_SE_FIELD_DEACTIVATED:
         break;
       case MSG_SE_NOTIFY_TRANSACTION_LISTENERS:
+        break;
+      case MSG_READ_NDEF:
+        NfcService::handleReadNdefResponse(sToken);
         break;
       default:
         ALOGE("NFCService bad message");
@@ -179,25 +200,35 @@ bool NfcService::handleDisconnect()
 
 int NfcService::handleConnect(int technology, int token)
 {
+  ALOGD("%s enter", __func__);
   NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(sNfcManager->getNativeStruct("NativeNfcTag"));
   int status = pNativeNfcTag->connectWithStatus(technology);
   MessageHandler::processResponse(NFC_REQUEST_CONNECT, token, NULL);
   return status;
 }
 
-bool NfcService::handleReadNdef(int token)
+bool NfcService::handleReadNdefRequest(int token)
 {
+  ALOGD("%s enter token=%d", __func__, token);
+  msg_type = MSG_READ_NDEF;
+  sToken = token;
+  sem_post(&thread_sem);
+  return true;
+}
+
+void NfcService::handleReadNdefResponse(int token)
+{
+  ALOGD("%s enter token=%d", __func__, token);
   NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(sNfcManager->getNativeStruct("NativeNfcTag"));
   NdefMessage* pNdefMessage = pNativeNfcTag->findAndReadNdef();
 
+  ALOGD("pNdefMessage=%p",pNdefMessage);
   if (pNdefMessage != NULL) {
     MessageHandler::processResponse(NFC_REQUEST_READ_NDEF, token, pNdefMessage);
   } else {
   }
- 
-  delete pNdefMessage;
 
-  return true;
+  delete pNdefMessage;
 }
 
 bool NfcService::handleWriteNdef(NdefMessage& ndef, int token)

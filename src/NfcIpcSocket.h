@@ -20,20 +20,14 @@ public:
   void initialize();
   void loop();
 
-  static void writeToOutgoingQueue(android::Parcel* parcel);
+  static void writeToOutgoingQueue(uint8_t *data, size_t dataLen);
   static void writeToIncomingQueue(uint8_t *data, size_t dataLen);
 
 private:
   NfcIpcSocket();
 
-  pthread_t mReaderTid;
-  pthread_t mWriterTid;
-
   timespec mSleep_spec;
   timespec mSleep_spec_rem;
-
-  static void* writerThreadFunc(void *arg);
-  static void* readerThreadFunc(void *arg);
 
   void initSocket();
   int getListenSocket();

@@ -23,7 +23,7 @@ public:
 private:
   MessageHandler();
 
-  static void notifyTechDiscovered(android::Parcel* parcel, void* data);
+  static void notifyTechDiscovered(android::Parcel& parcel, void* data);
 
 //  static bool handleWriteNdef(const char *input, size_t length);
 //  static bool handleNdefPush(const char *input, size_t length);
@@ -33,11 +33,11 @@ private:
   static bool handleConnectRequest(android::Parcel& parcel, int token); 
   static bool handleCloseRequest(android::Parcel& parcel, int token);
 
-  static bool handleReadNdefResponse(android::Parcel* parcel, void* data);
-  static bool handleConnectResponse(android::Parcel* parcel);
+  static bool handleReadNdefResponse(android::Parcel& parcel, void* data);
+  static bool handleConnectResponse(android::Parcel& parcel);
 //  static bool handleTransceiveReq(const char *input, size_t length);
 
-  static void sendResponse(android::Parcel* parcel);
+  static void sendResponse(android::Parcel& parcel);
 };
 
 #endif // mozilla_nfcd_MessageHandler_h
