@@ -7,18 +7,8 @@
  */
 
 #include "Mutex.h"
-//#include "NfcJniUtil.h"
 #include <errno.h>
 
-/*******************************************************************************
-**
-** Function:        Mutex
-**
-** Description:     Initialize member variables.
-**
-** Returns:         None.
-**
-*******************************************************************************/
 Mutex::Mutex ()
 {
     memset (&mMutex, 0, sizeof(mMutex));
@@ -29,16 +19,6 @@ Mutex::Mutex ()
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        ~Mutex
-**
-** Description:     Cleanup all resources.
-**
-** Returns:         None.
-**
-*******************************************************************************/
 Mutex::~Mutex ()
 {
     int res = pthread_mutex_destroy (&mMutex);
@@ -48,16 +28,6 @@ Mutex::~Mutex ()
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        lock
-**
-** Description:     Block the thread and try lock the mutex.
-**
-** Returns:         None.
-**
-*******************************************************************************/
 void Mutex::lock ()
 {
     int res = pthread_mutex_lock (&mMutex);
@@ -67,16 +37,6 @@ void Mutex::lock ()
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        unlock
-**
-** Description:     Unlock a mutex to unblock a thread.
-**
-** Returns:         None.
-**
-*******************************************************************************/
 void Mutex::unlock ()
 {
     int res = pthread_mutex_unlock (&mMutex);
@@ -86,16 +46,6 @@ void Mutex::unlock ()
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        tryLock
-**
-** Description:     Try to lock the mutex.
-**
-** Returns:         True if the mutex is locked.
-**
-*******************************************************************************/
 bool Mutex::tryLock ()
 {
     int res = pthread_mutex_trylock (&mMutex);
@@ -106,19 +56,7 @@ bool Mutex::tryLock ()
     return res == 0;
 }
 
-
-/*******************************************************************************
-**
-** Function:        nativeHandle
-**
-** Description:     Get the handle of the mutex.
-**
-** Returns:         Handle of the mutex.
-**
-*******************************************************************************/
 pthread_mutex_t* Mutex::nativeHandle ()
 {
     return &mMutex;
 }
-
-

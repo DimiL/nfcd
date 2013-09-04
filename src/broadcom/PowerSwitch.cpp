@@ -9,7 +9,6 @@
 #include "PowerSwitch.h"
 #include "config.h"
 
-// Dimi: Remove SE function temporarily
 //#include "SecureElement.h"
 
 #define LOG_TAG "PowerSwitch"
@@ -21,15 +20,6 @@ const PowerSwitch::PowerActivity PowerSwitch::DISCOVERY=0x01;
 const PowerSwitch::PowerActivity PowerSwitch::SE_ROUTING=0x02;
 const PowerSwitch::PowerActivity PowerSwitch::SE_CONNECTED=0x04;
 
-/*******************************************************************************
-**
-** Function:        PowerSwitch
-**
-** Description:     Initialize member variables.
-**
-** Returns:         None
-**
-*******************************************************************************/
 PowerSwitch::PowerSwitch ()
 :   mCurrLevel (UNKNOWN_LEVEL),
     mCurrDeviceMgtPowerState (NFA_DM_PWR_STATE_UNKNOWN),
@@ -38,45 +28,15 @@ PowerSwitch::PowerSwitch ()
 {
 }
 
-
-/*******************************************************************************
-**
-** Function:        ~PowerSwitch
-**
-** Description:     Release all resources.
-**
-** Returns:         None
-**
-*******************************************************************************/
 PowerSwitch::~PowerSwitch ()
 {
 }
 
-
-/*******************************************************************************
-**
-** Function:        getInstance
-**
-** Description:     Get the singleton of this object.
-**
-** Returns:         Reference to this object.
-**
-*******************************************************************************/
 PowerSwitch& PowerSwitch::getInstance ()
 {
     return sPowerSwitch;
 }
 
-
-/*******************************************************************************
-**
-** Function:        initialize
-**
-** Description:     Initialize member variables.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void PowerSwitch::initialize (PowerLevel level)
 {
     static const char fn [] = "PowerSwitch::initialize";
@@ -106,16 +66,6 @@ void PowerSwitch::initialize (PowerLevel level)
     mMutex.unlock ();
 }
 
-
-/*******************************************************************************
-**
-** Function:        getLevel
-**
-** Description:     Get the current power level of the controller.
-**
-** Returns:         Power level.
-**
-*******************************************************************************/
 PowerSwitch::PowerLevel PowerSwitch::getLevel ()
 {
     PowerLevel level = UNKNOWN_LEVEL;
@@ -125,17 +75,6 @@ PowerSwitch::PowerLevel PowerSwitch::getLevel ()
     return level;
 }
 
-
-/*******************************************************************************
-**
-** Function:        setLevel
-**
-** Description:     Set the controller's power level.
-**                  level: power level.
-**
-** Returns:         True if ok.
-**
-*******************************************************************************/
 bool PowerSwitch::setLevel (PowerLevel newLevel)
 {
     static const char fn [] = "PowerSwitch::setLevel";
@@ -178,15 +117,6 @@ TheEnd:
     return retval;
 }
 
-/*******************************************************************************
-**
-** Function:        setModeOff
-**
-** Description:     Set a mode to be deactive.
-**
-** Returns:         True if any mode is still active.
-**
-*******************************************************************************/
 bool PowerSwitch::setModeOff (PowerActivity deactivated)
 {
     bool retVal = false;
@@ -199,16 +129,6 @@ bool PowerSwitch::setModeOff (PowerActivity deactivated)
     return retVal;
 }
 
-
-/*******************************************************************************
-**
-** Function:        setModeOn
-**
-** Description:     Set a mode to be active.
-**
-** Returns:         True if any mode is active.
-**
-*******************************************************************************/
 bool PowerSwitch::setModeOn (PowerActivity activated)
 {
     bool retVal = false;
@@ -221,17 +141,6 @@ bool PowerSwitch::setModeOn (PowerActivity activated)
     return retVal;
 }
 
-
-/*******************************************************************************
-**
-** Function:        setPowerOffSleepState
-**
-** Description:     Adjust controller's power-off-sleep state.
-**                  sleep: whether to enter sleep state.
-**
-** Returns:         True if ok.
-**
-*******************************************************************************/
 bool PowerSwitch::setPowerOffSleepState (bool sleep)
 {
     static const char fn [] = "PowerSwitch::setPowerOffSleepState";
@@ -306,17 +215,6 @@ TheEnd:
     return retval;
 }
 
-
-/*******************************************************************************
-**
-** Function:        deviceMgtPowerStateToString
-**
-** Description:     Decode power level to a string.
-**                  deviceMgtPowerState: power level.
-**
-** Returns:         Text representation of power level.
-**
-*******************************************************************************/
 const char* PowerSwitch::deviceMgtPowerStateToString (UINT8 deviceMgtPowerState)
 {
     switch (deviceMgtPowerState)
@@ -330,17 +228,6 @@ const char* PowerSwitch::deviceMgtPowerStateToString (UINT8 deviceMgtPowerState)
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        powerLevelToString
-**
-** Description:     Decode power level to a string.
-**                  level: power level.
-**
-** Returns:         Text representation of power level.
-**
-*******************************************************************************/
 const char* PowerSwitch::powerLevelToString (PowerLevel level)
 {
     switch (level)
@@ -358,16 +245,6 @@ const char* PowerSwitch::powerLevelToString (PowerLevel level)
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        abort
-**
-** Description:     Abort and unblock currrent operation.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void PowerSwitch::abort ()
 {
     static const char fn [] = "PowerSwitch::abort";
@@ -376,18 +253,6 @@ void PowerSwitch::abort ()
     mPowerStateEvent.notifyOne ();
 }
 
-
-/*******************************************************************************
-**
-** Function:        deviceManagementCallback
-**
-** Description:     Callback function for the stack.
-**                  event: event ID.
-**                  eventData: event's data.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void PowerSwitch::deviceManagementCallback (UINT8 event, tNFA_DM_CBACK_DATA* eventData)
 {
     static const char fn [] = "PowerSwitch::deviceManagementCallback";
@@ -408,16 +273,6 @@ void PowerSwitch::deviceManagementCallback (UINT8 event, tNFA_DM_CBACK_DATA* eve
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        isPowerOffSleepFeatureEnabled
-**
-** Description:     Whether power-off-sleep feature is enabled in .conf file.
-**
-** Returns:         True if feature is enabled.
-**
-*******************************************************************************/
 bool PowerSwitch::isPowerOffSleepFeatureEnabled ()
 {
     return mDesiredScreenOffPowerState == 0;

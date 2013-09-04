@@ -8,7 +8,6 @@
 #include "NfcService.h"
 #include "NfcIpcSocket.h"
 #include "NfcUtil.h"
-#include "NativeNfcTag.h"
 #include "NdefMessage.h"
 #include "NdefRecord.h"
 #include <jansson.h>
@@ -26,13 +25,14 @@ void MessageHandler::initialize()
 void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
 {
 
-  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(data);
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(data);
+  std::vector<int>& techList = pINfcTag->getTechList();
 
   //TODO write SessionId.
-  int numberOfTech = pNativeNfcTag->mTechList.size();
+  int numberOfTech = techList.size();
   parcel.writeInt32(numberOfTech);
   for (int i = 0; i < numberOfTech; i++) {
-    parcel.writeInt32(pNativeNfcTag->mTechList[i]);
+    parcel->writeInt32(techList[i]);
   }
   sendResponse(parcel);
 }

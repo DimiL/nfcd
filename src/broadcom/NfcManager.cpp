@@ -76,23 +76,17 @@ NfcManager::NfcManager() :
   mP2pDevice(NULL),
   mNativeNfcTag(NULL)
 {
-    initializeNativeStructure();
-}
-
-NfcManager::~NfcManager()
-{
-    // Mozilla : TODO, use MACRO
-    if (mP2pDevice != NULL)    delete mP2pDevice;
-    if (mNativeNfcTag != NULL)       delete mNativeNfcTag;
-}
-
-void NfcManager::initializeNativeStructure()
-{
     mP2pDevice = new P2pDevice();
     mNativeNfcTag = new NativeNfcTag();
 }
 
-void* NfcManager::getNativeStruct(const char* name)
+NfcManager::~NfcManager()
+{
+    if (mP2pDevice != NULL)    delete mP2pDevice;
+    if (mNativeNfcTag != NULL)       delete mNativeNfcTag;
+}
+
+void* NfcManager::queryInterface(const char* name)
 {
     if (0 == strcmp(name, "P2pDevice"))
         return reinterpret_cast<void*>(mP2pDevice);

@@ -8,23 +8,22 @@
 #include "DeviceHost.h"
 #include "P2pDevice.h"
 #include "NativeNfcTag.h"
+#include "INfcManager.h"
 
-class NfcManager : public DeviceHost
+class NfcManager : public DeviceHost, public INfcManager
 {
 public:
-
   NfcManager();
   virtual ~NfcManager();
 
   bool initialize();
   void enableDiscovery();
-  void* getNativeStruct(const char* name);
+  void* queryInterface(const char* name);
 
 private:
   P2pDevice* mP2pDevice;
   NativeNfcTag* mNativeNfcTag;
 
-  void initializeNativeStructure();
   bool doInitialize();
 };
 

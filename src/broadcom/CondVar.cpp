@@ -7,19 +7,8 @@
  */
 
 #include "CondVar.h"
-//#include "NfcJniUtil.h"
 #include <errno.h>
 
-
-/*******************************************************************************
-**
-** Function:        CondVar
-**
-** Description:     Initialize member variables.
-**
-** Returns:         None.
-**
-*******************************************************************************/
 CondVar::CondVar ()
 {
     memset (&mCondition, 0, sizeof(mCondition));
@@ -30,16 +19,6 @@ CondVar::CondVar ()
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        ~CondVar
-**
-** Description:     Cleanup all resources.
-**
-** Returns:         None.
-**
-*******************************************************************************/
 CondVar::~CondVar ()
 {
     int const res = pthread_cond_destroy (&mCondition);
@@ -49,16 +28,6 @@ CondVar::~CondVar ()
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        wait
-**
-** Description:     Block the caller and wait for a condition.
-**
-** Returns:         None.
-**
-*******************************************************************************/
 void CondVar::wait (Mutex& mutex)
 {
     int const res = pthread_cond_wait (&mCondition, mutex.nativeHandle());
@@ -68,17 +37,6 @@ void CondVar::wait (Mutex& mutex)
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        wait
-**
-** Description:     Block the caller and wait for a condition.
-**                  millisec: Timeout in milliseconds.
-**
-** Returns:         True if wait is successful; false if timeout occurs.
-**
-*******************************************************************************/
 bool CondVar::wait (Mutex& mutex, long millisec)
 {
     bool retVal = false;
@@ -113,16 +71,6 @@ bool CondVar::wait (Mutex& mutex, long millisec)
     return retVal;
 }
 
-
-/*******************************************************************************
-**
-** Function:        notifyOne
-**
-** Description:     Unblock the waiting thread.
-**
-** Returns:         None.
-**
-*******************************************************************************/
 void CondVar::notifyOne ()
 {
     int const res = pthread_cond_signal (&mCondition);
