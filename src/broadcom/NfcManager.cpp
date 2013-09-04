@@ -339,7 +339,7 @@ void nfaDeviceManagementCallback (UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
 
         if (!sP2pActive && eventData->rf_field.status == NFA_STATUS_OK)
         {
-            // Mozilla : TODO : Implement SE related function
+            // TODO : Implement SE
         }
         break;
 
@@ -350,13 +350,12 @@ void nfaDeviceManagementCallback (UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
                 ALOGD ("%s: NFA_DM_NFCC_TIMEOUT_EVT; abort all outstanding operations", __FUNCTION__);
             else
                 ALOGD ("%s: NFA_DM_NFCC_TRANSPORT_ERR_EVT; abort all outstanding operations", __FUNCTION__);
-            // Mozilla : TODO : Handle ERR or TIMEOUT evevnt
+            // TODO : Handle ERR or TIMEOUT evevnt
         }
         break;
 
     case NFA_DM_PWR_MODE_CHANGE_EVT:
-        // Mozilla : TODO : Handle evevnt
-        // PowerSwitch::getInstance ().deviceManagementCallback (dmEvent, eventData);
+        PowerSwitch::getInstance ().deviceManagementCallback (dmEvent, eventData);
         break;
     default:
         ALOGD ("%s: unhandled event", __FUNCTION__);
