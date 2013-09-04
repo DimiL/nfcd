@@ -10,6 +10,7 @@
 #include "NfcUtil.h"
 #include "NdefMessage.h"
 #include "NdefRecord.h"
+#include "SessionId.h"
 
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
@@ -27,7 +28,8 @@ void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(data);
   std::vector<int>& techList = pINfcTag->getTechList();
 
-  //TODO write SessionId.
+  // TODO: SessionId
+  //parcel.writeInt32(SessionId::getSessionId());
   int numberOfTech = techList.size();
   parcel.writeInt32(numberOfTech);
   for (int i = 0; i < numberOfTech; i++) {
