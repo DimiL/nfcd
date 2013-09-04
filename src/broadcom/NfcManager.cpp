@@ -457,7 +457,7 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
                 ALOGE ("%s: Failed to disable RF field events", __FUNCTION__);
             }
             // For the SE, consider the field to be on while p2p is active.
-            // Mozilla : TODO : Implement SE related function
+            // TODO : Implement SE
         }
         else if (pn544InteropIsBusy() == false)
         {
@@ -468,7 +468,7 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
             // Send the RF Event.
             if (isListenMode(eventData->activated))
             {
-                // Mozilla : TODO : Implement SE related function
+                // TODO : Implement SE
             }
         }
 
@@ -494,7 +494,7 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
         if ((eventData->deactivated.type == NFA_DEACTIVATE_TYPE_IDLE)
                 || (eventData->deactivated.type == NFA_DEACTIVATE_TYPE_DISCOVERY))
         {
-            // Mozilla : TODO : Implement SE related function
+            // TODO : Implement SE
         }
 
         break;
@@ -551,6 +551,7 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
 
     case NFA_SET_TAG_RO_EVT: // Tag set as Read only
         ALOGD("%s: NFA_SET_TAG_RO_EVT: status = %d", __FUNCTION__, eventData->status);
+        NativeNfcTag::nativeNfcTag_doMakeReadonlyResult(eventData->status);
         break;
 
     case NFA_CE_NDEF_WRITE_START_EVT: // NDEF write started
@@ -581,12 +582,10 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
         PeerToPeer::getInstance().llcpDeactivatedHandler (eventData->llcp_deactivated);
         break;
 
-    // Mozilla : Compile error, to be fixed
-    /*
     case NFA_LLCP_FIRST_PACKET_RECEIVED_EVT: // Received first packet over llcp
         ALOGD("%s: NFA_LLCP_FIRST_PACKET_RECEIVED_EVT", __FUNCTION__);
+        PeerToPeer::getInstance().llcpFirstPacketHandler ();
         break;
-    */
 
     case NFA_PRESENCE_CHECK_EVT:
         ALOGD("%s: NFA_PRESENCE_CHECK_EVT", __FUNCTION__);
@@ -595,6 +594,7 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
 
     case NFA_FORMAT_CPLT_EVT:
         ALOGD("%s: NFA_FORMAT_CPLT_EVT: status=0x%X", __FUNCTION__, eventData->status);
+        ALOGE("Unimplement function %s", __FUNCTION__);
         break;
 
     case NFA_I93_CMD_CPLT_EVT:
@@ -603,6 +603,8 @@ static void nfaConnectionCallback (UINT8 connEvent, tNFA_CONN_EVT_DATA* eventDat
 
     case NFA_CE_UICC_LISTEN_CONFIGURED_EVT :
         ALOGD("%s: NFA_CE_UICC_LISTEN_CONFIGURED_EVT : status=0x%X", __FUNCTION__, eventData->status);
+        // TODO : Implement SE
+        ALOGE("Unimplement function %s", __FUNCTION__);
         break;
 
     case NFA_SET_P2P_LISTEN_TECH_EVT:

@@ -569,6 +569,64 @@ void NativeNfcTag::nativeNfcTag_doCheckNdefResult (tNFA_STATUS status, uint32_t 
     sem_post (&sCheckNdefSem);
 }
 
+void NativeNfcTag::nativeNfcTag_doMakeReadonlyResult (tNFA_STATUS status)
+{
+    if (sMakeReadonlyWaitingForComplete != false)
+    {
+        sMakeReadonlyWaitingForComplete = false;
+        sMakeReadonlyStatus = status;
+
+        sem_post (&sMakeReadonlySem);
+    }
+}
+
+bool NativeNfcTag::nativeNfcTag_doMakeReadonly ()
+{
+    bool result = false;
+    tNFA_STATUS status;
+
+    ALOGD ("%s", __FUNCTION__);
+
+    /* Create the make_readonly semaphore */
+    if (sem_init (&sMakeReadonlySem, 0, 0) == -1)
+    {
+        ALOGE ("%s: Make readonly semaphore creation failed (errno=0x%08x)", __FUNCTION__, errno);
+        return false;
+    }
+
+    sMakeReadonlyWaitingForComplete = true;
+
+    // Hard-lock the tag (cannot be reverted)
+    status = NFA_RwSetTagReadOnly(true);
+
+    if (status != NFA_STATUS_OK)
+    {
+        ALOGE ("%s: NFA_RwSetTagReadOnly failed, status = %d", __FUNCTION__, status);
+        goto TheEnd;
+    }
+
+    /* Wait for check NDEF completion status */
+    if (sem_wait (&sMakeReadonlySem))
+    {
+        ALOGE ("%s: Failed to wait for make_readonly semaphore (errno=0x%08x)", __FUNCTION__, errno);
+        goto TheEnd;
+    }
+
+    if (sMakeReadonlyStatus == NFA_STATUS_OK)
+    {
+        result = true;
+    }
+
+TheEnd:
+    /* Destroy semaphore */
+    if (sem_destroy (&sMakeReadonlySem))
+    {
+        ALOGE ("%s: Failed to destroy read_only semaphore (errno=0x%08x)", __FUNCTION__, errno);
+    }
+    sMakeReadonlyWaitingForComplete = false;
+    return result;
+}
+
 //register a callback to receive NDEF message from the tag
 //from the NFA_NDEF_DATA_EVT;
 void NativeNfcTag::nativeNfcTag_registerNdefTypeHandler ()
