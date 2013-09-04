@@ -97,11 +97,6 @@ void* NfcManager::queryInterface(const char* name)
     return NULL;
 }
 
-bool NfcManager::initialize()
-{
-    return doInitialize();
-}
-
 bool NfcManager::doInitialize()
 {
     tNFA_STATUS stat = NFA_STATUS_OK;
@@ -191,6 +186,54 @@ TheEnd:
     }
 
     return sIsNfaEnabled ? true : false;
+}
+
+bool NfcManager::doDeinitialize ()
+{
+    ALOGD ("%s: enter", __FUNCTION__);
+
+    sIsDisabling = true;
+    pn544InteropAbortNow ();
+    // TODO : Implement SE
+    //SecureElement::getInstance().finalize ();
+
+    if (sIsNfaEnabled)
+    {
+        SyncEventGuard guard (sNfaDisableEvent);
+        tNFA_STATUS stat = NFA_Disable (TRUE /* graceful */);
+        if (stat == NFA_STATUS_OK)
+        {
+            ALOGD ("%s: wait for completion", __FUNCTION__);
+            sNfaDisableEvent.wait (); //wait for NFA command to finish
+            PeerToPeer::getInstance ().handleNfcOnOff (false);
+        }
+        else
+        {
+            ALOGE ("%s: fail disable; error=0x%X", __FUNCTION__, stat);
+        }
+    }
+    NativeNfcTag::nativeNfcTag_abortWaits();
+    NfcTag::getInstance().abort ();
+    sAbortConnlessWait = true;
+    // TODO : Implement LLCP
+    //nativeLlcpConnectionlessSocket_abortWait();
+    sIsNfaEnabled = false;
+    sDiscoveryEnabled = false;
+    sIsDisabling = false;
+    // TODO : Implement SE
+    // sIsSecElemSelected = false;
+
+    {
+        //unblock NFA_EnablePolling() and NFA_DisablePolling()
+        SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+        sNfaEnableDisablePollingEvent.notifyOne ();
+    }
+
+    NfcAdaptation& theInstance = NfcAdaptation::GetInstance();
+    theInstance.Finalize();
+
+    ALOGD ("%s: exit", __FUNCTION__);
+    return true;
 }
 
 void NfcManager::enableDiscovery()
