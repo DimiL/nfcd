@@ -50,6 +50,7 @@ static bool                 sDiscoveryEnabled = false;  //is polling for tag?
 static bool                 sIsDisabling = false;
 static bool                 sRfEnabled = false; // whether RF discovery is enabled
 static bool                 sP2pActive = false; // whether p2p was last active
+static bool                 sAbortConnlessWait = false;
 
 #define CONFIG_UPDATE_TECH_MASK     (1 << 1)
 #define DEFAULT_TECH_MASK           (NFA_TECHNOLOGY_MASK_A \
@@ -142,7 +143,7 @@ bool NfcManager::doInitialize()
     {
         if (sIsNfaEnabled)
         {
-            // Mozilla : TODO : Implement SE related function
+            // Mozilla : TODO : Implement SE
             // SecureElement::getInstance().initialize (getNative(e, o));
             NativeNfcTag::nativeNfcTag_registerNdefTypeHandler ();
             NfcTag::getInstance().initialize (this);
@@ -243,7 +244,7 @@ void NfcManager::enableDiscovery()
         ALOGD ("%s: Enable p2pListening", __FUNCTION__);
         PeerToPeer::getInstance().enableP2pListening (true);
 
-        // Mozilla : TODO : Implement SE related function
+        // TODO : Implement SE
     }
 
     // Actually start discovery.
@@ -350,7 +351,42 @@ void nfaDeviceManagementCallback (UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
                 ALOGD ("%s: NFA_DM_NFCC_TIMEOUT_EVT; abort all outstanding operations", __FUNCTION__);
             else
                 ALOGD ("%s: NFA_DM_NFCC_TRANSPORT_ERR_EVT; abort all outstanding operations", __FUNCTION__);
-            // TODO : Handle ERR or TIMEOUT evevnt
+
+            NativeNfcTag::nativeNfcTag_abortWaits();
+            NfcTag::getInstance().abort ();
+            sAbortConnlessWait = true;
+            // TODO : Implement LLCP
+            //nativeLlcpConnectionlessSocket_abortWait();
+            {
+                ALOGD ("%s: aborting  sNfaEnableDisablePollingEvent", __FUNCTION__);
+                SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+                sNfaEnableDisablePollingEvent.notifyOne();
+            }
+            {
+                ALOGD ("%s: aborting  sNfaEnableEvent", __FUNCTION__);
+                SyncEventGuard guard (sNfaEnableEvent);
+                sNfaEnableEvent.notifyOne();
+            }
+            {
+                ALOGD ("%s: aborting  sNfaDisableEvent", __FUNCTION__);
+                SyncEventGuard guard (sNfaDisableEvent);
+                sNfaDisableEvent.notifyOne();
+            }
+            sDiscoveryEnabled = false;
+            PowerSwitch::getInstance ().abort ();
+
+            if (!sIsDisabling && sIsNfaEnabled)
+            {
+                NFA_Disable(FALSE);
+                sIsDisabling = true;
+            }
+            else
+            {
+                sIsNfaEnabled = false;
+                sIsDisabling = false;
+            }
+            PowerSwitch::getInstance ().initialize (PowerSwitch::UNKNOWN_LEVEL);
+            ALOGD ("%s: aborted all waiting events", __FUNCTION__);
         }
         break;
 
