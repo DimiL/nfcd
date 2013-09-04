@@ -49,8 +49,6 @@ LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/src \
     external/stlport/stlport \
     external/openssl/include \
-    external/jansson/android \
-    external/jansson/src \
     bionic
 
 ifeq ($(NFC_VENDOR),BROADCOM)
@@ -81,8 +79,7 @@ LOCAL_SHARED_LIBRARIES += \
     liblog \
     libstlport \
     libcrypto \
-    libjansson \
-    libbinder 
+    libbinder
 
 ifeq ($(NFC_VENDOR),BROADCOM)
 LOCAL_SHARED_LIBRARIES += \

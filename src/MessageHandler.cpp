@@ -10,7 +10,6 @@
 #include "NfcUtil.h"
 #include "NdefMessage.h"
 #include "NdefRecord.h"
-#include <jansson.h>
 
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
@@ -116,11 +115,6 @@ void MessageHandler::sendResponse(Parcel& parcel)
 }
 
 #if 0
-bool MessageHandler::handleWriteNdef(const char *input, size_t length)
-{
-  return true;
-}
-
 bool MessageHandler::handleNdefPush(const char *input, size_t length)
 {
   return true;
