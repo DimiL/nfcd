@@ -88,7 +88,7 @@ static void NfcService_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
 
 void *pollingThreadFunc(void *arg)
 {
-  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(arg);
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(arg);
 
   // TODO : check if check tag presence here is correct
   // For android. it use startPresenceChecking API in INfcTag.java
@@ -96,19 +96,17 @@ void *pollingThreadFunc(void *arg)
     sleep(1);
   }
 
-  pNativeNfcTag->disconnect();
+  pINfcTag->disconnect();
   return NULL;
 }
 
 static void NfcService_MSG_NDEF_TAG(void* pTag)
 {
-  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(pTag);
-  MessageHandler::processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, pNativeNfcTag);
-
-  gTag.msg = pNativeNfcTag;
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(pTag);
+  MessageHandler::processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, pINfcTag);
 
   pthread_t tid;
-  pthread_create(&tid, NULL, pollingThreadFunc, pNativeNfcTag);
+  pthread_create(&tid, NULL, pollingThreadFunc, pINfcTag);
 }
 
 static void *serviceThreadFunc(void *arg)

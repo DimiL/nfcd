@@ -32,7 +32,7 @@ void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
   int numberOfTech = techList.size();
   parcel.writeInt32(numberOfTech);
   for (int i = 0; i < numberOfTech; i++) {
-    parcel->writeInt32(techList[i]);
+    parcel.writeInt32(techList[i]);
   }
   sendResponse(parcel);
 }
