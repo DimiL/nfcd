@@ -8,11 +8,11 @@
 #include "DeviceHost.h"
 #include "P2pDevice.h"
 #include "NativeNfcTag.h"
+#include "INfcManager.h"
 
-class NfcManager : public DeviceHost
+class NfcManager : public DeviceHost, public INfcManager
 {
 public:
-
   NfcManager();
   virtual ~NfcManager();
 

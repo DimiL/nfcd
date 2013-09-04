@@ -6,7 +6,6 @@
 
 DeviceHost::DeviceHost()
 {
-  ALOGE("DeviceHost constructor");
 }
 
 DeviceHost::~DeviceHost()
