@@ -25,7 +25,6 @@ private:
 
   static void notifyTechDiscovered(android::Parcel& parcel, void* data);
 
-//  static bool handleWriteNdef(const char *input, size_t length);
 //  static bool handleNdefPush(const char *input, size_t length);
 //  static bool handleNdefDetailsRequest();
   static bool handleReadNdefRequest(android::Parcel& parcel, int token);
@@ -34,6 +33,7 @@ private:
   static bool handleCloseRequest(android::Parcel& parcel, int token);
 
   static bool handleReadNdefResponse(android::Parcel& parcel, void* data);
+  static bool handleWriteNdefResponse(android::Parcel& parcel);
   static bool handleConnectResponse(android::Parcel& parcel);
 //  static bool handleTransceiveReq(const char *input, size_t length);
 

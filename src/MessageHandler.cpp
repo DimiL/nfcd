@@ -241,7 +241,7 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
   return true;
 }
 
-bool handleWriteNdefResponse(android::Parcel& parcel)
+bool MessageHandler::handleWriteNdefResponse(android::Parcel& parcel)
 {
   //TODO write SessionId
   sendResponse(parcel);
