@@ -86,6 +86,9 @@ void MessageHandler::processResponse(NfcRequest request, int token, void* data)
     case NFC_REQUEST_READ_NDEF:
       handleReadNdefResponse(parcel, data);
       break;
+    case NFC_REQUEST_WRITE_NDEF:
+      handleWriteNdefResponse(parcel);
+      break;
     case NFC_REQUEST_CONNECT:
       handleConnectResponse(parcel);
       break;
@@ -178,7 +181,7 @@ bool MessageHandler::handleWriteNdefRequest(Parcel& parcel, int token)
     delete[] ndefMessagePdu.records[i].payload;
   }
   delete[] ndefMessagePdu.records;
-  
+
   return NfcService::handleWriteNdef(ndefMessage, token);
 }
 
@@ -235,7 +238,14 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
 
   //TODO check when will parcel release data.
   sendResponse(parcel);
-  return false;
+  return true;
+}
+
+bool handleWriteNdefResponse(android::Parcel& parcel)
+{
+  //TODO write SessionId
+  sendResponse(parcel);
+  return true;
 }
 
 bool MessageHandler::handleConnectResponse(Parcel& parcel)
