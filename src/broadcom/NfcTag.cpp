@@ -342,66 +342,72 @@ void NfcTag::createNativeNfcTag (tNFA_ACTIVATED& activationData)
     static const char fn [] = "NfcTag::createNativeNfcTag";
     ALOGD ("%s: enter", fn);
 
-    NativeNfcTag* pNativeNfcTag = 
-        reinterpret_cast<NativeNfcTag*>(mNfcManager->getNativeStruct("NativeNfcTag"));
+    INfcTag* pINfcTag = 
+        reinterpret_cast<INfcTag*>(mNfcManager->queryInterface("NativeNfcTag"));
 
-    if (pNativeNfcTag == NULL) {
+    if (pINfcTag == NULL) {
         ALOGE("%s : cannot get native nfc tag class");
         return;
     }
 
     //fill NativeNfcTag's mProtocols, mTechList, mTechHandles, mTechLibNfcTypes
-    fillNativeNfcTagMembers1(pNativeNfcTag);
+    fillNativeNfcTagMembers1(pINfcTag);
 
     //fill NativeNfcTag's members: mHandle, mConnectedTechnology
-    fillNativeNfcTagMembers2(pNativeNfcTag);//, activationData);
+    fillNativeNfcTagMembers2(pINfcTag);//, activationData);
 
     //fill NativeNfcTag's members: mTechPollBytes
-    fillNativeNfcTagMembers3(pNativeNfcTag, activationData);
+    fillNativeNfcTagMembers3(pINfcTag, activationData);
 
     //fill NativeNfcTag's members: mTechActBytes
-    fillNativeNfcTagMembers4(pNativeNfcTag, activationData);
+    fillNativeNfcTagMembers4(pINfcTag, activationData);
 
     //fill NativeNfcTag's members: mUid
-    fillNativeNfcTagMembers5(pNativeNfcTag, activationData);
+    fillNativeNfcTagMembers5(pINfcTag, activationData);
 
     //notify NFC service about this new tag
     ALOGD ("%s: try notify nfc service", fn);
-    mNfcManager->notifyNdefMessageListeners(reinterpret_cast<void*>(pNativeNfcTag)); 
+    mNfcManager->notifyNdefMessageListeners(reinterpret_cast<void*>(pINfcTag));
 
     ALOGD ("%s: exit", fn);
 }
 
-void NfcTag::fillNativeNfcTagMembers1 (NativeNfcTag* pNativeNfcTag)
+void NfcTag::fillNativeNfcTagMembers1 (INfcTag* pINfcTag)
 {
     static const char fn [] = "NfcTag::fillNativeNfcTagMembers1";
     ALOGD ("%s", fn);
 
+    std::vector<int>& techList = pINfcTag->getTechList();
+    std::vector<int>& techHandles = pINfcTag->getTechHandles();
+    std::vector<int>& techLibNfcTypes = pINfcTag->getTechLibNfcTypes();
+
     for (int i = 0; i < mNumTechList; i++) {
-        // Dimi : TODO : fix mNativeData
+        // TODO : fix mNativeData
         // mNativeData->tProtocols [i] = mTechLibNfcTypes [i];
         // mNativeData->handles [i] = mTechHandles [i];
                   
-        pNativeNfcTag->mTechList.push_back(mTechList[i]);
-        pNativeNfcTag->mTechHandles.push_back(mTechHandles[i]);
-        pNativeNfcTag->mTechLibNfcTypes.push_back(mTechLibNfcTypes[i]);
+        techList.push_back(mTechList[i]);
+        techHandles.push_back(mTechHandles[i]);
+        techLibNfcTypes.push_back(mTechLibNfcTypes[i]);
    }   
 }
 
 //fill NativeNfcTag's members: mHandle, mConnectedTechnology
-void NfcTag::fillNativeNfcTagMembers2 (NativeNfcTag* pNativeNfcTag)
+void NfcTag::fillNativeNfcTagMembers2 (INfcTag* pINfcTag)
 {
     static const char fn [] = "NfcTag::fillNativeNfcTagMembers2";
     ALOGD ("%s", fn);
 
-    pNativeNfcTag->mConnectedTechIndex = 0;
+    int& connectedTechIndex = pINfcTag->getConnectedHandle();
+    connectedTechIndex = 0;
 }
 
-void NfcTag::fillNativeNfcTagMembers3 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVATED& activationData)
+void NfcTag::fillNativeNfcTagMembers3 (INfcTag* pINfcTag, tNFA_ACTIVATED& activationData)
 {
     static const char fn [] = "NfcTag::fillNativeNfcTagMembers3";
     int len = 0;
-    std::vector<unsigned char> pollBytes;
+    std::vector<uint8_t> pollBytes;
+    std::vector<std::vector<uint8_t> >& techPollBytes = pINfcTag->getTechPollBytes();
 
     for (int i = 0; i < mNumTechList; i++)
     {
@@ -500,16 +506,15 @@ void NfcTag::fillNativeNfcTagMembers3 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVAT
             pollBytes.clear();
             break;
         } //switch: every type of technology
-        // Dimi : TODO : Make sure this is correct
-        pNativeNfcTag->mTechPollBytes.push_back(pollBytes);
+        techPollBytes.push_back(pollBytes);
     } //for: every technology in the array
-
 }
 
-void NfcTag::fillNativeNfcTagMembers4 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVATED& activationData)
+void NfcTag::fillNativeNfcTagMembers4 (INfcTag* pINfcTag, tNFA_ACTIVATED& activationData)
 {
     static const char fn [] = "NfcTag::fillNativeNfcTagMembers4";
     std::vector<unsigned char> actBytes;
+    std::vector<std::vector<uint8_t> >& techActBytes = pINfcTag->getTechActBytes();
 
     for (int i = 0; i < mNumTechList; i++)
     {
@@ -626,15 +631,16 @@ void NfcTag::fillNativeNfcTagMembers4 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVAT
             actBytes.clear();
             break;
         }//switch
-        pNativeNfcTag->mTechPollBytes.push_back(actBytes);
+        techActBytes.push_back(actBytes);
     } //for: every technology in the array
 }
 
-void NfcTag::fillNativeNfcTagMembers5 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVATED& activationData)
+void NfcTag::fillNativeNfcTagMembers5 (INfcTag* pINfcTag, tNFA_ACTIVATED& activationData)
 {
     static const char fn [] = "NfcTag::fillNativeNfcTagMembers5";
     int len = 0;
     std::vector<unsigned char> uid;
+    std::vector<std::vector<uint8_t> >& nfcTagUid = pINfcTag->getUid();
 
     switch (mTechParams [0].mode)
     {
@@ -700,7 +706,7 @@ void NfcTag::fillNativeNfcTagMembers5 (NativeNfcTag* pNativeNfcTag, tNFA_ACTIVAT
         uid.clear();
         break;
     }
-    pNativeNfcTag->mUid.push_back(uid);
+    nfcTagUid.push_back(uid);
 }
 
 bool NfcTag::isP2pDiscovered ()

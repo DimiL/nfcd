@@ -18,7 +18,7 @@ public:
 
   bool initialize();
   void enableDiscovery();
-  void* getNativeStruct(const char* name);
+  void* queryInterface(const char* name);
 
 private:
   P2pDevice* mP2pDevice;

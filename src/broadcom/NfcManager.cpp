@@ -92,7 +92,7 @@ void NfcManager::initializeNativeStructure()
     mNativeNfcTag = new NativeNfcTag();
 }
 
-void* NfcManager::getNativeStruct(const char* name)
+void* NfcManager::queryInterface(const char* name)
 {
     if (0 == strcmp(name, "P2pDevice"))
         return reinterpret_cast<void*>(mP2pDevice);

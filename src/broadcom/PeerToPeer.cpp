@@ -294,7 +294,7 @@ void PeerToPeer::llcpActivatedHandler (tNFA_LLCP_ACTIVATED& activated)
     ALOGE ("%s: enter", fn);
 
     P2pDevice* pP2pDevice = 
-        reinterpret_cast<P2pDevice*>(mNfcManager->getNativeStruct("P2pDevice"));
+        reinterpret_cast<P2pDevice*>(mNfcManager->queryInterface("P2pDevice"));
 
     if (pP2pDevice == NULL) {
         ALOGE("%s : cannot get native p2p device class", fn);

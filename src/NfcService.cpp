@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 #include "MessageHandler.h"
-#include "NativeNfcTag.h"
+#include "INfcTag.h"
 #include "NfcGonkMessage.h"
 #include "NfcService.h"
 
@@ -20,13 +20,6 @@ static sem_t thread_sem;
 
 static void* linkDevice;
 static void* nfcTag;
-
-typedef struct tagInfo {
-  NativeNfcTag* msg;
-  char* requestId;
-} tag;
-
-tag gTag;
 
 typedef enum {
   MSG_UNDEFINED = 0,
@@ -86,19 +79,18 @@ static void NfcService_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
 
 static void NfcService_MSG_NDEF_TAG(void* pTag)
 {
-  ALOGD("NfcService_MSG_NDEF_TAG");
-  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(pTag);
-  MessageHandler::processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, pNativeNfcTag);
+  ALOGE("NfcService_MSG_NDEF_TAG");
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(pTag);
 
-  gTag.msg = pNativeNfcTag;
+  MessageHandler::processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, pINfcTag);
 
   // TODO : check if check tag presence here is correct
-  // For android. it use startPresenceChecking API in NativeNfcTag.java
-  while (pNativeNfcTag->presenceCheck()) {
+  // For android. it use startPresenceChecking API in INfcTag.java
+  while (pINfcTag->presenceCheck()) {
     sleep(1);
   }
 
-  pNativeNfcTag->disconnect();
+  pINfcTag->disconnect();
 }
 
 static void *serviceThreadFunc(void *arg)
@@ -172,23 +164,23 @@ void NfcService::initialize(NfcManager* pNfcManager)
 
 bool NfcService::handleDisconnect()
 {
-  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(sNfcManager->getNativeStruct("NativeNfcTag"));
-  bool result = pNativeNfcTag->disconnect();
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
+  bool result = pINfcTag->disconnect();
   return result;
 }
 
 int NfcService::handleConnect(int technology, int token)
 {
-  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(sNfcManager->getNativeStruct("NativeNfcTag"));
-  int status = pNativeNfcTag->connectWithStatus(technology);
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
+  int status = pINfcTag->connectWithStatus(technology);
   MessageHandler::processResponse(NFC_REQUEST_CONNECT, token, NULL);
   return status;
 }
 
 bool NfcService::handleReadNdef(int token)
 {
-  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(sNfcManager->getNativeStruct("NativeNfcTag"));
-  NdefMessage* pNdefMessage = pNativeNfcTag->findAndReadNdef();
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
+  NdefMessage* pNdefMessage = pINfcTag->findAndReadNdef();
 
   if (pNdefMessage != NULL) {
     MessageHandler::processResponse(NFC_REQUEST_READ_NDEF, token, pNdefMessage);
@@ -202,8 +194,8 @@ bool NfcService::handleReadNdef(int token)
 
 bool NfcService::handleWriteNdef(NdefMessage& ndef, int token)
 {
-  NativeNfcTag* pNativeNfcTag = reinterpret_cast<NativeNfcTag*>(sNfcManager->getNativeStruct("NativeNfcTag"));
-  bool result = pNativeNfcTag->writeNdef(ndef);
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
+  bool result = pINfcTag->writeNdef(ndef);
 
   MessageHandler::processResponse(NFC_REQUEST_WRITE_NDEF, token, NULL);
 
