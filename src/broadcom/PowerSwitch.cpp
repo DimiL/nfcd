@@ -9,8 +9,6 @@
 #include "PowerSwitch.h"
 #include "config.h"
 
-//#include "SecureElement.h"
-
 #define LOG_TAG "PowerSwitch"
 
 void doStartupConfig ();
