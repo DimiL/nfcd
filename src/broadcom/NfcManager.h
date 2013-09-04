@@ -24,7 +24,6 @@ private:
   P2pDevice* mP2pDevice;
   NativeNfcTag* mNativeNfcTag;
 
-  void initializeNativeStructure();
   bool doInitialize();
 };
 

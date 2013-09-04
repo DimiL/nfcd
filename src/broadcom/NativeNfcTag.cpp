@@ -25,19 +25,9 @@ extern "C"
 extern bool nfcManager_isNfcActive();
 extern int gGeneralTransceiveTimeout;
 
-/*****************************************************************************
-**
-** public variables and functions
-**
-*****************************************************************************/
 bool    gIsTagDeactivating = false;    // flag for nfa callback indicating we are deactivating for RF interface switch
 bool    gIsSelectingRfInterface = false; // flag for nfa callback indicating we are selecting for RF interface switch
 
-/*****************************************************************************
-**
-** private variables and functions
-**
-*****************************************************************************/
 // Pre-defined tag type values. These must match the values in
 // framework Ndef.java for Google public NFC API.
 #define NDEF_UNKNOWN_TYPE          -1

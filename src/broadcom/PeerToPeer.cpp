@@ -10,10 +10,7 @@
 #include "NfcUtil.h"
 #include "llcp_defs.h"
 #include "config.h"
-//#include "JavaClassConstants.h"
-//#include <ScopedLocalRef.h>
 #include "P2pDevice.h"
-
 
 /* Some older PN544-based solutions would only send the first SYMM back
  * (as an initiator) after the full LTO (750ms). But our connect timer
@@ -36,16 +33,6 @@ namespace android
 PeerToPeer PeerToPeer::sP2p;
 const std::string P2pServer::sSnepServiceName ("urn:nfc:sn:snep");
 
-
-/*******************************************************************************
-**
-** Function:        PeerToPeer
-**
-** Description:     Initialize member variables.
-**
-** Returns:         None
-**
-*******************************************************************************/
 PeerToPeer::PeerToPeer ()
 :   mRemoteWKS (0),
     mIsP2pListening (false),
@@ -60,45 +47,15 @@ PeerToPeer::PeerToPeer ()
     memset (mClients, 0, sizeof(mClients));
 }
 
-
-/*******************************************************************************
-**
-** Function:        ~PeerToPeer
-**
-** Description:     Free all resources.
-**
-** Returns:         None
-**
-*******************************************************************************/
 PeerToPeer::~PeerToPeer ()
 {
 }
 
-
-/*******************************************************************************
-**
-** Function:        getInstance
-**
-** Description:     Get the singleton PeerToPeer object.
-**
-** Returns:         Singleton PeerToPeer object.
-**
-*******************************************************************************/
 PeerToPeer& PeerToPeer::getInstance ()
 {
     return sP2p;
 }
 
-
-/*******************************************************************************
-**
-** Function:        initialize
-**
-** Description:     Initialize member variables.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void PeerToPeer::initialize (NfcManager* pNfcManager)
 {
     unsigned long num = 0;
@@ -109,18 +66,6 @@ void PeerToPeer::initialize (NfcManager* pNfcManager)
         mP2pListenTechMask = num;
 }
 
-
-/*******************************************************************************
-**
-** Function:        findServerLocked
-**
-** Description:     Find a PeerToPeer object by connection handle.
-**                  Assumes mMutex is already held
-**                  nfaP2pServerHandle: Connectin handle.
-**
-** Returns:         PeerToPeer object.
-**
-*******************************************************************************/
 sp<P2pServer> PeerToPeer::findServerLocked (tNFA_HANDLE nfaP2pServerHandle)
 {
     for (int i = 0; i < sMax; i++)
@@ -136,18 +81,6 @@ sp<P2pServer> PeerToPeer::findServerLocked (tNFA_HANDLE nfaP2pServerHandle)
     return NULL;
 }
 
-
-/*******************************************************************************
-**
-** Function:        findServerLocked
-**
-** Description:     Find a PeerToPeer object by connection handle.
-**                  Assumes mMutex is already held
-**                  serviceName: service name.
-**
-** Returns:         PeerToPeer object.
-**
-*******************************************************************************/
 sp<P2pServer> PeerToPeer::findServerLocked (tJNI_HANDLE jniHandle)
 {
     for (int i = 0; i < sMax; i++)
@@ -163,18 +96,6 @@ sp<P2pServer> PeerToPeer::findServerLocked (tJNI_HANDLE jniHandle)
     return NULL;
 }
 
-
-/*******************************************************************************
-**
-** Function:        findServerLocked
-**
-** Description:     Find a PeerToPeer object by service name
-**                  Assumes mMutex is already heldf
-**                  serviceName: service name.
-**
-** Returns:         PeerToPeer object.
-**
-*******************************************************************************/
 sp<P2pServer> PeerToPeer::findServerLocked (const char *serviceName)
 {
     for (int i = 0; i < sMax; i++)
@@ -187,18 +108,6 @@ sp<P2pServer> PeerToPeer::findServerLocked (const char *serviceName)
     return NULL;
 }
 
-
-/*******************************************************************************
-**
-** Function:        registerServer
-**
-** Description:     Let a server start listening for peer's connection request.
-**                  jniHandle: Connection handle.
-**                  serviceName: Server's service name.
-**
-** Returns:         True if ok.
-**
-*******************************************************************************/
 bool PeerToPeer::registerServer (tJNI_HANDLE jniHandle, const char *serviceName)
 {
     static const char fn [] = "PeerToPeer::registerServer";
@@ -245,17 +154,6 @@ bool PeerToPeer::registerServer (tJNI_HANDLE jniHandle, const char *serviceName)
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        removeServer
-**
-** Description:     Free resources related to a server.
-**                  jniHandle: Connection handle.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void PeerToPeer::removeServer (tJNI_HANDLE jniHandle)
 {
     static const char fn [] = "PeerToPeer::removeServer";
@@ -276,18 +174,6 @@ void PeerToPeer::removeServer (tJNI_HANDLE jniHandle)
     ALOGE ("%s: unknown server jni handle: %u", fn, jniHandle);
 }
 
-
-/*******************************************************************************
-**
-** Function:        llcpActivatedHandler
-**
-** Description:     Receive LLLCP-activated event from stack.
-**                  nat: JVM-related data.
-**                  activated: Event data.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void PeerToPeer::llcpActivatedHandler (tNFA_LLCP_ACTIVATED& activated)
 {
     static const char fn [] = "PeerToPeer::llcpActivatedHandler";
@@ -319,18 +205,6 @@ void PeerToPeer::llcpActivatedHandler (tNFA_LLCP_ACTIVATED& activated)
     ALOGE ("%s: exit", fn);
 }
 
-
-/*******************************************************************************
-**
-** Function:        llcpDeactivatedHandler
-**
-** Description:     Receive LLLCP-deactivated event from stack.
-**                  nat: JVM-related data.
-**                  deactivated: Event data.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void PeerToPeer::llcpDeactivatedHandler (tNFA_LLCP_DEACTIVATED& /*deactivated*/)
 {
     //mNfcManager->notifyLlcpLinkDeactivated();
@@ -338,22 +212,9 @@ void PeerToPeer::llcpDeactivatedHandler (tNFA_LLCP_DEACTIVATED& /*deactivated*/)
 
 void PeerToPeer::llcpFirstPacketHandler ()
 {
-    // Dimi : To be implemented
+    // TODO : implemented
 }
 
-/*******************************************************************************
-**
-** Function:        accept
-**
-** Description:     Accept a peer's request to connect.
-**                  serverJniHandle: Server's handle.
-**                  connJniHandle: Connection handle.
-**                  maxInfoUnit: Maximum information unit.
-**                  recvWindow: Receive window size.
-**
-** Returns:         True if ok.
-**
-*******************************************************************************/
 bool PeerToPeer::accept (tJNI_HANDLE serverJniHandle, tJNI_HANDLE connJniHandle, int maxInfoUnit, int recvWindow)
 {
     static const char fn [] = "PeerToPeer::accept";
@@ -374,16 +235,6 @@ bool PeerToPeer::accept (tJNI_HANDLE serverJniHandle, tJNI_HANDLE connJniHandle,
     return pSrv->accept(serverJniHandle, connJniHandle, maxInfoUnit, recvWindow);
 }
 
-
-/*******************************************************************************
-**
-** Function:        deregisterServer
-**
-** Description:     Stop a P2pServer from listening for peer.
-**
-** Returns:         True if ok.
-**
-*******************************************************************************/
 bool PeerToPeer::deregisterServer (tJNI_HANDLE jniHandle)
 {
     static const char fn [] = "PeerToPeer::deregisterServer";
@@ -418,19 +269,6 @@ bool PeerToPeer::deregisterServer (tJNI_HANDLE jniHandle)
     return true;
 }
 
-
-/*******************************************************************************
-**
-** Function:        createClient
-**
-** Description:     Create a P2pClient object for a new out-bound connection.
-**                  jniHandle: Connection handle.
-**                  miu: Maximum information unit.
-**                  rw: Receive window size.
-**
-** Returns:         True if ok.
-**
-*******************************************************************************/
 bool PeerToPeer::createClient (tJNI_HANDLE jniHandle, UINT16 miu, UINT8 rw)
 {
     static const char fn [] = "PeerToPeer::createClient";
@@ -480,17 +318,6 @@ bool PeerToPeer::createClient (tJNI_HANDLE jniHandle, UINT16 miu, UINT8 rw)
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        removeConn
-**
-** Description:     Free resources related to a connection.
-**                  jniHandle: Connection handle.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void PeerToPeer::removeConn(tJNI_HANDLE jniHandle)
 {
     static const char fn[] = "PeerToPeer::removeConn";
@@ -524,18 +351,6 @@ void PeerToPeer::removeConn(tJNI_HANDLE jniHandle)
     ALOGE ("%s: could not find handle: %u", fn, jniHandle);
 }
 
-
-/*******************************************************************************
-**
-** Function:        connectConnOriented
-**
-** Description:     Estabish a connection-oriented connection to a peer.
-**                  jniHandle: Connection handle.
-**                  serviceName: Peer's service name.
-**
-** Returns:         True if ok.
-**
-*******************************************************************************/
 bool PeerToPeer::connectConnOriented (tJNI_HANDLE jniHandle, const char* serviceName)
 {
     static const char fn [] = "PeerToPeer::connectConnOriented";
@@ -545,18 +360,6 @@ bool PeerToPeer::connectConnOriented (tJNI_HANDLE jniHandle, const char* service
     return stat;
 }
 
-
-/*******************************************************************************
-**
-** Function:        connectConnOriented
-**
-** Description:     Estabish a connection-oriented connection to a peer.
-**                  jniHandle: Connection handle.
-**                  destinationSap: Peer's service access point.
-**
-** Returns:         True if ok.
-**
-*******************************************************************************/
 bool PeerToPeer::connectConnOriented (tJNI_HANDLE jniHandle, UINT8 destinationSap)
 {
     static const char fn [] = "PeerToPeer::connectConnOriented";
@@ -566,19 +369,6 @@ bool PeerToPeer::connectConnOriented (tJNI_HANDLE jniHandle, UINT8 destinationSa
     return stat;
 }
 
-
-/*******************************************************************************
-**
-** Function:        createDataLinkConn
-**
-** Description:     Estabish a connection-oriented connection to a peer.
-**                  jniHandle: Connection handle.
-**                  serviceName: Peer's service name.
-**                  destinationSap: Peer's service access point.
-**
-** Returns:         True if ok.
-**
-*******************************************************************************/
 bool PeerToPeer::createDataLinkConn (tJNI_HANDLE jniHandle, const char* serviceName, UINT8 destinationSap)
 {
     static const char fn [] = "PeerToPeer::createDataLinkConn";
@@ -630,17 +420,6 @@ bool PeerToPeer::createDataLinkConn (tJNI_HANDLE jniHandle, const char* serviceN
     return nfaStat == NFA_STATUS_OK;
 }
 
-
-/*******************************************************************************
-**
-** Function:        findClient
-**
-** Description:     Find a PeerToPeer object with a client connection handle.
-**                  nfaConnHandle: Connection handle.
-**
-** Returns:         PeerToPeer object.
-**
-*******************************************************************************/
 sp<P2pClient> PeerToPeer::findClient (tNFA_HANDLE nfaConnHandle)
 {
     AutoMutex mutex(mMutex);
@@ -652,17 +431,6 @@ sp<P2pClient> PeerToPeer::findClient (tNFA_HANDLE nfaConnHandle)
     return (NULL);
 }
 
-
-/*******************************************************************************
-**
-** Function:        findClient
-**
-** Description:     Find a PeerToPeer object with a client connection handle.
-**                  jniHandle: Connection handle.
-**
-** Returns:         PeerToPeer object.
-**
-*******************************************************************************/
 sp<P2pClient> PeerToPeer::findClient (tJNI_HANDLE jniHandle)
 {
     AutoMutex mutex(mMutex);
@@ -674,17 +442,6 @@ sp<P2pClient> PeerToPeer::findClient (tJNI_HANDLE jniHandle)
     return (NULL);
 }
 
-
-/*******************************************************************************
-**
-** Function:        findClientCon
-**
-** Description:     Find a PeerToPeer object with a client connection handle.
-**                  nfaConnHandle: Connection handle.
-**
-** Returns:         PeerToPeer object.
-**
-*******************************************************************************/
 sp<P2pClient> PeerToPeer::findClientCon (tNFA_HANDLE nfaConnHandle)
 {
     AutoMutex mutex(mMutex);
@@ -696,17 +453,6 @@ sp<P2pClient> PeerToPeer::findClientCon (tNFA_HANDLE nfaConnHandle)
     return (NULL);
 }
 
-
-/*******************************************************************************
-**
-** Function:        findConnection
-**
-** Description:     Find a PeerToPeer object with a connection handle.
-**                  nfaConnHandle: Connection handle.
-**
-** Returns:         PeerToPeer object.
-**
-*******************************************************************************/
 sp<NfaConn> PeerToPeer::findConnection (tNFA_HANDLE nfaConnHandle)
 {
     AutoMutex mutex(mMutex);
@@ -735,17 +481,6 @@ sp<NfaConn> PeerToPeer::findConnection (tNFA_HANDLE nfaConnHandle)
     return NULL;
 }
 
-
-/*******************************************************************************
-**
-** Function:        findConnection
-**
-** Description:     Find a PeerToPeer object with a connection handle.
-**                  jniHandle: Connection handle.
-**
-** Returns:         PeerToPeer object.
-**
-*******************************************************************************/
 sp<NfaConn> PeerToPeer::findConnection (tJNI_HANDLE jniHandle)
 {
     AutoMutex mutex(mMutex);
@@ -774,19 +509,6 @@ sp<NfaConn> PeerToPeer::findConnection (tJNI_HANDLE jniHandle)
     return NULL;
 }
 
-
-/*******************************************************************************
-**
-** Function:        send
-**
-** Description:     Send data to peer.
-**                  jniHandle: Handle of connection.
-**                  buffer: Buffer of data.
-**                  bufferLen: Length of data.
-**
-** Returns:         True if ok.
-**
-*******************************************************************************/
 bool PeerToPeer::send (tJNI_HANDLE jniHandle, UINT8 *buffer, UINT16 bufferLen)
 {
     static const char fn [] = "PeerToPeer::send";
@@ -827,20 +549,6 @@ bool PeerToPeer::send (tJNI_HANDLE jniHandle, UINT8 *buffer, UINT16 bufferLen)
     return nfaStat == NFA_STATUS_OK;
 }
 
-
-/*******************************************************************************
-**
-** Function:        receive
-**
-** Description:     Receive data from peer.
-**                  jniHandle: Handle of connection.
-**                  buffer: Buffer to store data.
-**                  bufferLen: Max length of buffer.
-**                  actualLen: Actual length received.
-**
-** Returns:         True if ok.
-**
-*******************************************************************************/
 bool PeerToPeer::receive (tJNI_HANDLE jniHandle, UINT8* buffer, UINT16 bufferLen, UINT16& actualLen)
 {
     static const char fn [] = "PeerToPeer::receive";
@@ -880,17 +588,6 @@ bool PeerToPeer::receive (tJNI_HANDLE jniHandle, UINT8* buffer, UINT16 bufferLen
     return retVal;
 }
 
-
-/*******************************************************************************
-**
-** Function:        disconnectConnOriented
-**
-** Description:     Disconnect a connection-oriented connection with peer.
-**                  jniHandle: Handle of connection.
-**
-** Returns:         True if ok.
-**
-*******************************************************************************/
 bool PeerToPeer::disconnectConnOriented (tJNI_HANDLE jniHandle)
 {
     static const char fn [] = "PeerToPeer::disconnectConnOriented";
@@ -943,17 +640,6 @@ bool PeerToPeer::disconnectConnOriented (tJNI_HANDLE jniHandle)
     return nfaStat == NFA_STATUS_OK;
 }
 
-
-/*******************************************************************************
-**
-** Function:        getRemoteMaxInfoUnit
-**
-** Description:     Get peer's max information unit.
-**                  jniHandle: Handle of the connection.
-**
-** Returns:         Peer's max information unit.
-**
-*******************************************************************************/
 UINT16 PeerToPeer::getRemoteMaxInfoUnit (tJNI_HANDLE jniHandle)
 {
     static const char fn [] = "PeerToPeer::getRemoteMaxInfoUnit";
@@ -968,17 +654,6 @@ UINT16 PeerToPeer::getRemoteMaxInfoUnit (tJNI_HANDLE jniHandle)
     return (pConn->mRemoteMaxInfoUnit);
 }
 
-
-/*******************************************************************************
-**
-** Function:        getRemoteRecvWindow
-**
-** Description:     Get peer's receive window size.
-**                  jniHandle: Handle of the connection.
-**
-** Returns:         Peer's receive window size.
-**
-*******************************************************************************/
 UINT8 PeerToPeer::getRemoteRecvWindow (tJNI_HANDLE jniHandle)
 {
     static const char fn [] = "PeerToPeer::getRemoteRecvWindow";
@@ -993,30 +668,10 @@ UINT8 PeerToPeer::getRemoteRecvWindow (tJNI_HANDLE jniHandle)
     return pConn->mRemoteRecvWindow;
 }
 
-/*******************************************************************************
-**
-** Function:        setP2pListenMask
-**
-** Description:     Sets the p2p listen technology mask.
-**                  p2pListenMask: the p2p listen mask to be set?
-**
-** Returns:         None
-**
-*******************************************************************************/
 void PeerToPeer::setP2pListenMask (tNFA_TECHNOLOGY_MASK p2pListenMask) {
     mP2pListenTechMask = p2pListenMask;
 }
 
-/*******************************************************************************
-**
-** Function:        enableP2pListening
-**
-** Description:     Start/stop polling/listening to peer that supports P2P.
-**                  isEnable: Is enable polling/listening?
-**
-** Returns:         None
-**
-*******************************************************************************/
 void PeerToPeer::enableP2pListening (bool isEnable)
 {
     static const char    fn []   = "PeerToPeer::enableP2pListening";
@@ -1051,17 +706,6 @@ void PeerToPeer::enableP2pListening (bool isEnable)
     ALOGD ("%s: exit; mIsP2pListening: %u", fn, mIsP2pListening);
 }
 
-
-/*******************************************************************************
-**
-** Function:        handleNfcOnOff
-**
-** Description:     Handle events related to turning NFC on/off by the user.
-**                  isOn: Is NFC turning on?
-**
-** Returns:         None
-**
-*******************************************************************************/
 void PeerToPeer::handleNfcOnOff (bool isOn)
 {
     static const char fn [] = "PeerToPeer::handleNfcOnOff";
@@ -1116,18 +760,6 @@ void PeerToPeer::handleNfcOnOff (bool isOn)
     ALOGD ("%s: exit", fn);
 }
 
-
-/*******************************************************************************
-**
-** Function:        nfaServerCallback
-**
-** Description:     Receive LLCP-related events from the stack.
-**                  p2pEvent: Event code.
-**                  eventData: Event data.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void PeerToPeer::nfaServerCallback (tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eventData)
 {
     static const char fn [] = "PeerToPeer::nfaServerCallback";
@@ -1273,18 +905,6 @@ void PeerToPeer::nfaServerCallback (tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* ev
     ALOGD_IF ((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "%s: exit", fn);
 }
 
-
-/*******************************************************************************
-**
-** Function:        nfaClientCallback
-**
-** Description:     Receive LLCP-related events from the stack.
-**                  p2pEvent: Event code.
-**                  eventData: Event data.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void PeerToPeer::nfaClientCallback (tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eventData)
 {
     static const char fn [] = "PeerToPeer::nfaClientCallback";
@@ -1424,18 +1044,6 @@ void PeerToPeer::nfaClientCallback (tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* ev
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        connectionEventHandler
-**
-** Description:     Receive events from the stack.
-**                  event: Event code.
-**                  eventData: Event data.
-**
-** Returns:         None
-**
-*******************************************************************************/
 void PeerToPeer::connectionEventHandler (UINT8 event, tNFA_CONN_EVT_DATA* /*eventData*/)
 {
     switch (event)
@@ -1449,16 +1057,6 @@ void PeerToPeer::connectionEventHandler (UINT8 event, tNFA_CONN_EVT_DATA* /*even
     }
 }
 
-
-/*******************************************************************************
-**
-** Function:        getNextJniHandle
-**
-** Description:     Get a new JNI handle.
-**
-** Returns:         A new JNI handle.
-**
-*******************************************************************************/
 PeerToPeer::tJNI_HANDLE PeerToPeer::getNewJniHandle ()
 {
     tJNI_HANDLE newHandle = 0;
@@ -1469,20 +1067,6 @@ PeerToPeer::tJNI_HANDLE PeerToPeer::getNewJniHandle ()
     return newHandle;
 }
 
-
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-
-
-/*******************************************************************************
-**
-** Function:        P2pServer
-**
-** Description:     Initialize member variables.
-**
-** Returns:         None
-**
-*******************************************************************************/
 P2pServer::P2pServer(PeerToPeer::tJNI_HANDLE jniHandle, const char* serviceName)
 :   mNfaP2pServerHandle (NFA_HANDLE_INVALID),
     mJniHandle (jniHandle)
@@ -1624,17 +1208,6 @@ sp<NfaConn> P2pServer::allocateConnection (PeerToPeer::tJNI_HANDLE jniHandle)
     return NULL;
 }
 
-
-/*******************************************************************************
-**
-** Function:        findServerConnection
-**
-** Description:     Find a P2pServer that has the handle.
-**                  nfaConnHandle: NFA connection handle.
-**
-** Returns:         P2pServer object.
-**
-*******************************************************************************/
 sp<NfaConn> P2pServer::findServerConnection (tNFA_HANDLE nfaConnHandle)
 {
     int jj = 0;
@@ -1650,16 +1223,6 @@ sp<NfaConn> P2pServer::findServerConnection (tNFA_HANDLE nfaConnHandle)
     return (NULL);
 }
 
-/*******************************************************************************
-**
-** Function:        findServerConnection
-**
-** Description:     Find a P2pServer that has the handle.
-**                  nfaConnHandle: NFA connection handle.
-**
-** Returns:         P2pServer object.
-**
-*******************************************************************************/
 sp<NfaConn> P2pServer::findServerConnection (PeerToPeer::tJNI_HANDLE jniHandle)
 {
     int jj = 0;
@@ -1675,16 +1238,6 @@ sp<NfaConn> P2pServer::findServerConnection (PeerToPeer::tJNI_HANDLE jniHandle)
     return (NULL);
 }
 
-/*******************************************************************************
-**
-** Function:        removeServerConnection
-**
-** Description:     Find a P2pServer that has the handle.
-**                  nfaConnHandle: NFA connection handle.
-**
-** Returns:         P2pServer object.
-**
-*******************************************************************************/
 bool P2pServer::removeServerConnection (PeerToPeer::tJNI_HANDLE jniHandle)
 {
     int jj = 0;
@@ -1701,19 +1254,7 @@ bool P2pServer::removeServerConnection (PeerToPeer::tJNI_HANDLE jniHandle)
     // If here, not found
     return false;
 }
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
 
-
-/*******************************************************************************
-**
-** Function:        P2pClient
-**
-** Description:     Initialize member variables.
-**
-** Returns:         None
-**
-*******************************************************************************/
 P2pClient::P2pClient ()
 :   mNfaP2pClientHandle (NFA_HANDLE_INVALID),
     mIsConnecting (false)
@@ -1721,34 +1262,10 @@ P2pClient::P2pClient ()
     mClientConn = new NfaConn();
 }
 
-
-/*******************************************************************************
-**
-** Function:        ~P2pClient
-**
-** Description:     Free all resources.
-**
-** Returns:         None
-**
-*******************************************************************************/
 P2pClient::~P2pClient ()
 {
 }
 
-
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-
-
-/*******************************************************************************
-**
-** Function:        NfaConn
-**
-** Description:     Initialize member variables.
-**
-** Returns:         None
-**
-*******************************************************************************/
 NfaConn::NfaConn()
 :   mNfaConnHandle (NFA_HANDLE_INVALID),
     mJniHandle (0),
