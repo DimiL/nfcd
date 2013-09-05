@@ -29,7 +29,8 @@ public:
   static int handleConnect(int technology, int token);
   static bool handleReadNdefRequest(int token);
   static void handleReadNdefResponse(int token);
-  static bool handleWriteNdef(NdefMessage& ndef, int token);
+  static bool handleWriteNdefRequest(NdefMessage& ndef, int token);
+  static void handleWriteNdefResponse(int token);
 
 private:
   NfcService();

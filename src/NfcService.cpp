@@ -32,6 +32,7 @@ typedef enum {
   MSG_SE_FIELD_DEACTIVATED,
   MSG_SE_NOTIFY_TRANSACTION_LISTENERS,
   MSG_READ_NDEF,
+  MSG_WRITE_NDEF,
 } MSG_TYPE;
 
 static MSG_TYPE msg_type = MSG_UNDEFINED;
@@ -139,6 +140,9 @@ static void *serviceThreadFunc(void *arg)
       case MSG_READ_NDEF:
         NfcService::handleReadNdefResponse(sToken);
         break;
+      case MSG_WRITE_NDEF:
+        NfcService::handleWriteNdefResponse(sToken);
+        break;
       default:
         ALOGE("NFCService bad message");
         abort();
@@ -222,12 +226,21 @@ void NfcService::handleReadNdefResponse(int token)
   delete pNdefMessage;
 }
 
-bool NfcService::handleWriteNdef(NdefMessage& ndef, int token)
+bool NfcService::handleWriteNdefRequest(NdefMessage& ndef, int token)
 {
+  ALOGD("%s enter token=%d", __func__, token);
+
+  //TODO try not to do it in main thread.
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
   bool result = pINfcTag->writeNdef(ndef);
 
-  MessageHandler::processResponse(NFC_REQUEST_WRITE_NDEF, token, NULL);
-
+  msg_type = MSG_WRITE_NDEF;
+  sToken = token;
+  sem_post(&thread_sem);
   return true;
+}
+
+void NfcService::handleWriteNdefResponse(int token)
+{
+  MessageHandler::processResponse(NFC_REQUEST_WRITE_NDEF, token, NULL);
 }

@@ -178,7 +178,7 @@ bool MessageHandler::handleWriteNdefRequest(Parcel& parcel, int token)
   }
   delete[] ndefMessagePdu.records;
 
-  return NfcService::handleWriteNdef(ndefMessage, token);
+  return NfcService::handleWriteNdefRequest(ndefMessage, token);
 }
 
 bool MessageHandler::handleConnectRequest(Parcel& parcel, int token)
