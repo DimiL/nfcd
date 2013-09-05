@@ -17,7 +17,7 @@ int main() {
 
   // 1. Create NFC Manager and do initialize
   NfcManager* pNfcManager = new NfcManager();
-  pNfcManager->initialize();
+  pNfcManager->doInitialize();
 
   MessageHandler::initialize();
 

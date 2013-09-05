@@ -16,15 +16,15 @@ public:
   NfcManager();
   virtual ~NfcManager();
 
-  bool initialize();
+  bool doInitialize();
+  bool doDeinitialize();
   void enableDiscovery();
+  void disableDiscovery();
   void* queryInterface(const char* name);
 
 private:
   P2pDevice* mP2pDevice;
   NativeNfcTag* mNativeNfcTag;
-
-  bool doInitialize();
 };
 
 #endif 

@@ -97,11 +97,6 @@ void* NfcManager::queryInterface(const char* name)
     return NULL;
 }
 
-bool NfcManager::initialize()
-{
-    return doInitialize();
-}
-
 bool NfcManager::doInitialize()
 {
     tNFA_STATUS stat = NFA_STATUS_OK;
@@ -193,6 +188,54 @@ TheEnd:
     return sIsNfaEnabled ? true : false;
 }
 
+bool NfcManager::doDeinitialize ()
+{
+    ALOGD ("%s: enter", __FUNCTION__);
+
+    sIsDisabling = true;
+    pn544InteropAbortNow ();
+    // TODO : Implement SE
+    //SecureElement::getInstance().finalize ();
+
+    if (sIsNfaEnabled)
+    {
+        SyncEventGuard guard (sNfaDisableEvent);
+        tNFA_STATUS stat = NFA_Disable (TRUE /* graceful */);
+        if (stat == NFA_STATUS_OK)
+        {
+            ALOGD ("%s: wait for completion", __FUNCTION__);
+            sNfaDisableEvent.wait (); //wait for NFA command to finish
+            PeerToPeer::getInstance ().handleNfcOnOff (false);
+        }
+        else
+        {
+            ALOGE ("%s: fail disable; error=0x%X", __FUNCTION__, stat);
+        }
+    }
+    NativeNfcTag::nativeNfcTag_abortWaits();
+    NfcTag::getInstance().abort ();
+    sAbortConnlessWait = true;
+    // TODO : Implement LLCP
+    //nativeLlcpConnectionlessSocket_abortWait();
+    sIsNfaEnabled = false;
+    sDiscoveryEnabled = false;
+    sIsDisabling = false;
+    // TODO : Implement SE
+    // sIsSecElemSelected = false;
+
+    {
+        //unblock NFA_EnablePolling() and NFA_DisablePolling()
+        SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+        sNfaEnableDisablePollingEvent.notifyOne ();
+    }
+
+    NfcAdaptation& theInstance = NfcAdaptation::GetInstance();
+    theInstance.Finalize();
+
+    ALOGD ("%s: exit", __FUNCTION__);
+    return true;
+}
+
 void NfcManager::enableDiscovery()
 {
     tNFA_TECHNOLOGY_MASK tech_mask = DEFAULT_TECH_MASK;
@@ -252,6 +295,51 @@ void NfcManager::enableDiscovery()
 
     PowerSwitch::getInstance ().setModeOn (PowerSwitch::DISCOVERY);
 
+    ALOGD ("%s: exit", __FUNCTION__);
+}
+
+void NfcManager::disableDiscovery ()
+{
+    tNFA_STATUS status = NFA_STATUS_OK;
+    ALOGD ("%s: enter;", __FUNCTION__);
+
+    pn544InteropAbortNow ();
+    if (sDiscoveryEnabled == false)
+    {
+        ALOGD ("%s: already disabled", __FUNCTION__);
+        goto TheEnd;
+    }
+
+    // Stop RF Discovery.
+    startRfDiscovery (false);
+
+    if (sDiscoveryEnabled)
+    {
+        SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+        status = NFA_DisablePolling ();
+        if (status == NFA_STATUS_OK)
+        {
+            sDiscoveryEnabled = false;
+            sNfaEnableDisablePollingEvent.wait (); //wait for NFA_POLL_DISABLED_EVT
+        }
+        else
+            ALOGE ("%s: Failed to disable polling; error=0x%X", __FUNCTION__, status);
+    }
+
+    PeerToPeer::getInstance().enableP2pListening (false);
+
+    //if nothing is active after this, then tell the controller to power down
+    if (! PowerSwitch::getInstance ().setModeOff (PowerSwitch::DISCOVERY))
+        PowerSwitch::getInstance ().setLevel (PowerSwitch::LOW_POWER);
+
+    // We may have had RF field notifications that did not cause
+    // any activate/deactive events. For example, caused by wireless
+    // charging orbs. Those may cause us to go to sleep while the last
+    // field event was indicating a field. To prevent sticking in that
+    // state, always reset the rf field status when we disable discovery.
+    // TODO : Implement SE
+    // SecureElement::getInstance().resetRfFieldStatus();
+TheEnd:
     ALOGD ("%s: exit", __FUNCTION__);
 }
 
