@@ -35,6 +35,7 @@ private:
 
   void initSocket();
   int getListenSocket();
+  void onConnect();
 };
 
 #endif // mozilla_nfcd_NfcIpcSocket_h

@@ -113,6 +113,8 @@ void NfcIpcSocket::loop()
 
     RecordStream *rs = record_stream_new(nfcdRw, MAX_COMMAND_BYTES);
 
+    onConnect();
+
     struct pollfd fds[1];
     fds[0].fd = nfcdRw;
     fds[0].events = POLLIN;
@@ -163,8 +165,7 @@ void NfcIpcSocket::writeToOutgoingQueue(uint8_t* data, size_t dataLen)
   ALOGD("Writing %d bytes to gecko ", dataLen);
   while (writeOffset < dataLen) {
     do {
-      written = write (nfcdRw, data + writeOffset,
-                       dataLen - writeOffset);
+      written = write (nfcdRw, data + writeOffset, dataLen - writeOffset);
     } while (written < 0 && errno == EINTR);
 
     if (written >= 0) {
@@ -186,4 +187,9 @@ void NfcIpcSocket::writeToIncomingQueue(uint8_t* data, size_t dataLen)
   if (data != NULL && dataLen > 0) {
     sMsgHandler->processRequest(data, dataLen);
   }
+}
+
+void NfcIpcSocket::onConnect()
+{
+  ALOGD("%s", __func__);
 }
