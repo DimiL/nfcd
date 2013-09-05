@@ -9,6 +9,8 @@
 #include <time.h>
 #include <binder/Parcel.h>
 
+class MessageHandler;
+
 class NfcIpcSocket{
 private:
   static NfcIpcSocket* sInstance;
@@ -17,17 +19,19 @@ public:
   ~NfcIpcSocket();
 
   static NfcIpcSocket* Instance();
-  void initialize();
+  void initialize(MessageHandler* msgHandler);
   void loop();
 
-  static void writeToOutgoingQueue(uint8_t *data, size_t dataLen);
-  static void writeToIncomingQueue(uint8_t *data, size_t dataLen);
+  void writeToOutgoingQueue(uint8_t *data, size_t dataLen);
+  void writeToIncomingQueue(uint8_t *data, size_t dataLen);
 
 private:
   NfcIpcSocket();
 
   timespec mSleep_spec;
   timespec mSleep_spec_rem;
+
+  static MessageHandler* sMsgHandler;
 
   void initSocket();
   int getListenSocket();

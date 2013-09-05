@@ -19,20 +19,23 @@ int main() {
   NfcManager* pNfcManager = new NfcManager();
   pNfcManager->doInitialize();
 
-  MessageHandler::initialize();
+  MessageHandler* msgHandler = new MessageHandler();
 
   // 2. Enable Discovery
   pNfcManager->enableDiscovery();
 
   // 3. Create service thread to receive message from nfc library
   NfcService* pNfcService = NfcService::Instance();
-  pNfcService->initialize(pNfcManager);
+  pNfcService->initialize(pNfcManager, msgHandler);
 
   // 4. Create IPC socket & main thread will enter while loop to read data from socket
   NfcIpcSocket* pNfcIpcSocket = NfcIpcSocket::Instance();
-  pNfcIpcSocket->initialize();
+  pNfcIpcSocket->initialize(msgHandler);
   pNfcIpcSocket->loop();
+  msgHandler->setSocket(pNfcIpcSocket);
 
+  //TODO delete NfcIpcSocket, NfcService
+  delete msgHandler;
   delete pNfcManager;
   //exit(0);
 }

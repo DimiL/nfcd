@@ -11,33 +11,32 @@
 
 class NativeNfcTag;
 class NdefMessage;
+class NfcIpcSocket;
 
 class MessageHandler {
 public:
-  static void initialize();
-
-  static void processRequest(const uint8_t* data, size_t length);
-  static void processResponse(NfcRequest request, int token, void* data);
-  static void processNotification(NfcNotification notification, void* data);
+  MessageHandler() {};
+  void processRequest(const uint8_t* data, size_t length);
+  void processResponse(NfcRequest request, int token, void* data);
+  void processNotification(NfcNotification notification, void* data);
+  //TODO a better naming?
+  void setSocket(NfcIpcSocket* socket);
 
 private:
-  MessageHandler();
+  void notifyTechDiscovered(android::Parcel& parcel, void* data);
 
-  static void notifyTechDiscovered(android::Parcel& parcel, void* data);
+  bool handleReadNdefRequest(android::Parcel& parcel, int token);
+  bool handleWriteNdefRequest(android::Parcel& parcel, int token);
+  bool handleConnectRequest(android::Parcel& parcel, int token); 
+  bool handleCloseRequest(android::Parcel& parcel, int token);
 
-//  static bool handleNdefPush(const char *input, size_t length);
-//  static bool handleNdefDetailsRequest();
-  static bool handleReadNdefRequest(android::Parcel& parcel, int token);
-  static bool handleWriteNdefRequest(android::Parcel& parcel, int token);
-  static bool handleConnectRequest(android::Parcel& parcel, int token); 
-  static bool handleCloseRequest(android::Parcel& parcel, int token);
+  bool handleReadNdefResponse(android::Parcel& parcel, void* data);
+  bool handleWriteNdefResponse(android::Parcel& parcel);
+  bool handleConnectResponse(android::Parcel& parcel);
 
-  static bool handleReadNdefResponse(android::Parcel& parcel, void* data);
-  static bool handleWriteNdefResponse(android::Parcel& parcel);
-  static bool handleConnectResponse(android::Parcel& parcel);
-//  static bool handleTransceiveReq(const char *input, size_t length);
+  void sendResponse(android::Parcel& parcel);
 
-  static void sendResponse(android::Parcel& parcel);
+  NfcIpcSocket* mSocket;
 };
 
 #endif // mozilla_nfcd_MessageHandler_h

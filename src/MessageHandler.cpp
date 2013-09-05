@@ -18,13 +18,8 @@
 
 using android::Parcel;
 
-void MessageHandler::initialize()
-{
-}
-
 void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
 {
-
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(data);
   std::vector<int>& techList = pINfcTag->getTechList();
 
@@ -38,7 +33,6 @@ void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
   sendResponse(parcel);
 }
 
-// static
 void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
 {
   Parcel parcel;
@@ -74,7 +68,6 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
   }
 }
 
-// static
 void MessageHandler::processResponse(NfcRequest request, int token, void* data)
 {
   ALOGD("%s enter request=%d, token=%d ", __func__, request, token);
@@ -96,7 +89,6 @@ void MessageHandler::processResponse(NfcRequest request, int token, void* data)
   }
 }
 
-// static
 void MessageHandler::processNotification(NfcNotification notification, void* data)
 {
   Parcel parcel;
@@ -110,23 +102,15 @@ void MessageHandler::processNotification(NfcNotification notification, void* dat
   }
 }
 
-// static
+void MessageHandler::setSocket(NfcIpcSocket* socket)
+{
+  mSocket = socket;
+}
+
 void MessageHandler::sendResponse(Parcel& parcel)
 {
-  NfcIpcSocket::writeToOutgoingQueue(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
+  mSocket->writeToOutgoingQueue(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
 }
-
-#if 0
-bool MessageHandler::handleNdefPush(const char *input, size_t length)
-{
-  return true;
-}
-
-bool MessageHandler::handleNdefDetailsRequest()
-{
-  return true;
-}
-#endif
 
 bool MessageHandler::handleReadNdefRequest(Parcel& parcel, int token)
 {
@@ -232,7 +216,6 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
     }
   }
 
-  //TODO check when will parcel release data.
   sendResponse(parcel);
   return true;
 }

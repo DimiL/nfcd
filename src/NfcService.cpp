@@ -37,6 +37,10 @@ typedef enum {
 
 static MSG_TYPE msg_type = MSG_UNDEFINED;
 
+NfcService* NfcService::sInstance = NULL;
+NfcManager* NfcService::sNfcManager = NULL;
+MessageHandler* NfcService::sMsgHandler = NULL;
+
 void NfcService::nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
 {
   ALOGD("%s enter", __func__);
@@ -101,10 +105,10 @@ void *pollingThreadFunc(void *arg)
   return NULL;
 }
 
-static void NfcService_MSG_NDEF_TAG(void* pTag)
+void NfcService::handleNdefTag(void* pTag)
 {
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(pTag);
-  MessageHandler::processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, pINfcTag);
+  sMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, pINfcTag);
 
   pthread_t tid;
   pthread_create(&tid, NULL, pollingThreadFunc, pINfcTag);
@@ -113,6 +117,8 @@ static void NfcService_MSG_NDEF_TAG(void* pTag)
 static void *serviceThreadFunc(void *arg)
 {
   pthread_setname_np(pthread_self(), "NFCService thread");
+
+  NfcService* service = reinterpret_cast<NfcService*>(arg);
 
   ALOGD("NFCService started");
   while(true) {
@@ -129,7 +135,7 @@ static void *serviceThreadFunc(void *arg)
       case MSG_LLCP_LINK_DEACTIVATION:
         break;
       case MSG_NDEF_TAG:
-        NfcService_MSG_NDEF_TAG(nfcTag);
+        service->handleNdefTag(nfcTag);
         break;
       case MSG_SE_FIELD_ACTIVATED:
         break;
@@ -152,9 +158,6 @@ static void *serviceThreadFunc(void *arg)
   return NULL;
 }
 
-NfcService* NfcService::sInstance = NULL;
-NfcManager* NfcService::sNfcManager = NULL;
-
 NfcService* NfcService::Instance() {
     if (!sInstance)
         sInstance = new NfcService();
@@ -169,7 +172,7 @@ NfcService::~NfcService()
 {
 }
 
-void NfcService::initialize(NfcManager* pNfcManager)
+void NfcService::initialize(NfcManager* pNfcManager, MessageHandler* msgHandler)
 {
   if(sem_init(&thread_sem, 0, 0) == -1)
   {
@@ -177,12 +180,13 @@ void NfcService::initialize(NfcManager* pNfcManager)
     abort();
   }
 
-  if(pthread_create(&thread_id, NULL, serviceThreadFunc, NULL) != 0)
+  if(pthread_create(&thread_id, NULL, serviceThreadFunc, this) != 0)
   {
     ALOGE("init_nfc_service pthread_create failed");
     abort();
   }
 
+  sMsgHandler = msgHandler;
   sNfcManager = pNfcManager;
 }
 
@@ -198,7 +202,7 @@ int NfcService::handleConnect(int technology, int token)
 
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
   int status = pINfcTag->connectWithStatus(technology);
-  MessageHandler::processResponse(NFC_REQUEST_CONNECT, token, NULL);
+  sMsgHandler->processResponse(NFC_REQUEST_CONNECT, token, NULL);
   return status;
 }
 
@@ -219,8 +223,9 @@ void NfcService::handleReadNdefResponse(int token)
 
   ALOGD("pNdefMessage=%p",pNdefMessage);
   if (pNdefMessage != NULL) {
-    MessageHandler::processResponse(NFC_REQUEST_READ_NDEF, token, pNdefMessage);
+    sMsgHandler->processResponse(NFC_REQUEST_READ_NDEF, token, pNdefMessage);
   } else {
+    //TODO can we notify null ndef?
   }
 
   delete pNdefMessage;
@@ -242,5 +247,5 @@ bool NfcService::handleWriteNdefRequest(NdefMessage& ndef, int token)
 
 void NfcService::handleWriteNdefResponse(int token)
 {
-  MessageHandler::processResponse(NFC_REQUEST_WRITE_NDEF, token, NULL);
+  sMsgHandler->processResponse(NFC_REQUEST_WRITE_NDEF, token, NULL);
 }

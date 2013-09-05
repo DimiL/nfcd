@@ -7,15 +7,15 @@
 
 #include "NfcManager.h"
 
-class NfcService{
-private:
-  static NfcService* sInstance;
-  static NfcManager* sNfcManager;
+class MessageHandler;
 
+class NfcService{
 public:
   ~NfcService();
-  void initialize(NfcManager* pNfcManager);
+  void initialize(NfcManager* pNfcManager, MessageHandler* msgHandler);
 
+  //TODO update this name
+  void handleNdefTag(void* tag);
   static NfcService* Instance();
 
   static void nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice);
@@ -33,6 +33,9 @@ public:
   static void handleWriteNdefResponse(int token);
 
 private:
+  static NfcService* sInstance;
+  static NfcManager* sNfcManager;
+  static MessageHandler* sMsgHandler;
   NfcService();
 };
 

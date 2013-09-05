@@ -29,15 +29,17 @@ using android::Parcel;
 
 static int nfcdRw;
 
+MessageHandler* NfcIpcSocket::sMsgHandler = NULL;
+
 /**
  * NfcIpcSocket
  */
 NfcIpcSocket* NfcIpcSocket::sInstance = NULL;
 
 NfcIpcSocket* NfcIpcSocket::Instance() {
-    if (!sInstance)
-        sInstance = new NfcIpcSocket();
-    return sInstance;
+  if (!sInstance)
+      sInstance = new NfcIpcSocket();
+  return sInstance;
 }
 
 NfcIpcSocket::NfcIpcSocket()
@@ -48,9 +50,10 @@ NfcIpcSocket::~NfcIpcSocket()
 {
 }
 
-void NfcIpcSocket::initialize()
+void NfcIpcSocket::initialize(MessageHandler* msgHandler)
 {
   initSocket();
+  sMsgHandler = msgHandler;
 }
 
 void NfcIpcSocket::initSocket()
@@ -142,40 +145,45 @@ void NfcIpcSocket::loop()
 
 // Write NFC data to Gecko
 // Outgoing queue contain the data should be send to gecko
-void NfcIpcSocket::writeToOutgoingQueue(uint8_t* data, size_t dataLen) {
+// TODO check thread, this should run on the NfcService thread.
+void NfcIpcSocket::writeToOutgoingQueue(uint8_t* data, size_t dataLen)
+{
   ALOGD("%s enter, data=%p, dataLen=%d", __func__, data, dataLen);
 
-  if (data != NULL && dataLen > 0) {
-    size_t writeOffset = 0;
-    size_t written = 0;
+  if (data == NULL || dataLen == 0) {
+    return;
+  }
 
-    //TODO update this
-    size_t size = __builtin_bswap32(dataLen);
-    write(nfcdRw, (void*)&size, sizeof(uint32_t));
+  size_t writeOffset = 0;
+  size_t written = 0;
 
-    ALOGD("Writing %d bytes to gecko ", dataLen);
-    while (writeOffset < dataLen) {
-      do {
-        written = write (nfcdRw, data + writeOffset,
-                         dataLen - writeOffset);
-      } while (written < 0 && errno == EINTR);
+  size_t size = __builtin_bswap32(dataLen);
+  write(nfcdRw, (void*)&size, sizeof(uint32_t));
 
-      if (written >= 0) {
-        writeOffset += written;
-      } else {
-        ALOGE("Response: unexpected error on write errno:%d", errno);
-        break;
-      }
+  ALOGD("Writing %d bytes to gecko ", dataLen);
+  while (writeOffset < dataLen) {
+    do {
+      written = write (nfcdRw, data + writeOffset,
+                       dataLen - writeOffset);
+    } while (written < 0 && errno == EINTR);
+
+    if (written >= 0) {
+      writeOffset += written;
+    } else {
+      ALOGE("Response: unexpected error on write errno:%d", errno);
+      break;
     }
   }
 }
 
 // Write Gecko data to NFC
 // Incoming queue contains
-void NfcIpcSocket::writeToIncomingQueue(uint8_t* data, size_t dataLen) {
+// TODO check thread, this should run on top of main thread of nfcd.
+void NfcIpcSocket::writeToIncomingQueue(uint8_t* data, size_t dataLen)
+{
   ALOGD("%s enter, data=%p, dataLen=%d", __func__, data, dataLen);
 
   if (data != NULL && dataLen > 0) {
-    MessageHandler::processRequest(data, dataLen);
+    sMsgHandler->processRequest(data, dataLen);
   }
 }
