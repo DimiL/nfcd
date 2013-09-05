@@ -17,6 +17,7 @@ public:
   //TODO update this name
   void handleNdefTag(void* tag);
   static NfcService* Instance();
+  static INfcManager* getNfcManager();
 
   static void nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice);
   static void nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice);

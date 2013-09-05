@@ -10,7 +10,7 @@
 #include "NfcUtil.h"
 #include "llcp_defs.h"
 #include "config.h"
-#include "P2pDevice.h"
+#include "IP2pDevice.h"
 
 /* Some older PN544-based solutions would only send the first SYMM back
  * (as an initiator) after the full LTO (750ms). But our connect timer
@@ -179,10 +179,10 @@ void PeerToPeer::llcpActivatedHandler (tNFA_LLCP_ACTIVATED& activated)
     static const char fn [] = "PeerToPeer::llcpActivatedHandler";
     ALOGE ("%s: enter", fn);
 
-    P2pDevice* pP2pDevice = 
-        reinterpret_cast<P2pDevice*>(mNfcManager->queryInterface("P2pDevice"));
+    IP2pDevice* pIP2pDevice = 
+        reinterpret_cast<IP2pDevice*>(mNfcManager->queryInterface("P2pDevice"));
 
-    if (pP2pDevice == NULL) {
+    if (pIP2pDevice == NULL) {
         ALOGE("%s : cannot get native p2p device class", fn);
         return;
     }
@@ -192,15 +192,15 @@ void PeerToPeer::llcpActivatedHandler (tNFA_LLCP_ACTIVATED& activated)
 
     if (activated.is_initiator == true) {
         ALOGE ("%s: p2p initiator", fn);
-        pP2pDevice->mMode = MODE_P2P_INITIATOR;
+        pIP2pDevice->getMode() = NfcDepEndpoint::MODE_P2P_INITIATOR;
     } else {
         ALOGE ("%s: p2p target", fn);
-        pP2pDevice->mMode = MODE_P2P_TARGET;
+        pIP2pDevice->getMode() = NfcDepEndpoint::MODE_P2P_TARGET;
     }
 
-    pP2pDevice->mHandle = 0x1234;
+    pIP2pDevice->getHandle() = 0x1234;
 
-    mNfcManager->notifyLlcpLinkActivation(reinterpret_cast<void*>(pP2pDevice));
+    mNfcManager->notifyLlcpLinkActivation(reinterpret_cast<void*>(pIP2pDevice));
 
     ALOGE ("%s: exit", fn);
 }

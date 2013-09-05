@@ -343,6 +343,18 @@ TheEnd:
     ALOGD ("%s: exit", __FUNCTION__);
 }
 
+bool NfcManager::doCheckLlcp()
+{
+    ALOGD ("%s: enter;", __FUNCTION__);
+    return true;
+}
+
+bool NfcManager::doActivateLlcp()
+{
+    ALOGD ("%s: enter;", __FUNCTION__);
+    return true;
+}
+
 static void handleRfDiscoveryEvent (tNFC_RESULT_DEVT* discoveredDevice)
 {
     if (discoveredDevice->more)

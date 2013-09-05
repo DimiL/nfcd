@@ -11,8 +11,8 @@
 #define DISCOVERY_MODE_DISABLED           0
 #define DISCOVERY_MODE_ENABLED            1
 
-#define MODE_P2P_TARGET                   0
-#define MODE_P2P_INITIATOR                1
+//#define MODE_P2P_TARGET                   0
+//#define MODE_P2P_INITIATOR                1
 
 
 /* Properties values */

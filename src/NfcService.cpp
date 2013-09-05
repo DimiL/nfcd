@@ -88,7 +88,36 @@ void NfcService::nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS()
 
 static void NfcService_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
 {
-  ALOGD("NfcService_MSG_LLCP_LINK_ACTIVATION");
+  ALOGD("%s enter", __func__);
+  IP2pDevice* pIP2pDevice = reinterpret_cast<IP2pDevice*>(pDevice);
+
+  if (pIP2pDevice->getMode() == NfcDepEndpoint::MODE_P2P_TARGET ||
+      pIP2pDevice->getMode() == NfcDepEndpoint::MODE_P2P_INITIATOR) {
+    if(pIP2pDevice->getMode() == NfcDepEndpoint::MODE_P2P_TARGET) {
+      if (pIP2pDevice->doConnect()) {
+        ALOGD("Connected to device!");
+      }
+      else {
+        ALOGE("Cannot connect remote Target. Polling loop restarted.");
+      }
+    }
+
+    INfcManager* pINfcManager = NfcService::getNfcManager();
+    bool ret = pINfcManager->doCheckLlcp();
+    if(ret == true) {
+      ret = pINfcManager->doActivateLlcp();
+      if(ret == true) {
+        ALOGD("Target Activate LLCP OK");
+      } else {
+        ALOGE("doActivateLLcp failed");
+      }
+    } else {
+      ALOGE("doCheckLLcp failed");
+    }
+  } else {
+    ALOGE("com_android_nfc_NfcService: Unknown LLCP P2P mode");
+    //stop();
+  }
 }
 
 void *pollingThreadFunc(void *arg)
@@ -188,6 +217,11 @@ void NfcService::initialize(NfcManager* pNfcManager, MessageHandler* msgHandler)
 
   sMsgHandler = msgHandler;
   sNfcManager = pNfcManager;
+}
+
+INfcManager* NfcService::getNfcManager()
+{
+  return reinterpret_cast<INfcManager*>(NfcService::sNfcManager);
 }
 
 bool NfcService::handleDisconnect()

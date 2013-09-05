@@ -5,8 +5,9 @@
 #ifndef mozilla_nfcd_DeviceHost_h
 #define mozilla_nfcd_DeviceHost_h
 
-class DeviceHost{
+#include <stdio.h>
 
+class DeviceHost{
 public:
 
   DeviceHost();
@@ -27,6 +28,22 @@ public:
   void notifySeFieldActivated();
 
   void notifySeFieldDeactivated();
+};
+
+class NfcDepEndpoint {
+public:
+  //Peer-to-Peer Target
+  static const uint8_t MODE_P2P_TARGET = 0x00;
+
+  //Peer-to-Peer Initiator
+  static const uint8_t MODE_P2P_INITIATOR = 0x01;
+
+  //Invalid target mode
+  static const uint8_t MODE_INVALID = 0xff;
+
+private:
+  NfcDepEndpoint();
+  virtual ~NfcDepEndpoint();
 };
 
 #endif

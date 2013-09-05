@@ -9,11 +9,16 @@ class INfcManager {
 public:
   virtual ~INfcManager() {};
 
+  virtual void* queryInterface(const char* name) = 0;
+
   virtual bool doInitialize() = 0;
   virtual bool doDeinitialize() = 0;
+
   virtual void enableDiscovery() = 0;
   virtual void disableDiscovery() = 0;
-  virtual void* queryInterface(const char* name) = 0;
+
+  virtual bool doCheckLlcp() = 0;
+  virtual bool doActivateLlcp() = 0;
 };
 
 #endif

@@ -16,11 +16,16 @@ public:
   NfcManager();
   virtual ~NfcManager();
 
+  void* queryInterface(const char* name);
+
   bool doInitialize();
   bool doDeinitialize();
+
   void enableDiscovery();
   void disableDiscovery();
-  void* queryInterface(const char* name);
+
+  bool doCheckLlcp();
+  bool doActivateLlcp();
 
 private:
   P2pDevice* mP2pDevice;

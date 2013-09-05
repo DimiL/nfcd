@@ -5,18 +5,28 @@
 #ifndef mozilla_nfcd_P2pDevice_h
 #define mozilla_nfcd_P2pDevice_h
 
-class P2pDevice
+#include "IP2pDevice.h"
+
+class P2pDevice : public IP2pDevice
 {
 public:
-
   P2pDevice();
   virtual ~P2pDevice();
+
+  bool doConnect();
+  bool doDisconnect();
+  void doTransceive();
+  void doReceive();
+  bool doSend();
+
+  int& getHandle();
+  int& getMode();
+
+private:
 
   int mHandle;
   int mMode;
   unsigned char* mGeneralBytes;
-
-private:
 };
 
 #endif // mozilla_nfcd_P2pDevice_h
