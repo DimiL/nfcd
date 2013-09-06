@@ -10,7 +10,7 @@
 
 class SnepMessenger{
 public:
-  SnepMessenger();
+  SnepMessenger(bool isClient, ILlcpSocket* socket, int fragmentLength);
   ~SnepMessenger();
 
   ILlcpSocket* mSocket;
@@ -20,6 +20,8 @@ public:
   void sendMessage(SnepMessage& msg);
   SnepMessage* getMessage();
   void close();
+
+  static SnepMessage* getPutRequest(NdefMessage& ndef);
 
 private: 
   static const int HEADER_LENGTH = 6;

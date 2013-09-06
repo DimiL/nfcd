@@ -1,6 +1,9 @@
 #include "SnepMessenger.h"
 
-SnepMessenger::SnepMessenger()
+SnepMessenger::SnepMessenger(bool isClient, ILlcpSocket* socket, int fragmentLength) :
+mIsClient(isClient),
+mSocket(socket),
+mFragmentLength(fragmentLength)
 {
 }
 
@@ -19,4 +22,6 @@ SnepMessage* SnepMessenger::getMessage()
 
 void SnepMessenger::close()
 {
+  if (mSocket != NULL)
+    mSocket->close();
 }

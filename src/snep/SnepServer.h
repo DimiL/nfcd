@@ -10,10 +10,14 @@ public:
   SnepServer();
   ~SnepServer();
 
+  static const int DEFAULT_MIU = 248;
+  static const int DEFAULT_RW_SIZE = 1;
+  static const int DEFAULT_PORT = 4;
+  static const char* DEFAULT_SERVICE_NAME;
+
   void start();
 
 private: 
-
 };
 
 #endif

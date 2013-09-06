@@ -12,6 +12,7 @@
 #include "INfcManager.h"
 
 class ILlcpServerSocket;
+class ILlcpSocket;
 
 class NfcManager : public DeviceHost, public INfcManager
 {
@@ -30,6 +31,7 @@ public:
   bool doCheckLlcp();
   bool doActivateLlcp();
 
+  ILlcpSocket* createLlcpSocket(int sap, int miu, int rw, int linearBufferLength);
   ILlcpServerSocket* createLlcpServerSocket(int nSap, const char* sn, int miu, int rw, int linearBufferLength);
 
 private:

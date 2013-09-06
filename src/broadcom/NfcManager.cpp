@@ -74,8 +74,9 @@ static UINT8 sConfig[256];
 /////////////////////////////////////////////////////////////
 
 NfcManager::NfcManager() :
-  mP2pDevice(NULL),
-  mNativeNfcTag(NULL)
+mP2pDevice(NULL),
+mNativeNfcTag(NULL),
+mLlcpServiceSocket(NULL)
 {
     mP2pDevice = new P2pDevice();
     mNativeNfcTag = new NativeNfcTag();
@@ -86,6 +87,7 @@ NfcManager::~NfcManager()
 {
     if (mP2pDevice != NULL)    delete mP2pDevice;
     if (mNativeNfcTag != NULL)       delete mNativeNfcTag;
+    if (mLlcpServiceSocket != NULL)       delete mLlcpServiceSocket;
 }
 
 void* NfcManager::queryInterface(const char* name)
@@ -356,6 +358,11 @@ bool NfcManager::doActivateLlcp()
 {
     ALOGD ("%s: enter;", __FUNCTION__);
     return true;
+}
+
+ILlcpSocket* NfcManager::createLlcpSocket(int sap, int miu, int rw, int linearBufferLength)
+{
+    return NULL;
 }
 
 ILlcpServerSocket* NfcManager::createLlcpServerSocket(int nSap, const char* sn, int miu, int rw, int linearBufferLength)

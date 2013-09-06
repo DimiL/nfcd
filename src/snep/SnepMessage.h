@@ -36,6 +36,9 @@ public:
   int getLength() {  return mLength;  }
   int getAcceptableLength() {  return mField != REQUEST_GET ? 0 : mAcceptableLength;  }
 
+  static SnepMessage* getGetRequest(int acceptableLength, NdefMessage& ndef);
+  static SnepMessage* getPutRequest(NdefMessage& ndef);
+
 private: 
 
   static const int HEADER_LENGTH = 6;

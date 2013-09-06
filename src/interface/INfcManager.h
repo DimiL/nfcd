@@ -22,6 +22,7 @@ public:
   virtual bool doCheckLlcp() = 0;
   virtual bool doActivateLlcp() = 0;
 
+  virtual ILlcpSocket* createLlcpSocket(int sap, int miu, int rw, int linearBufferLength) = 0;
   virtual ILlcpServerSocket* createLlcpServerSocket(int nSap, const char* sn, int miu, int rw, int linearBufferLength) = 0;
 };
 

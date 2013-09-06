@@ -15,6 +15,8 @@ int mFragmentLength;
 int mMiu;
 int mRwSize;
 
+const char* SnepServer::DEFAULT_SERVICE_NAME = "urn:nfc:sn:snep";
+
 void* connectionThreadFunc(void* arg)
 {
   bool running = true;
