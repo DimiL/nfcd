@@ -5,6 +5,8 @@
 #ifndef mozilla_nfcd_INfcManager_h
 #define mozilla_nfcd_INfcManager_h
 
+#include "ILlcpServerSocket.h"
+
 class INfcManager {
 public:
   virtual ~INfcManager() {};
@@ -19,6 +21,8 @@ public:
 
   virtual bool doCheckLlcp() = 0;
   virtual bool doActivateLlcp() = 0;
+
+  virtual ILlcpServerSocket* createLlcpServerSocket(int nSap, const char* sn, int miu, int rw, int linearBufferLength) = 0;
 };
 
 #endif

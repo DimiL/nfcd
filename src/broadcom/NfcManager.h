@@ -8,7 +8,10 @@
 #include "DeviceHost.h"
 #include "P2pDevice.h"
 #include "NativeNfcTag.h"
+#include "LlcpServiceSocket.h"
 #include "INfcManager.h"
+
+class ILlcpServerSocket;
 
 class NfcManager : public DeviceHost, public INfcManager
 {
@@ -27,9 +30,12 @@ public:
   bool doCheckLlcp();
   bool doActivateLlcp();
 
+  ILlcpServerSocket* createLlcpServerSocket(int nSap, const char* sn, int miu, int rw, int linearBufferLength);
+
 private:
   P2pDevice* mP2pDevice;
   NativeNfcTag* mNativeNfcTag;
+  LlcpServiceSocket* mLlcpServiceSocket;
 };
 
 #endif 

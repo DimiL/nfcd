@@ -17,7 +17,11 @@ LOCAL_SRC_FILES := \
     src/NfcIpcSocket.cpp \
     src/NfcUtil.cpp \
     src/MessageHandler.cpp \
-    src/SessionId.cpp
+    src/SessionId.cpp \
+    src/snep/SnepServer.cpp \
+    src/snep/SnepClient.cpp \
+    src/snep/SnepMessage.cpp \
+    src/snep/SnepMessenger.cpp
 
 BROADCOM_SRC_FILES := \
     src/broadcom/NfcManager.cpp \

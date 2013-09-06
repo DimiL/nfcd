@@ -79,6 +79,7 @@ NfcManager::NfcManager() :
 {
     mP2pDevice = new P2pDevice();
     mNativeNfcTag = new NativeNfcTag();
+    mLlcpServiceSocket = new LlcpServiceSocket();
 }
 
 NfcManager::~NfcManager()
@@ -93,6 +94,8 @@ void* NfcManager::queryInterface(const char* name)
         return reinterpret_cast<void*>(mP2pDevice);
     else if (0 == strcmp(name, "NativeNfcTag"))
         return reinterpret_cast<void*>(mNativeNfcTag);
+    else if (0 == strcmp(name, "LlcpServiceSocket"))
+        return reinterpret_cast<void*>(mLlcpServiceSocket);
 
     return NULL;
 }
@@ -353,6 +356,11 @@ bool NfcManager::doActivateLlcp()
 {
     ALOGD ("%s: enter;", __FUNCTION__);
     return true;
+}
+
+ILlcpServerSocket* NfcManager::createLlcpServerSocket(int nSap, const char* sn, int miu, int rw, int linearBufferLength)
+{
+    return NULL;
 }
 
 static void handleRfDiscoveryEvent (tNFC_RESULT_DEVT* discoveredDevice)
