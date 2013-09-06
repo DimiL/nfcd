@@ -122,7 +122,7 @@ bool MessageHandler::handleWriteNdefRequest(Parcel& parcel, int token)
 {
   //TODO read SessionId
   NdefMessagePdu ndefMessagePdu;
-  NdefMessage ndefMessage;
+  NdefMessage* ndefMessage = new NdefMessage();
 
   uint32_t numRecords = parcel.readInt32();
   ndefMessagePdu.numRecords = numRecords;

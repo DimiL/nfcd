@@ -12,7 +12,7 @@
 class NfcUtil{
 
 public:
-  static void convertNdefPduToNdefMessage(NdefMessagePdu& ndefPdu, NdefMessage& ndefMessage);
+  static void convertNdefPduToNdefMessage(NdefMessagePdu& ndefPdu, NdefMessage* ndefMessage);
 
 private:
   NfcUtil();
