@@ -5,9 +5,28 @@
 #ifndef mozilla_nfcd_NfcService_h
 #define mozilla_nfcd_NfcService_h
 
+#include "utils/List.h"
 #include "NfcManager.h"
 
 class MessageHandler;
+
+typedef enum {
+  MSG_UNDEFINED = 0,
+  MSG_LLCP_LINK_ACTIVATION,
+  MSG_LLCP_LINK_DEACTIVATION,
+  MSG_NDEF_TAG,
+  MSG_SE_FIELD_ACTIVATED,
+  MSG_SE_FIELD_DEACTIVATED,
+  MSG_SE_NOTIFY_TRANSACTION_LISTENERS,
+  MSG_READ_NDEF,
+  MSG_WRITE_NDEF,
+} NfcEventType;
+
+struct NfcEvent {
+  NfcEventType type;
+  int token;
+  void *data;
+};
 
 class NfcService{
 public:
@@ -15,7 +34,7 @@ public:
   void initialize(NfcManager* pNfcManager, MessageHandler* msgHandler);
 
   //TODO update this name
-  void handleNdefTag(void* tag);
+  void handleNdefTag(NfcEvent* event);
   static NfcService* Instance();
   static INfcManager* getNfcManager();
 
@@ -29,10 +48,13 @@ public:
   static bool handleDisconnect();
   static int handleConnect(int technology, int token);
   static bool handleReadNdefRequest(int token);
-  static void handleReadNdefResponse(int token);
-  static bool handleWriteNdefRequest(NdefMessage& ndef, int token);
-  static void handleWriteNdefResponse(int token);
+  static void handleReadNdefResponse(NfcEvent* event);
+  static bool handleWriteNdefRequest(NdefMessage* ndef, int token);
+  static void handleWriteNdefResponse(NfcEvent* event);
 
+  //TODO remove static
+  //TODO put this in public because serviceThread will need to access this.
+  static android::List<NfcEvent*> mQueue;
 private:
   static NfcService* sInstance;
   static NfcManager* sNfcManager;
