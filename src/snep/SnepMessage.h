@@ -37,11 +37,13 @@ public:
   uint8_t getVersion() {  return mVersion;  }
   int getLength() {  return mLength;  }
   int getAcceptableLength() {  return mField != REQUEST_GET ? 0 : mAcceptableLength;  }
+
   void toByteArray(std::vector<uint8_t>& buf);
 
   static SnepMessage* getGetRequest(int acceptableLength, NdefMessage& ndef);
   static SnepMessage* getPutRequest(NdefMessage& ndef); 
   static SnepMessage* getMessage(uint8_t field);
+  static SnepMessage* fromByteArray(std::vector<uint8_t>& buf);
 private: 
 
   static const int HEADER_LENGTH = 6;

@@ -31,6 +31,7 @@ SnepMessage::SnepMessage(std::vector<uint8_t>& buf)
   }
 
   if (ndefLength > 0) {
+    // TODO : erase here ??? should not modify input data
     buf.erase(buf.begin(), buf.begin() + idx);
     mNdefMessage.init(buf);
   }
@@ -64,6 +65,11 @@ SnepMessage* SnepMessage::getMessage(uint8_t field) {
   // TODO : should we use pointer instead of reference ?
   NdefMessage ndefMessage;
   return new SnepMessage(SnepMessage::VERSION, field, 0, 0, ndefMessage);
+}
+
+SnepMessage* SnepMessage::fromByteArray(std::vector<uint8_t>& buf)
+{
+  return new SnepMessage(buf);
 }
 
 void SnepMessage::toByteArray(std::vector<uint8_t>& buf)

@@ -6,6 +6,7 @@
 #define mozilla_nfcd_DeviceHost_h
 
 #include <stdio.h>
+#include <vector>
 
 class DeviceHost{
 public:
@@ -56,8 +57,8 @@ public:
 
   virtual void close() = 0;
 
-  //virtual void send(byte[] data) throws IOException;
-  //virtual int receive(byte[] recvBuff) throws IOException;
+  virtual void send(uint8_t data[]);
+  virtual int receive(uint8_t recvBuff[]);
 
   virtual int getRemoteMiu() = 0;
   virtual int getRemoteRw() = 0;

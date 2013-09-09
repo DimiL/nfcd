@@ -5,6 +5,8 @@
 #ifndef mozilla_nfcd_SnepServer_h
 #define mozilla_nfcd_SnepServer_h
 
+#include "SnepMessenger.h"
+
 class SnepServer{
 public:
   SnepServer();
@@ -16,8 +18,9 @@ public:
   static const char* DEFAULT_SERVICE_NAME;
 
   void start();
-
-private: 
+  
+private:
+  static bool handleRequest(SnepMessenger& messenger);
 };
 
 #endif
