@@ -17,8 +17,12 @@ SnepMessenger::~SnepMessenger()
 
 void SnepMessenger::sendMessage(SnepMessage& msg)
 {
+  SnepMessage* snepResponse = NULL;
+  uint8_t* responseBytes = NULL;
+  uint8_t* tmpBuf = NULL;
   uint8_t remoteContinue;
   std::vector<uint8_t> buf;
+  int offset;
 
   msg.toByteArray(buf);
   if (mIsClient) {
@@ -28,47 +32,45 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
   }
 
   int length = buf.size() <  mFragmentLength ? buf.size() : mFragmentLength;
-  uint8_t* tmpBuf = new uint8_t[length];
+  tmpBuf = new uint8_t[length];
   for(int i = 0; i < length; i++)
     tmpBuf[i] = buf[i];
 
   mSocket->send(tmpBuf);
 
   if (length == buf.size()) {
-    return;
+    goto End;
   }
 
   // Look for Continue or Reject from peer.
-  int offset = length;
-  uint8_t* responseBytes = new uint8_t[SnepMessenger::HEADER_LENGTH];
+  offset = length;
+  responseBytes = new uint8_t[SnepMessenger::HEADER_LENGTH];
   mSocket->receive(responseBytes);
-  SnepMessage* snepResponse = NULL;
 
-  // TODO : tmp 
-  //snepResponse = SnepMessage::fromByteArray(responseBytes);
-  std::vector<uint8_t> test;
-  snepResponse = SnepMessage::fromByteArray(test);
+  snepResponse = SnepMessage::fromByteArray(responseBytes, SnepMessenger::HEADER_LENGTH);
   if (snepResponse == NULL) {
     ALOGE("Invalid SNEP message");   
-    return;
+    goto End;
   }
 
   if (snepResponse->getField() != remoteContinue) {
     ALOGE("Invalid response from server (%d)", snepResponse->getField());
-    delete snepResponse;
-    return;
+    goto End;
   }
 
   // Send remaining fragments.
   while (offset < buf.size()) {
     length = buf.size() - offset < mFragmentLength ? buf.size() - offset : mFragmentLength;
     // TODO : Need check here
-    for(int i = offset; i < length; i++)
+    for(int i = offset; i < offset + length; i++)
       tmpBuf[i] = buf[i];
     mSocket->send(tmpBuf);
     offset += length;
   }
 
+End:
+  delete[] tmpBuf;
+  delete[] responseBytes;
   delete snepResponse;
 }
   
@@ -107,9 +109,7 @@ SnepMessage* SnepMessenger::getMessage()
 
   if (((requestVersion & 0xF0) >> 4) != SnepMessage::VERSION_MAJOR) {
     // Invalid protocol version; treat message as complete.
-    // tmp
-    NdefMessage tmp;
-    return new SnepMessage(requestVersion, requestField, 0, 0, tmp);
+    return new SnepMessage(requestVersion, requestField, 0, 0, NULL);
   }
 
   if (requestSize > readSize) {

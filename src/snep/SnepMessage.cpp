@@ -1,13 +1,16 @@
 #include "SnepMessage.h"
 
+#define LOG_TAG "nfcd"
+#include <cutils/log.h>
+
 SnepMessage::SnepMessage()
 {
-
+  mNdefMessage = NULL;
 }
 
 SnepMessage::~SnepMessage()
 {
-
+  delete mNdefMessage;
 }
 
 SnepMessage::SnepMessage(std::vector<uint8_t>& buf)
@@ -16,7 +19,7 @@ SnepMessage::SnepMessage(std::vector<uint8_t>& buf)
   int ndefLength;
   int idx = 0;
 
-  mVersion = buf[idx];
+  mVersion = buf[idx++];
   mField = buf[idx++];
   mLength = (buf[idx++] << 24) || (buf[idx++] << 16) || (buf[idx++] << 8) || buf[idx++];
 
@@ -31,19 +34,19 @@ SnepMessage::SnepMessage(std::vector<uint8_t>& buf)
   }
 
   if (ndefLength > 0) {
-    // TODO : erase here ??? should not modify input data
-    buf.erase(buf.begin(), buf.begin() + idx);
-    mNdefMessage.init(buf);
+    mNdefMessage = new NdefMessage();
+    mNdefMessage->init(buf, idx);
+  } else {
+    mNdefMessage = NULL;
   }
 }
 
-SnepMessage::SnepMessage(uint8_t version, uint8_t field, int length, int acceptableLength, NdefMessage ndefMessage)
+SnepMessage::SnepMessage(uint8_t version, uint8_t field, int length, int acceptableLength, NdefMessage* ndefMessage)
 {
   mVersion = version;
   mField = field;
   mLength = length;
   mAcceptableLength = acceptableLength;
-  // TODO : overwrite copy?
   mNdefMessage = ndefMessage;
 }
 
@@ -51,20 +54,28 @@ SnepMessage* SnepMessage::getGetRequest(int acceptableLength, NdefMessage& ndef)
 {
   std::vector<uint8_t> buf;
   ndef.toByteArray(buf);
-  return new SnepMessage(SnepMessage::VERSION, SnepMessage::REQUEST_GET, 4 + buf.size(), acceptableLength, ndef);
+  return new SnepMessage(SnepMessage::VERSION, SnepMessage::REQUEST_GET, 4 + buf.size(), acceptableLength, &ndef);
 }
 
 SnepMessage* SnepMessage::getPutRequest(NdefMessage& ndef)
 {
   std::vector<uint8_t> buf;
   ndef.toByteArray(buf);
-  return new SnepMessage(SnepMessage::VERSION, SnepMessage::REQUEST_PUT, buf.size(), 0, ndef);
+  return new SnepMessage(SnepMessage::VERSION, SnepMessage::REQUEST_PUT, buf.size(), 0, &ndef);
 }
 
 SnepMessage* SnepMessage::getMessage(uint8_t field) {
-  // TODO : should we use pointer instead of reference ?
-  NdefMessage ndefMessage;
-  return new SnepMessage(SnepMessage::VERSION, field, 0, 0, ndefMessage);
+  return new SnepMessage(SnepMessage::VERSION, field, 0, 0, NULL);
+}
+
+SnepMessage* getSuccessResponse(NdefMessage* ndef) {
+  if (ndef == NULL) {
+    return new SnepMessage(SnepMessage::VERSION, SnepMessage::RESPONSE_SUCCESS, 0, 0, NULL);
+  } else {
+    std::vector<uint8_t> buf;
+    ndef->toByteArray(buf);
+    return new SnepMessage(SnepMessage::VERSION, SnepMessage::RESPONSE_SUCCESS, buf.size(), 0, ndef);
+  }
 }
 
 SnepMessage* SnepMessage::fromByteArray(std::vector<uint8_t>& buf)
@@ -72,10 +83,21 @@ SnepMessage* SnepMessage::fromByteArray(std::vector<uint8_t>& buf)
   return new SnepMessage(buf);
 }
 
+SnepMessage* SnepMessage::fromByteArray(uint8_t* pBuf, int size)
+{
+  std::vector<uint8_t> buf;
+  for (uint32_t i = 0; i < size; i++)  buf[i] = pBuf[i];
+  return new SnepMessage(buf);
+}
+
 void SnepMessage::toByteArray(std::vector<uint8_t>& buf)
 {
+  if (mNdefMessage == NULL) {
+    ALOGE("Null NDEF message");
+  }
+
   std::vector<uint8_t> snepHeader;
-  mNdefMessage.toByteArray(buf);
+  mNdefMessage->toByteArray(buf);
 
   snepHeader.push_back(mVersion);
   snepHeader.push_back(mField);

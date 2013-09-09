@@ -37,6 +37,11 @@ NdefRecord::~NdefRecord()
 
 bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<NdefRecord>& records)
 {
+  return NdefRecord::parse(buf, ignoreMbMe, records, 0);
+}
+
+bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<NdefRecord>& records, int offset)
+{
   std::vector<uint8_t> type;
   std::vector<uint8_t> id;
   std::vector<uint8_t> payload;
@@ -44,7 +49,7 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
   std::vector<std::vector<uint8_t> > chunks;
   uint8_t chunkTnf = -1;
   bool me = false;
-  uint32_t index = 0;
+  uint32_t index = offset;
 
   while(!me) {
     uint8_t flag = buf[index++];

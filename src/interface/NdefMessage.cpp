@@ -9,6 +9,11 @@ NdefMessage::~NdefMessage()
   mRecords.clear();
 }
 
+bool NdefMessage::init(std::vector<uint8_t>& buf, int offset)
+{
+  return NdefRecord::parse(buf, false, mRecords, offset);
+}
+
 bool NdefMessage::init(std::vector<uint8_t>& buf)
 {
   return NdefRecord::parse(buf, false, mRecords);
