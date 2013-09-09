@@ -10,6 +10,8 @@
 class SnepMessage{
 public:
   SnepMessage();
+  SnepMessage(std::vector<uint8_t>& buf);
+  SnepMessage(uint8_t version,uint8_t field,int length,int acceptableLength, NdefMessage ndefMessage);
   ~SnepMessage();
 
   static const uint8_t VERSION_MAJOR = 0x1;
@@ -35,10 +37,11 @@ public:
   uint8_t getVersion() {  return mVersion;  }
   int getLength() {  return mLength;  }
   int getAcceptableLength() {  return mField != REQUEST_GET ? 0 : mAcceptableLength;  }
+  void toByteArray(std::vector<uint8_t>& buf);
 
   static SnepMessage* getGetRequest(int acceptableLength, NdefMessage& ndef);
-  static SnepMessage* getPutRequest(NdefMessage& ndef);
-
+  static SnepMessage* getPutRequest(NdefMessage& ndef); 
+  static SnepMessage* getMessage(uint8_t field);
 private: 
 
   static const int HEADER_LENGTH = 6;
@@ -48,7 +51,6 @@ private:
   int mLength;
   int mAcceptableLength;
   NdefMessage mNdefMessage;
-
 };
 
 #endif
