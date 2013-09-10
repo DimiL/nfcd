@@ -90,13 +90,13 @@ typedef struct {
   uint32_t tnf;
 
   uint32_t typeLength;
-  uint32_t* type;
+  uint8_t* type;
 
   uint32_t idLength;
-  uint32_t* id;
+  uint8_t* id;
 
   uint32_t payloadLength;
-  uint32_t* payload;
+  uint8_t* payload;
 } NdefRecordPdu;
 
 /**
@@ -107,14 +107,10 @@ typedef struct {
   NdefRecordPdu* records;
 } NdefMessagePdu;
 
-//TODO: Use String16 for SessionId?
 /**
  * Session Id.
  */
-typedef struct {
-  uint32_t strLength;
-  char* sessionId;
-} NfcSessionId;
+typedef uint32_t NfcSessionId;
 
 typedef struct {
   /**
@@ -276,13 +272,28 @@ typedef enum {
 } NfcRequest;
 
 typedef struct {
+  uint32_t status;
+  uint32_t majorVersion;
+  uint32_t minorVersion;
+} NfcNotificationInitialized;
+
+typedef struct {
   NfcSessionId sessionId;
   uint32_t numOfTechnogies;
   NfcTechnology* technology;
 } NfcNotificationTechDiscovered;
 
 typedef enum {
-  NFC_NOTIFICATION_BASE = 1000,
+  NFC_NOTIFICATION_BASE = 1999,
+
+  /**
+   * NFC_NOTIFICATION_INITIALIZED
+   *
+   * To notify nfcd is initialized after startup.
+   *
+   * data is NfcNotificationInitialized.
+   */
+  NFC_NOTIFICATION_INITIALIZED = 2000,
 
   /**
    * NFC_NOTIFICATION_TECH_DISCOVERED
@@ -291,7 +302,7 @@ typedef enum {
    *
    * data is NfcNotificationTechDiscovered.
    */
-  NFC_NOTIFICATION_TECH_DISCOVERED = 1001,
+  NFC_NOTIFICATION_TECH_DISCOVERED = 2001,
 
   /**
    * NFC_NOTIFICATION_TECH_LOST
@@ -302,7 +313,7 @@ typedef enum {
    * data is char* sessionId, which is correlates to a technology that was
    * previously discovered with NFC_NOTIFICATION_TECH_DISCOVERED.
    */
-  NFC_NOTIFICATION_TECH_LOST = 1002,
+  NFC_NOTIFICATION_TECH_LOST = 2002,
 } NfcNotification;
 
 #ifdef __cplusplus
