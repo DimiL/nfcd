@@ -133,24 +133,21 @@ bool MessageHandler::handleWriteNdefRequest(Parcel& parcel, int token)
 
     uint32_t typeLength = parcel.readInt32();
     ndefMessagePdu.records[i].typeLength = typeLength;
-    ndefMessagePdu.records[i].type = new uint32_t[typeLength];
-    for (uint32_t j = 0; j < typeLength; j++) {
-      ndefMessagePdu.records[i].type[j] = parcel.readInt32();
-    }
+    ndefMessagePdu.records[i].type = new uint8_t[typeLength];
+    const void* data = parcel.readInplace(typeLength);
+    memcpy(ndefMessagePdu.records[i].type, data, typeLength);
 
     uint32_t idLength = parcel.readInt32();
     ndefMessagePdu.records[i].idLength = idLength;
-    ndefMessagePdu.records[i].id = new uint32_t[idLength];
-    for (uint32_t j = 0; j < idLength; j++) {
-      ndefMessagePdu.records[i].id[j] = parcel.readInt32();
-    }
+    ndefMessagePdu.records[i].id = new uint8_t[idLength];
+    data = parcel.readInplace(idLength);
+    memcpy(ndefMessagePdu.records[i].id, data, idLength);
 
     uint32_t payloadLength = parcel.readInt32();
     ndefMessagePdu.records[i].payloadLength = payloadLength;
-    ndefMessagePdu.records[i].payload = new uint32_t[payloadLength];
-    for (uint32_t j = 0; j < payloadLength; j++) {
-      ndefMessagePdu.records[i].payload[j] = parcel.readInt32();
-    }
+    ndefMessagePdu.records[i].payload = new uint8_t[payloadLength];
+    data = parcel.readInplace(payloadLength);
+    memcpy(ndefMessagePdu.records[i].payload, data, payloadLength);
   }
 
   NfcUtil::convertNdefPduToNdefMessage(ndefMessagePdu, ndefMessage);
@@ -183,36 +180,38 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
   NdefMessage* ndef = reinterpret_cast<NdefMessage*>(data);
   //TODO write SessionId
   int numRecords = ndef->mRecords.size();
+  ALOGD("numRecords=%d", numRecords);
   parcel.writeInt32(numRecords);
 
   for (int i = 0; i < numRecords; i++) {
     NdefRecord &record = ndef->mRecords[i];
 
-    ALOGV("tnf=%u",record.mTnf);
+    ALOGD("tnf=%u",record.mTnf);
     parcel.writeInt32(record.mTnf);
 
     uint32_t typeLength = record.mType.size();
-    ALOGV("typeLength=%u",typeLength);
+    ALOGD("typeLength=%u",typeLength);
     parcel.writeInt32(typeLength);
-    for (int j = 0; j < typeLength; j++) {
-      ALOGV("mType %d = %u", j, record.mType[j]);
-      parcel.writeInt32(record.mType[j]);
+    void* dest = parcel.writeInplace(typeLength);
+    if (dest == NULL) {
+      ALOGE("writeInplace returns NULL");
+      return false;
     }
+    memcpy(dest, &record.mType.front(), typeLength);
 
-    uint8_t idLength = record.mId.size();
-    ALOGV("idLength=%d",idLength);
+    uint32_t idLength = record.mId.size();
+    ALOGD("idLength=%d",idLength);
     parcel.writeInt32(idLength);
-    for (int j = 0; j < idLength; j++) {
-      ALOGV("mId %d = %u", j, record.mId[j]);
-      parcel.writeInt32(record.mId[j]);
-    }
+    dest = parcel.writeInplace(idLength);
+    memcpy(dest, &record.mId.front(), idLength);
 
     uint32_t payloadLength = record.mPayload.size();
-    ALOGV("payloadLength=%d",payloadLength);
+    ALOGD("payloadLength=%u",payloadLength);
     parcel.writeInt32(payloadLength);
+    dest = parcel.writeInplace(payloadLength);
+    memcpy(dest, &record.mPayload.front(), payloadLength);
     for (int j = 0; j < payloadLength; j++) {
-      ALOGV("mPayload %d = %u", j, record.mPayload[j]);
-      parcel.writeInt32(record.mPayload[j]);
+      ALOGD("mPayload %d = %u", j, record.mPayload[j]);
     }
   }
 
