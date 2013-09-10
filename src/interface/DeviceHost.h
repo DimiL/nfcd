@@ -46,25 +46,4 @@ private:
   NfcDepEndpoint();
   virtual ~NfcDepEndpoint();
 };
-
-class ILlcpSocket {
-public:
-  ILlcpSocket();
-  virtual ~ILlcpSocket();
-
-  virtual void connectToSap(int sap) = 0;
-  virtual void connectToService(const char* serviceName) = 0;
-
-  virtual void close() = 0;
-
-  virtual void send(uint8_t data[]);
-  virtual int receive(uint8_t recvBuff[]);
-
-  virtual int getRemoteMiu() = 0;
-  virtual int getRemoteRw() = 0;
-  virtual int getLocalSap() = 0;
-  virtual int getLocalMiu() = 0;
-  virtual int getLocalRw() = 0;
-};
-
 #endif

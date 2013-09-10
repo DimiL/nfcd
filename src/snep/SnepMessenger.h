@@ -6,7 +6,7 @@
 #define mozilla_nfcd_SnepMessenger_h
 
 #include "SnepMessage.h"
-#include "DeviceHost.h"
+#include "ILlcpSocket.h"
 
 class SnepMessenger{
 public:

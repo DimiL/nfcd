@@ -24,8 +24,6 @@ class NfaConn;
 class PeerToPeer
 {
 public:
-    typedef unsigned int tJNI_HANDLE;
-
     PeerToPeer ();
 
     ~PeerToPeer ();
@@ -42,27 +40,27 @@ public:
 
     void connectionEventHandler (UINT8 event, tNFA_CONN_EVT_DATA* eventData);
 
-    bool registerServer (tJNI_HANDLE jniHandle, const char* serviceName);
+    bool registerServer (unsigned int handle, const char* serviceName);
 
-    bool deregisterServer (tJNI_HANDLE jniHandle);
+    bool deregisterServer (unsigned int handle);
 
-    bool accept (tJNI_HANDLE serverJniHandle, tJNI_HANDLE connJniHandle, int maxInfoUnit, int recvWindow);
+    bool accept (unsigned int serverHandle, unsigned int connHandle, int maxInfoUnit, int recvWindow);
 
-    bool createClient (tJNI_HANDLE jniHandle, UINT16 miu, UINT8 rw);
+    bool createClient (unsigned int handle, UINT16 miu, UINT8 rw);
 
-    bool connectConnOriented (tJNI_HANDLE jniHandle, const char* serviceName);
+    bool connectConnOriented (unsigned int handle, const char* serviceName);
 
-    bool connectConnOriented (tJNI_HANDLE jniHandle, UINT8 destinationSap);
+    bool connectConnOriented (unsigned int handle, UINT8 destinationSap);
 
-    bool send (tJNI_HANDLE jniHandle, UINT8* buffer, UINT16 bufferLen);
+    bool send (unsigned int handle, UINT8* buffer, UINT16 bufferLen);
 
-    bool receive (tJNI_HANDLE jniHandle, UINT8* buffer, UINT16 bufferLen, UINT16& actualLen);
+    bool receive (unsigned int handle, UINT8* buffer, UINT16 bufferLen, UINT16& actualLen);
 
-    bool disconnectConnOriented (tJNI_HANDLE jniHandle);
+    bool disconnectConnOriented (unsigned int handle);
 
-    UINT16 getRemoteMaxInfoUnit (tJNI_HANDLE jniHandle);
+    UINT16 getRemoteMaxInfoUnit (unsigned int handle);
 
-    UINT8 getRemoteRecvWindow (tJNI_HANDLE jniHandle);
+    UINT8 getRemoteRecvWindow (unsigned int handle);
 
     void setP2pListenMask (tNFA_TECHNOLOGY_MASK p2pListenMask);
 
@@ -70,7 +68,7 @@ public:
 
     void handleNfcOnOff (bool isOn);
 
-    tJNI_HANDLE getNewJniHandle ();
+    unsigned int getNewHandle ();
 
     static void nfaServerCallback  (tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA *eventData);
 
@@ -85,8 +83,8 @@ private:
     bool            mIsP2pListening;            // If P2P listening is enabled or not
     tNFA_TECHNOLOGY_MASK    mP2pListenTechMask; // P2P Listen mask
 
-    // Variable below is protected by mNewJniHandleMutex
-    tJNI_HANDLE     mNextJniHandle;
+    // Variable below is protected by mNewHandleMutex
+    unsigned int     mNextHandle;
 
     // Variables below protected by mMutex
     // A note on locking order: mMutex in PeerToPeer is *ALWAYS*
@@ -100,7 +98,7 @@ private:
     SyncEvent       mSnepDefaultServerStartStopEvent; // completion event for NFA_SnepStartDefaultServer(), NFA_SnepStopDefaultServer()
     SyncEvent       mSnepRegisterEvent;         // completion event for NFA_SnepRegisterClient()
     Mutex           mDisconnectMutex;           // synchronize the disconnect operation
-    Mutex           mNewJniHandleMutex;         // synchronize the creation of a new JNI handle
+    Mutex           mNewHandleMutex;         // synchronize the creation of a new handle
 
     NfcManager*     mNfcManager;
 
@@ -108,32 +106,32 @@ private:
 
     android::sp<P2pServer>   findServerLocked (tNFA_HANDLE nfaP2pServerHandle);
 
-    android::sp<P2pServer>   findServerLocked (tJNI_HANDLE jniHandle);
+    android::sp<P2pServer>   findServerLocked (unsigned int handle);
 
     android::sp<P2pServer>   findServerLocked (const char *serviceName);
 
-    void        removeServer (tJNI_HANDLE jniHandle);
+    void        removeServer (unsigned int handle);
 
-    void        removeConn (tJNI_HANDLE jniHandle);
+    void        removeConn (unsigned int handle);
 
-    bool        createDataLinkConn (tJNI_HANDLE jniHandle, const char* serviceName, UINT8 destinationSap);
+    bool        createDataLinkConn (unsigned int handle, const char* serviceName, UINT8 destinationSap);
 
     android::sp<P2pClient>   findClient (tNFA_HANDLE nfaConnHandle);
 
-    android::sp<P2pClient>   findClient (tJNI_HANDLE jniHandle);
+    android::sp<P2pClient>   findClient (unsigned int handle);
 
     android::sp<P2pClient>   findClientCon (tNFA_HANDLE nfaConnHandle);
 
     android::sp<NfaConn>     findConnection (tNFA_HANDLE nfaConnHandle);
 
-    android::sp<NfaConn>     findConnection (tJNI_HANDLE jniHandle);
+    android::sp<NfaConn>     findConnection (unsigned int handle);
 };
 
 class NfaConn : public android::RefBase
 {
 public:
     tNFA_HANDLE         mNfaConnHandle;         // NFA handle of the P2P connection
-    PeerToPeer::tJNI_HANDLE         mJniHandle;             // JNI handle of the P2P connection
+    unsigned int        mHandle;             // handle of the P2P connection
     UINT16              mMaxInfoUnit;
     UINT8               mRecvWindow;
     UINT16              mRemoteMaxInfoUnit;
@@ -151,32 +149,32 @@ public:
     static const std::string sSnepServiceName;
 
     tNFA_HANDLE     mNfaP2pServerHandle;    // NFA p2p handle of local server
-    PeerToPeer::tJNI_HANDLE     mJniHandle;     // JNI Handle
+    unsigned int    mHandle;     // Handle
     SyncEvent       mRegServerEvent;        // for NFA_P2pRegisterServer()
     SyncEvent       mConnRequestEvent;      // for accept()
     std::string     mServiceName;
 
-    P2pServer (PeerToPeer::tJNI_HANDLE jniHandle, const char* serviceName);
+    P2pServer (unsigned int handle, const char* serviceName);
 
     bool registerWithStack();
 
-    bool accept (PeerToPeer::tJNI_HANDLE serverJniHandle, PeerToPeer::tJNI_HANDLE connJniHandle,
+    bool accept (unsigned int serverHandle, unsigned int connHandle,
             int maxInfoUnit, int recvWindow);
 
     void unblockAll();
 
     android::sp<NfaConn> findServerConnection (tNFA_HANDLE nfaConnHandle);
 
-    android::sp<NfaConn> findServerConnection (PeerToPeer::tJNI_HANDLE jniHandle);
+    android::sp<NfaConn> findServerConnection (unsigned int handle);
 
-    bool removeServerConnection(PeerToPeer::tJNI_HANDLE jniHandle);
+    bool removeServerConnection(unsigned int handle);
 
 private:
     Mutex           mMutex;
     // mServerConn is protected by mMutex
     android::sp<NfaConn>     mServerConn[MAX_NFA_CONNS_PER_SERVER];
 
-    android::sp<NfaConn> allocateConnection (PeerToPeer::tJNI_HANDLE jniHandle);
+    android::sp<NfaConn> allocateConnection (unsigned int handle);
 };
 
 class P2pClient : public android::RefBase

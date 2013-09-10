@@ -36,7 +36,7 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
   for(int i = 0; i < length; i++)
     tmpBuf[i] = buf[i];
 
-  mSocket->send(tmpBuf);
+  //mSocket->send(tmpBuf);
 
   if (length == buf.size()) {
     goto End;
@@ -45,7 +45,7 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
   // Look for Continue or Reject from peer.
   offset = length;
   responseBytes = new uint8_t[SnepMessenger::HEADER_LENGTH];
-  mSocket->receive(responseBytes);
+  //mSocket->receive(responseBytes);
 
   snepResponse = SnepMessage::fromByteArray(responseBytes, SnepMessenger::HEADER_LENGTH);
   if (snepResponse == NULL) {
@@ -64,7 +64,7 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
     // TODO : Need check here
     for(int i = offset; i < offset + length; i++)
       tmpBuf[i] = buf[i];
-    mSocket->send(tmpBuf);
+    //mSocket->send(tmpBuf);
     offset += length;
   }
 
@@ -93,7 +93,7 @@ SnepMessage* SnepMessenger::getMessage()
     fieldReject = SnepMessage::RESPONSE_REJECT;
   }
 
-  size = mSocket->receive(partial);
+  //size = mSocket->receive(partial);
   if (size < 0) {
     //mSocket->send(SnepMessage.getMessage(fieldReject).toByteArray());
   } else if (size < HEADER_LENGTH) {
@@ -120,7 +120,7 @@ SnepMessage* SnepMessenger::getMessage()
 
   // Remaining fragments
   while (!doneReading) {
-    size = mSocket->receive(partial);
+    //size = mSocket->receive(partial);
     if (size < 0) {
       //mSocket->send(SnepMessage.getMessage(fieldReject).toByteArray());
     } else {
