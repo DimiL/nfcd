@@ -9,33 +9,50 @@
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
 
-char* mServiceName;
-int mServiceSap;
-int mFragmentLength;
-int mMiu;
-int mRwSize;
-
 const char* SnepServer::DEFAULT_SERVICE_NAME = "urn:nfc:sn:snep";
+
+ISnepCallback*  gCallback;
+const char*     gServiceName;
+int             gServiceSap;
+int             gFragmentLength;
+int             gMiu;
+int             gRwSize;
 
 void* connectionThreadFunc(void* arg)
 {
   bool running = true;
-  /*
+  ConnectionThread* pConnectionThread = reinterpret_cast<ConnectionThread*>(arg);
+
   while(running) {
     // Handle message
-    if (!SnepServer::handleRequest(mMessager)) {
+    if (!SnepServer::handleRequest(pConnectionThread->mMessenger, gCallback)) {
       break;
     }
-  }*/
+  }
 
   return NULL;
+}
+
+ConnectionThread::ConnectionThread(ILlcpSocket* socket, int fragmentLength):
+mSock(socket)
+{
+  mMessenger = new SnepMessenger(false, socket, fragmentLength);
+}
+
+void ConnectionThread::run()
+{
+  pthread_t tid;
+  if(pthread_create(&tid, NULL, connectionThreadFunc, this) != 0) {
+    ALOGE("init_nfc_service pthread_create failed");
+    abort();
+  }
 }
 
 void* serverThreadFunc(void* arg)
 {
   INfcManager* pINfcManager = NfcService::getNfcManager();
   ILlcpServerSocket* pServerSocket = pINfcManager->createLlcpServerSocket(
-    mServiceSap, mServiceName, mMiu, mRwSize, 1024);
+    gServiceSap, gServiceName, gMiu, gRwSize, 1024);
 
   while(true) {
     if (pServerSocket == NULL) {
@@ -48,7 +65,7 @@ void* serverThreadFunc(void* arg)
     if (communicationSocket != NULL) {
       int miu = communicationSocket->getRemoteMiu();
       // use math
-      int fragmentLength = (mFragmentLength == -1) ? miu : miu < mFragmentLength ? miu : mFragmentLength;
+      int fragmentLength = (gFragmentLength == -1) ? miu : miu < gFragmentLength ? miu : gFragmentLength;
       // use pthread
       pthread_t tid;
       if(pthread_create(&tid, NULL, connectionThreadFunc, NULL) != 0) {
@@ -61,9 +78,40 @@ void* serverThreadFunc(void* arg)
   return NULL;
 }
 
-SnepServer::SnepServer()
-{
+SnepServer::SnepServer(ISnepCallback* callback) {
+  gCallback = callback;
+  gServiceName = DEFAULT_SERVICE_NAME;
+  gServiceSap = DEFAULT_PORT;
+  gFragmentLength = -1;
+  gMiu = DEFAULT_MIU;
+  gRwSize = DEFAULT_RW_SIZE;
+}
 
+SnepServer::SnepServer(const char* serviceName, int serviceSap, ISnepCallback* callback) {
+  gCallback = callback;
+  gServiceName = serviceName;
+  gServiceSap = serviceSap;
+  gFragmentLength = -1;
+  gMiu = DEFAULT_MIU;
+  gRwSize = DEFAULT_RW_SIZE;
+}
+
+SnepServer::SnepServer(ISnepCallback* callback, int miu, int rwSize) {
+  gCallback = callback;
+  gServiceName = DEFAULT_SERVICE_NAME;
+  gServiceSap = DEFAULT_PORT;
+  gFragmentLength = -1;
+  gMiu = miu;
+  gRwSize = rwSize;
+}
+
+SnepServer::SnepServer(const char* serviceName, int serviceSap, int fragmentLength, ISnepCallback* callback) {
+  gCallback = callback;
+  gServiceName = serviceName;
+  gServiceSap = serviceSap;
+  gFragmentLength = fragmentLength;
+  gMiu = DEFAULT_MIU;
+  gRwSize = DEFAULT_RW_SIZE;
 }
 
 SnepServer::~SnepServer()
@@ -81,26 +129,32 @@ void SnepServer::start()
   }
 }
 
-bool SnepServer::handleRequest(SnepMessenger& messenger)
+bool SnepServer::handleRequest(SnepMessenger* messenger, ISnepCallback* callback)
 {
-  SnepMessage* request = messenger.getMessage();
+  SnepMessage* request = messenger->getMessage();
+  SnepMessage* response = NULL;
   if (request == NULL) {
     ALOGE("Bad snep message");
-    //messenger.sendMessage(SnepMessage::getMessage(SnepMessage::RESPONSE_BAD_REQUEST));
+    response = SnepMessage::getMessage(SnepMessage::RESPONSE_BAD_REQUEST);
+    messenger->sendMessage(*response);
     return false;
   } 
 
   if (((request->getVersion() & 0xF0) >> 4) != SnepMessage::VERSION_MAJOR) {
-    //messenger.sendMessage(SnepMessage.getMessage(SnepMessage::RESPONSE_UNSUPPORTED_VERSION));
+    response = SnepMessage::getMessage(SnepMessage::RESPONSE_UNSUPPORTED_VERSION);
+    messenger->sendMessage(*response);
   } else if (request->getField() == SnepMessage::REQUEST_GET) {
-    // TODO : Add callback
-    // messenger.sendMessage(callback.doGet(request.getAcceptableLength(), request.getNdefMessage()));
+    response = callback->doGet(request->getAcceptableLength(), *request->getNdefMessage());
+    messenger->sendMessage(*response);
   } else if (request->getField() == SnepMessage::REQUEST_PUT) {
-    // TODO : Add callback
-    // messenger.sendMessage(callback.doPut(request.getNdefMessage()));
+    response = callback->doPut(*request->getNdefMessage());
+    messenger->sendMessage(*response);
   } else {
-    //messenger.sendMessage(SnepMessage.getMessage(SnepMessage::RESPONSE_BAD_REQUEST));
+    response = SnepMessage::getMessage(SnepMessage::RESPONSE_UNSUPPORTED_VERSION);
+    messenger->sendMessage(*response);
   }
+
+  delete response;
 
   return true;
 }

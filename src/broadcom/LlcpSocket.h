@@ -8,14 +8,14 @@
 #include "ILlcpSocket.h"
 #include <vector>
 
-class LlcpSocket : ILlcpSocket
+class LlcpSocket : public ILlcpSocket
 {
 public:
-  LlcpSocket();
+  LlcpSocket(unsigned int handle, int sap, int miu, int rw);
   virtual ~LlcpSocket();
 
-  void connectToSap(int sap);
-  void connectToService(const char* serviceName);
+  bool connectToSap(int sap);
+  bool connectToService(const char* serviceName);
   void close();
   void send(std::vector<uint8_t>& data);
   int receive(std::vector<uint8_t>& recvBuff);

@@ -6,10 +6,26 @@
 #define mozilla_nfcd_SnepServer_h
 
 #include "SnepMessenger.h"
+#include "ISnepCallback.h"
+
+
+class ConnectionThread {
+public:
+  ConnectionThread(ILlcpSocket* socket, int fragmentLength);
+  ~ConnectionThread();
+
+  void run();
+
+  ILlcpSocket* mSock;
+  SnepMessenger* mMessenger;
+};
 
 class SnepServer{
 public:
-  SnepServer();
+  SnepServer(ISnepCallback* callback);
+  SnepServer(const char* serviceName, int serviceSap, ISnepCallback* callback);
+  SnepServer(ISnepCallback* callback, int miu, int rwSize);
+  SnepServer(const char* serviceName, int serviceSap, int fragmentLength, ISnepCallback* callback);
   ~SnepServer();
 
   static const int DEFAULT_MIU = 248;
@@ -19,8 +35,7 @@ public:
 
   void start();
   
-private:
-  static bool handleRequest(SnepMessenger& messenger);
+  static bool handleRequest(SnepMessenger* messenger, ISnepCallback* callback);
 };
 
 #endif

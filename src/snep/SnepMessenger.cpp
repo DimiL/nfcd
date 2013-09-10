@@ -18,11 +18,9 @@ SnepMessenger::~SnepMessenger()
 void SnepMessenger::sendMessage(SnepMessage& msg)
 {
   SnepMessage* snepResponse = NULL;
-  uint8_t* responseBytes = NULL;
-  uint8_t* tmpBuf = NULL;
   uint8_t remoteContinue;
   std::vector<uint8_t> buf;
-  int offset;
+  uint32_t offset;
 
   msg.toByteArray(buf);
   if (mIsClient) {
@@ -31,52 +29,47 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
     remoteContinue = SnepMessage::REQUEST_CONTINUE;
   }
 
-  int length = buf.size() <  mFragmentLength ? buf.size() : mFragmentLength;
-  tmpBuf = new uint8_t[length];
-  for(int i = 0; i < length; i++)
-    tmpBuf[i] = buf[i];
+  uint32_t length = buf.size() <  mFragmentLength ? buf.size() : mFragmentLength;
 
-  //mSocket->send(tmpBuf);
+  mSocket->send(buf);
 
   if (length == buf.size()) {
-    goto End;
+    return;
   }
 
   // Look for Continue or Reject from peer.
   offset = length;
-  responseBytes = new uint8_t[SnepMessenger::HEADER_LENGTH];
-  //mSocket->receive(responseBytes);
+  std::vector<uint8_t> responseBytes;
+  mSocket->receive(responseBytes);
 
-  snepResponse = SnepMessage::fromByteArray(responseBytes, SnepMessenger::HEADER_LENGTH);
+  snepResponse = SnepMessage::fromByteArray(responseBytes);
   if (snepResponse == NULL) {
-    ALOGE("Invalid SNEP message");   
-    goto End;
+    ALOGE("Invalid SNEP message");
+    return;
   }
 
   if (snepResponse->getField() != remoteContinue) {
     ALOGE("Invalid response from server (%d)", snepResponse->getField());
-    goto End;
+    delete snepResponse;
+    return;
   }
 
   // Send remaining fragments.
   while (offset < buf.size()) {
+    std::vector<uint8_t> tmpBuf;
     length = buf.size() - offset < mFragmentLength ? buf.size() - offset : mFragmentLength;
     // TODO : Need check here
-    for(int i = offset; i < offset + length; i++)
-      tmpBuf[i] = buf[i];
-    //mSocket->send(tmpBuf);
+    for(uint32_t i = offset; i < offset + length; i++)
+      tmpBuf.push_back(buf[i]);
+    mSocket->send(tmpBuf);
     offset += length;
   }
-
-End:
-  delete[] tmpBuf;
-  delete[] responseBytes;
-  delete snepResponse;
 }
   
 SnepMessage* SnepMessenger::getMessage()
 {
-  uint8_t* partial = new uint8_t[mFragmentLength];
+  std::vector<uint8_t> partial;
+  std::vector<uint8_t> buffer;
   int size;
   int requestSize = 0;
   int readSize = 0;
@@ -93,14 +86,12 @@ SnepMessage* SnepMessenger::getMessage()
     fieldReject = SnepMessage::RESPONSE_REJECT;
   }
 
-  //size = mSocket->receive(partial);
-  if (size < 0) {
-    //mSocket->send(SnepMessage.getMessage(fieldReject).toByteArray());
-  } else if (size < HEADER_LENGTH) {
-    //mSocket->send(SnepMessage.getMessage(fieldReject).toByteArray());
+  size = mSocket->receive(partial);
+  if (size < 0 || size < HEADER_LENGTH) {
+    socketSend(fieldReject);
   } else {
     readSize = size - HEADER_LENGTH;
-    //buffer.write(partial, 0, size);
+    buffer.insert(buffer.end(), partial.begin(), partial.end());
   }
 
   requestVersion = partial[0];
@@ -113,31 +104,42 @@ SnepMessage* SnepMessenger::getMessage()
   }
 
   if (requestSize > readSize) {
-    //mSocket->send(SnepMessage.getMessage(fieldContinue).toByteArray());
+    socketSend(fieldContinue);
   } else {
     doneReading = true;
   }
 
+  // TODO : DO we need clear partial here?
+  partial.clear();
   // Remaining fragments
   while (!doneReading) {
-    //size = mSocket->receive(partial);
+    size = mSocket->receive(partial);
     if (size < 0) {
-      //mSocket->send(SnepMessage.getMessage(fieldReject).toByteArray());
+      socketSend(fieldReject);
     } else {
       readSize += size;
-      //buffer.write(partial, 0, size);
+      buffer.insert(buffer.end(), partial.begin(), partial.end());
       if (readSize == requestSize) {
         doneReading = true;
       }
     }
   }
 
-  return NULL;
-  //return SnepMessage.fromByteArray(buffer.toByteArray());
+  SnepMessage* snep = SnepMessage::fromByteArray(buffer); 
+  return snep;
 }
 
 void SnepMessenger::close()
 {
   if (mSocket != NULL)
     mSocket->close();
+}
+
+void SnepMessenger::socketSend(uint8_t field)
+{
+  std::vector<uint8_t> data;
+  SnepMessage* msg = SnepMessage::getMessage(field);
+  msg->toByteArray(data);
+  mSocket->send(data);
+  delete msg;
 }

@@ -4,7 +4,11 @@
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
 
-LlcpSocket::LlcpSocket()
+LlcpSocket::LlcpSocket(unsigned int handle, int sap, int miu, int rw):
+mHandle(handle),
+mSap(sap),
+mLocalMiu(miu),
+mLocalRw(rw)
 {
 }
 
@@ -12,16 +16,14 @@ LlcpSocket::~LlcpSocket()
 {
 }
 
-void LlcpSocket::connectToSap(int sap)
+bool LlcpSocket::connectToSap(int sap)
 {
-  LlcpSocket::LlcpSocket_doConnect (sap);
-  return;
+  return LlcpSocket::LlcpSocket_doConnect (sap);
 }
 
-void LlcpSocket::connectToService(const char* serviceName)
+bool LlcpSocket::connectToService(const char* serviceName)
 {
-  LlcpSocket::LlcpSocket_doConnectBy(serviceName);
-  return;
+  return LlcpSocket::LlcpSocket_doConnectBy(serviceName);
 }
 
 void LlcpSocket::close()

@@ -8,6 +8,7 @@
 #include "NfcTag.h"
 #include "config.h"
 #include "Pn544Interop.h"
+#include "LlcpSocket.h"
 
 extern "C"
 {
@@ -362,7 +363,13 @@ bool NfcManager::doActivateLlcp()
 
 ILlcpSocket* NfcManager::createLlcpSocket(int sap, int miu, int rw, int linearBufferLength)
 {
-    return NULL;
+    ALOGD ("%s: enter; sap=%d; miu=%d; rw=%d; buffer len=%d", __FUNCTION__, sap, miu, rw, linearBufferLength);
+
+    unsigned int handle = PeerToPeer::getInstance().getNewHandle ();
+    LlcpSocket* pLlcpSocket = new LlcpSocket(handle, sap, miu, rw);
+    
+    ALOGD ("%s: exit", __FUNCTION__); 
+    return static_cast<ILlcpSocket*>(pLlcpSocket);
 }
 
 ILlcpServerSocket* NfcManager::createLlcpServerSocket(int nSap, const char* sn, int miu, int rw, int linearBufferLength)

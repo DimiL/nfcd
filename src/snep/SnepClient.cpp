@@ -60,8 +60,11 @@ SnepClient::SnepClient(const char* serviceName, int acceptableLength, int fragme
 
 SnepClient::~SnepClient()
 {
-  if (mMessenger)
+  if (mMessenger) {
+    mMessenger->close();
     delete mMessenger;
+    mMessenger = NULL;
+  }
 }
 
 void SnepClient::put(NdefMessage& msg)
@@ -112,10 +115,20 @@ void SnepClient::connect()
     ALOGE("Could not connect to socket");
     return;
   }
+
+  bool ret = false;
   if (mPort == -1) {
-    socket->connectToService(mServiceName);
+    if (!socket->connectToService(mServiceName)) {
+      ALOGE("Could not connect to service (%s)", mServiceName);
+      delete socket;
+      return;
+    }
   } else {
-    socket->connectToSap(mPort);
+    if (!socket->connectToSap(mPort)) {
+      ALOGE("Could not connect to sap (%d)", mPort);
+      delete socket;
+      return;
+    }    
   }
 
   int miu = socket->getRemoteMiu();
@@ -125,10 +138,15 @@ void SnepClient::connect()
   mMessenger = messenger;
 
   mState = SnepClient::CONNECTED;
+
+  delete socket;
 }
 
 void SnepClient::close()
 {
-  mMessenger->close();
-  mMessenger = NULL;
+  if (mMessenger) {
+    mMessenger->close();
+    delete mMessenger;
+    mMessenger = NULL;
+  }
 }
