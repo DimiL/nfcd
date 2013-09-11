@@ -11,32 +11,49 @@
 
 const char* SnepServer::DEFAULT_SERVICE_NAME = "urn:nfc:sn:snep";
 
-ISnepCallback*  gCallback;
-const char*     gServiceName;
-int             gServiceSap;
-int             gFragmentLength;
-int             gMiu;
-int             gRwSize;
-
 void* connectionThreadFunc(void* arg)
 {
+  ALOGD("starting connection thread");
+
   bool running = true;
   ConnectionThread* pConnectionThread = reinterpret_cast<ConnectionThread*>(arg);
+  if (pConnectionThread == NULL) {
+    ALOGE("no connection thread class");
+    return NULL;
+  }
 
+  ISnepCallback* callback = pConnectionThread->mCallback;
   while(running) {
     // Handle message
-    if (!SnepServer::handleRequest(pConnectionThread->mMessenger, gCallback)) {
+    if (!SnepServer::handleRequest(pConnectionThread->mMessenger, callback)) {
       break;
     }
+
+    running = pConnectionThread->isServerRunning();
   }
+
+  pConnectionThread->mSock->close();
+
+  // TODO : is this correct ??
+  delete pConnectionThread;
+
+  ALOGD("finished connection thread");
 
   return NULL;
 }
 
-ConnectionThread::ConnectionThread(ILlcpSocket* socket, int fragmentLength):
-mSock(socket)
+ConnectionThread::ConnectionThread(
+  SnepServer* server,ILlcpSocket* socket, int fragmentLength, ISnepCallback* callback):
+mServer(server),
+mSock(socket),
+mCallback(callback)
 {
   mMessenger = new SnepMessenger(false, socket, fragmentLength);
+}
+
+ConnectionThread::~ConnectionThread()
+{
+  delete mMessenger;
 }
 
 void ConnectionThread::run()
@@ -48,30 +65,42 @@ void ConnectionThread::run()
   }
 }
 
+bool ConnectionThread::isServerRunning()
+{
+  return mServer->mServerRunning;
+}
+
 void* serverThreadFunc(void* arg)
 {
-  INfcManager* pINfcManager = NfcService::getNfcManager();
-  ILlcpServerSocket* pServerSocket = pINfcManager->createLlcpServerSocket(
-    gServiceSap, gServiceName, gMiu, gRwSize, 1024);
+  SnepServer* pSnepServer = reinterpret_cast<SnepServer*>(arg);
+  if (pSnepServer == NULL) {
+    ALOGE("no snep server class");
+    return NULL;
+  }
 
-  while(true) {
-    if (pServerSocket == NULL) {
+  ISnepCallback* callback = pSnepServer->mCallback;
+  ILlcpServerSocket* serverSocket = pSnepServer->mServerSocket;
+  int fragmentLength = pSnepServer->mFragmentLength;
+
+  if (serverSocket == NULL) {
+    ALOGE("no server socket");
+    return NULL;
+  }
+
+  while(pSnepServer->mServerRunning) {
+    if (serverSocket == NULL) {
         ALOGD("Server socket shut down.");
         return NULL;
     }
 
-    ILlcpSocket* communicationSocket = pServerSocket->accept();
+    ILlcpSocket* communicationSocket = serverSocket->accept();
     
     if (communicationSocket != NULL) {
       int miu = communicationSocket->getRemoteMiu();
-      // use math
-      int fragmentLength = (gFragmentLength == -1) ? miu : miu < gFragmentLength ? miu : gFragmentLength;
-      // use pthread
-      pthread_t tid;
-      if(pthread_create(&tid, NULL, connectionThreadFunc, NULL) != 0) {
-        ALOGE("init_nfc_service pthread_create failed");
-        abort();
-      }
+      int length = (fragmentLength == -1) ? miu : miu < fragmentLength ? miu : fragmentLength;
+      ConnectionThread* pConnectionThread = 
+          new ConnectionThread(pSnepServer, communicationSocket, length, callback);
+      pConnectionThread->run();
     }
   }
 
@@ -79,39 +108,39 @@ void* serverThreadFunc(void* arg)
 }
 
 SnepServer::SnepServer(ISnepCallback* callback) {
-  gCallback = callback;
-  gServiceName = DEFAULT_SERVICE_NAME;
-  gServiceSap = DEFAULT_PORT;
-  gFragmentLength = -1;
-  gMiu = DEFAULT_MIU;
-  gRwSize = DEFAULT_RW_SIZE;
+  mCallback = callback;
+  mServiceName = DEFAULT_SERVICE_NAME;
+  mServiceSap = DEFAULT_PORT;
+  mFragmentLength = -1;
+  mMiu = DEFAULT_MIU;
+  mRwSize = DEFAULT_RW_SIZE;
 }
 
 SnepServer::SnepServer(const char* serviceName, int serviceSap, ISnepCallback* callback) {
-  gCallback = callback;
-  gServiceName = serviceName;
-  gServiceSap = serviceSap;
-  gFragmentLength = -1;
-  gMiu = DEFAULT_MIU;
-  gRwSize = DEFAULT_RW_SIZE;
+  mCallback = callback;
+  mServiceName = serviceName;
+  mServiceSap = serviceSap;
+  mFragmentLength = -1;
+  mMiu = DEFAULT_MIU;
+  mRwSize = DEFAULT_RW_SIZE;
 }
 
 SnepServer::SnepServer(ISnepCallback* callback, int miu, int rwSize) {
-  gCallback = callback;
-  gServiceName = DEFAULT_SERVICE_NAME;
-  gServiceSap = DEFAULT_PORT;
-  gFragmentLength = -1;
-  gMiu = miu;
-  gRwSize = rwSize;
+  mCallback = callback;
+  mServiceName = DEFAULT_SERVICE_NAME;
+  mServiceSap = DEFAULT_PORT;
+  mFragmentLength = -1;
+  mMiu = miu;
+  mRwSize = rwSize;
 }
 
 SnepServer::SnepServer(const char* serviceName, int serviceSap, int fragmentLength, ISnepCallback* callback) {
-  gCallback = callback;
-  gServiceName = serviceName;
-  gServiceSap = serviceSap;
-  gFragmentLength = fragmentLength;
-  gMiu = DEFAULT_MIU;
-  gRwSize = DEFAULT_RW_SIZE;
+  mCallback = callback;
+  mServiceName = serviceName;
+  mServiceSap = serviceSap;
+  mFragmentLength = fragmentLength;
+  mMiu = DEFAULT_MIU;
+  mRwSize = DEFAULT_RW_SIZE;
 }
 
 SnepServer::~SnepServer()
@@ -121,26 +150,46 @@ SnepServer::~SnepServer()
 
 void SnepServer::start()
 {
+  INfcManager* pINfcManager = NfcService::getNfcManager();
+  mServerSocket = pINfcManager->createLlcpServerSocket(mServiceSap, mServiceName, mMiu, mRwSize, 1024);
+
   pthread_t tid;
   if(pthread_create(&tid, NULL, serverThreadFunc, this) != 0)
   {
     ALOGE("init_nfc_service pthread_create failed");
     abort();
   }
+  mServerRunning = true;
+}
+
+void SnepServer::stop()
+{
+  // TODO : need to kill thread here
+  mServerSocket->close();
+  mServerRunning = false;
+
+  // use pthread_join here to make sure all thread is finished ?
 }
 
 bool SnepServer::handleRequest(SnepMessenger* messenger, ISnepCallback* callback)
 {
+  if (messenger == NULL || callback == NULL) {
+    ALOGE("function %s incorrect parameter", __FUNCTION__);
+    return false;
+  }
+
   SnepMessage* request = messenger->getMessage();
   SnepMessage* response = NULL;
+
   if (request == NULL) {
-    ALOGE("Bad snep message");
+    ALOGE("function %s : Bad snep message", __FUNCTION__);
     response = SnepMessage::getMessage(SnepMessage::RESPONSE_BAD_REQUEST);
     messenger->sendMessage(*response);
     return false;
   } 
 
   if (((request->getVersion() & 0xF0) >> 4) != SnepMessage::VERSION_MAJOR) {
+    ALOGE("function %s : Unsupported version", __FUNCTION__);
     response = SnepMessage::getMessage(SnepMessage::RESPONSE_UNSUPPORTED_VERSION);
     messenger->sendMessage(*response);
   } else if (request->getField() == SnepMessage::REQUEST_GET) {
@@ -150,10 +199,12 @@ bool SnepServer::handleRequest(SnepMessenger* messenger, ISnepCallback* callback
     response = callback->doPut(*request->getNdefMessage());
     messenger->sendMessage(*response);
   } else {
-    response = SnepMessage::getMessage(SnepMessage::RESPONSE_UNSUPPORTED_VERSION);
+    ALOGE("function %s : Bad request", __FUNCTION__);
+    response = SnepMessage::getMessage(SnepMessage::RESPONSE_BAD_REQUEST);
     messenger->sendMessage(*response);
   }
 
+  // TODO : check if we need to delete request here
   delete response;
 
   return true;

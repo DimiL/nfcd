@@ -8,18 +8,6 @@
 #include "SnepMessenger.h"
 #include "ISnepCallback.h"
 
-
-class ConnectionThread {
-public:
-  ConnectionThread(ILlcpSocket* socket, int fragmentLength);
-  ~ConnectionThread();
-
-  void run();
-
-  ILlcpSocket* mSock;
-  SnepMessenger* mMessenger;
-};
-
 class SnepServer{
 public:
   SnepServer(ISnepCallback* callback);
@@ -34,8 +22,32 @@ public:
   static const char* DEFAULT_SERVICE_NAME;
 
   void start();
+  void stop();
   
   static bool handleRequest(SnepMessenger* messenger, ISnepCallback* callback);
+
+  ILlcpServerSocket* mServerSocket;
+  ISnepCallback*     mCallback;
+  bool               mServerRunning;
+  const char*        mServiceName;
+  int                mServiceSap;
+  int                mFragmentLength;
+  int                mMiu;
+  int                mRwSize;
+};
+
+class ConnectionThread {
+public:
+  ConnectionThread(SnepServer* server, ILlcpSocket* socket, int fragmentLength, ISnepCallback* callback);
+  ~ConnectionThread();
+
+  void run();
+  bool isServerRunning();
+
+  ILlcpSocket* mSock;
+  SnepMessenger* mMessenger;
+  ISnepCallback* mCallback;
+  SnepServer* mServer;
 };
 
 #endif

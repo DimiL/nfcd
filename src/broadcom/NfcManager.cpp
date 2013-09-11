@@ -377,6 +377,35 @@ ILlcpServerSocket* NfcManager::createLlcpServerSocket(int nSap, const char* sn, 
     return NULL;
 }
 
+void NfcManager::setP2pInitiatorModes(int modes)
+{
+
+}
+
+void NfcManager::setP2pTargetModes(int modes)
+{
+  ALOGD ("%s: modes=0x%X", __FUNCTION__, modes);
+  // Map in the right modes
+  tNFA_TECHNOLOGY_MASK mask = 0;
+  if (modes & 0x01) mask |= NFA_TECHNOLOGY_MASK_A;
+  if (modes & 0x02) mask |= NFA_TECHNOLOGY_MASK_F;
+  if (modes & 0x04) mask |= NFA_TECHNOLOGY_MASK_F;
+  if (modes & 0x08) mask |= NFA_TECHNOLOGY_MASK_A_ACTIVE | NFA_TECHNOLOGY_MASK_F_ACTIVE;
+
+  PeerToPeer::getInstance().setP2pListenMask(mask); 
+  //this function is not called by the NFC service nor exposed by public API.
+}
+
+int NfcManager::getDefaultLlcpMiu()
+{
+  return NfcManager::DEFAULT_LLCP_MIU;
+}
+
+int NfcManager::getDefaultLlcpRwSize()
+{
+  return NfcManager::DEFAULT_LLCP_RWSIZE;
+}
+
 static void handleRfDiscoveryEvent (tNFC_RESULT_DEVT* discoveredDevice)
 {
     if (discoveredDevice->more)

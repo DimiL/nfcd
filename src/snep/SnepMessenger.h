@@ -10,7 +10,7 @@
 
 class SnepMessenger{
 public:
-  SnepMessenger(bool isClient, ILlcpSocket* socket, int fragmentLength);
+  SnepMessenger(bool isClient, ILlcpSocket* socket, uint32_t fragmentLength);
   ~SnepMessenger();
 
   ILlcpSocket* mSocket;

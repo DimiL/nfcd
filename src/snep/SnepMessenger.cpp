@@ -4,7 +4,7 @@
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
 
-SnepMessenger::SnepMessenger(bool isClient, ILlcpSocket* socket, int fragmentLength) :
+SnepMessenger::SnepMessenger(bool isClient, ILlcpSocket* socket, uint32_t fragmentLength) :
 mIsClient(isClient),
 mSocket(socket),
 mFragmentLength(fragmentLength)
@@ -17,9 +17,8 @@ SnepMessenger::~SnepMessenger()
 
 void SnepMessenger::sendMessage(SnepMessage& msg)
 {
-  SnepMessage* snepResponse = NULL;
-  uint8_t remoteContinue;
   std::vector<uint8_t> buf;
+  uint8_t remoteContinue;
   uint32_t offset;
 
   msg.toByteArray(buf);
@@ -29,6 +28,7 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
     remoteContinue = SnepMessage::REQUEST_CONTINUE;
   }
 
+  msg.toByteArray(buf);
   uint32_t length = buf.size() <  mFragmentLength ? buf.size() : mFragmentLength;
 
   mSocket->send(buf);
@@ -42,7 +42,7 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
   std::vector<uint8_t> responseBytes;
   mSocket->receive(responseBytes);
 
-  snepResponse = SnepMessage::fromByteArray(responseBytes);
+  SnepMessage* snepResponse = SnepMessage::fromByteArray(responseBytes);
   if (snepResponse == NULL) {
     ALOGE("Invalid SNEP message");
     return;
@@ -70,13 +70,9 @@ SnepMessage* SnepMessenger::getMessage()
 {
   std::vector<uint8_t> partial;
   std::vector<uint8_t> buffer;
-  int size;
-  int requestSize = 0;
-  int readSize = 0;
-  uint8_t requestVersion = 0;
-  bool doneReading = false;
-  uint8_t fieldContinue;
-  uint8_t fieldReject;
+
+  uint8_t fieldContinue = 0;
+  uint8_t fieldReject = 0;
 
   if (mIsClient) {
     fieldContinue = SnepMessage::REQUEST_CONTINUE;
@@ -86,7 +82,8 @@ SnepMessage* SnepMessenger::getMessage()
     fieldReject = SnepMessage::RESPONSE_REJECT;
   }
 
-  size = mSocket->receive(partial);
+  int readSize = 0;
+  int size = mSocket->receive(partial);
   if (size < 0 || size < HEADER_LENGTH) {
     socketSend(fieldReject);
   } else {
@@ -94,15 +91,19 @@ SnepMessage* SnepMessenger::getMessage()
     buffer.insert(buffer.end(), partial.begin(), partial.end());
   }
 
-  requestVersion = partial[0];
+  uint8_t requestVersion = partial[0];
   uint8_t requestField = partial[1];
-  requestSize = partial[2] << 24 || partial[3] << 16 || partial[4] << 8 || partial[5];
+  uint32_t requestSize = ((uint32_t)partial[2] << 24) |
+                         ((uint32_t)partial[3] << 16) |
+                         ((uint32_t)partial[4] <<  8) |
+                         ((uint32_t)partial[5]);
 
   if (((requestVersion & 0xF0) >> 4) != SnepMessage::VERSION_MAJOR) {
     // Invalid protocol version; treat message as complete.
     return new SnepMessage(requestVersion, requestField, 0, 0, NULL);
   }
 
+  bool doneReading = false;
   if (requestSize > readSize) {
     socketSend(fieldContinue);
   } else {
@@ -125,8 +126,13 @@ SnepMessage* SnepMessenger::getMessage()
     }
   }
 
-  SnepMessage* snep = SnepMessage::fromByteArray(buffer); 
-  return snep;
+  SnepMessage* snep = SnepMessage::fromByteArray(buffer);
+  if (snep == NULL) {
+    ALOGE("Badly formatted NDEF message, ignoring");
+    return NULL;
+  } else {
+    return snep;
+  }
 }
 
 void SnepMessenger::close()

@@ -79,7 +79,9 @@ void SnepClient::put(NdefMessage& msg)
   // TODO : Need to do error handling
   SnepMessage* snepMessage = SnepMessage::getPutRequest(msg);
   messenger->sendMessage(*snepMessage);
-  messenger->getMessage();
+
+  // TODO : Don't know why android call this function
+  //messenger->getMessage();
 
   delete snepMessage;
 }
@@ -93,9 +95,10 @@ SnepMessage* SnepClient::get(NdefMessage& msg)
   }
   messenger = mMessenger;  
 
-  // TODO : Need to check if should free snepMessage here
   SnepMessage* snepMessage = SnepMessage::getGetRequest(mAcceptableLength, msg);
   messenger->sendMessage(*snepMessage);
+  delete snepMessage;
+ 
   return messenger->getMessage();  
 }
 
@@ -107,10 +110,8 @@ void SnepClient::connect()
   }
   mState = SnepClient::CONNECTING;
 
-  ILlcpSocket* socket = NULL;
-
   INfcManager* pINfcManager = NfcService::getNfcManager();
-  socket = pINfcManager->createLlcpSocket(0, mMiu, mRwSize, 1024);
+  ILlcpSocket* socket = pINfcManager->createLlcpSocket(0, mMiu, mRwSize, 1024);
   if (socket == NULL) {
     ALOGE("Could not connect to socket");
     return;
@@ -135,6 +136,10 @@ void SnepClient::connect()
   int fragmentLength = (mFragmentLength == -1) ?  miu : miu < mFragmentLength ? miu : mFragmentLength;
   SnepMessenger* messenger = new SnepMessenger(true, socket, fragmentLength);
 
+  if (mMessenger) {
+    mMessenger->close();
+    delete mMessenger;
+  }
   mMessenger = messenger;
 
   mState = SnepClient::CONNECTED;

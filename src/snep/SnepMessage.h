@@ -52,8 +52,8 @@ private:
   
   uint8_t mVersion;
   uint8_t mField;
-  int mLength;
-  int mAcceptableLength;
+  uint32_t mLength;
+  uint32_t mAcceptableLength;
   NdefMessage* mNdefMessage;
 };
 

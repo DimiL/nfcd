@@ -17,6 +17,9 @@ class ILlcpSocket;
 class NfcManager : public DeviceHost, public INfcManager
 {
 public:
+  static const int DEFAULT_LLCP_MIU = 1980;
+  static const int DEFAULT_LLCP_RWSIZE = 2;
+
   NfcManager();
   virtual ~NfcManager();
 
@@ -33,6 +36,12 @@ public:
 
   ILlcpSocket* createLlcpSocket(int sap, int miu, int rw, int linearBufferLength);
   ILlcpServerSocket* createLlcpServerSocket(int nSap, const char* sn, int miu, int rw, int linearBufferLength);
+
+  void setP2pInitiatorModes(int modes);
+  void setP2pTargetModes(int modes);
+
+  int getDefaultLlcpMiu();
+  int getDefaultLlcpRwSize();
 
 private:
   P2pDevice* mP2pDevice;
