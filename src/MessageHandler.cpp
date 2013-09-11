@@ -23,8 +23,8 @@ void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(data);
   std::vector<int>& techList = pINfcTag->getTechList();
 
-  // TODO: SessionId
-  //parcel.writeInt32(SessionId::getSessionId());
+  parcel.writeInt32(SessionId::generateNewId());
+
   int numberOfTech = techList.size();
   parcel.writeInt32(numberOfTech);
   for (int i = 0; i < numberOfTech; i++) {
@@ -114,15 +114,18 @@ void MessageHandler::sendResponse(Parcel& parcel)
 
 bool MessageHandler::handleReadNdefRequest(Parcel& parcel, int token)
 {
-  //TODO read SessionId
+  int sessionId = parcel.readInt32();
+  //TODO check SessionId
   return NfcService::handleReadNdefRequest(token);
 }
 
 bool MessageHandler::handleWriteNdefRequest(Parcel& parcel, int token)
 {
-  //TODO read SessionId
   NdefMessagePdu ndefMessagePdu;
   NdefMessage* ndefMessage = new NdefMessage();
+
+  int sessionId = parcel.readInt32();
+  //TODO check SessionId
 
   uint32_t numRecords = parcel.readInt32();
   ndefMessagePdu.numRecords = numRecords;
@@ -164,6 +167,9 @@ bool MessageHandler::handleWriteNdefRequest(Parcel& parcel, int token)
 
 bool MessageHandler::handleConnectRequest(Parcel& parcel, int token)
 {
+  int sessionId = parcel.readInt32();
+  //TODO check SessionId
+
   int32_t techType = parcel.readInt32();
   ALOGD("%s techType=%d", __func__, techType);
   NfcService::handleConnect(techType, token);
@@ -178,7 +184,9 @@ bool MessageHandler::handleCloseRequest(Parcel& parcel, int token)
 bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
 {
   NdefMessage* ndef = reinterpret_cast<NdefMessage*>(data);
-  //TODO write SessionId
+
+  parcel.writeInt32(SessionId::getCurrentId());
+
   int numRecords = ndef->mRecords.size();
   ALOGD("numRecords=%d", numRecords);
   parcel.writeInt32(numRecords);
@@ -221,13 +229,14 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
 
 bool MessageHandler::handleWriteNdefResponse(android::Parcel& parcel)
 {
-  //TODO write SessionId
+  parcel.writeInt32(SessionId::getCurrentId());
   sendResponse(parcel);
   return true;
 }
 
 bool MessageHandler::handleConnectResponse(Parcel& parcel)
 {
+  parcel.writeInt32(SessionId::getCurrentId());
   sendResponse(parcel);
   return true;
 }

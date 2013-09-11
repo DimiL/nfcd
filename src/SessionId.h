@@ -4,8 +4,11 @@
 
 class SessionId {
 public:
-  static int getSessionId();
+  static int generateNewId();
 
+  static int getCurrentId();
+
+  static bool isValid(int id);
 private:
-  static int mSessionId;
+  static int mId;
 };

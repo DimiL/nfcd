@@ -4,9 +4,19 @@
 
 #include "SessionId.h"
 
-int SessionId::mSessionId = 0;
+int SessionId::mId = 0;
 
 int
-SessionId::getSessionId() {
-  return ++mSessionId;
+SessionId::generateNewId() {
+  return ++mId;
+}
+
+int
+SessionId::getCurrentId() {
+  return mId;
+}
+
+bool
+SessionId::isValid(int id) {
+  return mId == id;
 }
