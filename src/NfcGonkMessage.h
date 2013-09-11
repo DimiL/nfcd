@@ -14,7 +14,7 @@ extern "C" {
  *
  * NFC Request:
  *    4 bytes of parcel size. (Big-Endian)
- *    4 byte of request type. Value will be one of NfcRequest.
+ *    4 byte of request type. Value will be one of NfcRequestType.
  *    (Parcel size - 4) bytes of request data.
  *
  * NFC Response:
@@ -25,7 +25,7 @@ extern "C" {
  *
  * NFC Notification:
  *    4 bytes of parcel size. (Big-endian)
- *    4 bytes of notification type. Value will one of NfcNotification.
+ *    4 bytes of notification type. Value will one of NfcNotificationType.
  *    (Parcel size - 4) bytes of notification data.
  *
  * Except Parcel size is encoded in Big-Endian, other data will be encoded in
@@ -266,7 +266,7 @@ typedef enum {
    * response is NULL.
    */
   NFC_REQUEST_MAKE_NDEF_READ_ONLY = 6,
-} NfcRequest;
+} NfcRequestType;
 
 typedef enum {
   NFC_RESPONSE_GENERAL = 1000,
@@ -276,7 +276,7 @@ typedef enum {
   NFC_RESONSE_GET_DETAILS = 1002,
 
   NFC_RESPONSE_READ_NDEF = 1003,
-} NfcResponse;
+} NfcResponseType;
 
 typedef struct {
   uint32_t status;
@@ -321,7 +321,7 @@ typedef enum {
    * previously discovered with NFC_NOTIFICATION_TECH_DISCOVERED.
    */
   NFC_NOTIFICATION_TECH_LOST = 2002,
-} NfcNotification;
+} NfcNotificationType;
 
 #ifdef __cplusplus
 }

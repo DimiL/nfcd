@@ -80,12 +80,12 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
   }
 }
 
-void MessageHandler::processResponse(NfcResponse response, int token, void* data)
+void MessageHandler::processResponse(NfcResponseType response, int token, NfcErrorCode error, void* data)
 {
   ALOGD("%s enter response=%d, token=%d ", __func__, response, token);
   Parcel parcel;
   parcel.writeInt32(response);
-  parcel.writeInt32(0); //error code
+  parcel.writeInt32(error);
 
   switch (response) {
     case NFC_RESPONSE_READ_NDEF:
@@ -97,7 +97,7 @@ void MessageHandler::processResponse(NfcResponse response, int token, void* data
   }
 }
 
-void MessageHandler::processNotification(NfcNotification notification, void* data)
+void MessageHandler::processNotification(NfcNotificationType notification, void* data)
 {
   Parcel parcel;
   parcel.writeInt32(notification);

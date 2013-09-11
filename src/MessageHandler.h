@@ -17,8 +17,8 @@ class MessageHandler {
 public:
   MessageHandler() {};
   void processRequest(const uint8_t* data, size_t length);
-  void processResponse(NfcResponse response, int token, void* data);
-  void processNotification(NfcNotification notification, void* data);
+  void processResponse(NfcResponseType response, int token, NfcErrorCode error, void* data);
+  void processNotification(NfcNotificationType notification, void* data);
   //TODO a better naming?
   void setSocket(NfcIpcSocket* socket);
 

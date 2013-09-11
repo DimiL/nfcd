@@ -245,7 +245,7 @@ int NfcService::handleConnect(int technology, int token)
 {
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
   int status = pINfcTag->connectWithStatus(technology);
-  sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NULL);
+  sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NFC_ERROR_SUCCESS,  NULL);
   return status;
 }
 
@@ -270,7 +270,7 @@ void NfcService::handleReadNdefResponse(NfcEvent* event)
 
   ALOGD("pNdefMessage=%p",pNdefMessage);
   if (pNdefMessage != NULL) {
-    sMsgHandler->processResponse(NFC_RESPONSE_READ_NDEF, token, pNdefMessage);
+    sMsgHandler->processResponse(NFC_RESPONSE_READ_NDEF, token, NFC_ERROR_SUCCESS, pNdefMessage);
   } else {
     //TODO can we notify null ndef?
   }
@@ -297,7 +297,7 @@ void NfcService::handleWriteNdefResponse(NfcEvent* event)
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
   bool result = pINfcTag->writeNdef(*ndef);
   delete ndef;
-  sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NULL);
+  sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NFC_ERROR_SUCCESS, NULL);
 }
 
 void NfcService::handleCloseRequest()
@@ -310,7 +310,7 @@ void NfcService::handleCloseRequest()
 
 void NfcService::handleCloseResponse(NfcEvent* event)
 {
-  sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, 0, NULL);
+  sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, 0, NFC_ERROR_SUCCESS, NULL);
 }
 
 void NfcService::onSocketConnected()
