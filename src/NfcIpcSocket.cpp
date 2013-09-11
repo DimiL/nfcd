@@ -192,4 +192,5 @@ void NfcIpcSocket::writeToIncomingQueue(uint8_t* data, size_t dataLen)
 void NfcIpcSocket::onConnect()
 {
   ALOGD("%s", __func__);
+  sMsgHandler->onSocketConnected();
 }

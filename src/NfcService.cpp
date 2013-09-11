@@ -181,6 +181,9 @@ static void *serviceThreadFunc(void *arg)
         case MSG_CLOSE:
           NfcService::handleCloseResponse(event);
           break;
+        case MSG_SOCKET_CONNECTED:
+          NfcService::sMsgHandler->processNotification(NFC_NOTIFICATION_INITIALIZED , NULL);
+          break;
         default:
           ALOGE("NFCService bad message");
           abort();
@@ -310,3 +313,10 @@ void NfcService::handleCloseResponse(NfcEvent* event)
   sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, 0, NULL);
 }
 
+void NfcService::onSocketConnected()
+{
+  NfcEvent *event = new NfcEvent();
+  event->type = MSG_SOCKET_CONNECTED;
+  mQueue.push_back(event);
+  sem_post(&thread_sem);
+}

@@ -21,6 +21,7 @@ typedef enum {
   MSG_READ_NDEF,
   MSG_WRITE_NDEF,
   MSG_CLOSE,
+  MSG_SOCKET_CONNECTED,
 } NfcEventType;
 
 struct NfcEvent {
@@ -55,13 +56,15 @@ public:
   static void handleCloseRequest();
   static void handleCloseResponse(NfcEvent* event);
 
+  static void onSocketConnected();
+
   //TODO remove static
-  //TODO put this in public because serviceThread will need to access this.
+  //TODO put these in public because serviceThread will need to access this.
   static android::List<NfcEvent*> mQueue;
+  static MessageHandler* sMsgHandler;
 private:
   static NfcService* sInstance;
   static NfcManager* sNfcManager;
-  static MessageHandler* sMsgHandler;
   NfcService();
 };
 

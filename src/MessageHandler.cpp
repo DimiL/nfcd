@@ -16,7 +16,18 @@
 #define LOG_TAG "nfcd"
 #include <utils/Log.h>
 
+#define MAJOR_VERSION (1)
+#define MINOR_VERSION (5)
+
 using android::Parcel;
+
+void MessageHandler::notifyInitialized(Parcel& parcel)
+{
+  parcel.writeInt32(0); // status
+  parcel.writeInt32(MAJOR_VERSION);
+  parcel.writeInt32(MINOR_VERSION);
+  sendResponse(parcel);
+}
 
 void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
 {
@@ -92,6 +103,9 @@ void MessageHandler::processNotification(NfcNotification notification, void* dat
   parcel.writeInt32(notification);
 
   switch (notification) {
+    case NFC_NOTIFICATION_INITIALIZED :
+      notifyInitialized(parcel);
+      break;
     case NFC_NOTIFICATION_TECH_DISCOVERED:
       notifyTechDiscovered(parcel, data);
       break;
@@ -101,6 +115,11 @@ void MessageHandler::processNotification(NfcNotification notification, void* dat
 void MessageHandler::setSocket(NfcIpcSocket* socket)
 {
   mSocket = socket;
+}
+
+void MessageHandler::onSocketConnected()
+{
+  NfcService::onSocketConnected();
 }
 
 void MessageHandler::sendResponse(Parcel& parcel)

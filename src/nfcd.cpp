@@ -31,8 +31,8 @@ int main() {
   // 4. Create IPC socket & main thread will enter while loop to read data from socket
   NfcIpcSocket* pNfcIpcSocket = NfcIpcSocket::Instance();
   pNfcIpcSocket->initialize(msgHandler);
-  pNfcIpcSocket->loop();
   msgHandler->setSocket(pNfcIpcSocket);
+  pNfcIpcSocket->loop();
 
   //TODO delete NfcIpcSocket, NfcService
   delete msgHandler;
