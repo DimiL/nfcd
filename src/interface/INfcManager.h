@@ -24,6 +24,12 @@ public:
 
   virtual ILlcpSocket* createLlcpSocket(int sap, int miu, int rw, int linearBufferLength) = 0;
   virtual ILlcpServerSocket* createLlcpServerSocket(int nSap, const char* sn, int miu, int rw, int linearBufferLength) = 0;
+
+  virtual void setP2pInitiatorModes(int modes) = 0;
+  virtual void setP2pTargetModes(int modes) = 0;
+
+  virtual int getDefaultLlcpMiu() = 0;
+  virtual int getDefaultLlcpRwSize() = 0;
 };
 
 #endif

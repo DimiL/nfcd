@@ -13,15 +13,18 @@ public:
 
   virtual bool connectToSap(int sap) = 0;
   virtual bool connectToService(const char* serviceName) = 0;
-  virtual void close() = 0;
+
   virtual void send(std::vector<uint8_t>& data) = 0;
   virtual int receive(std::vector<uint8_t>& recvBuff) = 0;
+
   virtual int getRemoteMiu() = 0;
   virtual int getRemoteRw() = 0;
 
   virtual int getLocalSap() = 0;
   virtual int getLocalMiu() = 0;
   virtual int getLocalRw() = 0;
+
+  virtual void close() = 0;
 };
 
 #endif
