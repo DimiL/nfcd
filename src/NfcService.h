@@ -20,6 +20,7 @@ typedef enum {
   MSG_SE_NOTIFY_TRANSACTION_LISTENERS,
   MSG_READ_NDEF,
   MSG_WRITE_NDEF,
+  MSG_CLOSE,
 } NfcEventType;
 
 struct NfcEvent {
@@ -51,6 +52,8 @@ public:
   static void handleReadNdefResponse(NfcEvent* event);
   static bool handleWriteNdefRequest(NdefMessage* ndef, int token);
   static void handleWriteNdefResponse(NfcEvent* event);
+  static void handleCloseRequest();
+  static void handleCloseResponse(NfcEvent* event);
 
   //TODO remove static
   //TODO put this in public because serviceThread will need to access this.

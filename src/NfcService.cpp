@@ -178,6 +178,9 @@ static void *serviceThreadFunc(void *arg)
         case MSG_WRITE_NDEF:
           NfcService::handleWriteNdefResponse(event);
           break;
+        case MSG_CLOSE:
+          NfcService::handleCloseResponse(event);
+          break;
         default:
           ALOGE("NFCService bad message");
           abort();
@@ -293,3 +296,17 @@ void NfcService::handleWriteNdefResponse(NfcEvent* event)
   delete ndef;
   sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NULL);
 }
+
+void NfcService::handleCloseRequest()
+{
+  NfcEvent *event = new NfcEvent();
+  event->type = MSG_CLOSE;
+  mQueue.push_back(event);
+  sem_post(&thread_sem);
+}
+
+void NfcService::handleCloseResponse(NfcEvent* event)
+{
+  sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, 0, NULL);
+}
+

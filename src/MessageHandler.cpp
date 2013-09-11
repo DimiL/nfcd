@@ -169,12 +169,13 @@ bool MessageHandler::handleConnectRequest(Parcel& parcel, int token)
   int32_t techType = parcel.readInt32();
   ALOGD("%s techType=%d", __func__, techType);
   NfcService::handleConnect(techType, token);
-  return false;
+  return true;
 }
 
 bool MessageHandler::handleCloseRequest(Parcel& parcel, int token)
 {
-  return false;
+  NfcService::handleCloseRequest();
+  return true;
 }
 
 bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
