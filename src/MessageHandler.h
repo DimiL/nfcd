@@ -17,7 +17,7 @@ class MessageHandler {
 public:
   MessageHandler() {};
   void processRequest(const uint8_t* data, size_t length);
-  void processResponse(NfcRequest request, int token, void* data);
+  void processResponse(NfcResponse response, int token, void* data);
   void processNotification(NfcNotification notification, void* data);
   //TODO a better naming?
   void setSocket(NfcIpcSocket* socket);
@@ -31,8 +31,7 @@ private:
   bool handleCloseRequest(android::Parcel& parcel, int token);
 
   bool handleReadNdefResponse(android::Parcel& parcel, void* data);
-  bool handleWriteNdefResponse(android::Parcel& parcel);
-  bool handleConnectResponse(android::Parcel& parcel);
+  bool handleResponse(android::Parcel& parcel);
 
   void sendResponse(android::Parcel& parcel);
 

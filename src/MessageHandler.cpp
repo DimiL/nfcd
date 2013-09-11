@@ -42,12 +42,13 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
   ALOGD("%s enter data=%p, dataLen=%d", __func__, data, dataLen);
   parcel.setData((uint8_t*)data, dataLen);
   status = parcel.readInt32(&request);
-  status = parcel.readInt32(&token);
-
   if (status != 0) {
     ALOGE("Invalid request block");
     return;
   }
+
+  //TODO remove token
+  token = 0;
 
   switch (request) {
     case NFC_REQUEST_READ_NDEF:
@@ -68,23 +69,19 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
   }
 }
 
-void MessageHandler::processResponse(NfcRequest request, int token, void* data)
+void MessageHandler::processResponse(NfcResponse response, int token, void* data)
 {
-  ALOGD("%s enter request=%d, token=%d ", __func__, request, token);
+  ALOGD("%s enter response=%d, token=%d ", __func__, response, token);
   Parcel parcel;
-  parcel.writeInt32(NFCC_MESSAGE_RESPONSE);
-  parcel.writeInt32(token);
+  parcel.writeInt32(response);
   parcel.writeInt32(0); //error code
 
-  switch (request) {
-    case NFC_REQUEST_READ_NDEF:
+  switch (response) {
+    case NFC_RESPONSE_READ_NDEF:
       handleReadNdefResponse(parcel, data);
       break;
-    case NFC_REQUEST_WRITE_NDEF:
-      handleWriteNdefResponse(parcel);
-      break;
-    case NFC_REQUEST_CONNECT:
-      handleConnectResponse(parcel);
+    case NFC_RESPONSE_GENERAL:
+      handleResponse(parcel);
       break;
   }
 }
@@ -92,7 +89,6 @@ void MessageHandler::processResponse(NfcRequest request, int token, void* data)
 void MessageHandler::processNotification(NfcNotification notification, void* data)
 {
   Parcel parcel;
-  parcel.writeInt32(NFCC_MESSAGE_NOTIFICATION);
   parcel.writeInt32(notification);
 
   switch (notification) {
@@ -227,14 +223,7 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
   return true;
 }
 
-bool MessageHandler::handleWriteNdefResponse(android::Parcel& parcel)
-{
-  parcel.writeInt32(SessionId::getCurrentId());
-  sendResponse(parcel);
-  return true;
-}
-
-bool MessageHandler::handleConnectResponse(Parcel& parcel)
+bool MessageHandler::handleResponse(Parcel& parcel)
 {
   parcel.writeInt32(SessionId::getCurrentId());
   sendResponse(parcel);
