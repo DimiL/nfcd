@@ -287,7 +287,7 @@ typedef struct {
 typedef struct {
   NfcSessionId sessionId;
   uint32_t numOfTechnogies;
-  NfcTechnology* technology;
+  uint8_t* technology;
 } NfcNotificationTechDiscovered;
 
 typedef enum {
