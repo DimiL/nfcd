@@ -143,8 +143,6 @@ void SnepClient::connect()
   mMessenger = messenger;
 
   mState = SnepClient::CONNECTED;
-
-  delete socket;
 }
 
 void SnepClient::close()

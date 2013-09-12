@@ -13,6 +13,7 @@ mFragmentLength(fragmentLength)
 
 SnepMessenger::~SnepMessenger()
 {
+  delete mSocket;
 }
 
 void SnepMessenger::sendMessage(SnepMessage& msg)

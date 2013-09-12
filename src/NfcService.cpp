@@ -83,6 +83,18 @@ void NfcService::nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS()
   sem_post(&thread_sem);
 }
 
+static void NfcService_MSG_LLCP_LINK_DEACTIVATION(NfcEvent* event)
+{
+  ALOGD("%s enter", __func__);
+
+  void* pDevice = event->data;
+  IP2pDevice* pIP2pDevice = reinterpret_cast<IP2pDevice*>(pDevice);
+
+  if (pIP2pDevice->getMode() == NfcDepEndpoint::MODE_P2P_TARGET) {
+    pIP2pDevice->doDisconnect();
+  }
+}
+
 static void NfcService_MSG_LLCP_LINK_ACTIVATION(NfcEvent* event)
 {
   ALOGD("%s enter", __func__);
@@ -168,6 +180,8 @@ static void *serviceThreadFunc(void *arg)
         case MSG_LLCP_LINK_ACTIVATION:
           NfcService_MSG_LLCP_LINK_ACTIVATION(event);
           break;
+        case MSG_LLCP_LINK_DEACTIVATION:
+          NfcService_MSG_LLCP_LINK_DEACTIVATION(event);
         case MSG_NDEF_TAG:
           service->handleNdefTag(event);
           break;
@@ -335,8 +349,12 @@ void NfcService::handlePushNdefResponse(NfcEvent* event)
   int token = event->token;
   NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->data);
 
+  // TODO : Do we need create a thread to do this ? And can we use the same snep client each time ?
   SnepClient snep;
+  snep.connect();
   snep.put(*ndef);
+  snep.close();
+
   delete ndef;
   sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NFC_ERROR_SUCCESS, NULL);
 }
