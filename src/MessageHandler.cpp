@@ -1,8 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include <map>
-#include <string>
 
 #include "MessageHandler.h"
 #include "NfcService.h"
@@ -12,6 +10,7 @@
 #include "NdefRecord.h"
 #include "SessionId.h"
 
+#define LOG_NDEBUG 0
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
 #include <utils/Log.h>
@@ -99,6 +98,7 @@ void MessageHandler::processResponse(NfcResponseType response, int token, NfcErr
 
 void MessageHandler::processNotification(NfcNotificationType notification, void* data)
 {
+  ALOGD("processNotificaton notification=%d", notification);
   Parcel parcel;
   parcel.writeInt32(notification);
 
@@ -204,17 +204,17 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
   parcel.writeInt32(SessionId::getCurrentId());
 
   int numRecords = ndef->mRecords.size();
-  ALOGD("numRecords=%d", numRecords);
+  ALOGV("numRecords=%d", numRecords);
   parcel.writeInt32(numRecords);
 
   for (int i = 0; i < numRecords; i++) {
     NdefRecord &record = ndef->mRecords[i];
 
-    ALOGD("tnf=%u",record.mTnf);
+    ALOGV("tnf=%u",record.mTnf);
     parcel.writeInt32(record.mTnf);
 
     uint32_t typeLength = record.mType.size();
-    ALOGD("typeLength=%u",typeLength);
+    ALOGV("typeLength=%u",typeLength);
     parcel.writeInt32(typeLength);
     void* dest = parcel.writeInplace(typeLength);
     if (dest == NULL) {
@@ -224,18 +224,18 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
     memcpy(dest, &record.mType.front(), typeLength);
 
     uint32_t idLength = record.mId.size();
-    ALOGD("idLength=%d",idLength);
+    ALOGV("idLength=%d",idLength);
     parcel.writeInt32(idLength);
     dest = parcel.writeInplace(idLength);
     memcpy(dest, &record.mId.front(), idLength);
 
     uint32_t payloadLength = record.mPayload.size();
-    ALOGD("payloadLength=%u",payloadLength);
+    ALOGV("payloadLength=%u",payloadLength);
     parcel.writeInt32(payloadLength);
     dest = parcel.writeInplace(payloadLength);
     memcpy(dest, &record.mPayload.front(), payloadLength);
     for (int j = 0; j < payloadLength; j++) {
-      ALOGD("mPayload %d = %u", j, record.mPayload[j]);
+      ALOGV("mPayload %d = %u", j, record.mPayload[j]);
     }
   }
 

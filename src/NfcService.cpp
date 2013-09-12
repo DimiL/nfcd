@@ -159,9 +159,7 @@ static void *serviceThreadFunc(void *arg)
 
     while (!queue.empty()) {
       NfcEvent* event = *queue.begin();
-      ALOGD("before erase queue.size()=%d event=%p",queue.size(), event);
       queue.erase(queue.begin());
-      ALOGD("after queue.size()=%d, empty=%d",queue.size(), queue.empty());
       NfcEventType eventType = event->type;
 
       ALOGD("NFCService msg=%d", eventType);
@@ -251,12 +249,10 @@ int NfcService::handleConnect(int technology, int token)
 
 bool NfcService::handleReadNdefRequest(int token)
 {
-  ALOGD("%s enter token=%d", __func__, token);
   NfcEvent *event = new NfcEvent();
   event->type = MSG_READ_NDEF;
   event->token = token;
   mQueue.push_back(event);
-  ALOGD("%s pushes to Q, queue.size()=%d event=%p",__func__, mQueue.size(), event);
   sem_post(&thread_sem);
   return true;
 }
@@ -264,7 +260,6 @@ bool NfcService::handleReadNdefRequest(int token)
 void NfcService::handleReadNdefResponse(NfcEvent* event)
 {
   int token = event->token;
-  ALOGD("%s enter token=%d", __func__, token);
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
   NdefMessage* pNdefMessage = pINfcTag->findAndReadNdef();
 
@@ -280,7 +275,6 @@ void NfcService::handleReadNdefResponse(NfcEvent* event)
 
 bool NfcService::handleWriteNdefRequest(NdefMessage* ndef, int token)
 {
-  ALOGD("%s enter token=%d", __func__, token);
   NfcEvent *event = new NfcEvent();
   event->type = MSG_WRITE_NDEF;
   event->token = token;
