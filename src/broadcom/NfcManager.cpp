@@ -140,7 +140,7 @@ bool NfcManager::doInitialize()
     {
         if (sIsNfaEnabled)
         {
-            // Mozilla : TODO : Implement SE
+            // TODO : Implement SE
             // SecureElement::getInstance().initialize (getNative(e, o));
             NativeNfcTag::nativeNfcTag_registerNdefTypeHandler ();
             NfcTag::getInstance().initialize (this);
@@ -832,7 +832,7 @@ void startRfDiscovery(bool isStart)
 
 void doStartupConfig()
 {
-    // Mozilla : To be fixed, use correct nat
+    // TODO : To be fixed, use correct nat
     unsigned long num = 0;
     // struct nfc_jni_native_data *nat = getNative(0, 0);
     tNFA_STATUS stat = NFA_STATUS_FAILED;

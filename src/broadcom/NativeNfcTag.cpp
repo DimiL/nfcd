@@ -172,7 +172,7 @@ NdefMessage* NativeNfcTag::findAndReadNdef()
 
         if (generateEmptyNdef == true) {
             ALOGI("Couldn't read NDEF!");
-            // Mozilla : TODO : Implement generate empty Ndef
+            // TODO : Implement generate empty Ndef
             //stop()
         }           
     }
