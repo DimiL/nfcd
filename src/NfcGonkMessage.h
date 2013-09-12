@@ -139,7 +139,7 @@ typedef struct {
    */
   NfcSessionId sessionId;
 
-  NfcTechnology technology;
+  uint8_t technology;
 } NfcConnectRequest;
 
 typedef struct {

@@ -185,6 +185,7 @@ bool MessageHandler::handleConnectRequest(Parcel& parcel, int token)
   int sessionId = parcel.readInt32();
   //TODO check SessionId
 
+  //TODO should only read 1 octet here.
   int32_t techType = parcel.readInt32();
   ALOGD("%s techType=%d", __func__, techType);
   NfcService::handleConnect(techType, token);
