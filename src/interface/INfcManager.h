@@ -23,7 +23,7 @@ public:
   virtual bool doActivateLlcp() = 0;
 
   virtual ILlcpSocket* createLlcpSocket(int sap, int miu, int rw, int linearBufferLength) = 0;
-  virtual ILlcpServerSocket* createLlcpServerSocket(int nSap, const char* sn, int miu, int rw, int linearBufferLength) = 0;
+  virtual ILlcpServerSocket* createLlcpServerSocket(int sap, const char* sn, int miu, int rw, int linearBufferLength) = 0;
 
   virtual void setP2pInitiatorModes(int modes) = 0;
   virtual void setP2pTargetModes(int modes) = 0;

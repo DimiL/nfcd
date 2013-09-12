@@ -9,6 +9,7 @@
 #include "NfcIpcSocket.h"
 #include "DeviceHost.h"
 #include "MessageHandler.h"
+#include "SnepServer.h"
 
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
@@ -28,7 +29,16 @@ int main() {
   NfcService* pNfcService = NfcService::Instance();
   pNfcService->initialize(pNfcManager, msgHandler);
 
-  // 4. Create IPC socket & main thread will enter while loop to read data from socket
+  // 4. Create snep server
+  // TODO : Maybe we should put this when p2p connection is established ?
+  // Mark first because the function is not yet complete
+  /*
+  SnepCallback snepCallback;
+  SnepServer snepServer(static_cast<ISnepCallback*>(&snepCallback));
+  snepServer.start();
+  */
+
+  // 5. Create IPC socket & main thread will enter while loop to read data from socket
   NfcIpcSocket* pNfcIpcSocket = NfcIpcSocket::Instance();
   pNfcIpcSocket->initialize(msgHandler);
   msgHandler->setSocket(pNfcIpcSocket);

@@ -8,6 +8,16 @@
 #include "SnepMessenger.h"
 #include "ISnepCallback.h"
 
+class SnepCallback : public ISnepCallback
+{
+public:
+   SnepCallback();
+   virtual ~SnepCallback();
+
+   virtual SnepMessage* doPut(NdefMessage& msg);
+   virtual SnepMessage* doGet(int acceptableLength, NdefMessage& msg);
+};
+
 class SnepServer{
 public:
   SnepServer(ISnepCallback* callback);

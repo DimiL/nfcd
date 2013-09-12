@@ -12,6 +12,7 @@ class LlcpSocket : public ILlcpSocket
 {
 public:
   LlcpSocket(unsigned int handle, int sap, int miu, int rw);
+  LlcpSocket(unsigned int handle, int miu, int rw);
   virtual ~LlcpSocket();
 
   bool connectToSap(int sap);
@@ -27,7 +28,7 @@ public:
   int getLocalRw(){  return mLocalRw;  }
 
 private:
-  unsigned int mHandle;
+  uint32_t mHandle;
   int mSap;
   int mLocalMiu;
   int mLocalRw;

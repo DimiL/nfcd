@@ -9,6 +9,7 @@
 #include "config.h"
 #include "Pn544Interop.h"
 #include "LlcpSocket.h"
+#include "LlcpServiceSocket.h"
 
 extern "C"
 {
@@ -74,21 +75,18 @@ static UINT8 sConfig[256];
 /////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////
 
-NfcManager::NfcManager() :
+NfcManager::NfcManager():
 mP2pDevice(NULL),
-mNativeNfcTag(NULL),
-mLlcpServiceSocket(NULL)
+mNativeNfcTag(NULL)
 {
     mP2pDevice = new P2pDevice();
     mNativeNfcTag = new NativeNfcTag();
-    mLlcpServiceSocket = new LlcpServiceSocket();
 }
 
 NfcManager::~NfcManager()
 {
     if (mP2pDevice != NULL)    delete mP2pDevice;
     if (mNativeNfcTag != NULL)       delete mNativeNfcTag;
-    if (mLlcpServiceSocket != NULL)       delete mLlcpServiceSocket;
 }
 
 void* NfcManager::queryInterface(const char* name)
@@ -97,8 +95,6 @@ void* NfcManager::queryInterface(const char* name)
         return reinterpret_cast<void*>(mP2pDevice);
     else if (0 == strcmp(name, "NativeNfcTag"))
         return reinterpret_cast<void*>(mNativeNfcTag);
-    else if (0 == strcmp(name, "LlcpServiceSocket"))
-        return reinterpret_cast<void*>(mLlcpServiceSocket);
 
     return NULL;
 }
@@ -366,15 +362,27 @@ ILlcpSocket* NfcManager::createLlcpSocket(int sap, int miu, int rw, int linearBu
     ALOGD ("%s: enter; sap=%d; miu=%d; rw=%d; buffer len=%d", __FUNCTION__, sap, miu, rw, linearBufferLength);
 
     unsigned int handle = PeerToPeer::getInstance().getNewHandle ();
+    bool stat = PeerToPeer::getInstance().createClient (handle, miu, rw);
+
     LlcpSocket* pLlcpSocket = new LlcpSocket(handle, sap, miu, rw);
     
     ALOGD ("%s: exit", __FUNCTION__); 
     return static_cast<ILlcpSocket*>(pLlcpSocket);
 }
 
-ILlcpServerSocket* NfcManager::createLlcpServerSocket(int nSap, const char* sn, int miu, int rw, int linearBufferLength)
+ILlcpServerSocket* NfcManager::createLlcpServerSocket(int sap, const char* sn, int miu, int rw, int linearBufferLength)
 {
-    return NULL;
+    ALOGD ("%s: enter; sap=%d; sn =%s; miu=%d; rw=%d; buffer len=%d", __FUNCTION__, sap, sn, miu, rw, linearBufferLength);
+    unsigned int handle = PeerToPeer::getInstance().getNewHandle ();
+    LlcpServiceSocket* pLlcpServiceSocket = new LlcpServiceSocket(handle, linearBufferLength, miu, rw);
+
+    if (!PeerToPeer::getInstance().registerServer (handle, sn)) {
+        ALOGE("%s: RegisterServer error", __FUNCTION__);
+        return NULL;
+    }
+    
+    ALOGD ("%s: exit", __FUNCTION__);
+    return static_cast<ILlcpServerSocket*>(pLlcpServiceSocket);
 }
 
 void NfcManager::setP2pInitiatorModes(int modes)

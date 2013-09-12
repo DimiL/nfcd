@@ -5,14 +5,14 @@
 #ifndef mozilla_nfcd_ILlcpServerSocket_h
 #define mozilla_nfcd_ILlcpServerSocket_h
 
-class ILlcpSocket;
+#include "ILlcpSocket.h"
 
 class ILlcpServerSocket {
 public:
   virtual ~ILlcpServerSocket() {};
 
   virtual ILlcpSocket* accept() = 0;
-  virtual void close() = 0;
+  virtual bool close() = 0;
 };
 
 #endif

@@ -64,6 +64,7 @@ NFC := $(VOB_COMPONENTS)/nfc
 LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/src/broadcom \
     $(LOCAL_PATH)/src/interface \
+    $(LOCAL_PATH)/src/snep \
     $(NFA)/include \
     $(NFA)/brcm \
     $(NFC)/include \

@@ -9,12 +9,16 @@ mHandle(handle),
 mSap(sap),
 mLocalMiu(miu),
 mLocalRw(rw)
-{
-}
+{}
+
+LlcpSocket::LlcpSocket(unsigned int handle, int miu, int rw):
+mHandle(handle),
+mLocalMiu(miu),
+mLocalRw(rw)
+{}
 
 LlcpSocket::~LlcpSocket()
-{
-}
+{}
 
 bool LlcpSocket::connectToSap(int sap)
 {

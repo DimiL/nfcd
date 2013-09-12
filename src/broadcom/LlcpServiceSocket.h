@@ -5,14 +5,24 @@
 #ifndef mozilla_nfcd_LlcpServiceSocket_h
 #define mozilla_nfcd_LlcpServiceSocket_h
 
-class LlcpServiceSocket
+#include "ILlcpServerSocket.h"
+#include "ILlcpSocket.h"
+
+class LlcpServiceSocket : public ILlcpServerSocket
 {
 public:
-
-  LlcpServiceSocket();
+  LlcpServiceSocket(uint32_t handle, int localLinearBufferLength, int localMiu, int localRw);
   virtual ~LlcpServiceSocket();
 
+  ILlcpSocket* accept();
+  bool close();
+
 private:
+  uint32_t mHandle;
+  int mLocalLinearBufferLength;
+  int mSap;
+  int mLocalMiu;
+  int mLocalRw;
 
 };
 

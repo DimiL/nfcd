@@ -11,6 +11,27 @@
 
 const char* SnepServer::DEFAULT_SERVICE_NAME = "urn:nfc:sn:snep";
 
+SnepCallback::SnepCallback()
+{
+}
+
+SnepCallback::~SnepCallback()
+{
+}
+
+SnepMessage* SnepCallback::doPut(NdefMessage& msg)
+{
+  // TODO : figure what this is for
+  // onReceiveComplete(msg);
+  return SnepMessage::getMessage(SnepMessage::RESPONSE_SUCCESS);
+}
+
+SnepMessage* SnepCallback::doGet(int acceptableLength, NdefMessage& msg)
+{
+  // TODO : android doing handover here ???
+  return SnepMessage::getMessage(SnepMessage::RESPONSE_SUCCESS);
+}
+
 void* connectionThreadFunc(void* arg)
 {
   ALOGD("starting connection thread");
@@ -150,16 +171,22 @@ SnepServer::~SnepServer()
 
 void SnepServer::start()
 {
+  ALOGD("%s enter", __func__);
   INfcManager* pINfcManager = NfcService::getNfcManager();
   mServerSocket = pINfcManager->createLlcpServerSocket(mServiceSap, mServiceName, mMiu, mRwSize, 1024);
+
+  if (mServerSocket == NULL) {
+    ALOGE("%s cannot create llcp serfer socket", __func__);
+  }
 
   pthread_t tid;
   if(pthread_create(&tid, NULL, serverThreadFunc, this) != 0)
   {
-    ALOGE("init_nfc_service pthread_create failed");
+    ALOGE("%s init_nfc_service pthread_create failed", __func__);
     abort();
   }
   mServerRunning = true;
+  ALOGD("%s exit", __func__);
 }
 
 void SnepServer::stop()

@@ -10,6 +10,7 @@
 #include "INfcTag.h"
 #include "NfcGonkMessage.h"
 #include "NfcService.h"
+#include "SnepClient.h"
 
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
@@ -182,6 +183,8 @@ static void *serviceThreadFunc(void *arg)
         case MSG_SOCKET_CONNECTED:
           NfcService::sMsgHandler->processNotification(NFC_NOTIFICATION_INITIALIZED , NULL);
           break;
+        case MSG_PUSH_NDEF:
+          NfcService::handlePushNdefResponse(event);          
         default:
           ALOGE("NFCService bad message");
           abort();
@@ -313,4 +316,27 @@ void NfcService::onSocketConnected()
   event->type = MSG_SOCKET_CONNECTED;
   mQueue.push_back(event);
   sem_post(&thread_sem);
+}
+
+bool NfcService::handlePushNdefRequest(NdefMessage* ndef, int token)
+{
+  ALOGD("%s enter token=%d", __func__, token);
+  NfcEvent *event = new NfcEvent();
+  event->type = MSG_PUSH_NDEF;
+  event->token = token;
+  event->data = ndef;
+  mQueue.push_back(event);
+  sem_post(&thread_sem);
+  return true;
+}
+
+void NfcService::handlePushNdefResponse(NfcEvent* event)
+{
+  int token = event->token;
+  NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->data);
+
+  SnepClient snep;
+  snep.put(*ndef);
+  delete ndef;
+  sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NFC_ERROR_SUCCESS, NULL);
 }
