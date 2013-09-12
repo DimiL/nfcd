@@ -9,8 +9,6 @@
 #include "PowerSwitch.h"
 #include "config.h"
 
-#define LOG_TAG "PowerSwitch"
-
 void doStartupConfig ();
 
 PowerSwitch PowerSwitch::sPowerSwitch;

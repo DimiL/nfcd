@@ -329,7 +329,7 @@ void PeerToPeer::removeConn(unsigned int handle)
 
     AutoMutex mutex(mMutex);
     // If the connection is a for a client, delete the client itself
-    for (size_t ii = 0; ii < sMax; ii++)
+    for (int ii = 0; ii < sMax; ii++)
     {
         if ((mClients[ii] != NULL) && (mClients[ii]->mClientConn->mHandle == handle))
         {
@@ -343,7 +343,7 @@ void PeerToPeer::removeConn(unsigned int handle)
     }
 
     // If the connection is for a server, just delete the connection
-    for (size_t ii = 0; ii < sMax; ii++)
+    for (int ii = 0; ii < sMax; ii++)
     {
         if (mServers[ii] != NULL)
         {
@@ -462,7 +462,7 @@ sp<NfaConn> PeerToPeer::findConnection (tNFA_HANDLE nfaConnHandle)
 {
     AutoMutex mutex(mMutex);
     // First, look through all the client control blocks
-    for (size_t ii = 0; ii < sMax; ii++)
+    for (int ii = 0; ii < sMax; ii++)
     {
         if ( (mClients[ii] != NULL)
            && (mClients[ii]->mClientConn->mNfaConnHandle == nfaConnHandle) ) {
@@ -471,7 +471,7 @@ sp<NfaConn> PeerToPeer::findConnection (tNFA_HANDLE nfaConnHandle)
     }
 
     // Not found yet. Look through all the server control blocks
-    for (size_t ii = 0; ii < sMax; ii++)
+    for (int ii = 0; ii < sMax; ii++)
     {
         if (mServers[ii] != NULL)
         {
@@ -490,7 +490,7 @@ sp<NfaConn> PeerToPeer::findConnection (unsigned int handle)
 {
     AutoMutex mutex(mMutex);
     // First, look through all the client control blocks
-    for (size_t ii = 0; ii < sMax; ii++)
+    for (int ii = 0; ii < sMax; ii++)
     {
         if ( (mClients[ii] != NULL)
           && (mClients[ii]->mClientConn->mHandle == handle) ) {
@@ -499,7 +499,7 @@ sp<NfaConn> PeerToPeer::findConnection (unsigned int handle)
     }
 
     // Not found yet. Look through all the server control blocks
-    for (size_t ii = 0; ii < sMax; ii++)
+    for (int ii = 0; ii < sMax; ii++)
     {
         if (mServers[ii] != NULL)
         {
@@ -728,7 +728,7 @@ void PeerToPeer::handleNfcOnOff (bool isOn)
     else
     {
         // Disconnect through all the clients
-        for (size_t ii = 0; ii < sMax; ii++)
+        for (int ii = 0; ii < sMax; ii++)
         {
             if (mClients[ii] != NULL)
             {
@@ -753,7 +753,7 @@ void PeerToPeer::handleNfcOnOff (bool isOn)
         } //loop
 
         // Now look through all the server control blocks
-        for (size_t ii = 0; ii < sMax; ii++)
+        for (int ii = 0; ii < sMax; ii++)
         {
             if (mServers[ii] != NULL)
             {

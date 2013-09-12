@@ -851,8 +851,7 @@ bool NativeNfcTag::switchRfInterface (tNFA_INTF_TYPE rfInterface)
     bool rVal = true;
     if (rfInterface != sCurrentRfInterface)
     {
-        // Mozilla : TODO : Fix warning
-        if (rVal = (0 == reSelect(rfInterface)))
+        if ((rVal = (0 == reSelect(rfInterface))))
         {
             sCurrentRfInterface = rfInterface;
         }

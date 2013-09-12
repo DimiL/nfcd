@@ -65,9 +65,9 @@ void* connectionThreadFunc(void* arg)
 
 ConnectionThread::ConnectionThread(
   SnepServer* server,ILlcpSocket* socket, int fragmentLength, ISnepCallback* callback):
-mServer(server),
 mSock(socket),
-mCallback(callback)
+mCallback(callback),
+mServer(server)
 {
   mMessenger = new SnepMessenger(false, socket, fragmentLength);
 }

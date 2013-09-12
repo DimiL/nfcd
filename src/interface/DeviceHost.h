@@ -10,7 +10,6 @@
 
 class DeviceHost{
 public:
-
   DeviceHost();
   virtual ~DeviceHost();
 
@@ -43,7 +42,6 @@ public:
   static const uint8_t MODE_INVALID = 0xff;
 
 private:
-  NfcDepEndpoint();
   virtual ~NfcDepEndpoint();
 };
 #endif

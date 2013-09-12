@@ -10,7 +10,6 @@
 #include "NdefRecord.h"
 #include "SessionId.h"
 
-#define LOG_NDEBUG 0
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
 #include <utils/Log.h>
@@ -93,6 +92,9 @@ void MessageHandler::processResponse(NfcResponseType response, int token, NfcErr
     case NFC_RESPONSE_GENERAL:
       handleResponse(parcel);
       break;
+    default:
+      ALOGE("Not implement");
+      break;
   }
 }
 
@@ -108,6 +110,9 @@ void MessageHandler::processNotification(NfcNotificationType notification, void*
       break;
     case NFC_NOTIFICATION_TECH_DISCOVERED:
       notifyTechDiscovered(parcel, data);
+      break;
+    default:
+      ALOGE("Not implement");
       break;
   }
 }
@@ -235,7 +240,7 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
     parcel.writeInt32(payloadLength);
     dest = parcel.writeInplace(payloadLength);
     memcpy(dest, &record.mPayload.front(), payloadLength);
-    for (int j = 0; j < payloadLength; j++) {
+    for (uint32_t j = 0; j < payloadLength; j++) {
       ALOGV("mPayload %d = %u", j, record.mPayload[j]);
     }
   }

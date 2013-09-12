@@ -5,9 +5,9 @@
 #include <cutils/log.h>
 
 SnepMessenger::SnepMessenger(bool isClient, ILlcpSocket* socket, uint32_t fragmentLength) :
-mIsClient(isClient),
 mSocket(socket),
-mFragmentLength(fragmentLength)
+mFragmentLength(fragmentLength),
+mIsClient(isClient)
 {
 }
 
@@ -83,7 +83,7 @@ SnepMessage* SnepMessenger::getMessage()
     fieldReject = SnepMessage::RESPONSE_REJECT;
   }
 
-  int readSize = 0;
+  uint32_t readSize = 0;
   int size = mSocket->receive(partial);
   if (size < 0 || size < HEADER_LENGTH) {
     socketSend(fieldReject);

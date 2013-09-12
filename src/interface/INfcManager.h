@@ -6,6 +6,7 @@
 #define mozilla_nfcd_INfcManager_h
 
 #include "ILlcpServerSocket.h"
+#include "ILlcpSocket.h"
 
 class INfcManager {
 public:

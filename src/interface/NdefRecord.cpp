@@ -7,7 +7,7 @@
 NdefRecord::NdefRecord(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload)
 {
   mTnf = tnf;
-  
+
   for(uint32_t i = 0; i < type.size(); i++)
     mType.push_back(type[i]);
   for(uint32_t i = 0; i < id.size(); i++)
@@ -16,20 +16,16 @@ NdefRecord::NdefRecord(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint
     mPayload.push_back(payload[i]);
 }
 
-//NdefRecord::NdefRecord(uint8_t tnf, uint32_t typeLength, uint32_t* type, uint32_t idLength, uint32_t* id, uint32_t payloadLength, uint32_t* payload)
 NdefRecord::NdefRecord(uint8_t tnf, uint32_t typeLength, uint8_t* type, uint32_t idLength, uint8_t* id, uint32_t payloadLength, uint8_t* payload)
 {
   mTnf = tnf;
 
-  for (uint32_t i = 0; i < typeLength; i++) {
+  for (uint32_t i = 0; i < typeLength; i++)
     mType.push_back((uint8_t)type[i]);
-  }
-  for (uint32_t i = 0; i < idLength; i++) {
+  for (uint32_t i = 0; i < idLength; i++)
     mId.push_back((uint8_t)id[i]);
-  }
-  for (uint32_t i = 0; i < payloadLength; i++) {
+  for (uint32_t i = 0; i < payloadLength; i++)
     mPayload.push_back((uint8_t)payload[i]);
-  }
 }
 
 NdefRecord::~NdefRecord()
@@ -87,13 +83,13 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
     if (sr) {
       payloadLength = buf[index++] & 0xFF;
     } else {
-      payloadLength = ((uint32_t)buf[index]     << 24) | 
-                      ((uint32_t)buf[index + 1] << 16) | 
-                      ((uint32_t)buf[index + 2] <<  8) | 
+      payloadLength = ((uint32_t)buf[index]     << 24) |
+                      ((uint32_t)buf[index + 1] << 16) |
+                      ((uint32_t)buf[index + 2] <<  8) |
                       ((uint32_t)buf[index + 3]);
       index += 4;
     }
-    uint32_t idLength = il ? (buf[index++] & 0xFF) : 0;    
+    uint32_t idLength = il ? (buf[index++] & 0xFF) : 0;   
 
     if (inChunk && typeLength != 0) {
       ALOGE("expected zero-length type in non-leading chunk");
@@ -214,7 +210,7 @@ void NdefRecord::writeToByteBuffer(std::vector<uint8_t>& buf, bool mb, bool me)
   bool sr = mPayload.size() < 256;
   bool il = mId.size() > 0;
 
-  uint8_t flags = (uint8_t)((mb ? NdefRecord::FLAG_MB : 0) | 
+  uint8_t flags = (uint8_t)((mb ? NdefRecord::FLAG_MB : 0) |
                             (me ? NdefRecord::FLAG_ME : 0) |
                             (sr ? NdefRecord::FLAG_SR : 0) |
                             (il ? NdefRecord::FLAG_IL : 0) | mTnf);
@@ -234,10 +230,10 @@ void NdefRecord::writeToByteBuffer(std::vector<uint8_t>& buf, bool mb, bool me)
     buf.push_back((uint8_t)mId.size());
   }
 
-  for (int i = 0; i < mType.size(); i++)
+  for (uint32_t i = 0; i < mType.size(); i++)
     buf.push_back(mType[i]);
-  for (int i = 0; i < mId.size(); i++)
+  for (uint32_t i = 0; i < mId.size(); i++)
     buf.push_back(mId[i]);
-  for (int i = 0; i < mPayload.size(); i++)
+  for (uint32_t i = 0; i < mPayload.size(); i++)
     buf.push_back(mPayload[i]);
 }

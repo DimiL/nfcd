@@ -14,11 +14,10 @@ extern "C"
     #include "rw_int.h"
 }
 
-
 NfcTag::NfcTag ()
-:   mActivationState (Idle),
+:   mNumTechList (0),
+    mActivationState (Idle),
     mProtocol(NFC_PROTOCOL_UNKNOWN),
-    mNumTechList (0),
     mtT1tMaxMessageSize (0),
     mReadCompletedStatus (NFA_STATUS_OK),
     mLastKovioUidLen (0),
@@ -346,7 +345,7 @@ void NfcTag::createNativeNfcTag (tNFA_ACTIVATED& activationData)
         reinterpret_cast<INfcTag*>(mNfcManager->queryInterface("NativeNfcTag"));
 
     if (pINfcTag == NULL) {
-        ALOGE("%s : cannot get native nfc tag class");
+        ALOGE("%s : cannot get native nfc tag class", fn);
         return;
     }
 
