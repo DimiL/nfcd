@@ -1,6 +1,6 @@
-
 #include "NfcManager.h"
 
+#include "OverrideLog.h"
 #include "NfcAdaptation.h"
 #include "SyncEvent.h"
 #include "PeerToPeer.h"
@@ -21,17 +21,18 @@ extern "C"
     #include "ce_api.h"
 }
 
+#undef LOG_TAG
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
 
 extern bool gIsTagDeactivating;
 extern bool gIsSelectingRfInterface;
-
 /*****************************************************************************
 **
 ** public variables and functions
 **
 *****************************************************************************/
+nfc_data                gNat;
 int                     gGeneralTransceiveTimeout = 1000;
 void                    doStartupConfig ();
 void                    startRfDiscovery (bool isStart);
@@ -102,6 +103,7 @@ void* NfcManager::queryInterface(const char* name)
 bool NfcManager::doInitialize()
 {
     tNFA_STATUS stat = NFA_STATUS_OK;
+    unsigned long num = 5;
 
     // 1. Initialize PowerSwitch
     PowerSwitch::getInstance ().initialize (PowerSwitch::FULL_POWER);
@@ -111,8 +113,6 @@ bool NfcManager::doInitialize()
     theInstance.Initialize();
 
     {
-        unsigned long num = 5;
-
         SyncEventGuard guard (sNfaEnableEvent);
         tHAL_NFC_ENTRY* halFuncEntries = theInstance.GetHalEntryFuncs ();
         NFA_Init (halFuncEntries);
@@ -120,7 +120,7 @@ bool NfcManager::doInitialize()
         stat = NFA_Enable (nfaDeviceManagementCallback, nfaConnectionCallback);
         if (stat == NFA_STATUS_OK)
         {
-            //num = initializeGlobalAppLogLevel ();
+            num = initializeGlobalAppLogLevel ();
             CE_SetTraceLevel (num);
             LLCP_SetTraceLevel (num);
             NFC_SetTraceLevel (num);
@@ -150,26 +150,18 @@ bool NfcManager::doInitialize()
 
             /////////////////////////////////////////////////////////////////////////////////
             // Add extra configuration here (work-arounds, etc.)
-
-            /*
-            struct nfc_jni_native_data *nat = getNative(e, o);
-
-            if ( nat )
             {
                 if (GetNumValue(NAME_POLLING_TECH_MASK, &num, sizeof(num)))
-                    nat->tech_mask = num;
+                    gNat.tech_mask = num;
                 else
-                    nat->tech_mask = DEFAULT_TECH_MASK;
+                    gNat.tech_mask = DEFAULT_TECH_MASK;
 
-                ALOGD ("%s: tag polling tech mask=0x%X", __FUNCTION__, nat->tech_mask);
+                ALOGD ("%s: tag polling tech mask=0x%X", __FUNCTION__, gNat.tech_mask);
             }
-            */
 
             // if this value exists, set polling interval.
-            /*
             if (GetNumValue(NAME_NFA_DM_DISC_DURATION_POLL, &num, sizeof(num)))
-                NFA_SetRfDiscoveryDuration(num);
-            */
+                NFA_SetRfDiscoveryDuration(num);            
 
             // Do custom NFCA startup configuration.
             doStartupConfig();
@@ -184,7 +176,7 @@ bool NfcManager::doInitialize()
 
 TheEnd:
     if (sIsNfaEnabled) {
-        //PowerSwitch::getInstance ().setLevel (PowerSwitch::LOW_POWER);
+        PowerSwitch::getInstance ().setLevel (PowerSwitch::LOW_POWER);
     }
 
     return sIsNfaEnabled ? true : false;
@@ -241,14 +233,9 @@ bool NfcManager::doDeinitialize ()
 void NfcManager::enableDiscovery()
 {
     tNFA_TECHNOLOGY_MASK tech_mask = DEFAULT_TECH_MASK;
-    /*
-    struct nfc_jni_native_data *nat = getNative(e, o);
 
-    if (nat)
-        tech_mask = (tNFA_TECHNOLOGY_MASK)nat->tech_mask;
+    tech_mask = (tNFA_TECHNOLOGY_MASK)gNat.tech_mask;
 
-    ALOGD ("%s: enter; tech_mask = %02x", __FUNCTION__, tech_mask);
-    */
 
     if (sDiscoveryEnabled)
     {
@@ -832,14 +819,11 @@ void startRfDiscovery(bool isStart)
 
 void doStartupConfig()
 {
-    // TODO : To be fixed, use correct nat
     unsigned long num = 0;
-    // struct nfc_jni_native_data *nat = getNative(0, 0);
     tNFA_STATUS stat = NFA_STATUS_FAILED;
 
     // If polling for Active mode, set the ordering so that we choose Active over Passive mode first.
-    // if (nat && (nat->tech_mask & (NFA_TECHNOLOGY_MASK_A_ACTIVE | NFA_TECHNOLOGY_MASK_F_ACTIVE)))
-    if (true)
+    if (gNat.tech_mask & (NFA_TECHNOLOGY_MASK_A_ACTIVE | NFA_TECHNOLOGY_MASK_F_ACTIVE))
     {
         UINT8  act_mode_order_param[] = { 0x01 };
         SyncEventGuard guard (sNfaSetConfigEvent);
@@ -909,4 +893,3 @@ static bool isListenMode(tNFA_ACTIVATED& activated)
             || (NFC_DISCOVERY_TYPE_LISTEN_ISO15693 == activated.activate_ntf.rf_tech_param.mode)
             || (NFC_DISCOVERY_TYPE_LISTEN_B_PRIME == activated.activate_ntf.rf_tech_param.mode));
 }
-

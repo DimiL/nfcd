@@ -14,6 +14,8 @@ extern "C"
     #include "rw_int.h"
 }
 
+extern nfc_data gNat;
+
 NfcTag::NfcTag ()
 :   mNumTechList (0),
     mActivationState (Idle),
@@ -381,9 +383,8 @@ void NfcTag::fillNativeNfcTagMembers1 (INfcTag* pINfcTag)
     std::vector<int>& techLibNfcTypes = pINfcTag->getTechLibNfcTypes();
 
     for (int i = 0; i < mNumTechList; i++) {
-        // TODO : fix mNativeData
-        // mNativeData->tProtocols [i] = mTechLibNfcTypes [i];
-        // mNativeData->handles [i] = mTechHandles [i];
+        gNat.tProtocols [i] = mTechLibNfcTypes [i];
+        gNat.handles [i] = mTechHandles [i];
                   
         techList.push_back(mTechList[i]);
         techHandles.push_back(mTechHandles[i]);

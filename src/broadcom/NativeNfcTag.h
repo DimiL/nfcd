@@ -21,11 +21,13 @@ public:
 
   NdefMessage* findAndReadNdef();
   int reconnectWithStatus(int technology);
+  int reconnectWithStatus();
   int connectWithStatus(int technology);
   void readNdef(std::vector<uint8_t>& buf);
   bool writeNdef(NdefMessage& ndef);
   int checkNdefWithStatus(int ndefinfo[]);
   bool disconnect();  
+  bool reconnect();
   bool presenceCheck();
 
   std::vector<int>& getTechList() {  return mTechList;  };

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#pragma once
 /* Discovery modes -- keep in sync with NFCManager.DISCOVERY_MODE_* */
 #define DISCOVERY_MODE_TAG_READER         0
 #define DISCOVERY_MODE_NFCIP1             1
@@ -73,3 +74,31 @@
 
 //default general trasceive timeout in millisecond
 #define DEFAULT_GENERAL_TRANS_TIMEOUT  1000
+
+struct nfc_data
+{
+   /* Thread handle */
+   pthread_t thread;
+   int running;
+
+   /* Reference to the NFCManager instance */
+   void* manager;
+
+   /* Secure Element selected */
+   int seId;
+
+   /* LLCP params */
+   int lto;
+   int miu;
+   int wks;
+   int opt;
+
+   int tech_mask;
+
+   /* Tag detected */
+   void* tag;
+
+   int tHandle;
+   int tProtocols[16];
+   int handles[16];
+};

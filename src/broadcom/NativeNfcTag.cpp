@@ -202,6 +202,42 @@ bool NativeNfcTag::disconnect()
   return result;
 }
 
+bool NativeNfcTag::reconnect()
+{
+  return reconnectWithStatus() == 0;
+}
+
+int NativeNfcTag::reconnectWithStatus ()
+{
+    ALOGD ("%s: enter", __FUNCTION__);
+    int retCode = NFCSTATUS_SUCCESS;
+    NfcTag& natTag = NfcTag::getInstance ();
+
+    if (natTag.getActivationState() != NfcTag::Active)
+    {
+        ALOGE ("%s: tag already deactivated", __FUNCTION__);
+        retCode = NFCSTATUS_FAILED;
+        goto TheEnd;
+    }
+
+    // special case for Kovio
+    if (NfcTag::getInstance ().mTechList [0] == TARGET_TYPE_KOVIO_BARCODE)
+    {
+        ALOGD ("%s: fake out reconnect for Kovio", __FUNCTION__);
+        goto TheEnd;
+    }
+
+    // this is only supported for type 2 or 4 (ISO_DEP) tags
+    if (natTag.mTechLibNfcTypes[0] == NFA_PROTOCOL_ISO_DEP)
+        retCode = reSelect(NFA_INTERFACE_ISO_DEP);
+    else if (natTag.mTechLibNfcTypes[0] == NFA_PROTOCOL_T2T)
+        retCode = reSelect(NFA_INTERFACE_FRAME);
+
+TheEnd:
+    ALOGD ("%s: exit 0x%X", __FUNCTION__, retCode);
+    return retCode;
+}
+
 int NativeNfcTag::reconnectWithStatus(int technology)
 {
   int status = -1;

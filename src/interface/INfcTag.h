@@ -13,6 +13,7 @@ public:
   virtual ~INfcTag() {};
 
   virtual bool disconnect() = 0;
+  virtual bool reconnect() = 0;
   virtual int connectWithStatus(int technology) = 0;
   virtual NdefMessage* findAndReadNdef() = 0;
   virtual bool writeNdef(NdefMessage& ndef) = 0;
