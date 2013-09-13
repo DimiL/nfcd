@@ -136,6 +136,7 @@ void SnepClient::connect()
   int fragmentLength = (mFragmentLength == -1) ?  miu : miu < mFragmentLength ? miu : mFragmentLength;
   SnepMessenger* messenger = new SnepMessenger(true, socket, fragmentLength);
 
+  // rmove old messenger
   if (mMessenger) {
     mMessenger->close();
     delete mMessenger;
@@ -152,4 +153,5 @@ void SnepClient::close()
     delete mMessenger;
     mMessenger = NULL;
   }
+  mState = SnepClient::DISCONNECTED;
 }

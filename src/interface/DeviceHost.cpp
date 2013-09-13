@@ -19,10 +19,12 @@ void DeviceHost::notifyNdefMessageListeners(void* pTag)
 
 void DeviceHost::notifyTargetDeselected()
 {
+  ALOGE("function %s not implement", __FUNCTION__);
 }
 
 void DeviceHost::notifyTransactionListeners()
 {
+  ALOGE("function %s not implement", __FUNCTION__);
 }
 
 void DeviceHost::notifyLlcpLinkActivation(void* pDevice)
@@ -37,6 +39,7 @@ void DeviceHost::notifyLlcpLinkDeactivated(void* pDevice)
 
 void DeviceHost::notifyLlcpLinkFirstPacketReceived()
 {
+  ALOGE("function %s not implement", __FUNCTION__);
 }
 
 void DeviceHost::notifySeFieldActivated()

@@ -77,7 +77,7 @@ bool LlcpSocket::LlcpSocket_doConnectBy (const char* sn)
   bool stat = PeerToPeer::getInstance().connectConnOriented(mHandle, sn);
 
   ALOGD ("%s: exit", __FUNCTION__);
-  return stat ? true : false;
+  return stat;
 }
 
 bool LlcpSocket::LlcpSocket_doSend (std::vector<uint8_t>& data)
@@ -91,7 +91,7 @@ bool LlcpSocket::LlcpSocket_doSend (std::vector<uint8_t>& data)
 
   delete[] raw_ptr;
 
-  return stat ? true : false;
+  return stat;
 }
 
 int LlcpSocket::LlcpSocket_doReceive(std::vector<uint8_t>& recvBuff)

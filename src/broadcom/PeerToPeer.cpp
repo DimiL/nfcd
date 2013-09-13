@@ -214,8 +214,8 @@ void PeerToPeer::llcpFirstPacketHandler ()
 {
     static const char fn [] = "PeerToPeer::llcpFirstPacketHandler";
     ALOGD ("%s: enter", fn);
-    // TODO : implemented
-    ALOGE ("Unimplement function %s", fn);
+
+    mNfcManager->notifyLlcpLinkFirstPacketReceived();
 
     ALOGD ("%s: exit", fn);
 }

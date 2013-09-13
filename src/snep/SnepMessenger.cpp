@@ -45,12 +45,12 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
 
   SnepMessage* snepResponse = SnepMessage::fromByteArray(responseBytes);
   if (snepResponse == NULL) {
-    ALOGE("Invalid SNEP message");
+    ALOGE("function %s Invalid SNEP message", __FUNCTION__);
     return;
   }
 
   if (snepResponse->getField() != remoteContinue) {
-    ALOGE("Invalid response from server (%d)", snepResponse->getField());
+    ALOGE("function %s Invalid response from server (%d)", __FUNCTION__, snepResponse->getField());
     delete snepResponse;
     return;
   }

@@ -14,8 +14,8 @@ public:
    SnepCallback();
    virtual ~SnepCallback();
 
-   virtual SnepMessage* doPut(NdefMessage& msg);
-   virtual SnepMessage* doGet(int acceptableLength, NdefMessage& msg);
+   virtual SnepMessage* doPut(NdefMessage* msg);
+   virtual SnepMessage* doGet(int acceptableLength, NdefMessage* msg);
 };
 
 class SnepServer{
