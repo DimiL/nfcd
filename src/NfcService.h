@@ -18,6 +18,7 @@ typedef enum {
   MSG_SE_FIELD_ACTIVATED,
   MSG_SE_FIELD_DEACTIVATED,
   MSG_SE_NOTIFY_TRANSACTION_LISTENERS,
+  MSG_READ_NDEF_DETAIL,
   MSG_READ_NDEF,
   MSG_WRITE_NDEF,
   MSG_CLOSE,
@@ -50,6 +51,9 @@ public:
 
   static bool handleDisconnect();
   static int handleConnect(int technology, int token);
+  
+  static bool handleReadNdefDetailRequest(int token);
+  static void handleReadNdefDetailResponse(NfcEvent* event);
   static bool handleReadNdefRequest(int token);
   static void handleReadNdefResponse(NfcEvent* event);
   static bool handleWriteNdefRequest(NdefMessage* ndef, int token);

@@ -16,6 +16,7 @@ public:
   virtual bool reconnect() = 0;
   virtual int connectWithStatus(int technology) = 0;
   virtual NdefMessage* findAndReadNdef() = 0;
+  virtual NdefDetail* ReadNdefDetail() = 0;
   virtual bool writeNdef(NdefMessage& ndef) = 0;
   virtual bool presenceCheck() = 0;
 

@@ -27,11 +27,13 @@ private:
   void notifyInitialized(android::Parcel& parcel);
   void notifyTechDiscovered(android::Parcel& parcel, void* data);
 
+  bool handleReadNdefDetailRequest(android::Parcel& parcel, int token);
   bool handleReadNdefRequest(android::Parcel& parcel, int token);
   bool handleWriteNdefRequest(android::Parcel& parcel, int token);
   bool handleConnectRequest(android::Parcel& parcel, int token); 
   bool handleCloseRequest(android::Parcel& parcel, int token);
 
+  bool handleReadNdefDetailResponse(android::Parcel& parcel, void* data);
   bool handleReadNdefResponse(android::Parcel& parcel, void* data);
   bool handleResponse(android::Parcel& parcel);
 

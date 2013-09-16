@@ -112,6 +112,23 @@ NativeNfcTag::~NativeNfcTag()
 {
 }
 
+NdefDetail* NativeNfcTag::ReadNdefDetail()
+{
+    int ndefinfo[2];
+    int status;
+    NdefDetail* pNdefDetail = NULL;
+    status = checkNdefWithStatus(ndefinfo);
+    if (status != 0) {
+        ALOGE("Check NDEF Failed - status = %d", status);
+    } else {
+        pNdefDetail = new NdefDetail();
+        pNdefDetail->maxSupportedLength = ndefinfo[0];
+        pNdefDetail->mode = ndefinfo[1];
+    }
+
+    return pNdefDetail;    
+}
+
 NdefMessage* NativeNfcTag::findAndReadNdef()
 {
     NdefMessage* pNdefMsg = NULL;

@@ -60,6 +60,9 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
   token = 0;
 
   switch (request) {
+    case NFC_REQUEST_GET_DETAILS:
+      handleReadNdefDetailRequest(parcel, token);
+      break;
     case NFC_REQUEST_READ_NDEF:
       handleReadNdefRequest(parcel, token);
       break;
@@ -86,6 +89,9 @@ void MessageHandler::processResponse(NfcResponseType response, int token, NfcErr
   parcel.writeInt32(error);
 
   switch (response) {
+    case NFC_RESPONSE_READ_NDEF_DETAILS:
+      handleReadNdefDetailResponse(parcel, data);
+      break;
     case NFC_RESPONSE_READ_NDEF:
       handleReadNdefResponse(parcel, data);
       break;
@@ -130,6 +136,13 @@ void MessageHandler::onSocketConnected()
 void MessageHandler::sendResponse(Parcel& parcel)
 {
   mSocket->writeToOutgoingQueue(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
+}
+
+bool MessageHandler::handleReadNdefDetailRequest(Parcel& parcel, int token)
+{
+  int sessionId = parcel.readInt32();
+  //TODO check SessionId
+  return NfcService::handleReadNdefDetailRequest(token);
 }
 
 bool MessageHandler::handleReadNdefRequest(Parcel& parcel, int token)
@@ -200,6 +213,19 @@ bool MessageHandler::handleConnectRequest(Parcel& parcel, int token)
 bool MessageHandler::handleCloseRequest(Parcel& parcel, int token)
 {
   NfcService::handleCloseRequest();
+  return true;
+}
+
+bool MessageHandler::handleReadNdefDetailResponse(Parcel& parcel, void* data)
+{
+  NdefDetail* ndefDetail = reinterpret_cast<NdefDetail*>(data);
+
+  parcel.writeInt32(SessionId::getCurrentId());  
+
+  parcel.writeInt32(ndefDetail->maxSupportedLength);
+  parcel.writeInt32(ndefDetail->mode);
+
+  sendResponse(parcel);
   return true;
 }
 

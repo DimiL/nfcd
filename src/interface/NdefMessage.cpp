@@ -29,3 +29,12 @@ void NdefMessage::toByteArray(std::vector<uint8_t>& buf)
   } 
   return;
 }
+
+NdefDetail::NdefDetail()
+{
+}
+
+NdefDetail::~NdefDetail()
+{
+}
+

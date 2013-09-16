@@ -185,6 +185,8 @@ static void *serviceThreadFunc(void *arg)
         case MSG_NDEF_TAG:
           service->handleNdefTag(event);
           break;
+        case MSG_READ_NDEF_DETAIL:
+          NfcService::handleReadNdefDetailResponse(event);
         case MSG_READ_NDEF:
           NfcService::handleReadNdefResponse(event);
           break;
@@ -262,6 +264,31 @@ int NfcService::handleConnect(int technology, int token)
   int status = pINfcTag->connectWithStatus(technology);
   sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NFC_ERROR_SUCCESS,  NULL);
   return status;
+}
+
+bool NfcService::handleReadNdefDetailRequest(int token)
+{
+  NfcEvent *event = new NfcEvent();
+  event->type = MSG_READ_NDEF_DETAIL;
+  event->token = token;
+  mQueue.push_back(event);
+  sem_post(&thread_sem);
+  return true;
+}
+
+void NfcService::handleReadNdefDetailResponse(NfcEvent* event)
+{
+  int token = event->token;
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
+  NdefDetail* pNdefDetail = pINfcTag->ReadNdefDetail();
+
+  if (pNdefDetail != NULL) {
+    sMsgHandler->processResponse(NFC_RESPONSE_READ_NDEF_DETAILS, token, NFC_ERROR_SUCCESS, pNdefDetail);
+  } else {
+    //TODO can we notify null ndef detail?
+  }
+
+  delete pNdefDetail;
 }
 
 bool NfcService::handleReadNdefRequest(int token)

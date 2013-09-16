@@ -20,4 +20,13 @@ public:
   std::vector<NdefRecord> mRecords;
 };
 
+class NdefDetail{
+public:
+  NdefDetail();
+  ~NdefDetail();
+
+  int maxSupportedLength;
+  int mode;
+};
+
 #endif

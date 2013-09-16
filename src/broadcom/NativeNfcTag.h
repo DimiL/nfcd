@@ -20,6 +20,7 @@ public:
   virtual ~NativeNfcTag();
 
   NdefMessage* findAndReadNdef();
+  NdefDetail* ReadNdefDetail();
   int reconnectWithStatus(int technology);
   int reconnectWithStatus();
   int connectWithStatus(int technology);
