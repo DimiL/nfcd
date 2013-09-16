@@ -18,7 +18,7 @@ public:
   bool connectToSap(int sap);
   bool connectToService(const char* serviceName);
   void close();
-  void send(std::vector<uint8_t>& data);
+  bool send(std::vector<uint8_t>& data);
   int receive(std::vector<uint8_t>& recvBuff);
   int getRemoteMiu();
   int getRemoteRw();

@@ -32,11 +32,9 @@ int main() {
   // 4. Create snep server
   // TODO : Maybe we should put this when p2p connection is established ?
   // Mark first because the function is not yet complete
-  /*
   SnepCallback snepCallback;
   SnepServer snepServer(static_cast<ISnepCallback*>(&snepCallback));
   snepServer.start();
-  */
 
   // 5. Create IPC socket & main thread will enter while loop to read data from socket
   NfcIpcSocket* pNfcIpcSocket = NfcIpcSocket::Instance();

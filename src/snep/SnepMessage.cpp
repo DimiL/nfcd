@@ -103,12 +103,14 @@ SnepMessage* SnepMessage::fromByteArray(uint8_t* pBuf, int size)
 
 void SnepMessage::toByteArray(std::vector<uint8_t>& buf)
 {
-  if (mNdefMessage == NULL) {
+  if (mNdefMessage != NULL) {
+    mNdefMessage->toByteArray(buf);
+  } else {
     ALOGE("Null NDEF message");
+    buf.push_back(0);
   }
 
   std::vector<uint8_t> snepHeader;
-  mNdefMessage->toByteArray(buf);
 
   snepHeader.push_back(mVersion);
   snepHeader.push_back(mField);

@@ -26,7 +26,7 @@ public:
 private: 
   static const int HEADER_LENGTH = 6;
 
-  void socketSend(uint8_t field);
+  bool socketSend(uint8_t field);
 };
 
 #endif

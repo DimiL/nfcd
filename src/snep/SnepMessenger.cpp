@@ -86,7 +86,10 @@ SnepMessage* SnepMessenger::getMessage()
   uint32_t readSize = 0;
   int size = mSocket->receive(partial);
   if (size < 0 || size < HEADER_LENGTH) {
-    socketSend(fieldReject);
+    if (!socketSend(fieldReject)) {
+      ALOGE("snep message send fail");
+      return NULL;
+    }
   } else {
     readSize = size - HEADER_LENGTH;
     buffer.insert(buffer.end(), partial.begin(), partial.end());
@@ -106,7 +109,10 @@ SnepMessage* SnepMessenger::getMessage()
 
   bool doneReading = false;
   if (requestSize > readSize) {
-    socketSend(fieldContinue);
+    if (!socketSend(fieldContinue)) {
+      ALOGE("snep message send fail");
+      return NULL;
+    }
   } else {
     doneReading = true;
   }
@@ -115,9 +121,14 @@ SnepMessage* SnepMessenger::getMessage()
   partial.clear();
   // Remaining fragments
   while (!doneReading) {
+    ALOGE("[Dimi]reading from snep socket >>");
     size = mSocket->receive(partial);
+    ALOGE("[Dimi]reading from snep socket <<");
     if (size < 0) {
-      socketSend(fieldReject);
+      if (!socketSend(fieldReject)) {
+        ALOGE("snep message send fail");
+        return NULL;
+      }
     } else {
       readSize += size;
       buffer.insert(buffer.end(), partial.begin(), partial.end());
@@ -142,11 +153,13 @@ void SnepMessenger::close()
     mSocket->close();
 }
 
-void SnepMessenger::socketSend(uint8_t field)
+bool SnepMessenger::socketSend(uint8_t field)
 {
+  bool status = false;
   std::vector<uint8_t> data;
   SnepMessage* msg = SnepMessage::getMessage(field);
   msg->toByteArray(data);
-  mSocket->send(data);
+  status = mSocket->send(data);
   delete msg;
+  return status;
 }

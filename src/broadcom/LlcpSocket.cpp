@@ -36,10 +36,9 @@ void LlcpSocket::close()
   return;
 }
 
-void LlcpSocket::send(std::vector<uint8_t>& data)
+bool LlcpSocket::send(std::vector<uint8_t>& data)
 {
-  LlcpSocket::LlcpSocket_doSend(data);
-  return;
+  return LlcpSocket::LlcpSocket_doSend(data);
 }
 
 int LlcpSocket::receive(std::vector<uint8_t>& recvBuff)
