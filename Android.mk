@@ -21,7 +21,8 @@ LOCAL_SRC_FILES := \
     src/snep/SnepServer.cpp \
     src/snep/SnepClient.cpp \
     src/snep/SnepMessage.cpp \
-    src/snep/SnepMessenger.cpp
+    src/snep/SnepMessenger.cpp \
+    src/ndefpush/NdefPushServer.cpp
 
 BROADCOM_SRC_FILES := \
     src/broadcom/NfcManager.cpp \
@@ -65,6 +66,7 @@ LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/src/broadcom \
     $(LOCAL_PATH)/src/interface \
     $(LOCAL_PATH)/src/snep \
+    $(LOCAL_PATH)/src/ndefpush \
     $(NFA)/include \
     $(NFA)/brcm \
     $(NFC)/include \
