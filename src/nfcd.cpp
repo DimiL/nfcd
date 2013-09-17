@@ -10,6 +10,7 @@
 #include "MessageHandler.h"
 #include "SnepServer.h"
 #include "NdefPushServer.h"
+#include "HandoverServer.h"
 
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
@@ -40,6 +41,10 @@ int main() {
   NdefPushCallback ndefpushCallback;
   NdefPushServer ndefpushServer(static_cast<INdefPushCallback*>(&ndefpushCallback));
   ndefpushServer.start();
+
+  HandoverCallback handoverCallback;
+  HandoverServer handoverServer(static_cast<IHandoverCallback*>(&handoverCallback));
+  handoverServer.start();
 
   // 5. Create IPC socket & main thread will enter while loop to read data from socket
   NfcIpcSocket* pNfcIpcSocket = NfcIpcSocket::Instance();
