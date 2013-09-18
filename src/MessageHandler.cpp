@@ -30,7 +30,7 @@ void MessageHandler::notifyInitialized(Parcel& parcel)
 void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
 {
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(data);
-  std::vector<int>& techList = pINfcTag->getTechList();
+  std::vector<uint8_t>& techList = pINfcTag->getTechList();
 
   parcel.writeInt32(SessionId::generateNewId());
 
