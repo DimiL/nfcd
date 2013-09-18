@@ -31,7 +31,7 @@ public:
   bool reconnect();
   bool presenceCheck();
 
-  std::vector<int>& getTechList() {  return mTechList;  };
+  std::vector<uint8_t>& getTechList() {  return mTechList;  };
   std::vector<int>& getTechHandles() {  return mTechHandles;  };
   std::vector<int>& getTechLibNfcTypes()  {  return mTechLibNfcTypes;  };
   std::vector<std::vector<uint8_t> >& getTechPollBytes()  {  return mTechPollBytes;  };
@@ -62,7 +62,7 @@ public:
 private:
   pthread_mutex_t mMutex;
 
-  std::vector<int> mTechList;
+  std::vector<uint8_t> mTechList;
   std::vector<int> mTechHandles;
   std::vector<int> mTechLibNfcTypes;
   std::vector<std::vector<uint8_t> > mTechPollBytes;

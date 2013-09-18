@@ -20,7 +20,7 @@ public:
   virtual bool writeNdef(NdefMessage& ndef) = 0;
   virtual bool presenceCheck() = 0;
 
-  virtual std::vector<int>& getTechList() = 0;
+  virtual std::vector<uint8_t>& getTechList() = 0;
   virtual std::vector<int>& getTechHandles() = 0;
   virtual std::vector<int>& getTechLibNfcTypes() = 0;
   virtual std::vector<std::vector<uint8_t> >& getTechPollBytes() = 0;

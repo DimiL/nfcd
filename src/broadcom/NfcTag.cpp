@@ -378,7 +378,7 @@ void NfcTag::fillNativeNfcTagMembers1 (INfcTag* pINfcTag)
     static const char fn [] = "NfcTag::fillNativeNfcTagMembers1";
     ALOGD ("%s", fn);
 
-    std::vector<int>& techList = pINfcTag->getTechList();
+    std::vector<uint8_t>& techList = pINfcTag->getTechList();
     std::vector<int>& techHandles = pINfcTag->getTechHandles();
     std::vector<int>& techLibNfcTypes = pINfcTag->getTechLibNfcTypes();
 
