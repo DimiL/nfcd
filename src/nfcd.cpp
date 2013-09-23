@@ -34,7 +34,7 @@ int main() {
   SnepCallback snepCallback;
   SnepServer snepServer(static_cast<ISnepCallback*>(&snepCallback));
   snepServer.start();
-  
+
   // 4. Enable discovery MUST after push,snep,handover servers are established
   pNfcManager->enableDiscovery();
 

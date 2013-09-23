@@ -96,12 +96,15 @@ bool LlcpSocket::LlcpSocket_doSend (std::vector<uint8_t>& data)
 int LlcpSocket::LlcpSocket_doReceive(std::vector<uint8_t>& recvBuff)
 {
   uint16_t actualLen = 0;
+  uint16_t MAX_BUF_SIZE = 4096;
 
-  UINT8* raw_ptr = new UINT8[recvBuff.size()];
-  bool stat = PeerToPeer::getInstance().receive(mHandle, raw_ptr, recvBuff.size(), actualLen);
+  UINT8* raw_ptr = new UINT8[MAX_BUF_SIZE];
+  bool stat = PeerToPeer::getInstance().receive(mHandle, raw_ptr, MAX_BUF_SIZE, actualLen);
 
   int retval = 0;
   if (stat && (actualLen>0)) {
+    for (uint16_t i = 0; i < actualLen; i++)
+      recvBuff.push_back(raw_ptr[i]);
     retval = actualLen;
   } else {
     retval = -1;
