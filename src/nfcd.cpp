@@ -24,19 +24,19 @@ int main() {
 
   MessageHandler* msgHandler = new MessageHandler();
 
-  // 2. Enable Discovery
-  pNfcManager->enableDiscovery();
-
-  // 3. Create service thread to receive message from nfc library
+  // 2. Create service thread to receive message from nfc library
   NfcService* pNfcService = NfcService::Instance();
   pNfcService->initialize(pNfcManager, msgHandler);
 
-  // 4. Create snep server
+  // 3. Create snep server
   // TODO : Maybe we should put this when p2p connection is established ?
   // Mark first because the function is not yet complete
   SnepCallback snepCallback;
   SnepServer snepServer(static_cast<ISnepCallback*>(&snepCallback));
   snepServer.start();
+  
+  // 4. Enable discovery MUST after push,snep,handover servers are established
+  pNfcManager->enableDiscovery();
 
   NdefPushCallback ndefpushCallback;
   NdefPushServer ndefpushServer(static_cast<INdefPushCallback*>(&ndefpushCallback));
