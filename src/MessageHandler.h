@@ -26,6 +26,7 @@ public:
 private:
   void notifyInitialized(android::Parcel& parcel);
   void notifyTechDiscovered(android::Parcel& parcel, void* data);
+  void notifyTechLost(android::Parcel& parcel);
 
   bool handleReadNdefDetailRequest(android::Parcel& parcel, int token);
   bool handleReadNdefRequest(android::Parcel& parcel, int token);

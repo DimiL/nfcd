@@ -55,7 +55,7 @@ void NfcService::nfc_service_send_MSG_NDEF_TAG(void* pTag)
 {
   ALOGD("%s enter", __func__);
   NfcEvent *event = new NfcEvent();
-  event->type = MSG_NDEF_TAG;
+  event->type = MSG_TAG_DISCOVERED;
   event->data = pTag;
   mQueue.push_back(event);
   ALOGD("%s pushes to Q, queue.size()=%d event=%p",__func__, mQueue.size(), event);
@@ -130,7 +130,7 @@ static void NfcService_MSG_LLCP_LINK_ACTIVATION(NfcEvent* event)
   }
 }
 
-void *pollingThreadFunc(void *arg)
+static void *pollingThreadFunc(void *arg)
 {
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(arg);
 
@@ -141,10 +141,17 @@ void *pollingThreadFunc(void *arg)
   }
 
   pINfcTag->disconnect();
+  NfcEvent *event = new NfcEvent();
+  event->type = MSG_TAG_LOST;
+  event->data = NULL;
+  NfcService* service = NfcService::Instance();
+  List<NfcEvent*>& queue = service->mQueue;
+  queue.push_back(event);
+  sem_post(&thread_sem);
   return NULL;
 }
 
-void NfcService::handleNdefTag(NfcEvent* event)
+void NfcService::handleTagDiscovered(NfcEvent* event)
 {
   void* pTag = event->data;
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(pTag);
@@ -152,6 +159,11 @@ void NfcService::handleNdefTag(NfcEvent* event)
 
   pthread_t tid;
   pthread_create(&tid, NULL, pollingThreadFunc, pINfcTag);
+}
+
+void NfcService::handleTagLost(NfcEvent* event)
+{
+  sMsgHandler->processNotification(NFC_NOTIFICATION_TECH_LOST, NULL);
 }
 
 static void *serviceThreadFunc(void *arg)
@@ -182,8 +194,12 @@ static void *serviceThreadFunc(void *arg)
           break;
         case MSG_LLCP_LINK_DEACTIVATION:
           NfcService_MSG_LLCP_LINK_DEACTIVATION(event);
-        case MSG_NDEF_TAG:
-          service->handleNdefTag(event);
+          break;
+        case MSG_TAG_DISCOVERED:
+          service->handleTagDiscovered(event);
+          break;
+        case MSG_TAG_LOST:
+          service->handleTagLost(event);
           break;
         case MSG_READ_NDEF_DETAIL:
           NfcService::handleReadNdefDetailResponse(event);

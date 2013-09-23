@@ -14,7 +14,8 @@ typedef enum {
   MSG_UNDEFINED = 0,
   MSG_LLCP_LINK_ACTIVATION,
   MSG_LLCP_LINK_DEACTIVATION,
-  MSG_NDEF_TAG,
+  MSG_TAG_DISCOVERED,
+  MSG_TAG_LOST,
   MSG_SE_FIELD_ACTIVATED,
   MSG_SE_FIELD_DEACTIVATED,
   MSG_SE_NOTIFY_TRANSACTION_LISTENERS,
@@ -24,6 +25,7 @@ typedef enum {
   MSG_CLOSE,
   MSG_SOCKET_CONNECTED,
   MSG_PUSH_NDEF,
+  MSG_NDEF_TAG_LIST,
 } NfcEventType;
 
 struct NfcEvent {
@@ -37,8 +39,8 @@ public:
   ~NfcService();
   void initialize(NfcManager* pNfcManager, MessageHandler* msgHandler);
 
-  //TODO update this name
-  void handleNdefTag(NfcEvent* event);
+  void handleTagDiscovered(NfcEvent* event);
+  void handleTagLost(NfcEvent* event);
   static NfcService* Instance();
   static INfcManager* getNfcManager();
 

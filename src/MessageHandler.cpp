@@ -42,6 +42,12 @@ void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
   sendResponse(parcel);
 }
 
+void MessageHandler::notifyTechLost(Parcel& parcel)
+{
+  parcel.writeInt32(SessionId::getCurrentId());
+  sendResponse(parcel);
+}
+
 void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
 {
   Parcel parcel;
@@ -116,6 +122,9 @@ void MessageHandler::processNotification(NfcNotificationType notification, void*
       break;
     case NFC_NOTIFICATION_TECH_DISCOVERED:
       notifyTechDiscovered(parcel, data);
+      break;
+    case NFC_NOTIFICATION_TECH_LOST:
+      notifyTechLost(parcel);
       break;
     default:
       ALOGE("Not implement");
@@ -220,7 +229,7 @@ bool MessageHandler::handleReadNdefDetailResponse(Parcel& parcel, void* data)
 {
   NdefDetail* ndefDetail = reinterpret_cast<NdefDetail*>(data);
 
-  parcel.writeInt32(SessionId::getCurrentId());  
+  parcel.writeInt32(SessionId::getCurrentId());
 
   parcel.writeInt32(ndefDetail->maxSupportedLength);
   parcel.writeInt32(ndefDetail->mode);
