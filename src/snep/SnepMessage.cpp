@@ -105,9 +105,6 @@ void SnepMessage::toByteArray(std::vector<uint8_t>& buf)
 {
   if (mNdefMessage != NULL) {
     mNdefMessage->toByteArray(buf);
-  } else {
-    ALOGE("Null NDEF message");
-    buf.push_back(0);
   }
 
   std::vector<uint8_t> snepHeader;
