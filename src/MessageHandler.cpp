@@ -66,6 +66,9 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
   token = 0;
 
   switch (request) {
+    case NFC_REQUEST_CONFIG:
+      handleConfigRequest(parcel, token);
+      break;
     case NFC_REQUEST_GET_DETAILS:
       handleReadNdefDetailRequest(parcel, token);
       break;
@@ -95,6 +98,9 @@ void MessageHandler::processResponse(NfcResponseType response, int token, NfcErr
   parcel.writeInt32(error);
 
   switch (response) {
+    case NFC_RESPONSE_CONFIG:
+      handleConfigResponse(parcel, data);
+      break;
     case NFC_RESPONSE_READ_NDEF_DETAILS:
       handleReadNdefDetailResponse(parcel, data);
       break;
@@ -145,6 +151,13 @@ void MessageHandler::onSocketConnected()
 void MessageHandler::sendResponse(Parcel& parcel)
 {
   mSocket->writeToOutgoingQueue(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
+}
+
+bool MessageHandler::handleConfigRequest(Parcel& parcel, int token)
+{
+  int sessionId = parcel.readInt32();
+  //TODO check SessionId
+  return NfcService::handleConfigRequest(token);
 }
 
 bool MessageHandler::handleReadNdefDetailRequest(Parcel& parcel, int token)
@@ -225,6 +238,12 @@ bool MessageHandler::handleCloseRequest(Parcel& parcel, int token)
   return true;
 }
 
+bool MessageHandler::handleConfigResponse(Parcel& parcel, void* data)
+{
+  sendResponse(parcel);
+  return true;
+}
+
 bool MessageHandler::handleReadNdefDetailResponse(Parcel& parcel, void* data)
 {
   NdefDetail* ndefDetail = reinterpret_cast<NdefDetail*>(data);
@@ -245,17 +264,17 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
   parcel.writeInt32(SessionId::getCurrentId());
 
   int numRecords = ndef->mRecords.size();
-  ALOGV("numRecords=%d", numRecords);
+  ALOGD("numRecords=%d", numRecords);
   parcel.writeInt32(numRecords);
 
   for (int i = 0; i < numRecords; i++) {
     NdefRecord &record = ndef->mRecords[i];
 
-    ALOGV("tnf=%u",record.mTnf);
+    ALOGD("tnf=%u",record.mTnf);
     parcel.writeInt32(record.mTnf);
 
     uint32_t typeLength = record.mType.size();
-    ALOGV("typeLength=%u",typeLength);
+    ALOGD("typeLength=%u",typeLength);
     parcel.writeInt32(typeLength);
     void* dest = parcel.writeInplace(typeLength);
     if (dest == NULL) {
@@ -265,18 +284,18 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
     memcpy(dest, &record.mType.front(), typeLength);
 
     uint32_t idLength = record.mId.size();
-    ALOGV("idLength=%d",idLength);
+    ALOGD("idLength=%d",idLength);
     parcel.writeInt32(idLength);
     dest = parcel.writeInplace(idLength);
     memcpy(dest, &record.mId.front(), idLength);
 
     uint32_t payloadLength = record.mPayload.size();
-    ALOGV("payloadLength=%u",payloadLength);
+    ALOGD("payloadLength=%u",payloadLength);
     parcel.writeInt32(payloadLength);
     dest = parcel.writeInplace(payloadLength);
     memcpy(dest, &record.mPayload.front(), payloadLength);
     for (uint32_t j = 0; j < payloadLength; j++) {
-      ALOGV("mPayload %d = %u", j, record.mPayload[j]);
+      ALOGD("mPayload %d = %u", j, record.mPayload[j]);
     }
   }
 

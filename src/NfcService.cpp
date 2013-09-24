@@ -201,6 +201,9 @@ static void *serviceThreadFunc(void *arg)
         case MSG_TAG_LOST:
           service->handleTagLost(event);
           break;
+        case MSG_CONFIG:
+          NfcService::handleConfigResponse(event);
+          break;
         case MSG_READ_NDEF_DETAIL:
           NfcService::handleReadNdefDetailResponse(event);
         case MSG_READ_NDEF:
@@ -216,7 +219,8 @@ static void *serviceThreadFunc(void *arg)
           NfcService::sMsgHandler->processNotification(NFC_NOTIFICATION_INITIALIZED , NULL);
           break;
         case MSG_PUSH_NDEF:
-          NfcService::handlePushNdefResponse(event);          
+          NfcService::handlePushNdefResponse(event);
+          break;
         default:
           ALOGE("NFCService bad message");
           abort();
@@ -282,6 +286,16 @@ int NfcService::handleConnect(int technology, int token)
   return status;
 }
 
+bool NfcService::handleConfigRequest(int token)
+{
+  NfcEvent *event = new NfcEvent();
+  event->type = MSG_CONFIG;
+  event->token = token;
+  mQueue.push_back(event);
+  sem_post(&thread_sem);
+  return true;
+}
+
 bool NfcService::handleReadNdefDetailRequest(int token)
 {
   NfcEvent *event = new NfcEvent();
@@ -290,6 +304,12 @@ bool NfcService::handleReadNdefDetailRequest(int token)
   mQueue.push_back(event);
   sem_post(&thread_sem);
   return true;
+}
+
+void NfcService::handleConfigResponse(NfcEvent* event)
+{
+  int token = event->token;
+  sMsgHandler->processResponse(NFC_RESPONSE_CONFIG, token, NFC_ERROR_SUCCESS, NULL);
 }
 
 void NfcService::handleReadNdefDetailResponse(NfcEvent* event)
