@@ -27,6 +27,7 @@ typedef enum {
   MSG_PUSH_NDEF,
   MSG_NDEF_TAG_LIST,
   MSG_CONFIG,
+  MSG_MAKE_NDEF_READONLY,
 } NfcEventType;
 
 struct NfcEvent {
@@ -67,6 +68,8 @@ public:
   static void handleCloseResponse(NfcEvent* event);
   static bool handlePushNdefRequest(NdefMessage* ndef, int token);
   static void handlePushNdefResponse(NfcEvent* event);
+  static bool handleMakeNdefReadonlyRequest(int token);
+  static void handleMakeNdefReadonlyResponse(NfcEvent* event);
 
   static void onSocketConnected();
 

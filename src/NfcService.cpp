@@ -221,6 +221,9 @@ static void *serviceThreadFunc(void *arg)
         case MSG_PUSH_NDEF:
           NfcService::handlePushNdefResponse(event);
           break;
+        case MSG_MAKE_NDEF_READONLY:
+          NfcService::handleMakeNdefReadonlyResponse(event);
+          break;
         default:
           ALOGE("NFCService bad message");
           abort();
@@ -419,5 +422,20 @@ void NfcService::handlePushNdefResponse(NfcEvent* event)
   snep.close();
 
   delete ndef;
+  sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NFC_ERROR_SUCCESS, NULL);
+}
+
+bool NfcService::handleMakeNdefReadonlyRequest(int token)
+{
+  NfcEvent *event = new NfcEvent();
+  event->type = MSG_MAKE_NDEF_READONLY;
+  mQueue.push_back(event);
+  sem_post(&thread_sem);
+  return true;
+}
+
+void NfcService::handleMakeNdefReadonlyResponse(NfcEvent* event)
+{
+  int token = event->token;
   sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NFC_ERROR_SUCCESS, NULL);
 }

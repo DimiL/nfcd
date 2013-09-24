@@ -84,6 +84,9 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
     case NFC_REQUEST_CLOSE:
       handleCloseRequest(parcel, token);
       break;
+    case NFC_REQUEST_MAKE_NDEF_READ_ONLY:
+      handleMakeNdefReadonlyRequest(parcel, token);
+      break;
     default:
       ALOGE("Unhandled Request %d", request);
       break;
@@ -235,6 +238,12 @@ bool MessageHandler::handleConnectRequest(Parcel& parcel, int token)
 bool MessageHandler::handleCloseRequest(Parcel& parcel, int token)
 {
   NfcService::handleCloseRequest();
+  return true;
+}
+
+bool MessageHandler::handleMakeNdefReadonlyRequest(Parcel& parcel, int token)
+{
+  NfcService::handleMakeNdefReadonlyRequest(token);
   return true;
 }
 

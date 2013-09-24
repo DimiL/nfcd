@@ -34,6 +34,7 @@ private:
   bool handleWriteNdefRequest(android::Parcel& parcel, int token);
   bool handleConnectRequest(android::Parcel& parcel, int token); 
   bool handleCloseRequest(android::Parcel& parcel, int token);
+  bool handleMakeNdefReadonlyRequest(android::Parcel& parcel, int token);
 
   bool handleConfigResponse(android::Parcel& parcel, void* data);
   bool handleReadNdefDetailResponse(android::Parcel& parcel, void* data);
