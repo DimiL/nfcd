@@ -26,6 +26,7 @@ typedef enum {
   MSG_SOCKET_CONNECTED,
   MSG_PUSH_NDEF,
   MSG_NDEF_TAG_LIST,
+  MSG_CONFIG,
 } NfcEventType;
 
 struct NfcEvent {
@@ -53,7 +54,9 @@ public:
 
   static bool handleDisconnect();
   static int handleConnect(int technology, int token);
-  
+
+  static bool handleConfigRequest(int token);
+  static void handleConfigResponse(NfcEvent* event);
   static bool handleReadNdefDetailRequest(int token);
   static void handleReadNdefDetailResponse(NfcEvent* event);
   static bool handleReadNdefRequest(int token);
