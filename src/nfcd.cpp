@@ -38,14 +38,6 @@ int main() {
   // 4. Enable discovery MUST after push,snep,handover servers are established
   pNfcManager->enableDiscovery();
 
-  NdefPushCallback ndefpushCallback;
-  NdefPushServer ndefpushServer(static_cast<INdefPushCallback*>(&ndefpushCallback));
-  ndefpushServer.start();
-
-  HandoverCallback handoverCallback;
-  HandoverServer handoverServer(static_cast<IHandoverCallback*>(&handoverCallback));
-  handoverServer.start();
-
   // 5. Create IPC socket & main thread will enter while loop to read data from socket
   NfcIpcSocket* pNfcIpcSocket = NfcIpcSocket::Instance();
   pNfcIpcSocket->initialize(msgHandler);
