@@ -51,7 +51,7 @@ void NfcService::nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice)
   sem_post(&thread_sem);
 }
 
-void NfcService::nfc_service_send_MSG_NDEF_TAG(void* pTag)
+void NfcService::nfc_service_send_MSG_TAG(void* pTag)
 {
   ALOGD("%s enter", __func__);
   NfcEvent *event = new NfcEvent();

@@ -12,9 +12,9 @@ DeviceHost::~DeviceHost()
 {
 }
 
-void DeviceHost::notifyNdefMessageListeners(void* pTag)
+void DeviceHost::notifyTagDiscover(void* pTag)
 {
-  NfcService::nfc_service_send_MSG_NDEF_TAG(pTag);
+  NfcService::nfc_service_send_MSG_TAG(pTag);
 }
 
 void DeviceHost::notifyTargetDeselected()
