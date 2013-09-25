@@ -12,56 +12,56 @@
 class SyncEvent
 {
 public:
-    ~SyncEvent ()
-    {
-    }
+  ~SyncEvent()
+  {
+  }
 
-    void start ()
-    {
-        mMutex.lock ();
-    }
+  void start()
+  {
+    mMutex.lock();
+  }
 
-    void wait ()
-    {
-        mCondVar.wait (mMutex);
-    }
+  void wait()
+  {
+    mCondVar.wait(mMutex);
+  }
 
-    bool wait (long millisec)
-    {
-        bool retVal = mCondVar.wait (mMutex, millisec);
-        return retVal;
-    }
+  bool wait(long millisec)
+  {
+    bool retVal = mCondVar.wait (mMutex, millisec);
+    return retVal;
+  }
 
-    void notifyOne ()
-    {
-        mCondVar.notifyOne ();
-    }
+  void notifyOne()
+  {
+    mCondVar.notifyOne ();
+  }
 
-    void end ()
-    {
-        mMutex.unlock ();
-    }
+  void end ()
+  {
+    mMutex.unlock ();
+  }
 
 private:
-    CondVar mCondVar;
-    Mutex mMutex;
+  CondVar mCondVar;
+  Mutex mMutex;
 };
 
 class SyncEventGuard
 {
 public:
-    SyncEventGuard (SyncEvent& event)
-    :   mEvent (event)
-    {
-        event.start (); //automatically start operation
-    };
+  SyncEventGuard (SyncEvent& event)
+    : mEvent (event)
+  {
+    event.start (); //automatically start operation
+  };
 
-    ~SyncEventGuard ()
-    {
-        mEvent.end (); //automatically end operation
-    };
+  ~SyncEventGuard ()
+  {
+    mEvent.end (); //automatically end operation
+  };
 
 private:
-    SyncEvent& mEvent;
+  SyncEvent& mEvent;
 };
 

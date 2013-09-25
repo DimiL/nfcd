@@ -2,41 +2,37 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
+/**
  *  Encapsulate a mutex for thread synchronization.
  */
 
 #pragma once
 #include <pthread.h>
 
-
 class Mutex
 {
 public:
-    Mutex ();
+  Mutex ();
+  ~Mutex ();
 
-    ~Mutex ();
+  void lock ();
+  void unlock ();
+  bool tryLock ();
 
-    void lock ();
+  pthread_mutex_t* nativeHandle ();
 
-    void unlock ();
-
-    bool tryLock ();
-
-    pthread_mutex_t* nativeHandle ();
-
-    class Autolock {
-        public:
-            inline Autolock(Mutex& mutex) : mLock(mutex)  { mLock.lock(); }
-            inline Autolock(Mutex* mutex) : mLock(*mutex) { mLock.lock(); }
-            inline ~Autolock() { mLock.unlock(); }
-        private:
-            Mutex& mLock;
-    };
-
+  class Autolock 
+  {
+  public:
+    inline Autolock(Mutex& mutex) : mLock(mutex)  { mLock.lock(); }
+    inline Autolock(Mutex* mutex) : mLock(*mutex) { mLock.lock(); }
+    inline ~Autolock() { mLock.unlock(); }
+  private:
+    Mutex& mLock;
+  };
 
 private:
-    pthread_mutex_t mMutex;
+  pthread_mutex_t mMutex;
 };
 
 typedef Mutex::Autolock AutoMutex;

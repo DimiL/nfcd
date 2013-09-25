@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
+/**
  *  Encapsulate a condition variable for thread synchronization.
  */
 
@@ -10,20 +10,16 @@
 #include <pthread.h>
 #include "Mutex.h"
 
-
 class CondVar
 {
 public:
-    CondVar ();
+  CondVar ();
+  ~CondVar ();
 
-    ~CondVar ();
-
-    void wait (Mutex& mutex);
-
-    bool wait (Mutex& mutex, long millisec);
-
-    void notifyOne ();
+  void wait (Mutex& mutex);
+  bool wait (Mutex& mutex, long millisec);
+  void notifyOne ();
 
 private:
-    pthread_cond_t mCondition;
+  pthread_cond_t mCondition;
 };

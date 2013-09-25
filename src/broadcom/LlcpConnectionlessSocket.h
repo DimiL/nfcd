@@ -8,7 +8,6 @@
 class LlcpConnectionlessSocket
 {
 public:
-
   LlcpConnectionlessSocket();
   virtual ~LlcpConnectionlessSocket();
 

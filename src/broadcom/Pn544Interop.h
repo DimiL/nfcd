@@ -5,8 +5,8 @@
 #pragma once
 #include "NfcUtil.h"
 
-void pn544InteropStopPolling ();
+void pn544InteropStopPolling();
 
-bool pn544InteropIsBusy ();
+bool pn544InteropIsBusy();
 
-void pn544InteropAbortNow ();
+void pn544InteropAbortNow();

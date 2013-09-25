@@ -10,7 +10,7 @@
 #include <vector>
 extern "C"
 {
-    #include "nfa_rw_api.h"
+  #include "nfa_rw_api.h"
 }
 
 class NativeNfcTag : INfcTag
@@ -32,33 +32,33 @@ public:
   bool presenceCheck();
   bool makeReadOnly();
 
-  std::vector<TagTechnology>& getTechList() {  return mTechList;  };
-  std::vector<int>& getTechHandles() {  return mTechHandles;  };
-  std::vector<int>& getTechLibNfcTypes()  {  return mTechLibNfcTypes;  };
-  std::vector<std::vector<uint8_t> >& getTechPollBytes()  {  return mTechPollBytes;  };
-  std::vector<std::vector<uint8_t> >& getTechActBytes()  {  return mTechActBytes;  };
-  std::vector<std::vector<uint8_t> >& getUid()  {  return mUid;  };
-  int& getConnectedHandle()  {  return mConnectedHandle;  };
+  std::vector<TagTechnology>& getTechList() { return mTechList; };
+  std::vector<int>& getTechHandles() { return mTechHandles; };
+  std::vector<int>& getTechLibNfcTypes() { return mTechLibNfcTypes; };
+  std::vector<std::vector<uint8_t> >& getTechPollBytes() { return mTechPollBytes; };
+  std::vector<std::vector<uint8_t> >& getTechActBytes() { return mTechActBytes; };
+  std::vector<std::vector<uint8_t> >& getUid() { return mUid; };
+  int& getConnectedHandle() { return mConnectedHandle; };
 
-  static void nativeNfcTag_doRead (std::vector<uint8_t>& buf);
-  static int nativeNfcTag_doCheckNdef (int ndefInfo[]);
-  static bool nativeNfcTag_doWrite (std::vector<uint8_t>& buf);
-  static void nativeNfcTag_abortWaits ();
-  static void nativeNfcTag_doReadCompleted (tNFA_STATUS status);
-  static void nativeNfcTag_doWriteStatus (bool isWriteOk);
-  static void nativeNfcTag_doConnectStatus (bool isConnectOk);
-  static void nativeNfcTag_doDeactivateStatus (int status);
-  static int nativeNfcTag_doConnect (int targetHandle);
-  static void nativeNfcTag_resetPresenceCheck ();
-  static void nativeNfcTag_doPresenceCheckResult (tNFA_STATUS status);
+  static void nativeNfcTag_doRead(std::vector<uint8_t>& buf);
+  static int nativeNfcTag_doCheckNdef(int ndefInfo[]);
+  static bool nativeNfcTag_doWrite(std::vector<uint8_t>& buf);
+  static void nativeNfcTag_abortWaits();
+  static void nativeNfcTag_doReadCompleted(tNFA_STATUS status);
+  static void nativeNfcTag_doWriteStatus(bool isWriteOk);
+  static void nativeNfcTag_doConnectStatus(bool isConnectOk);
+  static void nativeNfcTag_doDeactivateStatus(int status);
+  static int nativeNfcTag_doConnect(int targetHandle);
+  static void nativeNfcTag_resetPresenceCheck();
+  static void nativeNfcTag_doPresenceCheckResult(tNFA_STATUS status);
 
-  static void nativeNfcTag_doCheckNdefResult (tNFA_STATUS status, uint32_t maxSize, uint32_t currentSize, uint8_t flags);
-  static void nativeNfcTag_registerNdefTypeHandler ();
-  static void nativeNfcTag_deregisterNdefTypeHandler ();
-  static bool nativeNfcTag_doPresenceCheck ();
-  static bool nativeNfcTag_doDisconnect ();
-  static void nativeNfcTag_doMakeReadonlyResult (tNFA_STATUS status);
-  static bool nativeNfcTag_doMakeReadonly ();
+  static void nativeNfcTag_doCheckNdefResult(tNFA_STATUS status, uint32_t maxSize, uint32_t currentSize, uint8_t flags);
+  static void nativeNfcTag_registerNdefTypeHandler();
+  static void nativeNfcTag_deregisterNdefTypeHandler();
+  static bool nativeNfcTag_doPresenceCheck();
+  static bool nativeNfcTag_doDisconnect();
+  static void nativeNfcTag_doMakeReadonlyResult(tNFA_STATUS status);
+  static bool nativeNfcTag_doMakeReadonly();
 
 private:
   pthread_mutex_t mMutex;
@@ -86,7 +86,7 @@ private:
 
   bool mIsPresent; // Whether the tag is known to be still present
 
-  static int reSelect (tNFA_INTF_TYPE rfInterface);
+  static int reSelect(tNFA_INTF_TYPE rfInterface);
   static bool switchRfInterface(tNFA_INTF_TYPE rfInterface);
 };
 

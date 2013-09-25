@@ -1,14 +1,11 @@
-
 #include "P2pDevice.h"
 
 P2pDevice::P2pDevice()
 {
-
 }
 
 P2pDevice::~P2pDevice()
 {
-
 }
 
 bool P2pDevice::doConnect()
@@ -23,12 +20,10 @@ bool P2pDevice::doDisconnect()
 
 void P2pDevice::doTransceive()
 {
-
 }
 
 void P2pDevice::doReceive()
-{
-  
+{ 
 }
 
 bool P2pDevice::doSend()

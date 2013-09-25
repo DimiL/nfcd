@@ -2,81 +2,74 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
+/**
  *  Encapsulate a condition variable for thread synchronization.
  */
 
 #include "CondVar.h"
 #include <errno.h>
 
+#define LOG_TAG "nfcd"
+#include <cutils/log.h>
+
 CondVar::CondVar ()
 {
-    memset (&mCondition, 0, sizeof(mCondition));
-    int const res = pthread_cond_init (&mCondition, NULL);
-    if (res)
-    {
-        //ALOGE ("CondVar::CondVar: fail init; error=0x%X", res);
-    }
+  memset (&mCondition, 0, sizeof(mCondition));
+  int const res = pthread_cond_init (&mCondition, NULL);
+  if (res) {
+    ALOGE ("CondVar::CondVar: fail init; error=0x%X", res);
+  }
 }
 
 CondVar::~CondVar ()
 {
-    int const res = pthread_cond_destroy (&mCondition);
-    if (res)
-    {
-        //ALOGE ("CondVar::~CondVar: fail destroy; error=0x%X", res);
-    }
+  int const res = pthread_cond_destroy (&mCondition);
+  if (res) {
+    ALOGE ("CondVar::~CondVar: fail destroy; error=0x%X", res);
+  }
 }
 
 void CondVar::wait (Mutex& mutex)
 {
-    int const res = pthread_cond_wait (&mCondition, mutex.nativeHandle());
-    if (res)
-    {
-        //ALOGE ("CondVar::wait: fail wait; error=0x%X", res);
-    }
+  int const res = pthread_cond_wait (&mCondition, mutex.nativeHandle());
+  if (res) {
+    ALOGE ("CondVar::wait: fail wait; error=0x%X", res);
+  }
 }
 
 bool CondVar::wait (Mutex& mutex, long millisec)
 {
-    bool retVal = false;
-    struct timespec absoluteTime;
+  bool retVal = false;
+  struct timespec absoluteTime;
 
-    if (clock_gettime (CLOCK_MONOTONIC, &absoluteTime) == -1)
-    {
-        //ALOGE ("CondVar::wait: fail get time; errno=0x%X", errno);
+  if (clock_gettime (CLOCK_MONOTONIC, &absoluteTime) == -1) {
+    ALOGE ("CondVar::wait: fail get time; errno=0x%X", errno);
+  } else {
+    absoluteTime.tv_sec += millisec / 1000;
+    long ns = absoluteTime.tv_nsec + ((millisec % 1000) * 1000000);
+    if (ns > 1000000000) {
+      absoluteTime.tv_sec++;
+      absoluteTime.tv_nsec = ns - 1000000000;
+    } else {
+      absoluteTime.tv_nsec = ns;
     }
-    else
-    {
-        absoluteTime.tv_sec += millisec / 1000;
-        long ns = absoluteTime.tv_nsec + ((millisec % 1000) * 1000000);
-        if (ns > 1000000000)
-        {
-            absoluteTime.tv_sec++;
-            absoluteTime.tv_nsec = ns - 1000000000;
-        }
-        else
-            absoluteTime.tv_nsec = ns;
-    }
-
-    //pthread_cond_timedwait_monotonic_np() is an Android-specific function
-    //declared in /development/ndk/platforms/android-9/include/pthread.h;
-    //it uses monotonic clock.
-    //the standard pthread_cond_timedwait() uses realtime clock.
-    int waitResult = pthread_cond_timedwait_monotonic_np (&mCondition, mutex.nativeHandle(), &absoluteTime);
-    if ((waitResult != 0) && (waitResult != ETIMEDOUT)) {
-        //ALOGE ("CondVar::wait: fail timed wait; error=0x%X", waitResult);
-    }
-    retVal = (waitResult == 0); //waited successfully
-    return retVal;
+  }
+  //pthread_cond_timedwait_monotonic_np() is an Android-specific function
+  //declared in /development/ndk/platforms/android-9/include/pthread.h;
+  //it uses monotonic clock.
+  //the standard pthread_cond_timedwait() uses realtime clock.
+  int waitResult = pthread_cond_timedwait_monotonic_np (&mCondition, mutex.nativeHandle(), &absoluteTime);
+  if ((waitResult != 0) && (waitResult != ETIMEDOUT)) {
+    ALOGE ("CondVar::wait: fail timed wait; error=0x%X", waitResult);
+  }
+  retVal = (waitResult == 0); //waited successfully
+  return retVal;
 }
 
 void CondVar::notifyOne ()
 {
-    int const res = pthread_cond_signal (&mCondition);
-    if (res)
-    {
-        //ALOGE ("CondVar::notifyOne: fail signal; error=0x%X", res);
-    }
+  int const res = pthread_cond_signal (&mCondition);
+  if (res) {
+    ALOGE ("CondVar::notifyOne: fail signal; error=0x%X", res);
+  }
 }
-

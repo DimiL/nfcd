@@ -77,28 +77,28 @@
 
 struct nfc_data
 {
-   /* Thread handle */
-   pthread_t thread;
-   int running;
+  /* Thread handle */
+  pthread_t thread;
+  int running;
 
-   /* Reference to the NFCManager instance */
-   void* manager;
+  /* Reference to the NFCManager instance */
+  void* manager;
 
-   /* Secure Element selected */
-   int seId;
+  /* Secure Element selected */
+  int seId;
 
-   /* LLCP params */
-   int lto;
-   int miu;
-   int wks;
-   int opt;
+  /* LLCP params */
+  int lto;
+  int miu;
+  int wks;
+  int opt;
 
-   int tech_mask;
+  int tech_mask;
 
-   /* Tag detected */
-   void* tag;
+  /* Tag detected */
+  void* tag;
 
-   int tHandle;
-   int tProtocols[16];
-   int handles[16];
+  int tHandle;
+  int tProtocols[16];
+  int handles[16];
 };

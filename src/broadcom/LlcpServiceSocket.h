@@ -6,7 +6,8 @@
 #define mozilla_nfcd_LlcpServiceSocket_h
 
 #include "ILlcpServerSocket.h"
-#include "ILlcpSocket.h"
+
+class ILlcpSocket;
 
 class LlcpServiceSocket : public ILlcpServerSocket
 {
@@ -23,7 +24,6 @@ private:
   int mSap;
   int mLocalMiu;
   int mLocalRw;
-
 };
 
 #endif  // mozilla_nfcd_LlcpServiceSocket_h

@@ -1,24 +1,28 @@
 #include "LlcpSocket.h"
+
 #include "PeerToPeer.h"
 
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
 
-LlcpSocket::LlcpSocket(unsigned int handle, int sap, int miu, int rw):
-mHandle(handle),
-mSap(sap),
-mLocalMiu(miu),
-mLocalRw(rw)
-{}
+LlcpSocket::LlcpSocket(unsigned int handle, int sap, int miu, int rw)
+  : mHandle(handle)
+  , mSap(sap)
+  , mLocalMiu(miu)
+  , mLocalRw(rw)
+{
+}
 
-LlcpSocket::LlcpSocket(unsigned int handle, int miu, int rw):
-mHandle(handle),
-mLocalMiu(miu),
-mLocalRw(rw)
-{}
+LlcpSocket::LlcpSocket(unsigned int handle, int miu, int rw)
+  : mHandle(handle)
+  , mLocalMiu(miu)
+  , mLocalRw(rw)
+{
+}
 
 LlcpSocket::~LlcpSocket()
-{}
+{
+}
 
 bool LlcpSocket::connectToSap(int sap)
 {
@@ -60,7 +64,7 @@ bool LlcpSocket::LlcpSocket_doConnect (int nSap)
 {
   ALOGD ("%s: enter; sap=%d", __FUNCTION__, nSap);
 
-  bool stat = PeerToPeer::getInstance().connectConnOriented (mHandle, nSap);
+  bool stat = PeerToPeer::getInstance().connectConnOriented(mHandle, nSap);
 
   ALOGD ("%s: exit", __FUNCTION__);
   return stat ? true : false;

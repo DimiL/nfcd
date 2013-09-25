@@ -5,8 +5,8 @@
 #ifndef mozilla_nfcd_LlcpSocket_h
 #define mozilla_nfcd_LlcpSocket_h
 
-#include "ILlcpSocket.h"
 #include <vector>
+#include "ILlcpSocket.h"
 
 class LlcpSocket : public ILlcpSocket
 {
@@ -23,9 +23,9 @@ public:
   int getRemoteMiu();
   int getRemoteRw();
 
-  int getLocalSap() {  return mSap;  }
-  int getLocalMiu(){  return mLocalMiu;  }
-  int getLocalRw(){  return mLocalRw;  }
+  int getLocalSap() { return mSap; }
+  int getLocalMiu() { return mLocalMiu; }
+  int getLocalRw() { return mLocalRw; }
 
 private:
   uint32_t mHandle;
@@ -33,9 +33,9 @@ private:
   int mLocalMiu;
   int mLocalRw;
 
-  bool LlcpSocket_doConnect (int nSap);
-  bool LlcpSocket_doConnectBy (const char* sn);
-  bool LlcpSocket_doSend (std::vector<uint8_t>& data);
+  bool LlcpSocket_doConnect(int nSap);
+  bool LlcpSocket_doConnectBy(const char* sn);
+  bool LlcpSocket_doSend(std::vector<uint8_t>& data);
   int LlcpSocket_doReceive(std::vector<uint8_t>& recvBuff);
 
   bool LlcpSocket_doClose();

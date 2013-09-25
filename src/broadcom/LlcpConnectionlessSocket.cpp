@@ -7,4 +7,3 @@ LlcpConnectionlessSocket::LlcpConnectionlessSocket()
 LlcpConnectionlessSocket::~LlcpConnectionlessSocket()
 {
 }
-
