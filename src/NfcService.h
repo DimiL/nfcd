@@ -44,6 +44,7 @@ public:
   void handleTagDiscovered(NfcEvent* event);
   void handleTagLost(NfcEvent* event);
   void handleLlcpLinkActivation(NfcEvent* event);
+  void handleLlcpLinkDeactivation(NfcEvent* event);
   static NfcService* Instance();
   static INfcManager* getNfcManager();
 
@@ -55,22 +56,21 @@ public:
   static void nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS();
 
   static bool handleDisconnect();
-  static int handleConnect(int technology, int token);
-
-  static bool handleConfigRequest(int token);
-  static void handleConfigResponse(NfcEvent* event);
-  static bool handleReadNdefDetailRequest(int token);
-  static void handleReadNdefDetailResponse(NfcEvent* event);
-  static bool handleReadNdefRequest(int token);
-  static void handleReadNdefResponse(NfcEvent* event);
-  static bool handleWriteNdefRequest(NdefMessage* ndef, int token);
-  static void handleWriteNdefResponse(NfcEvent* event);
-  static void handleCloseRequest();
-  static void handleCloseResponse(NfcEvent* event);
-  static bool handlePushNdefRequest(NdefMessage* ndef, int token);
-  static void handlePushNdefResponse(NfcEvent* event);
-  static bool handleMakeNdefReadonlyRequest(int token);
-  static void handleMakeNdefReadonlyResponse(NfcEvent* event);
+  int handleConnect(int technology, int token);
+  bool handleConfigRequest(int token);
+  void handleConfigResponse(NfcEvent* event);
+  bool handleReadNdefDetailRequest(int token);
+  void handleReadNdefDetailResponse(NfcEvent* event);
+  bool handleReadNdefRequest(int token);
+  void handleReadNdefResponse(NfcEvent* event);
+  bool handleWriteNdefRequest(NdefMessage* ndef, int token);
+  void handleWriteNdefResponse(NfcEvent* event);
+  void handleCloseRequest();
+  void handleCloseResponse(NfcEvent* event);
+  bool handlePushNdefRequest(NdefMessage* ndef, int token);
+  void handlePushNdefResponse(NfcEvent* event);
+  bool handleMakeNdefReadonlyRequest(int token);
+  void handleMakeNdefReadonlyResponse(NfcEvent* event);
 
   static void onSocketConnected();
 

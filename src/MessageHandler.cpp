@@ -157,21 +157,21 @@ bool MessageHandler::handleConfigRequest(Parcel& parcel, int token)
 {
   int sessionId = parcel.readInt32();
   //TODO check SessionId
-  return NfcService::handleConfigRequest(token);
+  return mService->handleConfigRequest(token);
 }
 
 bool MessageHandler::handleReadNdefDetailRequest(Parcel& parcel, int token)
 {
   int sessionId = parcel.readInt32();
   //TODO check SessionId
-  return NfcService::handleReadNdefDetailRequest(token);
+  return mService->handleReadNdefDetailRequest(token);
 }
 
 bool MessageHandler::handleReadNdefRequest(Parcel& parcel, int token)
 {
   int sessionId = parcel.readInt32();
   //TODO check SessionId
-  return NfcService::handleReadNdefRequest(token);
+  return mService->handleReadNdefRequest(token);
 }
 
 bool MessageHandler::handleWriteNdefRequest(Parcel& parcel, int token)
@@ -217,7 +217,7 @@ bool MessageHandler::handleWriteNdefRequest(Parcel& parcel, int token)
   }
   delete[] ndefMessagePdu.records;
 
-  return NfcService::handleWriteNdefRequest(ndefMessage, token);
+  return mService->handleWriteNdefRequest(ndefMessage, token);
 }
 
 bool MessageHandler::handleConnectRequest(Parcel& parcel, int token)
@@ -228,19 +228,19 @@ bool MessageHandler::handleConnectRequest(Parcel& parcel, int token)
   //TODO should only read 1 octet here.
   int32_t techType = parcel.readInt32();
   ALOGD("%s techType=%d", __func__, techType);
-  NfcService::handleConnect(techType, token);
+  mService->handleConnect(techType, token);
   return true;
 }
 
 bool MessageHandler::handleCloseRequest(Parcel& parcel, int token)
 {
-  NfcService::handleCloseRequest();
+  mService->handleCloseRequest();
   return true;
 }
 
 bool MessageHandler::handleMakeNdefReadonlyRequest(Parcel& parcel, int token)
 {
-  NfcService::handleMakeNdefReadonlyRequest(token);
+  mService->handleMakeNdefReadonlyRequest(token);
   return true;
 }
 

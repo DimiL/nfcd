@@ -13,10 +13,11 @@
 class NativeNfcTag;
 class NdefMessage;
 class NfcIpcSocket;
+class NfcService;
 
 class MessageHandler {
 public:
-  MessageHandler() {};
+  MessageHandler(NfcService* service): mService(service) {};
   void processRequest(const uint8_t* data, size_t length);
   void processResponse(NfcResponseType response, int token, NfcErrorCode error, void* data);
   void processNotification(NfcNotificationType notification, void* data);
@@ -24,6 +25,7 @@ public:
   void setSocket(NfcIpcSocket* socket);
 
   void onSocketConnected();
+
 private:
   void notifyInitialized(android::Parcel& parcel);
   void notifyTechDiscovered(android::Parcel& parcel, void* data);
@@ -33,7 +35,7 @@ private:
   bool handleReadNdefDetailRequest(android::Parcel& parcel, int token);
   bool handleReadNdefRequest(android::Parcel& parcel, int token);
   bool handleWriteNdefRequest(android::Parcel& parcel, int token);
-  bool handleConnectRequest(android::Parcel& parcel, int token); 
+  bool handleConnectRequest(android::Parcel& parcel, int token);
   bool handleCloseRequest(android::Parcel& parcel, int token);
   bool handleMakeNdefReadonlyRequest(android::Parcel& parcel, int token);
 
@@ -45,6 +47,7 @@ private:
   void sendResponse(android::Parcel& parcel);
 
   NfcIpcSocket* mSocket;
+  NfcService* mService;
 };
 
 struct TechDiscoveredEvent {

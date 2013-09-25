@@ -84,7 +84,7 @@ void NfcService::nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS()
   sem_post(&thread_sem);
 }
 
-static void NfcService_MSG_LLCP_LINK_DEACTIVATION(NfcEvent* event)
+void NfcService::handleLlcpLinkDeactivation(NfcEvent* event)
 {
   ALOGD("%s enter", __func__);
 
@@ -213,7 +213,7 @@ static void *serviceThreadFunc(void *arg)
           service->handleLlcpLinkActivation(event);
           break;
         case MSG_LLCP_LINK_DEACTIVATION:
-          NfcService_MSG_LLCP_LINK_DEACTIVATION(event);
+          service->handleLlcpLinkDeactivation(event);
           break;
         case MSG_TAG_DISCOVERED:
           service->handleTagDiscovered(event);
@@ -222,27 +222,27 @@ static void *serviceThreadFunc(void *arg)
           service->handleTagLost(event);
           break;
         case MSG_CONFIG:
-          NfcService::handleConfigResponse(event);
+          service->handleConfigResponse(event);
           break;
         case MSG_READ_NDEF_DETAIL:
-          NfcService::handleReadNdefDetailResponse(event);
+          service->handleReadNdefDetailResponse(event);
         case MSG_READ_NDEF:
-          NfcService::handleReadNdefResponse(event);
+          service->handleReadNdefResponse(event);
           break;
         case MSG_WRITE_NDEF:
-          NfcService::handleWriteNdefResponse(event);
+          service->handleWriteNdefResponse(event);
           break;
         case MSG_CLOSE:
-          NfcService::handleCloseResponse(event);
+          service->handleCloseResponse(event);
           break;
         case MSG_SOCKET_CONNECTED:
-          NfcService::sMsgHandler->processNotification(NFC_NOTIFICATION_INITIALIZED , NULL);
+          service->sMsgHandler->processNotification(NFC_NOTIFICATION_INITIALIZED , NULL);
           break;
         case MSG_PUSH_NDEF:
-          NfcService::handlePushNdefResponse(event);
+          service->handlePushNdefResponse(event);
           break;
         case MSG_MAKE_NDEF_READONLY:
-          NfcService::handleMakeNdefReadonlyResponse(event);
+          service->handleMakeNdefReadonlyResponse(event);
           break;
         default:
           ALOGE("NFCService bad message");

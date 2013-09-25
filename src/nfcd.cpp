@@ -22,11 +22,11 @@ int main() {
   NfcManager* pNfcManager = new NfcManager();
   pNfcManager->doInitialize();
 
-  MessageHandler* msgHandler = new MessageHandler();
 
   // 2. Create service thread to receive message from nfc library
-  NfcService* pNfcService = NfcService::Instance();
-  pNfcService->initialize(pNfcManager, msgHandler);
+  NfcService* service = NfcService::Instance();
+  MessageHandler* msgHandler = new MessageHandler(service);
+  service->initialize(pNfcManager, msgHandler);
 
   // 3. Create snep server
   // TODO : Maybe we should put this when p2p connection is established ?
