@@ -9,32 +9,7 @@
 #include "NfcManager.h"
 
 class MessageHandler;
-
-typedef enum {
-  MSG_UNDEFINED = 0,
-  MSG_LLCP_LINK_ACTIVATION,
-  MSG_LLCP_LINK_DEACTIVATION,
-  MSG_TAG_DISCOVERED,
-  MSG_TAG_LOST,
-  MSG_SE_FIELD_ACTIVATED,
-  MSG_SE_FIELD_DEACTIVATED,
-  MSG_SE_NOTIFY_TRANSACTION_LISTENERS,
-  MSG_READ_NDEF_DETAIL,
-  MSG_READ_NDEF,
-  MSG_WRITE_NDEF,
-  MSG_CLOSE,
-  MSG_SOCKET_CONNECTED,
-  MSG_PUSH_NDEF,
-  MSG_NDEF_TAG_LIST,
-  MSG_CONFIG,
-  MSG_MAKE_NDEF_READONLY,
-} NfcEventType;
-
-struct NfcEvent {
-  NfcEventType type;
-  int token;
-  void *data;
-};
+class NfcEvent;
 
 class NfcService {
 public:
@@ -74,10 +49,9 @@ public:
 
   static void onSocketConnected();
 
-  //TODO remove static
   //TODO put these in public because serviceThread will need to access this.
-  static android::List<NfcEvent*> mQueue;
-  static MessageHandler* sMsgHandler;
+  android::List<NfcEvent*> mQueue;
+  MessageHandler* mMsgHandler;
 private:
   static NfcService* sInstance;
   static NfcManager* sNfcManager;

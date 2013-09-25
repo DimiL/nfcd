@@ -22,7 +22,6 @@ int main() {
   NfcManager* pNfcManager = new NfcManager();
   pNfcManager->doInitialize();
 
-
   // 2. Create service thread to receive message from nfc library
   NfcService* service = NfcService::Instance();
   MessageHandler* msgHandler = new MessageHandler(service);
