@@ -1050,3 +1050,11 @@ bool NativeNfcTag::writeNdef(NdefMessage& ndef) {
     pthread_mutex_unlock(&mMutex);
     return result;
 }
+
+bool NativeNfcTag::makeReadOnly() {
+    bool result;
+    pthread_mutex_lock(&mMutex);
+    result = nativeNfcTag_doMakeReadonly();
+    pthread_mutex_unlock(&mMutex);
+    return result;
+}

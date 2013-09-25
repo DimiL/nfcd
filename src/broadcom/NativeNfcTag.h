@@ -30,6 +30,7 @@ public:
   bool disconnect();  
   bool reconnect();
   bool presenceCheck();
+  bool makeReadOnly();
 
   std::vector<TagTechnology>& getTechList() {  return mTechList;  };
   std::vector<int>& getTechHandles() {  return mTechHandles;  };

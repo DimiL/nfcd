@@ -437,5 +437,9 @@ bool NfcService::handleMakeNdefReadonlyRequest(int token)
 void NfcService::handleMakeNdefReadonlyResponse(NfcEvent* event)
 {
   int token = event->token;
+
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
+  bool result = pINfcTag->makeReadOnly();  
+
   sMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NFC_ERROR_SUCCESS, NULL);
 }
