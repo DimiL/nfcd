@@ -47,4 +47,9 @@ private:
   NfcIpcSocket* mSocket;
 };
 
+struct TechDiscoveredEvent {
+  uint32_t techCount;
+  void* techList;
+};
+
 #endif // mozilla_nfcd_MessageHandler_h

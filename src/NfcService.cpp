@@ -10,6 +10,7 @@
 #include "INfcTag.h"
 #include "NfcGonkMessage.h"
 #include "NfcService.h"
+#include "NfcUtil.h"
 #include "SnepClient.h"
 
 #undef LOG_TAG
@@ -95,7 +96,7 @@ static void NfcService_MSG_LLCP_LINK_DEACTIVATION(NfcEvent* event)
   }
 }
 
-static void NfcService_MSG_LLCP_LINK_ACTIVATION(NfcEvent* event)
+void NfcService::handleLlcpLinkActivation(NfcEvent* event)
 {
   ALOGD("%s enter", __func__);
   void* pDevice = event->data;
@@ -128,6 +129,13 @@ static void NfcService_MSG_LLCP_LINK_ACTIVATION(NfcEvent* event)
     ALOGE("com_android_nfc_NfcService: Unknown LLCP P2P mode");
     //stop();
   }
+
+  TechDiscoveredEvent* data = new TechDiscoveredEvent();
+  data->techCount = 1;
+  uint8_t techs[] = { NFC_TECH_P2P };
+  data->techList = &techs;
+  sMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
+  delete data;
 }
 
 static void *pollingThreadFunc(void *arg)
@@ -155,7 +163,19 @@ void NfcService::handleTagDiscovered(NfcEvent* event)
 {
   void* pTag = event->data;
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(pTag);
-  sMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, pINfcTag);
+  std::vector<TagTechnology>& techList = pINfcTag->getTechList();
+  std::vector<NfcTechnology> gonkTechList;
+  int techCount = techList.size();
+
+  for(int i = 0; i < techCount; i++) {
+    gonkTechList.push_back(NfcUtil::convertTagTechToGonkFormat(techList[i]));
+  }
+
+  TechDiscoveredEvent* data = new TechDiscoveredEvent();
+  data->techCount = techCount;
+  data->techList = &gonkTechList.front();
+  sMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
+  delete data;
 
   pthread_t tid;
   pthread_create(&tid, NULL, pollingThreadFunc, pINfcTag);
@@ -190,7 +210,7 @@ static void *serviceThreadFunc(void *arg)
       ALOGD("NFCService msg=%d", eventType);
       switch(eventType) {
         case MSG_LLCP_LINK_ACTIVATION:
-          NfcService_MSG_LLCP_LINK_ACTIVATION(event);
+          service->handleLlcpLinkActivation(event);
           break;
         case MSG_LLCP_LINK_DEACTIVATION:
           NfcService_MSG_LLCP_LINK_DEACTIVATION(event);

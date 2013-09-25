@@ -36,13 +36,14 @@ struct NfcEvent {
   void *data;
 };
 
-class NfcService{
+class NfcService {
 public:
   ~NfcService();
   void initialize(NfcManager* pNfcManager, MessageHandler* msgHandler);
 
   void handleTagDiscovered(NfcEvent* event);
   void handleTagLost(NfcEvent* event);
+  void handleLlcpLinkActivation(NfcEvent* event);
   static NfcService* Instance();
   static INfcManager* getNfcManager();
 
