@@ -378,15 +378,16 @@ void NfcTag::fillNativeNfcTagMembers1 (INfcTag* pINfcTag)
     static const char fn [] = "NfcTag::fillNativeNfcTagMembers1";
     ALOGD ("%s", fn);
 
-    std::vector<uint8_t>& techList = pINfcTag->getTechList();
+    std::vector<TagTechnology>& techList = pINfcTag->getTechList();
     std::vector<int>& techHandles = pINfcTag->getTechHandles();
     std::vector<int>& techLibNfcTypes = pINfcTag->getTechLibNfcTypes();
 
     for (int i = 0; i < mNumTechList; i++) {
         gNat.tProtocols [i] = mTechLibNfcTypes [i];
         gNat.handles [i] = mTechHandles [i];
-                  
-        techList.push_back(mTechList[i]);
+
+        // Convert from vendor specific technology definition to common tag technology definition
+        techList.push_back(toGenericTagTechnology(mTechList[i]));
         techHandles.push_back(mTechHandles[i]);
         techLibNfcTypes.push_back(mTechLibNfcTypes[i]);
    }   
@@ -950,4 +951,22 @@ void NfcTag::connectionEventHandler (UINT8 event, tNFA_CONN_EVT_DATA* data)
                 ALOGE ("%s: NDEF detection timed out", fn);
         }
     }
+}
+
+TagTechnology NfcTag::toGenericTagTechnology(unsigned int tagTech)
+{
+  switch(tagTech) {
+    case TARGET_TYPE_ISO14443_3A:     return NFC_A;
+    case TARGET_TYPE_ISO14443_3B:     return NFC_B;
+    case TARGET_TYPE_ISO14443_4:      return NFC_ISO_DEP;
+    case TARGET_TYPE_FELICA:          return NDEF;
+    case TARGET_TYPE_ISO15693:        return NFC_V;
+    case TARGET_TYPE_NDEF:            return NDEF;
+    case TARGET_TYPE_NDEF_FORMATABLE: return NDEF_FORMATABLE;
+    case TARGET_TYPE_MIFARE_CLASSIC:  return MIFARE_CLASSIC;
+    case TARGET_TYPE_MIFARE_UL:       return MIFARE_ULTRALIGHT;
+    case TARGET_TYPE_KOVIO_BARCODE:   return NFC_BARCODE;
+    case TARGET_TYPE_UNKNOWN:
+    default:                          return UNKNOWN_TECH;
+  }
 }

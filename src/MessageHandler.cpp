@@ -30,14 +30,18 @@ void MessageHandler::notifyInitialized(Parcel& parcel)
 void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
 {
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(data);
-  std::vector<uint8_t>& techList = pINfcTag->getTechList();
+  std::vector<TagTechnology>& techList = pINfcTag->getTechList();
+  std::vector<NfcTechnology> gonkTechList;
+  int numberOfTech = techList.size();
+
+  for(int i = 0; i < numberOfTech; i++) {
+    gonkTechList.push_back(NfcUtil::convertTagTechToGonkFormat(techList[i]));
+  }
 
   parcel.writeInt32(SessionId::generateNewId());
-
-  int numberOfTech = techList.size();
   parcel.writeInt32(numberOfTech);
   void* dest = parcel.writeInplace(numberOfTech);
-  memcpy(dest, &techList.front(), numberOfTech);
+  memcpy(dest, &gonkTechList.front(), numberOfTech);
 
   sendResponse(parcel);
 }

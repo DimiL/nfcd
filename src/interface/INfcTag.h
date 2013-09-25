@@ -6,6 +6,7 @@
 #define mozilla_nfcd_INfcTag_h
 
 #include "NdefMessage.h"
+#include "TagTechnology.h"
 #include <vector>
 
 class INfcTag {
@@ -20,7 +21,7 @@ public:
   virtual bool writeNdef(NdefMessage& ndef) = 0;
   virtual bool presenceCheck() = 0;
 
-  virtual std::vector<uint8_t>& getTechList() = 0;
+  virtual std::vector<TagTechnology>& getTechList() = 0;
   virtual std::vector<int>& getTechHandles() = 0;
   virtual std::vector<int>& getTechLibNfcTypes() = 0;
   virtual std::vector<std::vector<uint8_t> >& getTechPollBytes() = 0;

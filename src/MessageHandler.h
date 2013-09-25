@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include "NfcGonkMessage.h"
+#include "TagTechnology.h"
 #include <binder/Parcel.h>
 
 class NativeNfcTag;

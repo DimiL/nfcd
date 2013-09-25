@@ -8,12 +8,13 @@
 #include <stdio.h>
 #include "NdefMessage.h"
 #include "NfcGonkMessage.h"
+#include "TagTechnology.h"
 
 class NfcUtil{
 
 public:
   static void convertNdefPduToNdefMessage(NdefMessagePdu& ndefPdu, NdefMessage* ndefMessage);
-
+  static NfcTechnology convertTagTechToGonkFormat(TagTechnology tagTech);
 private:
   NfcUtil();
 };

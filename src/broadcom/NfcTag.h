@@ -95,5 +95,7 @@ private:
     void resetTechnologies ();
 
     void calculateT1tMaxMessageSize (tNFA_ACTIVATED& activate);
+
+    TagTechnology toGenericTagTechnology(uint32_t tech);
 };
 

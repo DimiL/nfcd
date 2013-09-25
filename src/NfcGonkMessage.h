@@ -73,10 +73,18 @@ typedef enum {
  * NFC technologies.
  */
 typedef enum {
+  NFC_TECH_UNKNOWN = -1,
   NFC_TECH_NDEF = 0,
   NFC_TECH_NDEF_WRITABLE = 1,
   NFC_TECH_P2P = 2,
   NFC_TECH_NFCA = 3,
+  NFC_TECH_NFCB = 4,
+  NFC_TECH_NFCF = 5,
+  NFC_TECH_NFCV = 6,
+  NFC_TECH_ISO_DEP = 7,
+  NFC_TECH_MIFARE_CLASSIC = 8,
+  NFC_TECH_MIFARE_ULTRALIGHT = 9,
+  NFC_TECH_BARCODE = 10 
 } NfcTechnology;
 
 /**

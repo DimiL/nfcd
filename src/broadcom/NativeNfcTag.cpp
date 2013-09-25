@@ -303,8 +303,8 @@ int NativeNfcTag::connectWithStatus(int technology)
                 //    any handle).
                 // 2) We are connecting to the ndef technology - always
                 //    allowed.
-                if ((technology == TagTechnology::NDEF) ||
-                    (technology == TagTechnology::NDEF_FORMATABLE)) {
+                if ((technology == NDEF) ||
+                    (technology == NDEF_FORMATABLE)) {
                     i = 0;
                 }
 
