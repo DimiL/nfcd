@@ -22,6 +22,9 @@ extern "C"
   #include "rw_api.h"
 }
 
+#define LOG_TAG "BroadcomNfc"
+#include <cutils/log.h>
+
 extern bool nfcManager_isNfcActive();
 extern int gGeneralTransceiveTimeout;
 
@@ -119,7 +122,7 @@ NdefDetail* NativeNfcTag::ReadNdefDetail()
   NdefDetail* pNdefDetail = NULL;
   status = checkNdefWithStatus(ndefinfo);
   if (status != 0) {
-    ALOGE("Check NDEF Failed - status = %d", status);
+    ALOGE("%s: Check NDEF Failed - status = %d", __FUNCTION__, status);
   } else {
     pNdefDetail = new NdefDetail();
     pNdefDetail->maxSupportedLength = ndefinfo[0];
@@ -147,7 +150,7 @@ NdefMessage* NativeNfcTag::findAndReadNdef()
 
     status = connectWithStatus(mTechList[techIndex]);
     if (status != 0) {
-      ALOGE("Connect Failed - status = %d", status);
+      ALOGE("%s: Connect Failed - status = %d", __FUNCTION__, status);
       if (status == STATUS_CODE_TARGET_LOST) {
         break;
       }
@@ -159,7 +162,7 @@ NdefMessage* NativeNfcTag::findAndReadNdef()
     int ndefinfo[2];
     status = checkNdefWithStatus(ndefinfo);
     if (status != 0) {
-      ALOGE("Check NDEF Failed - status = %d", status);
+      ALOGE("%s: Check NDEF Failed - status = %d", __FUNCTION__, status);
       if (status == STATUS_CODE_TARGET_LOST) {
         break;
       }
@@ -231,7 +234,7 @@ int NativeNfcTag::reconnectWithStatus()
   NfcTag& natTag = NfcTag::getInstance();
 
   if (natTag.getActivationState() != NfcTag::Active) {
-    ALOGE("%s: tag already deactivated", __FUNCTION__);
+    ALOGD("%s: tag already deactivated", __FUNCTION__);
     retCode = NFCSTATUS_FAILED;
     goto TheEnd;
   }
@@ -286,7 +289,7 @@ int NativeNfcTag::connectWithStatus(int technology)
           status = nativeNfcTag_doConnect(i);
         } else {
           // Connect to a tech with a different handle
-          ALOGD("NfcTag: Connect to a tech with a different handle");
+          ALOGD("%s: Connect to a tech with a different handle", __FUNCTION__);
           status = reconnectWithStatus(i);
         }
         if (status == 0) {
@@ -744,7 +747,7 @@ bool NativeNfcTag::nativeNfcTag_doPresenceCheck()
   }
 
   if (sem_destroy(&sPresenceCheckSem)) {
-    ALOGE("Failed to destroy check NDEF semaphore (errno=0x%08x)", errno);
+    ALOGE("%s: Failed to destroy check NDEF semaphore (errno=0x%08x)", __FUNCTION__, errno);
   }
 
   if (isPresent == false)
@@ -859,7 +862,7 @@ bool NativeNfcTag::nativeNfcTag_doDisconnect()
   gGeneralTransceiveTimeout = DEFAULT_GENERAL_TRANS_TIMEOUT;
 
   if (NfcTag::getInstance().getActivationState() != NfcTag::Active) {
-    ALOGE("%s: tag already deactivated", __FUNCTION__);
+    ALOGD("%s: tag already deactivated", __FUNCTION__);
     goto TheEnd;
   }
 

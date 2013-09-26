@@ -1,5 +1,8 @@
 #include "P2pDevice.h"
 
+#define LOG_TAG "BroadcomNfc"
+#include <cutils/log.h>
+
 P2pDevice::P2pDevice()
 {
 }

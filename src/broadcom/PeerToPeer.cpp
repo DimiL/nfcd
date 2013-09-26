@@ -21,6 +21,10 @@
  */
 #define LLCP_DATA_LINK_TIMEOUT    2000
 
+#undef LOG_TAG
+#define LOG_TAG "BroadcomNfc"
+#include <cutils/log.h>
+
 using namespace android;
 
 namespace android
@@ -111,7 +115,7 @@ bool PeerToPeer::registerServer(unsigned int handle, const char *serviceName)
   mMutex.lock();
   // Check if already registered
   if ((pSrv = findServerLocked(serviceName)) != NULL) {
-    ALOGD ("%s: service name=%s  already registered, handle: 0x%04x", fn, serviceName, pSrv->mNfaP2pServerHandle);
+    ALOGD("%s: service name=%s  already registered, handle: 0x%04x", fn, serviceName, pSrv->mNfaP2pServerHandle);
     // Update handle
     pSrv->mHandle = handle;
     mMutex.unlock();
@@ -176,10 +180,10 @@ void PeerToPeer::llcpActivatedHandler(tNFA_LLCP_ACTIVATED& activated)
   NativeNfcTag::nativeNfcTag_deregisterNdefTypeHandler();
 
   if (activated.is_initiator == true) {
-    ALOGE("%s: p2p initiator", fn);
+    ALOGD("%s: p2p initiator", fn);
     pIP2pDevice->getMode() = NfcDepEndpoint::MODE_P2P_INITIATOR;
   } else {
-    ALOGE("%s: p2p target", fn);
+    ALOGD("%s: p2p target", fn);
     pIP2pDevice->getMode() = NfcDepEndpoint::MODE_P2P_TARGET;
   }
 
@@ -281,7 +285,7 @@ bool PeerToPeer::createClient(unsigned int handle, UINT16 miu, UINT8 rw)
     return (false);
   }
 
-  ALOGD ("%s: pClient: 0x%p  assigned for client handle: %u", fn, client.get(), handle);
+  ALOGD("%s: pClient: 0x%p  assigned for client handle: %u", fn, client.get(), handle);
 
   {
     SyncEventGuard guard (mClients[i]->mRegisteringEvent);
@@ -293,7 +297,7 @@ bool PeerToPeer::createClient(unsigned int handle, UINT16 miu, UINT8 rw)
     ALOGD("%s: exit; new client handle: %u   NFA Handle: 0x%04x", fn, handle, client->mClientConn->mNfaConnHandle);
     return (true);
   } else {
-    ALOGE ("%s: FAILED; new client handle: %u   NFA Handle: 0x%04x", fn, handle, client->mClientConn->mNfaConnHandle);
+    ALOGE("%s: FAILED; new client handle: %u   NFA Handle: 0x%04x", fn, handle, client->mClientConn->mNfaConnHandle);
     removeConn(handle);
     return (false);
   }
@@ -640,7 +644,7 @@ void PeerToPeer::enableP2pListening(bool isEnable)
       mIsP2pListening = true;
     }
     else
-      ALOGE ("%s: fail enable listen; error=0x%X", fn, nfaStat);
+      ALOGE("%s: fail enable listen; error=0x%X", fn, nfaStat);
   } else if ( (isEnable == false) && (mIsP2pListening == true) ) {
     SyncEventGuard guard (mSetTechEvent);
     // Request to disable P2P listening, check if it was enabled
@@ -695,7 +699,7 @@ void PeerToPeer::handleNfcOnOff(bool isOn)
     } //loop
 
   }
-  ALOGD ("%s: exit", fn);
+  ALOGD("%s: exit", fn);
 }
 
 void PeerToPeer::nfaServerCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eventData)
@@ -808,9 +812,9 @@ void PeerToPeer::nfaServerCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
   case NFA_P2P_CONGEST_EVT:
     // Look for the connection block
     if ((pConn = sP2p.findConnection(eventData->congest.handle)) == NULL) {
-      ALOGE ("%s: NFA_P2P_CONGEST_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->congest.handle);
+      ALOGE("%s: NFA_P2P_CONGEST_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->congest.handle);
     } else {
-      ALOGD ("%s: NFA_P2P_CONGEST_EVT; nfa handle: 0x%04x  congested: %u", fn,
+      ALOGD("%s: NFA_P2P_CONGEST_EVT; nfa handle: 0x%04x  congested: %u", fn,
         eventData->congest.handle, eventData->congest.is_congested);
       if (eventData->congest.is_congested == FALSE) {
         SyncEventGuard guard (pConn->mCongEvent);
@@ -839,9 +843,9 @@ void PeerToPeer::nfaClientCallback (tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* ev
   case NFA_P2P_REG_CLIENT_EVT:
     // Look for a client that is trying to register
     if ((pClient = sP2p.findClient ((tNFA_HANDLE)NFA_HANDLE_INVALID)) == NULL) {
-      ALOGE ("%s: NFA_P2P_REG_CLIENT_EVT: can't find waiting client", fn);
+      ALOGE("%s: NFA_P2P_REG_CLIENT_EVT: can't find waiting client", fn);
     } else {
-      ALOGD ("%s: NFA_P2P_REG_CLIENT_EVT; Conn Handle: 0x%04x, pClient: 0x%p", fn, eventData->reg_client.client_handle, pClient.get());
+      ALOGD("%s: NFA_P2P_REG_CLIENT_EVT; Conn Handle: 0x%04x, pClient: 0x%p", fn, eventData->reg_client.client_handle, pClient.get());
 
       SyncEventGuard guard (pClient->mRegisteringEvent);
       pClient->mNfaP2pClientHandle = eventData->reg_client.client_handle;

@@ -14,6 +14,9 @@ extern "C"
   #include "rw_int.h"
 }
 
+#define LOG_TAG "BroadcomNfc"
+#include <cutils/log.h>
+
 extern nfc_data gNat;
 
 NfcTag::NfcTag()

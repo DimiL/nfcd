@@ -21,8 +21,7 @@ extern "C"
   #include "ce_api.h"
 }
 
-#undef LOG_TAG
-#define LOG_TAG "nfcd"
+#define LOG_TAG "BroadcomNfc"
 #include <cutils/log.h>
 
 extern bool gIsTagDeactivating;
@@ -129,7 +128,7 @@ bool NfcManager::doInitialize()
             
       sNfaEnableEvent.wait(); //wait for NFA command to finish
     } else {
-      ALOGD("NFA Enable Fail");
+      ALOGE("%s: NFA Enable Fail", __FUNCTION__);
     }
   }
 
@@ -731,7 +730,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
 
   case NFA_FORMAT_CPLT_EVT:
     ALOGD("%s: NFA_FORMAT_CPLT_EVT: status=0x%X", __FUNCTION__, eventData->status);
-    ALOGE("Unimplement function %s", __FUNCTION__);
+    ALOGE("%s: Unimplement function", __FUNCTION__);
     break;
 
   case NFA_I93_CMD_CPLT_EVT:
@@ -741,7 +740,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
   case NFA_CE_UICC_LISTEN_CONFIGURED_EVT :
     ALOGD("%s: NFA_CE_UICC_LISTEN_CONFIGURED_EVT : status=0x%X", __FUNCTION__, eventData->status);
     // TODO : Implement SE
-    ALOGE("Unimplement function %s", __FUNCTION__);
+    ALOGE("%s: Unimplement function");
     break;
 
   case NFA_SET_P2P_LISTEN_TECH_EVT:

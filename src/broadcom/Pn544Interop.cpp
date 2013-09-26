@@ -8,6 +8,10 @@
 #include "Mutex.h"
 #include "NfcTag.h"
 
+#undef LOG_TAG
+#define LOG_TAG "BroadcomNfc"
+#include <cutils/log.h>
+
 extern void startStopPolling (bool isStartPolling);
 
 static const int gIntervalTime = 1000; //millisecond between the check to restore polling

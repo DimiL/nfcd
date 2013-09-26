@@ -9,6 +9,10 @@
 #include "PowerSwitch.h"
 #include "config.h"
 
+#undef LOG_TAG
+#define LOG_TAG "BroadcomNfc"
+#include <cutils/log.h>
+
 void doStartupConfig();
 
 PowerSwitch PowerSwitch::sPowerSwitch;
@@ -109,24 +113,26 @@ TheEnd:
 
 bool PowerSwitch::setModeOff(PowerActivity deactivated)
 {
+  static const char fn [] = "PowerSwitch::setModeOff";
   bool retVal = false;
 
   mMutex.lock();
   mCurrActivity &= ~deactivated;
   retVal = mCurrActivity != 0;
-  ALOGD("PowerSwitch::setModeOff(deactivated=0x%x) : mCurrActivity=0x%x", deactivated, mCurrActivity);
+  ALOGD("%s: (deactivated=0x%x) : mCurrActivity=0x%x", fn, deactivated, mCurrActivity);
   mMutex.unlock();
   return retVal;
 }
 
 bool PowerSwitch::setModeOn(PowerActivity activated)
 {
+  static const char fn [] = "PowerSwitch::setModeOn";
   bool retVal = false;
 
   mMutex.lock();
   mCurrActivity |= activated;
   retVal = mCurrActivity != 0;
-  ALOGD("PowerSwitch::setModeOn(activated=0x%x) : mCurrActivity=0x%x", activated, mCurrActivity);
+  ALOGD("%s: (activated=0x%x) : mCurrActivity=0x%x", fn, activated, mCurrActivity);
   mMutex.unlock();
   return retVal;
 }

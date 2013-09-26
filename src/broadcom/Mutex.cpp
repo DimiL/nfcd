@@ -9,7 +9,7 @@
 #include "Mutex.h"
 #include <errno.h>
 
-#define LOG_TAG "nfcd"
+#define LOG_TAG "BroadcomNfc"
 #include <cutils/log.h>
 
 Mutex::Mutex()
@@ -17,7 +17,7 @@ Mutex::Mutex()
   memset(&mMutex, 0, sizeof(mMutex));
   int res = pthread_mutex_init(&mMutex, NULL);
   if (res != 0) {
-    ALOGE("Mutex::Mutex: fail init; error=0x%X", res);
+    ALOGE("%s: fail init; error=0x%X", __FUNCTION__, res);
   }
 }
 
@@ -25,7 +25,7 @@ Mutex::~Mutex()
 {
   int res = pthread_mutex_destroy(&mMutex);
   if (res != 0) {
-    ALOGE("Mutex::~Mutex: fail destroy; error=0x%X", res);
+    ALOGE("%s: fail destroy; error=0x%X", __FUNCTION__, res);
   }
 }
 
@@ -33,7 +33,7 @@ void Mutex::lock()
 {
   int res = pthread_mutex_lock(&mMutex);
   if (res != 0) {
-    ALOGE("Mutex::lock: fail lock; error=0x%X", res);
+    ALOGE("%s: fail lock; error=0x%X", __FUNCTION__, res);
   }
 }
 
@@ -41,7 +41,7 @@ void Mutex::unlock()
 {
   int res = pthread_mutex_unlock(&mMutex);
   if (res != 0) {
-    ALOGE("Mutex::unlock: fail unlock; error=0x%X", res);
+    ALOGE("%s: fail unlock; error=0x%X", __FUNCTION__, res);
   }
 }
 
@@ -49,7 +49,7 @@ bool Mutex::tryLock()
 {
   int res = pthread_mutex_trylock(&mMutex);
   if ((res != 0) && (res != EBUSY)) {
-    ALOGE("Mutex::tryLock: error=0x%X", res);
+    ALOGE("%s: error=0x%X", __FUNCTION__, res);
   }
   return res == 0;
 }

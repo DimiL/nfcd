@@ -9,6 +9,9 @@
 #include "IntervalTimer.h"
 #include "OverrideLog.h"
 
+#define LOG_TAG "BroadcomNfc"
+#include <cutils/log.h>
+
 IntervalTimer::IntervalTimer()
 {
   mTimerId = 0;
@@ -40,7 +43,7 @@ bool IntervalTimer::set(int ms, TIMER_FUNC cb)
 
   stat = timer_settime(mTimerId, 0, &ts, 0);
   if (stat == -1)
-    ALOGE("IntervalTimer::set: fail set timer");
+    ALOGE("%s: fail set timer", __FUNCTION__);
   return stat == 0;
 }
 
@@ -75,6 +78,6 @@ bool IntervalTimer::create(TIMER_FUNC cb)
   mCb = cb;
   stat = timer_create(CLOCK_MONOTONIC, &se, &mTimerId);
   if (stat == -1)
-    ALOGE("IntervalTimer::create: fail create timer");
+    ALOGE("%s: fail create timer", __FUNCTION__);
   return stat == 0;
 }
