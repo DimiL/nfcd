@@ -13,12 +13,12 @@
 class CondVar
 {
 public:
-  CondVar ();
-  ~CondVar ();
+  CondVar();
+  ~CondVar();
 
-  void wait (Mutex& mutex);
-  bool wait (Mutex& mutex, long millisec);
-  void notifyOne ();
+  void wait(Mutex& mutex);
+  bool wait(Mutex& mutex, long millisec);
+  void notifyOne();
 
 private:
   pthread_cond_t mCondition;

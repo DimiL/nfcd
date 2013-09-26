@@ -350,7 +350,7 @@ void NativeNfcTag::nativeNfcTag_doRead(std::vector<uint8_t>& buf)
   }
 
   if (sReadData) {
-    free (sReadData);
+    free(sReadData);
     sReadData = NULL;
   }
   sReadDataLen = 0;
@@ -392,7 +392,7 @@ int NativeNfcTag::nativeNfcTag_doCheckNdef(int ndefInfo[])
 
   /* Create the write semaphore */
   if (sem_init(&sCheckNdefSem, 0, 0) == -1) {
-    ALOGE ("%s: Check NDEF semaphore creation failed (errno=0x%08x)", __FUNCTION__, errno);
+    ALOGE("%s: Check NDEF semaphore creation failed (errno=0x%08x)", __FUNCTION__, errno);
     return false;
   }
 
@@ -546,7 +546,7 @@ void NativeNfcTag::nativeNfcTag_doCheckNdefResult(tNFA_STATUS status, uint32_t m
   }
 
   if (!sCheckNdefWaitingForComplete) {
-    ALOGE ("%s: not waiting", __FUNCTION__);
+    ALOGE("%s: not waiting", __FUNCTION__);
     return;
   }
 

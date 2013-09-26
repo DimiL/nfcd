@@ -18,7 +18,7 @@ public:
 
   bool set(int ms, TIMER_FUNC cb);
   void kill();
-  bool create(TIMER_FUNC );
+  bool create(TIMER_FUNC);
 
 private:
   timer_t mTimerId;

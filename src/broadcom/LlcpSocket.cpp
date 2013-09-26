@@ -26,7 +26,7 @@ LlcpSocket::~LlcpSocket()
 
 bool LlcpSocket::connectToSap(int sap)
 {
-  return LlcpSocket::LlcpSocket_doConnect (sap);
+  return LlcpSocket::LlcpSocket_doConnect(sap);
 }
 
 bool LlcpSocket::connectToService(const char* serviceName)
@@ -60,30 +60,30 @@ int LlcpSocket::getRemoteRw()
   return LlcpSocket::LlcpSocket_doGetRemoteSocketRW();
 }
 
-bool LlcpSocket::LlcpSocket_doConnect (int nSap)
+bool LlcpSocket::LlcpSocket_doConnect(int nSap)
 {
-  ALOGD ("%s: enter; sap=%d", __FUNCTION__, nSap);
+  ALOGD("%s: enter; sap=%d", __FUNCTION__, nSap);
 
   bool stat = PeerToPeer::getInstance().connectConnOriented(mHandle, nSap);
 
-  ALOGD ("%s: exit", __FUNCTION__);
+  ALOGD("%s: exit", __FUNCTION__);
   return stat ? true : false;
 }
 
-bool LlcpSocket::LlcpSocket_doConnectBy (const char* sn)
+bool LlcpSocket::LlcpSocket_doConnectBy(const char* sn)
 {
-  ALOGD ("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", __FUNCTION__);
 
   if (sn == NULL) {
     return false;
   }
   bool stat = PeerToPeer::getInstance().connectConnOriented(mHandle, sn);
 
-  ALOGD ("%s: exit", __FUNCTION__);
+  ALOGD("%s: exit", __FUNCTION__);
   return stat;
 }
 
-bool LlcpSocket::LlcpSocket_doSend (std::vector<uint8_t>& data)
+bool LlcpSocket::LlcpSocket_doSend(std::vector<uint8_t>& data)
 {
   UINT8* raw_ptr = new UINT8[data.size()];
 
@@ -121,30 +121,30 @@ int LlcpSocket::LlcpSocket_doReceive(std::vector<uint8_t>& recvBuff)
 
 bool LlcpSocket::LlcpSocket_doClose()
 {   
-  ALOGD ("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", __FUNCTION__);
     
-  bool stat = PeerToPeer::getInstance().disconnectConnOriented (mHandle);
+  bool stat = PeerToPeer::getInstance().disconnectConnOriented(mHandle);
 
-  ALOGD ("%s: exit", __FUNCTION__);
+  ALOGD("%s: exit", __FUNCTION__);
   return true;  // TODO: stat?
 }
 
-int LlcpSocket::LlcpSocket_doGetRemoteSocketMIU ()
+int LlcpSocket::LlcpSocket_doGetRemoteSocketMIU()
 {
-  ALOGD ("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", __FUNCTION__);
 
   int miu = PeerToPeer::getInstance().getRemoteMaxInfoUnit(mHandle);
 
-  ALOGD ("%s: exit", __FUNCTION__);
+  ALOGD("%s: exit", __FUNCTION__);
   return miu;
 }
 
-int LlcpSocket::LlcpSocket_doGetRemoteSocketRW ()
+int LlcpSocket::LlcpSocket_doGetRemoteSocketRW()
 {
-  ALOGD ("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", __FUNCTION__);
 
-  int rw = PeerToPeer::getInstance().getRemoteRecvWindow (mHandle);
+  int rw = PeerToPeer::getInstance().getRemoteRecvWindow(mHandle);
 
-  ALOGD ("%s: exit", __FUNCTION__);
+  ALOGD("%s: exit", __FUNCTION__);
   return rw;
 }

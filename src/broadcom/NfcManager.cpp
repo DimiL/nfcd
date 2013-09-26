@@ -66,9 +66,9 @@ static bool                 sAbortConnlessWait = false;
                                      | NFA_TECHNOLOGY_MASK_KOVIO)
 
 
-static void nfaConnectionCallback (UINT8 event, tNFA_CONN_EVT_DATA *eventData);
-static void nfaDeviceManagementCallback (UINT8 event, tNFA_DM_CBACK_DATA *eventData);
-static bool isPeerToPeer (tNFA_ACTIVATED& activated);
+static void nfaConnectionCallback(UINT8 event, tNFA_CONN_EVT_DATA *eventData);
+static void nfaDeviceManagementCallback(UINT8 event, tNFA_DM_CBACK_DATA *eventData);
+static bool isPeerToPeer(tNFA_ACTIVATED& activated);
 static bool isListenMode(tNFA_ACTIVATED& activated);
 
 static UINT16 sCurrentConfigLen;
@@ -136,7 +136,7 @@ bool NfcManager::doInitialize()
   if (stat == NFA_STATUS_OK) {
     if (sIsNfaEnabled) {
       // TODO : Implement SE
-      // SecureElement::getInstance().initialize (getNative(e, o));
+      // SecureElement::getInstance().initialize(getNative(e, o));
       NativeNfcTag::nativeNfcTag_registerNdefTypeHandler();
       NfcTag::getInstance().initialize(this);
 
@@ -235,7 +235,7 @@ void NfcManager::enableDiscovery()
 
   tNFA_STATUS stat = NFA_STATUS_OK;
 
-  //ALOGD ("%s: sIsSecElemSelected=%u", __FUNCTION__, sIsSecElemSelected);
+  //ALOGD("%s: sIsSecElemSelected=%u", __FUNCTION__, sIsSecElemSelected);
 
   PowerSwitch::getInstance().setLevel(PowerSwitch::FULL_POWER);
 
@@ -423,7 +423,7 @@ void nfaDeviceManagementCallback(UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
       ALOGD("%s: NFA_DM_DISABLE_EVT", __FUNCTION__);
       sIsNfaEnabled = false;
       sIsDisabling = false;
-      sNfaDisableEvent.notifyOne ();
+      sNfaDisableEvent.notifyOne();
     }
     break;
 

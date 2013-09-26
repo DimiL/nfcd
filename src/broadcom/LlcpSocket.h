@@ -39,8 +39,8 @@ private:
   int LlcpSocket_doReceive(std::vector<uint8_t>& recvBuff);
 
   bool LlcpSocket_doClose();
-  int LlcpSocket_doGetRemoteSocketMIU ();
-  int LlcpSocket_doGetRemoteSocketRW ();
+  int LlcpSocket_doGetRemoteSocketMIU();
+  int LlcpSocket_doGetRemoteSocketRW();
 };
 
 #endif // mozilla_nfcd_LlcpSocket_h

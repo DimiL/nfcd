@@ -12,14 +12,14 @@
 class Mutex
 {
 public:
-  Mutex ();
-  ~Mutex ();
+  Mutex();
+  ~Mutex();
 
-  void lock ();
-  void unlock ();
-  bool tryLock ();
+  void lock();
+  void unlock();
+  bool tryLock();
 
-  pthread_mutex_t* nativeHandle ();
+  pthread_mutex_t* nativeHandle();
 
   class Autolock 
   {
