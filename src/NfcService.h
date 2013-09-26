@@ -6,12 +6,13 @@
 #define mozilla_nfcd_NfcService_h
 
 #include "utils/List.h"
+#include "IpcSocketListener.h"
 #include "NfcManager.h"
 
 class MessageHandler;
 class NfcEvent;
 
-class NfcService {
+class NfcService : public IpcSocketListener {
 public:
   ~NfcService();
   void initialize(NfcManager* pNfcManager, MessageHandler* msgHandler);
@@ -47,7 +48,7 @@ public:
   bool handleMakeNdefReadonlyRequest();
   void handleMakeNdefReadonlyResponse(NfcEvent* event);
 
-  static void onSocketConnected();
+  void onConnected();
 
   //TODO put these in public because serviceThread will need to access this.
   android::List<NfcEvent*> mQueue;

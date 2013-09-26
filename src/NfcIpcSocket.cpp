@@ -19,6 +19,7 @@
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
 
+#include "IpcSocketListener.h"
 #include "NfcIpcSocket.h"
 #include "MessageHandler.h"
 
@@ -77,6 +78,10 @@ int NfcIpcSocket::getListenSocket() {
   return nfcdConn;
 }
 
+void NfcIpcSocket::setSocketListener(IpcSocketListener* listener) {
+  mListener = listener;
+}
+
 void NfcIpcSocket::loop()
 {
   bool connected = false;
@@ -113,7 +118,7 @@ void NfcIpcSocket::loop()
 
     RecordStream *rs = record_stream_new(nfcdRw, MAX_COMMAND_BYTES);
 
-    onConnect();
+    mListener->onConnected();
 
     struct pollfd fds[1];
     fds[0].fd = nfcdRw;
@@ -187,10 +192,4 @@ void NfcIpcSocket::writeToIncomingQueue(uint8_t* data, size_t dataLen)
   if (data != NULL && dataLen > 0) {
     sMsgHandler->processRequest(data, dataLen);
   }
-}
-
-void NfcIpcSocket::onConnect()
-{
-  ALOGD("%s", __func__);
-  sMsgHandler->onSocketConnected();
 }
