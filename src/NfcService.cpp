@@ -420,6 +420,9 @@ void NfcService::handleCloseRequest()
 
 void NfcService::handleCloseResponse(NfcEvent* event)
 {
+  // TODO : If we call tag disconnect here, will keep trggering tag discover notification
+  //        Need to check with DT what should we do here
+
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
 }
 
