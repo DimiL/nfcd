@@ -31,20 +31,20 @@ public:
   static void nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS();
 
   static bool handleDisconnect();
-  int handleConnect(int technology, int token);
-  bool handleConfigRequest(int token);
+  int handleConnect(int technology);
+  bool handleConfigRequest();
   void handleConfigResponse(NfcEvent* event);
-  bool handleReadNdefDetailRequest(int token);
+  bool handleReadNdefDetailRequest();
   void handleReadNdefDetailResponse(NfcEvent* event);
-  bool handleReadNdefRequest(int token);
+  bool handleReadNdefRequest();
   void handleReadNdefResponse(NfcEvent* event);
-  bool handleWriteNdefRequest(NdefMessage* ndef, int token);
+  bool handleWriteNdefRequest(NdefMessage* ndef);
   void handleWriteNdefResponse(NfcEvent* event);
   void handleCloseRequest();
   void handleCloseResponse(NfcEvent* event);
-  bool handlePushNdefRequest(NdefMessage* ndef, int token);
+  bool handlePushNdefRequest(NdefMessage* ndef);
   void handlePushNdefResponse(NfcEvent* event);
-  bool handleMakeNdefReadonlyRequest(int token);
+  bool handleMakeNdefReadonlyRequest();
   void handleMakeNdefReadonlyResponse(NfcEvent* event);
 
   static void onSocketConnected();

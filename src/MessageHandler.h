@@ -19,7 +19,7 @@ class MessageHandler {
 public:
   MessageHandler(NfcService* service): mService(service) {};
   void processRequest(const uint8_t* data, size_t length);
-  void processResponse(NfcResponseType response, int token, NfcErrorCode error, void* data);
+  void processResponse(NfcResponseType response, NfcErrorCode error, void* data);
   void processNotification(NfcNotificationType notification, void* data);
   //TODO a better naming?
   void setSocket(NfcIpcSocket* socket);
@@ -31,13 +31,13 @@ private:
   void notifyTechDiscovered(android::Parcel& parcel, void* data);
   void notifyTechLost(android::Parcel& parcel);
 
-  bool handleConfigRequest(android::Parcel& parcel, int token);
-  bool handleReadNdefDetailRequest(android::Parcel& parcel, int token);
-  bool handleReadNdefRequest(android::Parcel& parcel, int token);
-  bool handleWriteNdefRequest(android::Parcel& parcel, int token);
-  bool handleConnectRequest(android::Parcel& parcel, int token);
-  bool handleCloseRequest(android::Parcel& parcel, int token);
-  bool handleMakeNdefReadonlyRequest(android::Parcel& parcel, int token);
+  bool handleConfigRequest(android::Parcel& parcel);
+  bool handleReadNdefDetailRequest(android::Parcel& parcel);
+  bool handleReadNdefRequest(android::Parcel& parcel);
+  bool handleWriteNdefRequest(android::Parcel& parcel);
+  bool handleConnectRequest(android::Parcel& parcel);
+  bool handleCloseRequest(android::Parcel& parcel);
+  bool handleMakeNdefReadonlyRequest(android::Parcel& parcel);
 
   bool handleConfigResponse(android::Parcel& parcel, void* data);
   bool handleReadNdefDetailResponse(android::Parcel& parcel, void* data);

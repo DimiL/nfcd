@@ -48,7 +48,7 @@ void MessageHandler::notifyTechLost(Parcel& parcel)
 void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
 {
   Parcel parcel;
-  int32_t sizeLe, size, request, token;
+  int32_t sizeLe, size, request;
   uint32_t status;
 
   ALOGD("%s enter data=%p, dataLen=%d", __func__, data, dataLen);
@@ -59,30 +59,27 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
     return;
   }
 
-  //TODO remove token
-  token = 0;
-
   switch (request) {
     case NFC_REQUEST_CONFIG:
-      handleConfigRequest(parcel, token);
+      handleConfigRequest(parcel);
       break;
     case NFC_REQUEST_GET_DETAILS:
-      handleReadNdefDetailRequest(parcel, token);
+      handleReadNdefDetailRequest(parcel);
       break;
     case NFC_REQUEST_READ_NDEF:
-      handleReadNdefRequest(parcel, token);
+      handleReadNdefRequest(parcel);
       break;
     case NFC_REQUEST_WRITE_NDEF:
-      handleWriteNdefRequest(parcel, token);
+      handleWriteNdefRequest(parcel);
       break;
     case NFC_REQUEST_CONNECT:
-      handleConnectRequest(parcel, token);
+      handleConnectRequest(parcel);
       break;
     case NFC_REQUEST_CLOSE:
-      handleCloseRequest(parcel, token);
+      handleCloseRequest(parcel);
       break;
     case NFC_REQUEST_MAKE_NDEF_READ_ONLY:
-      handleMakeNdefReadonlyRequest(parcel, token);
+      handleMakeNdefReadonlyRequest(parcel);
       break;
     default:
       ALOGE("Unhandled Request %d", request);
@@ -90,9 +87,9 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
   }
 }
 
-void MessageHandler::processResponse(NfcResponseType response, int token, NfcErrorCode error, void* data)
+void MessageHandler::processResponse(NfcResponseType response, NfcErrorCode error, void* data)
 {
-  ALOGD("%s enter response=%d, token=%d ", __func__, response, token);
+  ALOGD("%s enter response=%d", __func__, response);
   Parcel parcel;
   parcel.writeInt32(response);
   parcel.writeInt32(error);
@@ -153,28 +150,28 @@ void MessageHandler::sendResponse(Parcel& parcel)
   mSocket->writeToOutgoingQueue(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
 }
 
-bool MessageHandler::handleConfigRequest(Parcel& parcel, int token)
+bool MessageHandler::handleConfigRequest(Parcel& parcel)
 {
   int sessionId = parcel.readInt32();
   //TODO check SessionId
-  return mService->handleConfigRequest(token);
+  return mService->handleConfigRequest();
 }
 
-bool MessageHandler::handleReadNdefDetailRequest(Parcel& parcel, int token)
+bool MessageHandler::handleReadNdefDetailRequest(Parcel& parcel)
 {
   int sessionId = parcel.readInt32();
   //TODO check SessionId
-  return mService->handleReadNdefDetailRequest(token);
+  return mService->handleReadNdefDetailRequest();
 }
 
-bool MessageHandler::handleReadNdefRequest(Parcel& parcel, int token)
+bool MessageHandler::handleReadNdefRequest(Parcel& parcel)
 {
   int sessionId = parcel.readInt32();
   //TODO check SessionId
-  return mService->handleReadNdefRequest(token);
+  return mService->handleReadNdefRequest();
 }
 
-bool MessageHandler::handleWriteNdefRequest(Parcel& parcel, int token)
+bool MessageHandler::handleWriteNdefRequest(Parcel& parcel)
 {
   NdefMessagePdu ndefMessagePdu;
   NdefMessage* ndefMessage = new NdefMessage();
@@ -217,10 +214,10 @@ bool MessageHandler::handleWriteNdefRequest(Parcel& parcel, int token)
   }
   delete[] ndefMessagePdu.records;
 
-  return mService->handleWriteNdefRequest(ndefMessage, token);
+  return mService->handleWriteNdefRequest(ndefMessage);
 }
 
-bool MessageHandler::handleConnectRequest(Parcel& parcel, int token)
+bool MessageHandler::handleConnectRequest(Parcel& parcel)
 {
   int sessionId = parcel.readInt32();
   //TODO check SessionId
@@ -228,19 +225,19 @@ bool MessageHandler::handleConnectRequest(Parcel& parcel, int token)
   //TODO should only read 1 octet here.
   int32_t techType = parcel.readInt32();
   ALOGD("%s techType=%d", __func__, techType);
-  mService->handleConnect(techType, token);
+  mService->handleConnect(techType);
   return true;
 }
 
-bool MessageHandler::handleCloseRequest(Parcel& parcel, int token)
+bool MessageHandler::handleCloseRequest(Parcel& parcel)
 {
   mService->handleCloseRequest();
   return true;
 }
 
-bool MessageHandler::handleMakeNdefReadonlyRequest(Parcel& parcel, int token)
+bool MessageHandler::handleMakeNdefReadonlyRequest(Parcel& parcel)
 {
-  mService->handleMakeNdefReadonlyRequest(token);
+  mService->handleMakeNdefReadonlyRequest();
   return true;
 }
 

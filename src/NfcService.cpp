@@ -41,7 +41,6 @@ typedef enum {
 
 struct NfcEvent {
   NfcEventType type;
-  int token;
   void *data;
 };
 
@@ -323,29 +322,27 @@ bool NfcService::handleDisconnect()
   return result;
 }
 
-int NfcService::handleConnect(int technology, int token)
+int NfcService::handleConnect(int technology)
 {
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
   int status = pINfcTag->connectWithStatus(technology);
-  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NFC_ERROR_SUCCESS,  NULL);
+  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS,  NULL);
   return status;
 }
 
-bool NfcService::handleConfigRequest(int token)
+bool NfcService::handleConfigRequest()
 {
   NfcEvent *event = new NfcEvent();
   event->type = MSG_CONFIG;
-  event->token = token;
   mQueue.push_back(event);
   sem_post(&thread_sem);
   return true;
 }
 
-bool NfcService::handleReadNdefDetailRequest(int token)
+bool NfcService::handleReadNdefDetailRequest()
 {
   NfcEvent *event = new NfcEvent();
   event->type = MSG_READ_NDEF_DETAIL;
-  event->token = token;
   mQueue.push_back(event);
   sem_post(&thread_sem);
   return true;
@@ -353,18 +350,16 @@ bool NfcService::handleReadNdefDetailRequest(int token)
 
 void NfcService::handleConfigResponse(NfcEvent* event)
 {
-  int token = event->token;
-  mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, token, NFC_ERROR_SUCCESS, NULL);
+  mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
 }
 
 void NfcService::handleReadNdefDetailResponse(NfcEvent* event)
 {
-  int token = event->token;
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
   NdefDetail* pNdefDetail = pINfcTag->ReadNdefDetail();
 
   if (pNdefDetail != NULL) {
-    mMsgHandler->processResponse(NFC_RESPONSE_READ_NDEF_DETAILS, token, NFC_ERROR_SUCCESS, pNdefDetail);
+    mMsgHandler->processResponse(NFC_RESPONSE_READ_NDEF_DETAILS, NFC_ERROR_SUCCESS, pNdefDetail);
   } else {
     //TODO can we notify null ndef detail?
   }
@@ -372,11 +367,10 @@ void NfcService::handleReadNdefDetailResponse(NfcEvent* event)
   delete pNdefDetail;
 }
 
-bool NfcService::handleReadNdefRequest(int token)
+bool NfcService::handleReadNdefRequest()
 {
   NfcEvent *event = new NfcEvent();
   event->type = MSG_READ_NDEF;
-  event->token = token;
   mQueue.push_back(event);
   sem_post(&thread_sem);
   return true;
@@ -384,13 +378,12 @@ bool NfcService::handleReadNdefRequest(int token)
 
 void NfcService::handleReadNdefResponse(NfcEvent* event)
 {
-  int token = event->token;
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
   NdefMessage* pNdefMessage = pINfcTag->findAndReadNdef();
 
   ALOGD("pNdefMessage=%p",pNdefMessage);
   if (pNdefMessage != NULL) {
-    mMsgHandler->processResponse(NFC_RESPONSE_READ_NDEF, token, NFC_ERROR_SUCCESS, pNdefMessage);
+    mMsgHandler->processResponse(NFC_RESPONSE_READ_NDEF, NFC_ERROR_SUCCESS, pNdefMessage);
   } else {
     //TODO can we notify null ndef?
   }
@@ -398,11 +391,10 @@ void NfcService::handleReadNdefResponse(NfcEvent* event)
   delete pNdefMessage;
 }
 
-bool NfcService::handleWriteNdefRequest(NdefMessage* ndef, int token)
+bool NfcService::handleWriteNdefRequest(NdefMessage* ndef)
 {
   NfcEvent *event = new NfcEvent();
   event->type = MSG_WRITE_NDEF;
-  event->token = token;
   event->data = ndef;
   mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -411,12 +403,11 @@ bool NfcService::handleWriteNdefRequest(NdefMessage* ndef, int token)
 
 void NfcService::handleWriteNdefResponse(NfcEvent* event)
 {
-  int token = event->token;
   NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->data);
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
   bool result = pINfcTag->writeNdef(*ndef);
   delete ndef;
-  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NFC_ERROR_SUCCESS, NULL);
+  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
 }
 
 void NfcService::handleCloseRequest()
@@ -429,7 +420,7 @@ void NfcService::handleCloseRequest()
 
 void NfcService::handleCloseResponse(NfcEvent* event)
 {
-  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, 0, NFC_ERROR_SUCCESS, NULL);
+  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
 }
 
 void NfcService::onSocketConnected()
@@ -440,12 +431,10 @@ void NfcService::onSocketConnected()
   sem_post(&thread_sem);
 }
 
-bool NfcService::handlePushNdefRequest(NdefMessage* ndef, int token)
+bool NfcService::handlePushNdefRequest(NdefMessage* ndef)
 {
-  ALOGD("%s enter token=%d", __func__, token);
   NfcEvent *event = new NfcEvent();
   event->type = MSG_PUSH_NDEF;
-  event->token = token;
   event->data = ndef;
   mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -454,7 +443,6 @@ bool NfcService::handlePushNdefRequest(NdefMessage* ndef, int token)
 
 void NfcService::handlePushNdefResponse(NfcEvent* event)
 {
-  int token = event->token;
   NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->data);
 
   // TODO : Do we need create a thread to do this ? And can we use the same snep client each time ?
@@ -464,10 +452,10 @@ void NfcService::handlePushNdefResponse(NfcEvent* event)
   snep.close();
 
   delete ndef;
-  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NFC_ERROR_SUCCESS, NULL);
+  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
 }
 
-bool NfcService::handleMakeNdefReadonlyRequest(int token)
+bool NfcService::handleMakeNdefReadonlyRequest()
 {
   NfcEvent *event = new NfcEvent();
   event->type = MSG_MAKE_NDEF_READONLY;
@@ -478,10 +466,8 @@ bool NfcService::handleMakeNdefReadonlyRequest(int token)
 
 void NfcService::handleMakeNdefReadonlyResponse(NfcEvent* event)
 {
-  int token = event->token;
-
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
-  bool result = pINfcTag->makeReadOnly();  
+  bool result = pINfcTag->makeReadOnly();
 
-  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, token, NFC_ERROR_SUCCESS, NULL);
+  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
 }
