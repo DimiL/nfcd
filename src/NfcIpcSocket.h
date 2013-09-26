@@ -10,6 +10,7 @@
 #include <binder/Parcel.h>
 
 class MessageHandler;
+class IpcSocketListener;
 
 class NfcIpcSocket{
 private:
@@ -22,6 +23,8 @@ public:
   void initialize(MessageHandler* msgHandler);
   void loop();
 
+  void setSocketListener(IpcSocketListener* lister);
+
   void writeToOutgoingQueue(uint8_t *data, size_t dataLen);
   void writeToIncomingQueue(uint8_t *data, size_t dataLen);
 
@@ -33,9 +36,10 @@ private:
 
   static MessageHandler* sMsgHandler;
 
+  IpcSocketListener* mListener;
+
   void initSocket();
   int getListenSocket();
-  void onConnect();
 };
 
 #endif // mozilla_nfcd_NfcIpcSocket_h

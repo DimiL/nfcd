@@ -15,6 +15,7 @@ LOCAL_SRC_FILES := \
     src/nfcd.cpp \
     src/NfcService.cpp \
     src/NfcIpcSocket.cpp \
+    src/IpcSocketListener.cpp \
     src/NfcUtil.cpp \
     src/MessageHandler.cpp \
     src/SessionId.cpp \

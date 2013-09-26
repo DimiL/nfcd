@@ -140,11 +140,6 @@ void MessageHandler::setSocket(NfcIpcSocket* socket)
   mSocket = socket;
 }
 
-void MessageHandler::onSocketConnected()
-{
-  NfcService::onSocketConnected();
-}
-
 void MessageHandler::sendResponse(Parcel& parcel)
 {
   mSocket->writeToOutgoingQueue(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());

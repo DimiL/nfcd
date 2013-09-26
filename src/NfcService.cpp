@@ -426,11 +426,11 @@ void NfcService::handleCloseResponse(NfcEvent* event)
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
 }
 
-void NfcService::onSocketConnected()
+void NfcService::onConnected()
 {
   NfcEvent *event = new NfcEvent();
   event->type = MSG_SOCKET_CONNECTED;
-  NfcService::Instance()->mQueue.push_back(event);
+  mQueue.push_back(event);
   sem_post(&thread_sem);
 }
 

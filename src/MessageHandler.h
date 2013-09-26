@@ -24,8 +24,6 @@ public:
   //TODO a better naming?
   void setSocket(NfcIpcSocket* socket);
 
-  void onSocketConnected();
-
 private:
   void notifyInitialized(android::Parcel& parcel);
   void notifyTechDiscovered(android::Parcel& parcel, void* data);
