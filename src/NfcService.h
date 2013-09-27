@@ -47,6 +47,11 @@ public:
   void handlePushNdefResponse(NfcEvent* event);
   bool handleMakeNdefReadonlyRequest();
   void handleMakeNdefReadonlyResponse(NfcEvent* event);
+  bool handlePowerOnOffRequest(bool onOff);
+  void handlePowerOnOffResponse(NfcEvent* event);
+  bool handleNfcEnableDisableRequest(bool enableDisable);
+  void handleNfcEnableDisableResponse(NfcEvent* event);
+
 
   void onConnected();
 

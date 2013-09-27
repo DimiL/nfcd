@@ -37,11 +37,15 @@ typedef enum {
   MSG_NDEF_TAG_LIST,
   MSG_CONFIG,
   MSG_MAKE_NDEF_READONLY,
+  MSG_POWER_ON_OFF,
+  MSG_NFC_ENABLE_DISABLE
 } NfcEventType;
 
 struct NfcEvent {
   NfcEventType type;
-  void *data;
+  int arg1;
+  int arg2;
+  void* obj;
 };
 
 static pthread_t thread_id;
@@ -59,7 +63,7 @@ void NfcService::nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
   ALOGD("%s enter", __func__);
   NfcEvent *event = new NfcEvent();
   event->type = MSG_LLCP_LINK_ACTIVATION;
-  event->data = pDevice;
+  event->obj = pDevice;
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
 }
@@ -69,7 +73,7 @@ void NfcService::nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice)
   ALOGD("%s enter", __func__);
   NfcEvent *event = new NfcEvent();
   event->type = MSG_LLCP_LINK_DEACTIVATION;
-  event->data = pDevice;
+  event->obj = pDevice;
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
 }
@@ -79,7 +83,7 @@ void NfcService::nfc_service_send_MSG_TAG(void* pTag)
   ALOGD("%s enter", __func__);
   NfcEvent *event = new NfcEvent();
   event->type = MSG_TAG_DISCOVERED;
-  event->data = pTag;
+  event->obj = pTag;
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
 }
@@ -109,7 +113,7 @@ void NfcService::handleLlcpLinkDeactivation(NfcEvent* event)
 {
   ALOGD("%s enter", __func__);
 
-  void* pDevice = event->data;
+  void* pDevice = event->obj;
   IP2pDevice* pIP2pDevice = reinterpret_cast<IP2pDevice*>(pDevice);
 
   if (pIP2pDevice->getMode() == NfcDepEndpoint::MODE_P2P_TARGET) {
@@ -120,7 +124,7 @@ void NfcService::handleLlcpLinkDeactivation(NfcEvent* event)
 void NfcService::handleLlcpLinkActivation(NfcEvent* event)
 {
   ALOGD("%s enter", __func__);
-  void* pDevice = event->data;
+  void* pDevice = event->obj;
   IP2pDevice* pIP2pDevice = reinterpret_cast<IP2pDevice*>(pDevice);
 
   if (pIP2pDevice->getMode() == NfcDepEndpoint::MODE_P2P_TARGET ||
@@ -172,7 +176,7 @@ static void *pollingThreadFunc(void *arg)
   pINfcTag->disconnect();
   NfcEvent *event = new NfcEvent();
   event->type = MSG_TAG_LOST;
-  event->data = NULL;
+  event->obj = NULL;
   NfcService* service = NfcService::Instance();
   List<NfcEvent*>& queue = service->mQueue;
   queue.push_back(event);
@@ -182,7 +186,7 @@ static void *pollingThreadFunc(void *arg)
 
 void NfcService::handleTagDiscovered(NfcEvent* event)
 {
-  void* pTag = event->data;
+  void* pTag = event->obj;
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(pTag);
   std::vector<TagTechnology>& techList = pINfcTag->getTechList();
   std::vector<NfcTechnology> gonkTechList;
@@ -264,6 +268,12 @@ static void *serviceThreadFunc(void *arg)
           break;
         case MSG_MAKE_NDEF_READONLY:
           service->handleMakeNdefReadonlyResponse(event);
+          break;
+        case MSG_POWER_ON_OFF:
+          service->handlePowerOnOffResponse(event);
+          break;
+        case MSG_NFC_ENABLE_DISABLE:
+          service->handleNfcEnableDisableResponse(event);
           break;
         default:
           ALOGE("NFCService bad message");
@@ -395,7 +405,7 @@ bool NfcService::handleWriteNdefRequest(NdefMessage* ndef)
 {
   NfcEvent *event = new NfcEvent();
   event->type = MSG_WRITE_NDEF;
-  event->data = ndef;
+  event->obj = ndef;
   mQueue.push_back(event);
   sem_post(&thread_sem);
   return true;
@@ -403,7 +413,7 @@ bool NfcService::handleWriteNdefRequest(NdefMessage* ndef)
 
 void NfcService::handleWriteNdefResponse(NfcEvent* event)
 {
-  NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->data);
+  NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->obj);
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NativeNfcTag"));
   bool result = pINfcTag->writeNdef(*ndef);
   delete ndef;
@@ -438,7 +448,7 @@ bool NfcService::handlePushNdefRequest(NdefMessage* ndef)
 {
   NfcEvent *event = new NfcEvent();
   event->type = MSG_PUSH_NDEF;
-  event->data = ndef;
+  event->obj = ndef;
   mQueue.push_back(event);
   sem_post(&thread_sem);
   return true;
@@ -446,7 +456,7 @@ bool NfcService::handlePushNdefRequest(NdefMessage* ndef)
 
 void NfcService::handlePushNdefResponse(NfcEvent* event)
 {
-  NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->data);
+  NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->obj);
 
   // TODO : Do we need create a thread to do this ? And can we use the same snep client each time ?
   SnepClient snep;
@@ -474,3 +484,51 @@ void NfcService::handleMakeNdefReadonlyResponse(NfcEvent* event)
 
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
 }
+
+bool NfcService::handlePowerOnOffRequest(bool onOff)
+{
+  NfcEvent *event = new NfcEvent();
+  event->type = MSG_POWER_ON_OFF;
+  event->arg1 = onOff;
+  mQueue.push_back(event);
+  sem_post(&thread_sem);
+  return true;
+}
+
+void NfcService::handlePowerOnOffResponse(NfcEvent* event)
+{
+  bool onOff = event->arg1;
+  if (onOff)
+    sNfcManager->enableDiscovery();
+  else
+    sNfcManager->disableDiscovery();
+
+  return;
+}
+
+
+bool NfcService::handleNfcEnableDisableRequest(bool enableDisable)
+{
+  NfcEvent *event = new NfcEvent();
+  event->type = MSG_NFC_ENABLE_DISABLE;
+  event->arg1 = enableDisable;
+  mQueue.push_back(event);
+  sem_post(&thread_sem);
+  return true;
+}
+
+void NfcService::handleNfcEnableDisableResponse(NfcEvent* event)
+{
+  bool enableDisable = event->arg1;
+  if (enableDisable) {
+    // TODO : p2p init
+    sNfcManager->doInitialize();
+  }
+  else {
+    // TODO : p2p deinit
+    sNfcManager->doDeinitialize();
+  }
+
+  return;
+}
+
