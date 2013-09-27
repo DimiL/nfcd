@@ -196,7 +196,21 @@ void PeerToPeer::llcpActivatedHandler(tNFA_LLCP_ACTIVATED& activated)
 
 void PeerToPeer::llcpDeactivatedHandler(tNFA_LLCP_DEACTIVATED& /*deactivated*/)
 {
-  //mNfcManager->notifyLlcpLinkDeactivated();
+  static const char fn [] = "PeerToPeer::llcpDeactivatedHandler";
+  ALOGD("%s: enter", fn);
+
+  IP2pDevice* pIP2pDevice =
+    reinterpret_cast<IP2pDevice*>(mNfcManager->queryInterface("P2pDevice"));
+
+  if (pIP2pDevice == NULL) {
+    ALOGE("%s : cannot get native p2p device class", fn);
+    return;
+  }
+
+  mNfcManager->notifyLlcpLinkDeactivated(reinterpret_cast<void*>(pIP2pDevice));
+
+  NativeNfcTag::nativeNfcTag_registerNdefTypeHandler();
+  ALOGD("%s: exit", fn);
 }
 
 void PeerToPeer::llcpFirstPacketHandler()
