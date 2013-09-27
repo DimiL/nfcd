@@ -33,7 +33,7 @@ BROADCOM_SRC_FILES := \
     src/broadcom/LlcpServiceSocket.cpp \
     src/broadcom/NfcSecureElement.cpp \
     src/broadcom/P2pDevice.cpp \
-    src/broadcom/NativeNfcTag.cpp \
+    src/broadcom/NfcTagManager.cpp \
     src/broadcom/Mutex.cpp \
     src/broadcom/CondVar.cpp \
     src/broadcom/PowerSwitch.cpp \

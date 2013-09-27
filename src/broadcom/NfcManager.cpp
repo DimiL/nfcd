@@ -10,6 +10,7 @@
 #include "Pn544Interop.h"
 #include "LlcpSocket.h"
 #include "LlcpServiceSocket.h"
+#include "NfcTagManager.h"
 
 extern "C"
 {
@@ -78,24 +79,24 @@ static UINT8 sConfig[256];
 
 NfcManager::NfcManager()
  : mP2pDevice(NULL)
- , mNativeNfcTag(NULL)
+ , mNfcTagManager(NULL)
 {
   mP2pDevice = new P2pDevice();
-  mNativeNfcTag = new NativeNfcTag();
+  mNfcTagManager = new NfcTagManager();
 }
 
 NfcManager::~NfcManager()
 {
   if (mP2pDevice != NULL)    delete mP2pDevice;
-  if (mNativeNfcTag != NULL)       delete mNativeNfcTag;
+  if (mNfcTagManager != NULL)       delete mNfcTagManager;
 }
 
 void* NfcManager::queryInterface(const char* name)
 {
   if (0 == strcmp(name, "P2pDevice"))
     return reinterpret_cast<void*>(mP2pDevice);
-  else if (0 == strcmp(name, "NativeNfcTag"))
-    return reinterpret_cast<void*>(mNativeNfcTag);
+  else if (0 == strcmp(name, "NfcTagManager"))
+    return reinterpret_cast<void*>(mNfcTagManager);
 
   return NULL;
 }
@@ -136,8 +137,7 @@ bool NfcManager::doInitialize()
   if (stat == NFA_STATUS_OK) {
     if (sIsNfaEnabled) {
       // TODO : Implement SE
-      // SecureElement::getInstance().initialize(getNative(e, o));
-      NativeNfcTag::nativeNfcTag_registerNdefTypeHandler();
+      NfcTagManager::doRegisterNdefTypeHandler();
       NfcTag::getInstance().initialize(this);
 
       PeerToPeer::getInstance().initialize(this);
@@ -198,11 +198,10 @@ bool NfcManager::doDeinitialize()
     }
   }
 
-  NativeNfcTag::nativeNfcTag_abortWaits();
+  NfcTagManager::doAbortWaits();
   NfcTag::getInstance().abort();
   sAbortConnlessWait = true;
   // TODO : Implement LLCP
-  //nativeLlcpConnectionlessSocket_abortWait();
   sIsNfaEnabled = false;
   sDiscoveryEnabled = false;
   sIsDisabling = false;
@@ -471,11 +470,10 @@ void nfaDeviceManagementCallback(UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
       else
         ALOGD("%s: NFA_DM_NFCC_TRANSPORT_ERR_EVT; abort all outstanding operations", __FUNCTION__);
 
-      NativeNfcTag::nativeNfcTag_abortWaits();
+      NfcTagManager::doAbortWaits();
       NfcTag::getInstance().abort();
       sAbortConnlessWait = true;
       // TODO : Implement LLCP
-      //nativeLlcpConnectionlessSocket_abortWait();
       {
         ALOGD("%s: aborting  sNfaEnableDisablePollingEvent", __FUNCTION__);
         SyncEventGuard guard (sNfaEnableDisablePollingEvent);
@@ -584,11 +582,11 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
 
     NfcTag::getInstance().setActivationState();
     if (gIsSelectingRfInterface) {
-      NativeNfcTag::nativeNfcTag_doConnectStatus(true);
+      NfcTagManager::doConnectStatus(true);
       break;
     }
 
-    NativeNfcTag::nativeNfcTag_resetPresenceCheck();
+    NfcTagManager::doResetPresenceCheck();
     if (isPeerToPeer(eventData->activated)) {
       sP2pActive = true;
       ALOGD("%s: NFA_ACTIVATED_EVT; is p2p", __FUNCTION__);
@@ -621,12 +619,12 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
     ALOGD("%s: NFA_DEACTIVATED_EVT   Type: %u, gIsTagDeactivating: %d", __FUNCTION__, eventData->deactivated.type,gIsTagDeactivating);
     NfcTag::getInstance().setDeactivationState(eventData->deactivated);
     if (eventData->deactivated.type != NFA_DEACTIVATE_TYPE_SLEEP) {
-      NativeNfcTag::nativeNfcTag_resetPresenceCheck();
+      NfcTagManager::doResetPresenceCheck();
       NfcTag::getInstance().connectionEventHandler(connEvent, eventData);
-      NativeNfcTag::nativeNfcTag_abortWaits();
+      NfcTagManager::doAbortWaits();
       NfcTag::getInstance().abort();
     } else if (gIsTagDeactivating) {
-      NativeNfcTag::nativeNfcTag_doDeactivateStatus(0);
+      NfcTagManager::doDeactivateStatus(0);
     }
 
     // If RF is activated for what we think is a Secure Element transaction
@@ -658,7 +656,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
           eventData->ndef_detect.protocol, eventData->ndef_detect.max_size,
           eventData->ndef_detect.cur_size, eventData->ndef_detect.flags);
     NfcTag::getInstance().connectionEventHandler(connEvent, eventData);
-    NativeNfcTag::nativeNfcTag_doCheckNdefResult(status,
+    NfcTagManager::doCheckNdefResult(status,
       eventData->ndef_detect.max_size, eventData->ndef_detect.cur_size,
       eventData->ndef_detect.flags);
     break;
@@ -677,18 +675,18 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
 
   case NFA_READ_CPLT_EVT: // NDEF-read or tag-specific-read completed
     ALOGD("%s: NFA_READ_CPLT_EVT: status = 0x%X", __FUNCTION__, eventData->status);
-    NativeNfcTag::nativeNfcTag_doReadCompleted(eventData->status);
+    NfcTagManager::doReadCompleted(eventData->status);
     NfcTag::getInstance().connectionEventHandler(connEvent, eventData);
     break;
 
   case NFA_WRITE_CPLT_EVT: // Write completed
     ALOGD("%s: NFA_WRITE_CPLT_EVT: status = %d", __FUNCTION__, eventData->status);
-    NativeNfcTag::nativeNfcTag_doWriteStatus(eventData->status == NFA_STATUS_OK);
+    NfcTagManager::doWriteStatus(eventData->status == NFA_STATUS_OK);
     break;
 
   case NFA_SET_TAG_RO_EVT: // Tag set as Read only
     ALOGD("%s: NFA_SET_TAG_RO_EVT: status = %d", __FUNCTION__, eventData->status);
-    NativeNfcTag::nativeNfcTag_doMakeReadonlyResult(eventData->status);
+    NfcTagManager::doMakeReadonlyResult(eventData->status);
     break;
 
   case NFA_CE_NDEF_WRITE_START_EVT: // NDEF write started
@@ -726,7 +724,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
 
   case NFA_PRESENCE_CHECK_EVT:
     ALOGD("%s: NFA_PRESENCE_CHECK_EVT", __FUNCTION__);
-    NativeNfcTag::nativeNfcTag_doPresenceCheckResult(eventData->status);
+    NfcTagManager::doPresenceCheckResult(eventData->status);
     break;
 
   case NFA_FORMAT_CPLT_EVT:

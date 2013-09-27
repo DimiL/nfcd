@@ -7,10 +7,10 @@
 
 #include "DeviceHost.h"
 #include "P2pDevice.h"
-#include "NativeNfcTag.h"
 #include "LlcpServiceSocket.h"
 #include "INfcManager.h"
 
+class NfcTagManager;
 class ILlcpServerSocket;
 class ILlcpSocket;
 
@@ -45,7 +45,7 @@ public:
 
 private:
   P2pDevice* mP2pDevice;
-  NativeNfcTag* mNativeNfcTag;
+  NfcTagManager* mNfcTagManager;
 };
 
 #endif 

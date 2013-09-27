@@ -9,8 +9,10 @@
 #include "IpcSocketListener.h"
 #include "NfcManager.h"
 
+class NdefMessage;
 class MessageHandler;
 class NfcEvent;
+class INfcManager;
 
 class NfcService : public IpcSocketListener {
 public:

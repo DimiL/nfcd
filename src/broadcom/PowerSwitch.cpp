@@ -5,7 +5,6 @@
 /*
  *  Adjust the controller's power states.
  */
-#include "OverrideLog.h"
 #include "PowerSwitch.h"
 #include "config.h"
 

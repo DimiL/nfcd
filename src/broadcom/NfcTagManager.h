@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_nfcd_NativeNfcTag_h
-#define mozilla_nfcd_NativeNfcTag_h
+#ifndef mozilla_nfcd_NfcTagManager_h
+#define mozilla_nfcd_NfcTagManager_h
 
 #include "INfcTag.h"
 #include <pthread.h>
@@ -13,11 +13,11 @@ extern "C"
   #include "nfa_rw_api.h"
 }
 
-class NativeNfcTag : INfcTag
+class NfcTagManager : INfcTag
 {
 public:
-  NativeNfcTag();
-  virtual ~NativeNfcTag();
+  NfcTagManager();
+  virtual ~NfcTagManager();
 
   NdefMessage* findAndReadNdef();
   NdefDetail* ReadNdefDetail();
@@ -40,25 +40,24 @@ public:
   std::vector<std::vector<uint8_t> >& getUid() { return mUid; };
   int& getConnectedHandle() { return mConnectedHandle; };
 
-  static void nativeNfcTag_doRead(std::vector<uint8_t>& buf);
-  static int nativeNfcTag_doCheckNdef(int ndefInfo[]);
-  static bool nativeNfcTag_doWrite(std::vector<uint8_t>& buf);
-  static void nativeNfcTag_abortWaits();
-  static void nativeNfcTag_doReadCompleted(tNFA_STATUS status);
-  static void nativeNfcTag_doWriteStatus(bool isWriteOk);
-  static void nativeNfcTag_doConnectStatus(bool isConnectOk);
-  static void nativeNfcTag_doDeactivateStatus(int status);
-  static int nativeNfcTag_doConnect(int targetHandle);
-  static void nativeNfcTag_resetPresenceCheck();
-  static void nativeNfcTag_doPresenceCheckResult(tNFA_STATUS status);
-
-  static void nativeNfcTag_doCheckNdefResult(tNFA_STATUS status, uint32_t maxSize, uint32_t currentSize, uint8_t flags);
-  static void nativeNfcTag_registerNdefTypeHandler();
-  static void nativeNfcTag_deregisterNdefTypeHandler();
-  static bool nativeNfcTag_doPresenceCheck();
-  static bool nativeNfcTag_doDisconnect();
-  static void nativeNfcTag_doMakeReadonlyResult(tNFA_STATUS status);
-  static bool nativeNfcTag_doMakeReadonly();
+  static void doRead(std::vector<uint8_t>& buf);
+  static int doCheckNdef(int ndefInfo[]);
+  static bool doWrite(std::vector<uint8_t>& buf);
+  static void doAbortWaits();
+  static void doReadCompleted(tNFA_STATUS status);
+  static void doWriteStatus(bool isWriteOk);
+  static void doConnectStatus(bool isConnectOk);
+  static void doDeactivateStatus(int status);
+  static int doConnect(int targetHandle);
+  static void doResetPresenceCheck();
+  static void doPresenceCheckResult(tNFA_STATUS status);
+  static void doCheckNdefResult(tNFA_STATUS status, uint32_t maxSize, uint32_t currentSize, uint8_t flags);
+  static void doRegisterNdefTypeHandler();
+  static void doDeregisterNdefTypeHandler();
+  static bool doPresenceCheck();
+  static bool doDisconnect();
+  static void doMakeReadonlyResult(tNFA_STATUS status);
+  static bool doMakeReadonly();
 
 private:
   pthread_mutex_t mMutex;
@@ -90,4 +89,4 @@ private:
   static bool switchRfInterface(tNFA_INTF_TYPE rfInterface);
 };
 
-#endif // mozilla_nfcd_NativeNfcTag_h
+#endif // mozilla_nfcd_NfcTagManager_h

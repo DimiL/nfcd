@@ -10,8 +10,6 @@
 #include "TagTechnology.h"
 #include <binder/Parcel.h>
 
-class NativeNfcTag;
-class NdefMessage;
 class NfcIpcSocket;
 class NfcService;
 

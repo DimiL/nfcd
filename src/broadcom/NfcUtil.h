@@ -3,6 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #pragma once
+
+#include <pthread.h>
+
 /* Discovery modes -- keep in sync with NFCManager.DISCOVERY_MODE_* */
 #define DISCOVERY_MODE_TAG_READER         0
 #define DISCOVERY_MODE_NFCIP1             1

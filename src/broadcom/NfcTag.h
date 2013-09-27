@@ -10,6 +10,7 @@
 #include "SyncEvent.h"
 #include "NfcUtil.h"
 #include "NfcManager.h"
+#include "TagTechnology.h"
 
 extern "C"
 {
@@ -71,13 +72,13 @@ private:
   void discoverTechnologies(tNFA_ACTIVATED& activationData);
   void discoverTechnologies(tNFA_DISC_RESULT& discoveryData);
 
-  void createNativeNfcTag(tNFA_ACTIVATED& activationData);
+  void createNfcTag(tNFA_ACTIVATED& activationData);
 
-  void fillNativeNfcTagMembers1(INfcTag* pINfcTag);
-  void fillNativeNfcTagMembers2(INfcTag* pINfcTag);
-  void fillNativeNfcTagMembers3(INfcTag* pINfcTag, tNFA_ACTIVATED& activationData);
-  void fillNativeNfcTagMembers4(INfcTag* pINfcTag, tNFA_ACTIVATED& activationData);
-  void fillNativeNfcTagMembers5(INfcTag* pINfcTag, tNFA_ACTIVATED& activationData);
+  void fillNfcTagMembers1(INfcTag* pINfcTag);
+  void fillNfcTagMembers2(INfcTag* pINfcTag);
+  void fillNfcTagMembers3(INfcTag* pINfcTag, tNFA_ACTIVATED& activationData);
+  void fillNfcTagMembers4(INfcTag* pINfcTag, tNFA_ACTIVATED& activationData);
+  void fillNfcTagMembers5(INfcTag* pINfcTag, tNFA_ACTIVATED& activationData);
 
   void resetTechnologies();
 

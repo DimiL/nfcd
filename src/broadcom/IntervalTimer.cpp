@@ -7,7 +7,6 @@
  */
 
 #include "IntervalTimer.h"
-#include "OverrideLog.h"
 
 #define LOG_TAG "BroadcomNfc"
 #include <cutils/log.h>

@@ -1,4 +1,4 @@
-#include "NativeNfcTag.h"
+#include "NfcTagManager.h"
 #include "NdefMessage.h"
 #include "TagTechnology.h"
 
@@ -6,7 +6,6 @@
 #include <errno.h>
 #include <time.h>
 #include <signal.h>
-#include "OverrideLog.h"
 #include "NfcUtil.h"
 #include "NfcTag.h"
 #include "config.h"
@@ -22,6 +21,7 @@ extern "C"
   #include "rw_api.h"
 }
 
+#undef LOG_TAG
 #define LOG_TAG "BroadcomNfc"
 #include <cutils/log.h>
 
@@ -106,16 +106,16 @@ static void ndefHandlerCallback(tNFA_NDEF_EVT event, tNFA_NDEF_EVT_DATA *eventDa
   }
 }
 
-NativeNfcTag::NativeNfcTag()
+NfcTagManager::NfcTagManager()
 {
   pthread_mutex_init(&mMutex, NULL);
 }
 
-NativeNfcTag::~NativeNfcTag()
+NfcTagManager::~NfcTagManager()
 {
 }
 
-NdefDetail* NativeNfcTag::ReadNdefDetail()
+NdefDetail* NfcTagManager::ReadNdefDetail()
 {
   int ndefinfo[2];
   int status;
@@ -132,7 +132,7 @@ NdefDetail* NativeNfcTag::ReadNdefDetail()
   return pNdefDetail;    
 }
 
-NdefMessage* NativeNfcTag::findAndReadNdef()
+NdefMessage* NfcTagManager::findAndReadNdef()
 {
   NdefMessage* pNdefMsg = NULL;
   bool foundFormattable = false;
@@ -199,14 +199,14 @@ NdefMessage* NativeNfcTag::findAndReadNdef()
   return pNdefMsg;
 }
 
-bool NativeNfcTag::disconnect()
+bool NfcTagManager::disconnect()
 {
   bool result = false;
 
   mIsPresent = false;
 
   pthread_mutex_lock(&mMutex);
-  result = nativeNfcTag_doDisconnect();
+  result = doDisconnect();
   pthread_mutex_unlock(&mMutex);
 
   mConnectedTechIndex = -1;
@@ -222,12 +222,12 @@ bool NativeNfcTag::disconnect()
   return result;
 }
 
-bool NativeNfcTag::reconnect()
+bool NfcTagManager::reconnect()
 {
   return reconnectWithStatus() == 0;
 }
 
-int NativeNfcTag::reconnectWithStatus()
+int NfcTagManager::reconnectWithStatus()
 {
   ALOGD("%s: enter", __FUNCTION__);
   int retCode = NFCSTATUS_SUCCESS;
@@ -256,16 +256,16 @@ TheEnd:
   return retCode;
 }
 
-int NativeNfcTag::reconnectWithStatus(int technology)
+int NfcTagManager::reconnectWithStatus(int technology)
 {
   int status = -1;
   pthread_mutex_lock(&mMutex);
-  status = nativeNfcTag_doConnect(technology);
+  status = doConnect(technology);
   pthread_mutex_unlock(&mMutex);
   return status;
 }
 
-int NativeNfcTag::connectWithStatus(int technology)
+int NfcTagManager::connectWithStatus(int technology)
 {
   int status = -1;
   for (uint32_t i = 0; i < mTechList.size(); i++) {
@@ -286,7 +286,7 @@ int NativeNfcTag::connectWithStatus(int technology)
         //    allowed.
         if (mConnectedHandle == -1) {
           // Not connected yet
-          status = nativeNfcTag_doConnect(i);
+          status = doConnect(i);
         } else {
           // Connect to a tech with a different handle
           ALOGD("%s: Connect to a tech with a different handle", __FUNCTION__);
@@ -319,7 +319,7 @@ int NativeNfcTag::connectWithStatus(int technology)
   return status;
 }
 
-void NativeNfcTag::nativeNfcTag_doRead(std::vector<uint8_t>& buf)
+void NfcTagManager::doRead(std::vector<uint8_t>& buf)
 {
   ALOGD("%s: enter", __FUNCTION__);
   tNFA_STATUS status = NFA_STATUS_FAILED;
@@ -362,7 +362,7 @@ void NativeNfcTag::nativeNfcTag_doRead(std::vector<uint8_t>& buf)
   return;
 }
 
-void NativeNfcTag::nativeNfcTag_doWriteStatus(bool isWriteOk)
+void NfcTagManager::doWriteStatus(bool isWriteOk)
 {
   if (sWriteWaitingForComplete != false) {
     sWriteWaitingForComplete = false;
@@ -371,7 +371,7 @@ void NativeNfcTag::nativeNfcTag_doWriteStatus(bool isWriteOk)
   }
 }
 
-int NativeNfcTag::nativeNfcTag_doCheckNdef(int ndefInfo[])
+int NfcTagManager::doCheckNdef(int ndefInfo[])
 {
   tNFA_STATUS status = NFA_STATUS_FAILED;
 
@@ -459,7 +459,7 @@ TheEnd:
   return status;
 }
 
-void NativeNfcTag::nativeNfcTag_abortWaits()
+void NfcTagManager::doAbortWaits()
 {
   ALOGD("%s", __FUNCTION__);
   {
@@ -482,7 +482,7 @@ void NativeNfcTag::nativeNfcTag_abortWaits()
   sem_post(&sMakeReadonlySem);
 }
 
-void NativeNfcTag::nativeNfcTag_doReadCompleted(tNFA_STATUS status)
+void NfcTagManager::doReadCompleted(tNFA_STATUS status)
 {
   ALOGD("%s: status=0x%X; is reading=%u", __FUNCTION__, status, sIsReadingNdefMessage);
 
@@ -499,7 +499,7 @@ void NativeNfcTag::nativeNfcTag_doReadCompleted(tNFA_STATUS status)
   sReadEvent.notifyOne();
 }
 
-void NativeNfcTag::nativeNfcTag_doConnectStatus(bool isConnectOk)
+void NfcTagManager::doConnectStatus(bool isConnectOk)
 {
   if (sConnectWaitingForComplete != false) {
     sConnectWaitingForComplete = false;
@@ -509,7 +509,7 @@ void NativeNfcTag::nativeNfcTag_doConnectStatus(bool isConnectOk)
   }
 }
 
-void NativeNfcTag::nativeNfcTag_doDeactivateStatus(int status)
+void NfcTagManager::doDeactivateStatus(int status)
 {
   sGotDeactivate = (status == 0);
 
@@ -517,12 +517,12 @@ void NativeNfcTag::nativeNfcTag_doDeactivateStatus(int status)
   sReconnectEvent.notifyOne();
 }
 
-void NativeNfcTag::nativeNfcTag_resetPresenceCheck()
+void NfcTagManager::doResetPresenceCheck()
 {
   sCountTagAway = 0;
 }
 
-void NativeNfcTag::nativeNfcTag_doPresenceCheckResult(tNFA_STATUS status)
+void NfcTagManager::doPresenceCheckResult(tNFA_STATUS status)
 {
   if (status == NFA_STATUS_OK)
     sCountTagAway = 0;
@@ -533,7 +533,7 @@ void NativeNfcTag::nativeNfcTag_doPresenceCheckResult(tNFA_STATUS status)
   sem_post(&sPresenceCheckSem);
 }
 
-void NativeNfcTag::nativeNfcTag_doCheckNdefResult(tNFA_STATUS status, uint32_t maxSize, uint32_t currentSize, uint8_t flags)
+void NfcTagManager::doCheckNdefResult(tNFA_STATUS status, uint32_t maxSize, uint32_t currentSize, uint8_t flags)
 {
   //this function's flags parameter is defined using the following macros
   //in nfc/include/rw_api.h;
@@ -592,7 +592,7 @@ void NativeNfcTag::nativeNfcTag_doCheckNdefResult(tNFA_STATUS status, uint32_t m
   sem_post(&sCheckNdefSem);
 }
 
-void NativeNfcTag::nativeNfcTag_doMakeReadonlyResult(tNFA_STATUS status)
+void NfcTagManager::doMakeReadonlyResult(tNFA_STATUS status)
 {
   if (sMakeReadonlyWaitingForComplete != false) {
     sMakeReadonlyWaitingForComplete = false;
@@ -602,7 +602,7 @@ void NativeNfcTag::nativeNfcTag_doMakeReadonlyResult(tNFA_STATUS status)
   }
 }
 
-bool NativeNfcTag::nativeNfcTag_doMakeReadonly()
+bool NfcTagManager::doMakeReadonly()
 {
   bool result = false;
   tNFA_STATUS status;
@@ -646,21 +646,21 @@ TheEnd:
 
 //register a callback to receive NDEF message from the tag
 //from the NFA_NDEF_DATA_EVT;
-void NativeNfcTag::nativeNfcTag_registerNdefTypeHandler()
+void NfcTagManager::doRegisterNdefTypeHandler()
 {
   ALOGD("%s", __FUNCTION__);
   sNdefTypeHandlerHandle = NFA_HANDLE_INVALID;
   NFA_RegisterNDefTypeHandler(TRUE, NFA_TNF_DEFAULT, (UINT8 *) "", 0, ndefHandlerCallback);
 }
 
-void NativeNfcTag::nativeNfcTag_deregisterNdefTypeHandler()
+void NfcTagManager::doDeregisterNdefTypeHandler()
 {
   ALOGD("%s", __FUNCTION__);
   NFA_DeregisterNDefTypeHandler(sNdefTypeHandlerHandle);
   sNdefTypeHandlerHandle = NFA_HANDLE_INVALID;
 }
 
-int NativeNfcTag::nativeNfcTag_doConnect(int targetHandle)
+int NfcTagManager::doConnect(int targetHandle)
 {
   ALOGD("%s: targetHandle = %d", __FUNCTION__, targetHandle);
   int i = targetHandle;
@@ -700,7 +700,7 @@ TheEnd:
   return retCode;
 }
 
-bool NativeNfcTag::nativeNfcTag_doPresenceCheck()
+bool NfcTagManager::doPresenceCheck()
 {
   ALOGD("%s", __FUNCTION__);
   tNFA_STATUS status = NFA_STATUS_OK;
@@ -714,9 +714,9 @@ bool NativeNfcTag::nativeNfcTag_doPresenceCheck()
     tNFA_DEACTIVATED deactivated = {NFA_DEACTIVATE_TYPE_IDLE};
 
     NfcTag::getInstance().setDeactivationState(deactivated);
-    nativeNfcTag_resetPresenceCheck();
+    doResetPresenceCheck();
     NfcTag::getInstance().connectionEventHandler(NFA_DEACTIVATED_EVT, NULL);
-    nativeNfcTag_abortWaits();
+    doAbortWaits();
     NfcTag::getInstance().abort();
 
     return false;
@@ -756,7 +756,7 @@ bool NativeNfcTag::nativeNfcTag_doPresenceCheck()
   return isPresent;
 }
 
-int NativeNfcTag::reSelect(tNFA_INTF_TYPE rfInterface)
+int NfcTagManager::reSelect(tNFA_INTF_TYPE rfInterface)
 {
   ALOGD("%s: enter; rf intf = %d", __FUNCTION__, rfInterface);
   NfcTag& natTag = NfcTag::getInstance();
@@ -830,7 +830,7 @@ int NativeNfcTag::reSelect(tNFA_INTF_TYPE rfInterface)
   return rVal;
 }
 
-bool NativeNfcTag::switchRfInterface(tNFA_INTF_TYPE rfInterface)
+bool NfcTagManager::switchRfInterface(tNFA_INTF_TYPE rfInterface)
 {
   ALOGD("%s: rf intf = %d", __FUNCTION__, rfInterface);
   NfcTag& natTag = NfcTag::getInstance();
@@ -854,7 +854,7 @@ bool NativeNfcTag::switchRfInterface(tNFA_INTF_TYPE rfInterface)
   return rVal;
 }
 
-bool NativeNfcTag::nativeNfcTag_doDisconnect()
+bool NfcTagManager::doDisconnect()
 {
   ALOGD("%s: enter", __FUNCTION__);
   tNFA_STATUS nfaStat = NFA_STATUS_OK;
@@ -875,7 +875,7 @@ TheEnd:
   return (nfaStat == NFA_STATUS_OK) ? true : false;
 }
 
-bool NativeNfcTag::nativeNfcTag_doWrite(std::vector<uint8_t>& buf)
+bool NfcTagManager::doWrite(std::vector<uint8_t>& buf)
 {
   bool result = false;
   tNFA_STATUS status = 0;
@@ -948,47 +948,47 @@ TheEnd:
   return result;
 }
 
-bool NativeNfcTag::presenceCheck() 
+bool NfcTagManager::presenceCheck() 
 {
   bool result;
   pthread_mutex_lock(&mMutex);
-  result = nativeNfcTag_doPresenceCheck();
+  result = doPresenceCheck();
   pthread_mutex_unlock(&mMutex);
   return result;
 }
 
-void NativeNfcTag::readNdef(std::vector<uint8_t>& buf) 
+void NfcTagManager::readNdef(std::vector<uint8_t>& buf) 
 {
   pthread_mutex_lock(&mMutex);
-  nativeNfcTag_doRead(buf);
+  doRead(buf);
   pthread_mutex_unlock(&mMutex);
 }
 
-int NativeNfcTag::checkNdefWithStatus(int ndefinfo[]) 
+int NfcTagManager::checkNdefWithStatus(int ndefinfo[]) 
 {
   int status = -1;
   pthread_mutex_lock(&mMutex);
-  status = nativeNfcTag_doCheckNdef(ndefinfo);
+  status = doCheckNdef(ndefinfo);
   pthread_mutex_unlock(&mMutex);
   return status;
 }
 
-bool NativeNfcTag::writeNdef(NdefMessage& ndef) 
+bool NfcTagManager::writeNdef(NdefMessage& ndef) 
 {
   bool result;
   std::vector<uint8_t> buf;
   ndef.toByteArray(buf);
   pthread_mutex_lock(&mMutex);
-  result = nativeNfcTag_doWrite(buf);
+  result = doWrite(buf);
   pthread_mutex_unlock(&mMutex);
   return result;
 }
 
-bool NativeNfcTag::makeReadOnly() 
+bool NfcTagManager::makeReadOnly() 
 {
   bool result;
   pthread_mutex_lock(&mMutex);
-  result = nativeNfcTag_doMakeReadonly();
+  result = doMakeReadonly();
   pthread_mutex_unlock(&mMutex);
   return result;
 }

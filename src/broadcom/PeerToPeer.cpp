@@ -5,12 +5,13 @@
 /**
  *  Communicate with a peer using NFC-DEP, LLCP, SNEP.
  */
-#include "OverrideLog.h"
 #include "PeerToPeer.h"
+
 #include "NfcUtil.h"
 #include "llcp_defs.h"
 #include "config.h"
 #include "IP2pDevice.h"
+#include "NfcTagManager.h"
 
 /* Some older PN544-based solutions would only send the first SYMM back
  * (as an initiator) after the full LTO (750ms). But our connect timer
@@ -29,8 +30,8 @@ using namespace android;
 
 namespace android
 {
-  extern void nativeNfcTag_registerNdefTypeHandler ();
-  extern void nativeNfcTag_deregisterNdefTypeHandler ();
+  extern void NfcTagManager_registerNdefTypeHandler ();
+  extern void NfcTagManager_deregisterNdefTypeHandler ();
 }
 
 PeerToPeer PeerToPeer::sP2p;
@@ -172,12 +173,12 @@ void PeerToPeer::llcpActivatedHandler(tNFA_LLCP_ACTIVATED& activated)
     reinterpret_cast<IP2pDevice*>(mNfcManager->queryInterface("P2pDevice"));
 
   if (pIP2pDevice == NULL) {
-    ALOGE("%s : cannot get native p2p device class", fn);
+    ALOGE("%s : cannot get p2p device class", fn);
     return;
   }
     
   //no longer need to receive NDEF message from a tag
-  NativeNfcTag::nativeNfcTag_deregisterNdefTypeHandler();
+  NfcTagManager::doDeregisterNdefTypeHandler();
 
   if (activated.is_initiator == true) {
     ALOGD("%s: p2p initiator", fn);
@@ -203,13 +204,13 @@ void PeerToPeer::llcpDeactivatedHandler(tNFA_LLCP_DEACTIVATED& /*deactivated*/)
     reinterpret_cast<IP2pDevice*>(mNfcManager->queryInterface("P2pDevice"));
 
   if (pIP2pDevice == NULL) {
-    ALOGE("%s : cannot get native p2p device class", fn);
+    ALOGE("%s : cannot get p2p device class", fn);
     return;
   }
 
   mNfcManager->notifyLlcpLinkDeactivated(reinterpret_cast<void*>(pIP2pDevice));
 
-  NativeNfcTag::nativeNfcTag_registerNdefTypeHandler();
+  NfcTagManager::doRegisterNdefTypeHandler();
   ALOGD("%s: exit", fn);
 }
 
