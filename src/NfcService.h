@@ -24,12 +24,12 @@ public:
   static NfcService* Instance();
   static INfcManager* getNfcManager();
 
-  static void nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice);
-  static void nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice);
-  static void nfc_service_send_MSG_TAG(void* pTag);
-  static void nfc_service_send_MSG_SE_FIELD_ACTIVATED();
-  static void nfc_service_send_MSG_SE_FIELD_DEACTIVATED();
-  static void nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS();
+  static void notifyLlcpLinkActivation(void* pDevice);
+  static void notifyLlcpLinkDeactivation(void* pDevice);
+  static void notifyTagDiscovered(void* pTag);
+  static void notifySEFieldActivated();
+  static void notifySEFieldDeactivated();
+  static void notifySETransactionListeners();
 
   static bool handleDisconnect();
   int handleConnect(int technology);

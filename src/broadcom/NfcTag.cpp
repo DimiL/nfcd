@@ -14,6 +14,7 @@ extern "C"
   #include "rw_int.h"
 }
 
+#undef LOG_TAG
 #define LOG_TAG "BroadcomNfc"
 #include <cutils/log.h>
 
@@ -350,7 +351,7 @@ void NfcTag::createNativeNfcTag(tNFA_ACTIVATED& activationData)
 
   //notify NFC service about this new tag
   ALOGD("%s: try notify nfc service", fn);
-  mNfcManager->notifyTagDiscover(reinterpret_cast<void*>(pINfcTag));
+  mNfcManager->notifyTagDiscovered(reinterpret_cast<void*>(pINfcTag));
 
   ALOGD("%s: exit", fn);
 }

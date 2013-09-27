@@ -13,20 +13,13 @@ public:
   DeviceHost();
   virtual ~DeviceHost();
 
-  void notifyTagDiscover(void* pTag);
-
+  void notifyTagDiscovered(void* pTag);
   void notifyTargetDeselected();
-
   void notifyTransactionListeners();
-
   void notifyLlcpLinkActivation(void* pDevice);
-
   void notifyLlcpLinkDeactivated(void* pDevice);
-
   void notifyLlcpLinkFirstPacketReceived();
-
   void notifySeFieldActivated();
-
   void notifySeFieldDeactivated();
 };
 

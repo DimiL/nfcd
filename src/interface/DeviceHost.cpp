@@ -12,9 +12,9 @@ DeviceHost::~DeviceHost()
 {
 }
 
-void DeviceHost::notifyTagDiscover(void* pTag)
+void DeviceHost::notifyTagDiscovered(void* pTag)
 {
-  NfcService::nfc_service_send_MSG_TAG(pTag);
+  NfcService::notifyTagDiscovered(pTag);
 }
 
 void DeviceHost::notifyTargetDeselected()
@@ -29,25 +29,27 @@ void DeviceHost::notifyTransactionListeners()
 
 void DeviceHost::notifyLlcpLinkActivation(void* pDevice)
 {
-  NfcService::nfc_service_send_MSG_LLCP_LINK_ACTIVATION(pDevice);
+  NfcService::notifyLlcpLinkActivation(pDevice);
 }
 
 void DeviceHost::notifyLlcpLinkDeactivated(void* pDevice)
 {
-  NfcService::nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(pDevice);
+  NfcService::notifyLlcpLinkDeactivation(pDevice);
 }
 
 void DeviceHost::notifyLlcpLinkFirstPacketReceived()
 {
-  ALOGE("function %s not implement", __FUNCTION__);
+  ALOGE("%s: not implement", __FUNCTION__);
 }
 
 void DeviceHost::notifySeFieldActivated()
-{
-  NfcService::nfc_service_send_MSG_SE_FIELD_ACTIVATED();
+{ 
+  ALOGE("%s: not implement", __FUNCTION__);
+  //NfcService::notifySEFieldActivated();
 }
 
 void DeviceHost::notifySeFieldDeactivated()
 {
-  NfcService::nfc_service_send_MSG_SE_FIELD_DEACTIVATED();
+  ALOGE("%s: not implement", __FUNCTION__);
+  //NfcService::notifySEFieldDeactivated();
 }

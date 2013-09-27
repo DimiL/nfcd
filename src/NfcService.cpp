@@ -58,7 +58,7 @@ static NfcEventType msg_type = MSG_UNDEFINED;
 NfcService* NfcService::sInstance = NULL;
 NfcManager* NfcService::sNfcManager = NULL;
 
-void NfcService::nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
+void NfcService::notifyLlcpLinkActivation(void* pDevice)
 {
   ALOGD("%s enter", __func__);
   NfcEvent *event = new NfcEvent();
@@ -68,7 +68,7 @@ void NfcService::nfc_service_send_MSG_LLCP_LINK_ACTIVATION(void* pDevice)
   sem_post(&thread_sem);
 }
 
-void NfcService::nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice)
+void NfcService::notifyLlcpLinkDeactivation(void* pDevice)
 {
   ALOGD("%s enter", __func__);
   NfcEvent *event = new NfcEvent();
@@ -78,7 +78,7 @@ void NfcService::nfc_service_send_MSG_LLCP_LINK_DEACTIVATION(void* pDevice)
   sem_post(&thread_sem);
 }
 
-void NfcService::nfc_service_send_MSG_TAG(void* pTag)
+void NfcService::notifyTagDiscovered(void* pTag)
 {
   ALOGD("%s enter", __func__);
   NfcEvent *event = new NfcEvent();
@@ -88,21 +88,21 @@ void NfcService::nfc_service_send_MSG_TAG(void* pTag)
   sem_post(&thread_sem);
 }
 
-void NfcService::nfc_service_send_MSG_SE_FIELD_ACTIVATED()
+void NfcService::notifySEFieldActivated()
 {
   ALOGD("%s enter", __func__);
   msg_type = MSG_SE_FIELD_ACTIVATED;
   sem_post(&thread_sem);
 }
 
-void NfcService::nfc_service_send_MSG_SE_FIELD_DEACTIVATED()
+void NfcService::notifySEFieldDeactivated()
 {
   ALOGD("%s enter", __func__);
   msg_type = MSG_SE_FIELD_DEACTIVATED;
   sem_post(&thread_sem);
 }
 
-void NfcService::nfc_service_send_MSG_SE_NOTIFY_TRANSACTION_LISTENERS()
+void NfcService::notifySETransactionListeners()
 {
   ALOGD("%s enter", __func__);
   msg_type = MSG_SE_NOTIFY_TRANSACTION_LISTENERS;

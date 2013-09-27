@@ -21,6 +21,7 @@ extern "C"
   #include "ce_api.h"
 }
 
+#undef LOG_TAG
 #define LOG_TAG "BroadcomNfc"
 #include <cutils/log.h>
 
@@ -740,7 +741,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
   case NFA_CE_UICC_LISTEN_CONFIGURED_EVT :
     ALOGD("%s: NFA_CE_UICC_LISTEN_CONFIGURED_EVT : status=0x%X", __FUNCTION__, eventData->status);
     // TODO : Implement SE
-    ALOGE("%s: Unimplement function");
+    ALOGE("%s: Unimplement function", __FUNCTION__);
     break;
 
   case NFA_SET_P2P_LISTEN_TECH_EVT:
