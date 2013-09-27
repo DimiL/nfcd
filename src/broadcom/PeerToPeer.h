@@ -27,8 +27,8 @@ class NfaConn;
 class PeerToPeer
 {
 public:
-  PeerToPeer ();
-  ~PeerToPeer ();
+  PeerToPeer();
+  ~PeerToPeer();
 
   static PeerToPeer& getInstance();
 
@@ -166,8 +166,8 @@ public:
   SyncEvent             mConnectingEvent;       // for NFA_P2pConnectByName or Sap()
   SyncEvent             mSnepEvent;             // To wait for SNEP completion
 
-  P2pClient ();
-  ~P2pClient ();
+  P2pClient();
+  ~P2pClient();
 
   void unblock();
 };

@@ -28,18 +28,18 @@ public:
 
   bool wait(long millisec)
   {
-    bool retVal = mCondVar.wait (mMutex, millisec);
+    bool retVal = mCondVar.wait(mMutex, millisec);
     return retVal;
   }
 
   void notifyOne()
   {
-    mCondVar.notifyOne ();
+    mCondVar.notifyOne();
   }
 
-  void end ()
+  void end()
   {
-    mMutex.unlock ();
+    mMutex.unlock();
   }
 
 private:
@@ -50,15 +50,15 @@ private:
 class SyncEventGuard
 {
 public:
-  SyncEventGuard (SyncEvent& event)
-    : mEvent (event)
+  SyncEventGuard(SyncEvent& event)
+    : mEvent(event)
   {
-    event.start (); //automatically start operation
+    event.start(); //automatically start operation
   };
 
-  ~SyncEventGuard ()
+  ~SyncEventGuard()
   {
-    mEvent.end (); //automatically end operation
+    mEvent.end(); //automatically end operation
   };
 
 private:

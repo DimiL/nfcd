@@ -117,7 +117,7 @@ bool NfcManager::doInitialize()
   theInstance.Initialize();
 
   {
-    SyncEventGuard guard (sNfaEnableEvent);
+    SyncEventGuard guard(sNfaEnableEvent);
     tHAL_NFC_ENTRY* halFuncEntries = theInstance.GetHalEntryFuncs();
     NFA_Init(halFuncEntries);
 
@@ -190,7 +190,7 @@ bool NfcManager::doDeinitialize()
   //SecureElement::getInstance().finalize();
 
   if (sIsNfaEnabled) {
-    SyncEventGuard guard (sNfaDisableEvent);
+    SyncEventGuard guard(sNfaDisableEvent);
     tNFA_STATUS stat = NFA_Disable(TRUE /* graceful */);
     if (stat == NFA_STATUS_OK) {
       ALOGD("%s: wait for completion", __FUNCTION__);
@@ -213,7 +213,7 @@ bool NfcManager::doDeinitialize()
 
   {
     //unblock NFA_EnablePolling() and NFA_DisablePolling()
-    SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+    SyncEventGuard guard(sNfaEnableDisablePollingEvent);
     sNfaEnableDisablePollingEvent.notifyOne();
   }
 
@@ -247,7 +247,7 @@ void NfcManager::enableDiscovery()
   }
     
   {
-    SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+    SyncEventGuard guard(sNfaEnableDisablePollingEvent);
     stat = NFA_EnablePolling(tech_mask);
     if (stat == NFA_STATUS_OK) {
       ALOGD("%s: wait for enable event", __FUNCTION__);
@@ -290,7 +290,7 @@ void NfcManager::disableDiscovery()
   startRfDiscovery(false);
 
   if (sDiscoveryEnabled) {
-    SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+    SyncEventGuard guard(sNfaEnableDisablePollingEvent);
     status = NFA_DisablePolling();
     if (status == NFA_STATUS_OK) {
       sDiscoveryEnabled = false;
@@ -411,7 +411,7 @@ void nfaDeviceManagementCallback(UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
   {
   case NFA_DM_ENABLE_EVT: /* Result of NFA_Enable */
     {
-      SyncEventGuard guard (sNfaEnableEvent);
+      SyncEventGuard guard(sNfaEnableEvent);
       ALOGD("%s: NFA_DM_ENABLE_EVT; status=0x%X",__FUNCTION__, eventData->status);
       sIsNfaEnabled = eventData->status == NFA_STATUS_OK;
       sIsDisabling = false;
@@ -421,7 +421,7 @@ void nfaDeviceManagementCallback(UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
 
   case NFA_DM_DISABLE_EVT: /* Result of NFA_Disable */
     {
-      SyncEventGuard guard (sNfaDisableEvent);
+      SyncEventGuard guard(sNfaDisableEvent);
       ALOGD("%s: NFA_DM_DISABLE_EVT", __FUNCTION__);
       sIsNfaEnabled = false;
       sIsDisabling = false;
@@ -432,7 +432,7 @@ void nfaDeviceManagementCallback(UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
   case NFA_DM_SET_CONFIG_EVT: //result of NFA_SetConfig
     ALOGD("%s: NFA_DM_SET_CONFIG_EVT", __FUNCTION__);
     {
-      SyncEventGuard guard (sNfaSetConfigEvent);
+      SyncEventGuard guard(sNfaSetConfigEvent);
       sNfaSetConfigEvent.notifyOne();
     }
     break;
@@ -440,7 +440,7 @@ void nfaDeviceManagementCallback(UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
   case NFA_DM_GET_CONFIG_EVT: /* Result of NFA_GetConfig */
     ALOGD("%s: NFA_DM_GET_CONFIG_EVT", __FUNCTION__);
     {
-      SyncEventGuard guard (sNfaGetConfigEvent);
+      SyncEventGuard guard(sNfaGetConfigEvent);
       if (eventData->status == NFA_STATUS_OK &&
           eventData->get_config.tlv_size <= sizeof(sConfig)) {
         sCurrentConfigLen = eventData->get_config.tlv_size;
@@ -479,17 +479,17 @@ void nfaDeviceManagementCallback(UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
       // TODO : Implement LLCP
       {
         ALOGD("%s: aborting  sNfaEnableDisablePollingEvent", __FUNCTION__);
-        SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+        SyncEventGuard guard(sNfaEnableDisablePollingEvent);
         sNfaEnableDisablePollingEvent.notifyOne();
       }
       {
         ALOGD("%s: aborting  sNfaEnableEvent", __FUNCTION__);
-        SyncEventGuard guard (sNfaEnableEvent);
+        SyncEventGuard guard(sNfaEnableEvent);
         sNfaEnableEvent.notifyOne();
       }
       {
         ALOGD("%s: aborting  sNfaDisableEvent", __FUNCTION__);
-        SyncEventGuard guard (sNfaDisableEvent);
+        SyncEventGuard guard(sNfaDisableEvent);
         sNfaDisableEvent.notifyOne();
       }
       sDiscoveryEnabled = false;
@@ -527,7 +527,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
     {
       ALOGD("%s: NFA_POLL_ENABLED_EVT: status = %u", __FUNCTION__, eventData->status);
 
-      SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+      SyncEventGuard guard(sNfaEnableDisablePollingEvent);
       sNfaEnableDisablePollingEvent.notifyOne();
     }
     break;
@@ -536,7 +536,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
     {
       ALOGD("%s: NFA_POLL_DISABLED_EVT: status = %u", __FUNCTION__, eventData->status);
 
-      SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+      SyncEventGuard guard(sNfaEnableDisablePollingEvent);
       sNfaEnableDisablePollingEvent.notifyOne();
     }
     break;
@@ -545,7 +545,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
     {
       ALOGD("%s: NFA_RF_DISCOVERY_STARTED_EVT: status = %u", __FUNCTION__, eventData->status);
 
-      SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+      SyncEventGuard guard(sNfaEnableDisablePollingEvent);
       sNfaEnableDisablePollingEvent.notifyOne();
     }
     break;
@@ -554,7 +554,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
     {
       ALOGD("%s: NFA_RF_DISCOVERY_STOPPED_EVT: status = %u", __FUNCTION__, eventData->status);
  
-      SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+      SyncEventGuard guard(sNfaEnableDisablePollingEvent);
       sNfaEnableDisablePollingEvent.notifyOne();
     }
     break;
@@ -761,7 +761,7 @@ void startRfDiscovery(bool isStart)
   tNFA_STATUS status = NFA_STATUS_FAILED;
 
   ALOGD("%s: is start=%d", __FUNCTION__, isStart);
-  SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+  SyncEventGuard guard(sNfaEnableDisablePollingEvent);
   status  = isStart ? NFA_StartRfDiscovery() : NFA_StopRfDiscovery();
   if (status == NFA_STATUS_OK) {
     sNfaEnableDisablePollingEvent.wait(); //wait for NFA_RF_DISCOVERY_xxxx_EVT
@@ -779,7 +779,7 @@ void doStartupConfig()
   // If polling for Active mode, set the ordering so that we choose Active over Passive mode first.
   if (gNat.tech_mask & (NFA_TECHNOLOGY_MASK_A_ACTIVE | NFA_TECHNOLOGY_MASK_F_ACTIVE)) {
     UINT8  act_mode_order_param[] = { 0x01 };
-    SyncEventGuard guard (sNfaSetConfigEvent);
+    SyncEventGuard guard(sNfaSetConfigEvent);
     stat = NFA_SetConfig(NCI_PARAM_ID_ACT_ORDER, sizeof(act_mode_order_param), &act_mode_order_param[0]);
     if (stat == NFA_STATUS_OK)
       sNfaSetConfigEvent.wait();
@@ -803,7 +803,7 @@ void startStopPolling(bool isStartPolling)
     if (GetNumValue(NAME_POLLING_TECH_MASK, &num, sizeof(num)))
       tech_mask = num;
 
-    SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+    SyncEventGuard guard(sNfaEnableDisablePollingEvent);
     ALOGD("%s: enable polling", __FUNCTION__);
     stat = NFA_EnablePolling(tech_mask);
     if (stat == NFA_STATUS_OK) {
@@ -813,7 +813,7 @@ void startStopPolling(bool isStartPolling)
       ALOGE ("%s: fail enable polling; error=0x%X", __FUNCTION__, stat);
     }
   } else {
-    SyncEventGuard guard (sNfaEnableDisablePollingEvent);
+    SyncEventGuard guard(sNfaEnableDisablePollingEvent);
     ALOGD("%s: disable polling", __FUNCTION__);
     stat = NFA_DisablePolling();
     if (stat == NFA_STATUS_OK) {
@@ -834,10 +834,10 @@ static bool isPeerToPeer(tNFA_ACTIVATED& activated)
 static bool isListenMode(tNFA_ACTIVATED& activated)
 {
   return ((NFC_DISCOVERY_TYPE_LISTEN_A == activated.activate_ntf.rf_tech_param.mode)
-       || (NFC_DISCOVERY_TYPE_LISTEN_B == activated.activate_ntf.rf_tech_param.mode)
-       || (NFC_DISCOVERY_TYPE_LISTEN_F == activated.activate_ntf.rf_tech_param.mode)
-       || (NFC_DISCOVERY_TYPE_LISTEN_A_ACTIVE == activated.activate_ntf.rf_tech_param.mode)
-       || (NFC_DISCOVERY_TYPE_LISTEN_F_ACTIVE == activated.activate_ntf.rf_tech_param.mode)
-       || (NFC_DISCOVERY_TYPE_LISTEN_ISO15693 == activated.activate_ntf.rf_tech_param.mode)
-       || (NFC_DISCOVERY_TYPE_LISTEN_B_PRIME == activated.activate_ntf.rf_tech_param.mode));
+      || (NFC_DISCOVERY_TYPE_LISTEN_B == activated.activate_ntf.rf_tech_param.mode)
+      || (NFC_DISCOVERY_TYPE_LISTEN_F == activated.activate_ntf.rf_tech_param.mode)
+      || (NFC_DISCOVERY_TYPE_LISTEN_A_ACTIVE == activated.activate_ntf.rf_tech_param.mode)
+      || (NFC_DISCOVERY_TYPE_LISTEN_F_ACTIVE == activated.activate_ntf.rf_tech_param.mode)
+      || (NFC_DISCOVERY_TYPE_LISTEN_ISO15693 == activated.activate_ntf.rf_tech_param.mode)
+      || (NFC_DISCOVERY_TYPE_LISTEN_B_PRIME == activated.activate_ntf.rf_tech_param.mode));
 }

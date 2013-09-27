@@ -13,31 +13,31 @@
 #define LOG_TAG "BroadcomNfc"
 #include <cutils/log.h>
 
-extern void startStopPolling (bool isStartPolling);
+extern void startStopPolling(bool isStartPolling);
 
 static const int gIntervalTime = 1000; //millisecond between the check to restore polling
 static IntervalTimer gTimer;
 static Mutex gMutex;
-static void pn544InteropStartPolling (union sigval); //callback function for interval timer
+static void pn544InteropStartPolling(union sigval); //callback function for interval timer
 static bool gIsBusy = false; //is timer busy?
 static bool gAbortNow = false; //stop timer during next callback
 
 void pn544InteropStopPolling()
 {
-  ALOGD ("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", __FUNCTION__);
   gMutex.lock();
   gTimer.kill();
-  startStopPolling (false);
+  startStopPolling(false);
   gIsBusy = true;
   gAbortNow = false;
-  gTimer.set (gIntervalTime, pn544InteropStartPolling); //after some time, start polling again
+  gTimer.set(gIntervalTime, pn544InteropStartPolling); //after some time, start polling again
   gMutex.unlock();
-  ALOGD ("%s: exit", __FUNCTION__);
+  ALOGD("%s: exit", __FUNCTION__);
 }
 
 void pn544InteropStartPolling(union sigval)
 {
-  ALOGD ("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", __FUNCTION__);
   gMutex.lock();
   NfcTag::ActivationState state = NfcTag::getInstance().getActivationState();
 

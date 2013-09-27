@@ -40,7 +40,7 @@ void PowerSwitch::initialize(PowerLevel level)
 {
   static const char fn [] = "PowerSwitch::initialize";
 
-  mMutex.lock ();
+  mMutex.lock();
 
   ALOGD("%s: level=%s (%u)", fn, powerLevelToString(level), level);
   GetNumValue(NAME_SCREEN_OFF_POWER_STATE, &mDesiredScreenOffPowerState, sizeof(mDesiredScreenOffPowerState));
@@ -146,7 +146,7 @@ bool PowerSwitch::setPowerOffSleepState(bool sleep)
   if (sleep) { //enter power-off-sleep state
     //make sure the current power state is ON
     if (mCurrDeviceMgtPowerState != NFA_DM_PWR_MODE_OFF_SLEEP) {
-      SyncEventGuard guard (mPowerStateEvent);
+      SyncEventGuard guard(mPowerStateEvent);
 
       ALOGD("%s: try power off", fn);
       stat = NFA_PowerOffSleepMode(TRUE);
@@ -166,7 +166,7 @@ bool PowerSwitch::setPowerOffSleepState(bool sleep)
     //make sure the current power state is OFF
     if (mCurrDeviceMgtPowerState != NFA_DM_PWR_MODE_FULL) {
       mCurrDeviceMgtPowerState = NFA_DM_PWR_STATE_UNKNOWN;
-      SyncEventGuard guard (mPowerStateEvent);
+      SyncEventGuard guard(mPowerStateEvent);
 
       ALOGD("%s: try full power", fn);
       stat = NFA_PowerOffSleepMode(FALSE);
@@ -230,7 +230,7 @@ void PowerSwitch::abort()
 {
   static const char fn [] = "PowerSwitch::abort";
   ALOGD("%s", fn);
-  SyncEventGuard guard (mPowerStateEvent);
+  SyncEventGuard guard(mPowerStateEvent);
   mPowerStateEvent.notifyOne();
 }
 
@@ -245,7 +245,7 @@ void PowerSwitch::deviceManagementCallback(UINT8 event, tNFA_DM_CBACK_DATA* even
       tNFA_DM_PWR_MODE_CHANGE& power_mode = eventData->power_mode;
       ALOGD("%s: NFA_DM_PWR_MODE_CHANGE_EVT; status=%u; device mgt power mode=%s (%u)", fn,
         power_mode.status, sPowerSwitch.deviceMgtPowerStateToString(power_mode.power_mode), power_mode.power_mode);
-      SyncEventGuard guard (sPowerSwitch.mPowerStateEvent);
+      SyncEventGuard guard(sPowerSwitch.mPowerStateEvent);
       if (power_mode.status == NFA_STATUS_OK)
         sPowerSwitch.mCurrDeviceMgtPowerState = power_mode.power_mode;
             sPowerSwitch.mPowerStateEvent.notifyOne();

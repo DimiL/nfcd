@@ -30,8 +30,8 @@ public:
   static const int VBAT_MONITOR_PRIMARY_THRESHOLD = 5;
   static const int VBAT_MONITOR_SECONDARY_THRESHOLD = 8;
 
-  PowerSwitch ();
-  ~PowerSwitch ();
+  PowerSwitch();
+  ~PowerSwitch();
 
   static PowerSwitch& getInstance();
   static void deviceManagementCallback(UINT8 event, tNFA_DM_CBACK_DATA* eventData);

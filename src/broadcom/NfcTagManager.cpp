@@ -333,7 +333,7 @@ void NfcTagManager::doRead(std::vector<uint8_t>& buf)
 
   if (sCheckNdefCurrentSize > 0) {
     {
-      SyncEventGuard g (sReadEvent);
+      SyncEventGuard g(sReadEvent);
       sIsReadingNdefMessage = true;
       status = NFA_RwReadNDef();
       sReadEvent.wait(); //wait for NFA_READ_CPLT_EVT
@@ -464,13 +464,13 @@ void NfcTagManager::doAbortWaits()
 {
   ALOGD("%s", __FUNCTION__);
   {
-    SyncEventGuard g (sReadEvent);
+    SyncEventGuard g(sReadEvent);
     sReadEvent.notifyOne();
   }
   sem_post(&sWriteSem);
   sem_post(&sFormatSem);
   {
-    SyncEventGuard g (sTransceiveEvent);
+    SyncEventGuard g(sTransceiveEvent);
     sTransceiveEvent.notifyOne();
   }
   {
@@ -496,7 +496,7 @@ void NfcTagManager::doReadCompleted(tNFA_STATUS status)
       free (sReadData);
     sReadData = NULL;
   }
-  SyncEventGuard g (sReadEvent);
+  SyncEventGuard g(sReadEvent);
   sReadEvent.notifyOne();
 }
 
@@ -505,7 +505,7 @@ void NfcTagManager::doConnectStatus(bool isConnectOk)
   if (sConnectWaitingForComplete != false) {
     sConnectWaitingForComplete = false;
     sConnectOk = isConnectOk;
-    SyncEventGuard g (sReconnectEvent);
+    SyncEventGuard g(sReconnectEvent);
     sReconnectEvent.notifyOne();
   }
 }
@@ -514,7 +514,7 @@ void NfcTagManager::doDeactivateStatus(int status)
 {
   sGotDeactivate = (status == 0);
 
-  SyncEventGuard g (sReconnectEvent);
+  SyncEventGuard g(sReconnectEvent);
   sReconnectEvent.notifyOne();
 }
 
@@ -775,7 +775,7 @@ int NfcTagManager::reSelect(tNFA_INTF_TYPE rfInterface)
     }
 
     {
-      SyncEventGuard g (sReconnectEvent);
+      SyncEventGuard g(sReconnectEvent);
       gIsTagDeactivating = true;
       sGotDeactivate = false;
       ALOGD("%s: deactivate to sleep", __FUNCTION__);
