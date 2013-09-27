@@ -7,9 +7,9 @@
  */
 
 #pragma once
+
 #include "SyncEvent.h"
 #include "NfcUtil.h"
-#include "NfcManager.h"
 #include "TagTechnology.h"
 
 extern "C"
@@ -17,6 +17,7 @@ extern "C"
   #include "nfa_rw_api.h"
 }
 
+class NfcManager;
 class INfcTag;
 
 class NfcTag

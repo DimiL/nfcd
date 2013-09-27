@@ -6,7 +6,10 @@
  *  Tag-reading, tag-writing operations.
  */
 #include "NfcTag.h"
+
 #include <vector>
+
+#include "NfcManager.h"
 #include "INfcTag.h"
 
 extern "C"

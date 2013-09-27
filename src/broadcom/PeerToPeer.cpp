@@ -7,11 +7,18 @@
  */
 #include "PeerToPeer.h"
 
+#include "NfcManager.h"
 #include "NfcUtil.h"
 #include "llcp_defs.h"
 #include "config.h"
 #include "IP2pDevice.h"
 #include "NfcTagManager.h"
+
+#undef LOG_TAG
+#define LOG_TAG "BroadcomNfc"
+#include <cutils/log.h>
+
+using namespace android;
 
 /* Some older PN544-based solutions would only send the first SYMM back
  * (as an initiator) after the full LTO (750ms). But our connect timer
@@ -21,18 +28,6 @@
  * timeout to 2000 ms, giving us enough time to complete the first connect.
  */
 #define LLCP_DATA_LINK_TIMEOUT    2000
-
-#undef LOG_TAG
-#define LOG_TAG "BroadcomNfc"
-#include <cutils/log.h>
-
-using namespace android;
-
-namespace android
-{
-  extern void NfcTagManager_registerNdefTypeHandler ();
-  extern void NfcTagManager_deregisterNdefTypeHandler ();
-}
 
 PeerToPeer PeerToPeer::sP2p;
 const std::string P2pServer::sSnepServiceName ("urn:nfc:sn:snep");

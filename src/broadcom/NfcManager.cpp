@@ -1,16 +1,19 @@
 #include "NfcManager.h"
 
 #include "OverrideLog.h"
+#include "config.h"
 #include "NfcAdaptation.h"
+
 #include "SyncEvent.h"
 #include "PeerToPeer.h"
 #include "PowerSwitch.h"
 #include "NfcTag.h"
-#include "config.h"
 #include "Pn544Interop.h"
 #include "LlcpSocket.h"
 #include "LlcpServiceSocket.h"
 #include "NfcTagManager.h"
+#include "P2pDevice.h"
+
 
 extern "C"
 {

@@ -8,7 +8,6 @@
 class NfcSecureElement
 {
 public:
-
   NfcSecureElement();
   virtual ~NfcSecureElement();
 

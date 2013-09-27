@@ -6,10 +6,9 @@
 #define mozilla_nfcd_NfcManager_h
 
 #include "DeviceHost.h"
-#include "P2pDevice.h"
-#include "LlcpServiceSocket.h"
 #include "INfcManager.h"
 
+class P2pDevice;
 class NfcTagManager;
 class ILlcpServerSocket;
 class ILlcpSocket;

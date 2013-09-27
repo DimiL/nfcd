@@ -5,9 +5,10 @@
 #ifndef mozilla_nfcd_NfcTagManager_h
 #define mozilla_nfcd_NfcTagManager_h
 
-#include "INfcTag.h"
 #include <pthread.h>
 #include <vector>
+
+#include "INfcTag.h"
 extern "C"
 {
   #include "nfa_rw_api.h"

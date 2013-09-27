@@ -6,17 +6,19 @@
  *  Communicate with a peer using NFC-DEP, LLCP, SNEP.
  */
 #pragma once
+
 #include <utils/RefBase.h>
 #include <utils/StrongPointer.h>
-#include "SyncEvent.h"
-#include "NfcManager.h"
 #include <string>
+
+#include "SyncEvent.h"
 
 extern "C"
 {
     #include "nfa_p2p_api.h"
 }
 
+class NfcManager;
 class P2pServer;
 class P2pClient;
 class NfaConn;

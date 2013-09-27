@@ -3,10 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #pragma once
-#include "NfcUtil.h"
 
 void pn544InteropStopPolling();
-
 bool pn544InteropIsBusy();
-
 void pn544InteropAbortNow();

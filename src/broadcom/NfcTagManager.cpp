@@ -1,11 +1,12 @@
 #include "NfcTagManager.h"
-#include "NdefMessage.h"
-#include "TagTechnology.h"
 
 #include <semaphore.h>
 #include <errno.h>
 #include <time.h>
 #include <signal.h>
+
+#include "NdefMessage.h"
+#include "TagTechnology.h"
 #include "NfcUtil.h"
 #include "NfcTag.h"
 #include "config.h"

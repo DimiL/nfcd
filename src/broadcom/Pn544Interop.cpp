@@ -3,6 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Pn544Interop.h"
+
+#include "NfcUtil.h"
 #include "IntervalTimer.h"
 #include "Mutex.h"
 #include "NfcTag.h"
