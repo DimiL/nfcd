@@ -71,16 +71,16 @@ void SnepClient::put(NdefMessage& msg)
 {
   SnepMessenger* messenger = NULL;
   if (mState != SnepClient::CONNECTED) {
-    ALOGE("Socket not connected");
+    ALOGE("%s: Socket not connected", __FUNCTION__);
     return;
   }
   messenger = mMessenger;
 
-  // TODO : Need to do error handling
+  // TODO : Need to do error handling.
   SnepMessage* snepMessage = SnepMessage::getPutRequest(msg);
   messenger->sendMessage(*snepMessage);
 
-  // TODO : Don't know why android call this function
+  // TODO : Don't know why android call this function.
   //messenger->getMessage();
 
   delete snepMessage;
@@ -90,7 +90,7 @@ SnepMessage* SnepClient::get(NdefMessage& msg)
 {
   SnepMessenger* messenger = NULL;
   if (mState != SnepClient::CONNECTED) {
-    ALOGE("Socket not connected");
+    ALOGE("%s: Socket not connected", __FUNCTION__);
     return NULL;
   }
   messenger = mMessenger;  
@@ -105,7 +105,7 @@ SnepMessage* SnepClient::get(NdefMessage& msg)
 void SnepClient::connect()
 {
   if (mState != SnepClient::DISCONNECTED) {
-    ALOGE("Socket already in use");
+    ALOGE("%s: Socket already in use", __FUNCTION__);
     return;
   }
   mState = SnepClient::CONNECTING;
@@ -113,20 +113,20 @@ void SnepClient::connect()
   INfcManager* pINfcManager = NfcService::getNfcManager();
   ILlcpSocket* socket = pINfcManager->createLlcpSocket(0, mMiu, mRwSize, 1024);
   if (socket == NULL) {
-    ALOGE("Could not connect to socket");
+    ALOGE("%s: Could not connect to socket", __FUNCTION__);
     return;
   }
 
   bool ret = false;
   if (mPort == -1) {
     if (!socket->connectToService(mServiceName)) {
-      ALOGE("Could not connect to service (%s)", mServiceName);
+      ALOGE("%s: Could not connect to service (%s)", __FUNCTION__, mServiceName);
       delete socket;
       return;
     }
   } else {
     if (!socket->connectToSap(mPort)) {
-      ALOGE("Could not connect to sap (%d)", mPort);
+      ALOGE("%s: Could not connect to sap (%d)", __FUNCTION__, mPort);
       delete socket;
       return;
     }    
@@ -136,7 +136,7 @@ void SnepClient::connect()
   int fragmentLength = (mFragmentLength == -1) ?  miu : miu < mFragmentLength ? miu : mFragmentLength;
   SnepMessenger* messenger = new SnepMessenger(true, socket, fragmentLength);
 
-  // rmove old messenger
+  // Remove old messenger.
   if (mMessenger) {
     mMessenger->close();
     delete mMessenger;

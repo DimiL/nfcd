@@ -5,7 +5,9 @@
 #ifndef mozilla_nfcd_SnepMessage_h
 #define mozilla_nfcd_SnepMessage_h
 
-#include "NdefMessage.h"
+#include <vector>
+
+class NdefMessage;
 
 class SnepMessage{
 public:
@@ -58,4 +60,3 @@ private:
 };
 
 #endif
-

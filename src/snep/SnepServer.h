@@ -8,7 +8,8 @@
 #include "SnepMessenger.h"
 #include "ISnepCallback.h"
 
-class SnepCallback : public ISnepCallback
+class SnepCallback
+  : public ISnepCallback
 {
 public:
    SnepCallback();
@@ -61,4 +62,3 @@ public:
 };
 
 #endif
-

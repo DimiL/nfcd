@@ -5,8 +5,8 @@
 #ifndef mozilla_nfcd_ISnepCallback_h
 #define mozilla_nfcd_ISnepCallback_h
 
-#include "SnepMessage.h"
-#include "NdefMessage.h"
+class SnepMessage;
+class NdefMessage;
 
 class ISnepCallback {
 public:

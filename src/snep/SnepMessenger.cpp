@@ -1,13 +1,15 @@
 #include "SnepMessenger.h"
 #include <vector>
 
+#include "ILlcpSocket.h"
+
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
 
-SnepMessenger::SnepMessenger(bool isClient, ILlcpSocket* socket, uint32_t fragmentLength) :
-mSocket(socket),
-mFragmentLength(fragmentLength),
-mIsClient(isClient)
+SnepMessenger::SnepMessenger(bool isClient, ILlcpSocket* socket, uint32_t fragmentLength)
+ : mSocket(socket)
+ , mFragmentLength(fragmentLength)
+ , mIsClient(isClient)
 {
 }
 
@@ -45,12 +47,12 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
 
   SnepMessage* snepResponse = SnepMessage::fromByteArray(responseBytes);
   if (snepResponse == NULL) {
-    ALOGE("function %s Invalid SNEP message", __FUNCTION__);
+    ALOGE("%s: Invalid SNEP message", __FUNCTION__);
     return;
   }
 
   if (snepResponse->getField() != remoteContinue) {
-    ALOGE("function %s Invalid response from server (%d)", __FUNCTION__, snepResponse->getField());
+    ALOGE("%s: Invalid response from server (%d)", __FUNCTION__, snepResponse->getField());
     delete snepResponse;
     return;
   }
@@ -119,14 +121,12 @@ SnepMessage* SnepMessenger::getMessage()
 
   // TODO : DO we need clear partial here?
   partial.clear();
-  // Remaining fragments
+  // Remaining fragments.
   while (!doneReading) {
-    ALOGE("[Dimi]reading from snep socket >>");
     size = mSocket->receive(partial);
-    ALOGE("[Dimi]reading from snep socket <<");
     if (size < 0) {
       if (!socketSend(fieldReject)) {
-        ALOGE("snep message send fail");
+        ALOGE("%s: snep message send fail", __FUNCTION__);
         return NULL;
       }
     } else {
@@ -140,7 +140,7 @@ SnepMessage* SnepMessenger::getMessage()
 
   SnepMessage* snep = SnepMessage::fromByteArray(buffer);
   if (snep == NULL) {
-    ALOGE("Badly formatted NDEF message, ignoring");
+    ALOGE("%s: Badly formatted NDEF message, ignoring", __FUNCTION__);
     return NULL;
   } else {
     return snep;

@@ -5,9 +5,9 @@
 #ifndef mozilla_nfcd_SnepClient_h
 #define mozilla_nfcd_SnepClient_h
 
-#include "NdefMessage.h"
-#include "SnepMessage.h"
-#include "SnepMessenger.h"
+class NdefMessage;
+class SnepMessage;
+class SnepMessenger;
 
 class SnepClient{
 public:

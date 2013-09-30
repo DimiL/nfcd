@@ -1,5 +1,7 @@
 #include "SnepMessage.h"
 
+#include "NdefMessage.h"
+
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
 
@@ -44,7 +46,7 @@ SnepMessage::SnepMessage(std::vector<uint8_t>& buf)
 
   if (ndefLength > 0) {
     mNdefMessage = new NdefMessage();
-    // TODO : Need to check idx is correct
+    // TODO : Need to check idx is correct.
     mNdefMessage->init(buf, idx);
   } else {
     mNdefMessage = NULL;

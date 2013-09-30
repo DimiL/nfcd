@@ -6,7 +6,8 @@
 #define mozilla_nfcd_SnepMessenger_h
 
 #include "SnepMessage.h"
-#include "ILlcpSocket.h"
+
+class ILlcpSocket;
 
 class SnepMessenger{
 public:
@@ -30,4 +31,3 @@ private:
 };
 
 #endif
-
