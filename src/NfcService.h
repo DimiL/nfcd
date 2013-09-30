@@ -25,11 +25,14 @@ public:
   static void notifyLlcpLinkActivation(void* pDevice);
   static void notifyLlcpLinkDeactivation(void* pDevice);
   static void notifyTagDiscovered(void* pTag);
+  static void notifyTagLost();
   static void notifySEFieldActivated();
   static void notifySEFieldDeactivated();
   static void notifySETransactionListeners();
 
   static bool handleDisconnect();
+
+  void* eventLoop();
 
   void handleTagDiscovered(NfcEvent* event);
   void handleTagLost(NfcEvent* event);
@@ -57,13 +60,13 @@ public:
 
   void onConnected();
 
-  //TODO put these in public because serviceThread will need to access this.
-  android::List<NfcEvent*> mQueue;
-  MessageHandler* mMsgHandler;
 private:
+  NfcService();
+
   static NfcService* sInstance;
   static NfcManager* sNfcManager;
-  NfcService();
+  android::List<NfcEvent*> mQueue;
+  MessageHandler* mMsgHandler;
 };
 
 #endif // mozilla_nfcd_NfcService_h

@@ -91,6 +91,15 @@ void NfcService::notifyTagDiscovered(void* pTag)
   sem_post(&thread_sem);
 }
 
+void NfcService::notifyTagLost()
+{
+  ALOGD("%s: enter", __func__);
+  NfcEvent *event = new NfcEvent(MSG_TAG_LOST);
+  event->obj = NULL;
+  NfcService::Instance()->mQueue.push_back(event);
+  sem_post(&thread_sem);
+}
+
 void NfcService::notifySEFieldActivated()
 {
   ALOGD("%s: enter", __func__);
@@ -180,12 +189,8 @@ static void *pollingThreadFunc(void *arg)
   }
 
   pINfcTag->disconnect();
-  NfcEvent *event = new NfcEvent(MSG_TAG_LOST);
-  event->obj = NULL;
-  NfcService* service = NfcService::Instance();
-  List<NfcEvent*>& queue = service->mQueue;
-  queue.push_back(event);
-  sem_post(&thread_sem);
+
+  NfcService::Instance()->notifyTagLost();
   return NULL;
 }
 
@@ -222,6 +227,11 @@ static void *serviceThreadFunc(void *arg)
 
   NfcService* service = reinterpret_cast<NfcService*>(arg);
 
+  return service->eventLoop();
+}
+
+void* NfcService::eventLoop()
+{
   ALOGD("%s: NFCService started", __func__);
   while(true) {
     if(sem_wait(&thread_sem)) {
@@ -229,56 +239,53 @@ static void *serviceThreadFunc(void *arg)
       abort();
     }
 
-    // Using reference here to prvent creating another copy of List.
-    List<NfcEvent*>& queue = service->mQueue;
-
-    while (!queue.empty()) {
-      NfcEvent* event = *queue.begin();
-      queue.erase(queue.begin());
+    while (!mQueue.empty()) {
+      NfcEvent* event = *mQueue.begin();
+      mQueue.erase(mQueue.begin());
       NfcEventType eventType = event->getType();
 
       ALOGD("%s: NFCService msg=%d", __func__, eventType);
       switch(eventType) {
         case MSG_LLCP_LINK_ACTIVATION:
-          service->handleLlcpLinkActivation(event);
+          handleLlcpLinkActivation(event);
           break;
         case MSG_LLCP_LINK_DEACTIVATION:
-          service->handleLlcpLinkDeactivation(event);
+          handleLlcpLinkDeactivation(event);
           break;
         case MSG_TAG_DISCOVERED:
-          service->handleTagDiscovered(event);
+          handleTagDiscovered(event);
           break;
         case MSG_TAG_LOST:
-          service->handleTagLost(event);
+          handleTagLost(event);
           break;
         case MSG_CONFIG:
-          service->handleConfigResponse(event);
+          handleConfigResponse(event);
           break;
         case MSG_READ_NDEF_DETAIL:
-          service->handleReadNdefDetailResponse(event);
+          handleReadNdefDetailResponse(event);
         case MSG_READ_NDEF:
-          service->handleReadNdefResponse(event);
+          handleReadNdefResponse(event);
           break;
         case MSG_WRITE_NDEF:
-          service->handleWriteNdefResponse(event);
+          handleWriteNdefResponse(event);
           break;
         case MSG_CLOSE:
-          service->handleCloseResponse(event);
+          handleCloseResponse(event);
           break;
         case MSG_SOCKET_CONNECTED:
-          service->mMsgHandler->processNotification(NFC_NOTIFICATION_INITIALIZED , NULL);
+          mMsgHandler->processNotification(NFC_NOTIFICATION_INITIALIZED , NULL);
           break;
         case MSG_PUSH_NDEF:
-          service->handlePushNdefResponse(event);
+          handlePushNdefResponse(event);
           break;
         case MSG_MAKE_NDEF_READONLY:
-          service->handleMakeNdefReadonlyResponse(event);
+          handleMakeNdefReadonlyResponse(event);
           break;
         case MSG_POWER_ON_OFF:
-          service->handlePowerOnOffResponse(event);
+          handlePowerOnOffResponse(event);
           break;
         case MSG_NFC_ENABLE_DISABLE:
-          service->handleNfcEnableDisableResponse(event);
+          handleNfcEnableDisableResponse(event);
           break;
         default:
           ALOGE("%s: NFCService bad message", __func__);
@@ -289,8 +296,6 @@ static void *serviceThreadFunc(void *arg)
       delete event;
     }
   }
-
-  return NULL;
 }
 
 NfcService* NfcService::Instance() {
