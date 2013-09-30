@@ -44,19 +44,22 @@ typedef enum {
   MSG_NFC_ENABLE_DISABLE
 } NfcEventType;
 
-struct NfcEvent {
-  NfcEventType type;
+class NfcEvent {
+public:
+  NfcEvent (NfcEventType type) :mType(type) {}
+
+  NfcEventType getType() { return mType; }
+
   int arg1;
   int arg2;
   void* obj;
+
+private:
+  NfcEventType mType;
 };
 
 static pthread_t thread_id;
 static sem_t thread_sem;
-
-static int sToken;
-
-static NfcEventType msg_type = MSG_UNDEFINED;
 
 NfcService* NfcService::sInstance = NULL;
 NfcManager* NfcService::sNfcManager = NULL;
@@ -64,8 +67,7 @@ NfcManager* NfcService::sNfcManager = NULL;
 void NfcService::notifyLlcpLinkActivation(void* pDevice)
 {
   ALOGD("%s: enter", __func__);
-  NfcEvent *event = new NfcEvent();
-  event->type = MSG_LLCP_LINK_ACTIVATION;
+  NfcEvent *event = new NfcEvent(MSG_LLCP_LINK_ACTIVATION);
   event->obj = pDevice;
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -74,8 +76,7 @@ void NfcService::notifyLlcpLinkActivation(void* pDevice)
 void NfcService::notifyLlcpLinkDeactivation(void* pDevice)
 {
   ALOGD("%s: enter", __func__);
-  NfcEvent *event = new NfcEvent();
-  event->type = MSG_LLCP_LINK_DEACTIVATION;
+  NfcEvent *event = new NfcEvent(MSG_LLCP_LINK_DEACTIVATION);
   event->obj = pDevice;
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -84,8 +85,7 @@ void NfcService::notifyLlcpLinkDeactivation(void* pDevice)
 void NfcService::notifyTagDiscovered(void* pTag)
 {
   ALOGD("%s: enter", __func__);
-  NfcEvent *event = new NfcEvent();
-  event->type = MSG_TAG_DISCOVERED;
+  NfcEvent *event = new NfcEvent(MSG_TAG_DISCOVERED);
   event->obj = pTag;
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -94,21 +94,24 @@ void NfcService::notifyTagDiscovered(void* pTag)
 void NfcService::notifySEFieldActivated()
 {
   ALOGD("%s: enter", __func__);
-  msg_type = MSG_SE_FIELD_ACTIVATED;
+  NfcEvent *event = new NfcEvent(MSG_SE_FIELD_ACTIVATED);
+  NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
 }
 
 void NfcService::notifySEFieldDeactivated()
 {
   ALOGD("%s: enter", __func__);
-  msg_type = MSG_SE_FIELD_DEACTIVATED;
+  NfcEvent *event = new NfcEvent(MSG_SE_FIELD_DEACTIVATED);
+  NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
 }
 
 void NfcService::notifySETransactionListeners()
 {
   ALOGD("%s: enter", __func__);
-  msg_type = MSG_SE_NOTIFY_TRANSACTION_LISTENERS;
+  NfcEvent *event = new NfcEvent(MSG_SE_NOTIFY_TRANSACTION_LISTENERS);
+  NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
 }
 
@@ -177,8 +180,7 @@ static void *pollingThreadFunc(void *arg)
   }
 
   pINfcTag->disconnect();
-  NfcEvent *event = new NfcEvent();
-  event->type = MSG_TAG_LOST;
+  NfcEvent *event = new NfcEvent(MSG_TAG_LOST);
   event->obj = NULL;
   NfcService* service = NfcService::Instance();
   List<NfcEvent*>& queue = service->mQueue;
@@ -233,7 +235,7 @@ static void *serviceThreadFunc(void *arg)
     while (!queue.empty()) {
       NfcEvent* event = *queue.begin();
       queue.erase(queue.begin());
-      NfcEventType eventType = event->type;
+      NfcEventType eventType = event->getType();
 
       ALOGD("%s: NFCService msg=%d", __func__, eventType);
       switch(eventType) {
@@ -345,8 +347,7 @@ int NfcService::handleConnect(int technology)
 
 bool NfcService::handleConfigRequest()
 {
-  NfcEvent *event = new NfcEvent();
-  event->type = MSG_CONFIG;
+  NfcEvent *event = new NfcEvent(MSG_CONFIG);
   mQueue.push_back(event);
   sem_post(&thread_sem);
   return true;
@@ -354,8 +355,7 @@ bool NfcService::handleConfigRequest()
 
 bool NfcService::handleReadNdefDetailRequest()
 {
-  NfcEvent *event = new NfcEvent();
-  event->type = MSG_READ_NDEF_DETAIL;
+  NfcEvent *event = new NfcEvent(MSG_READ_NDEF_DETAIL);
   mQueue.push_back(event);
   sem_post(&thread_sem);
   return true;
@@ -382,8 +382,7 @@ void NfcService::handleReadNdefDetailResponse(NfcEvent* event)
 
 bool NfcService::handleReadNdefRequest()
 {
-  NfcEvent *event = new NfcEvent();
-  event->type = MSG_READ_NDEF;
+  NfcEvent *event = new NfcEvent(MSG_READ_NDEF);
   mQueue.push_back(event);
   sem_post(&thread_sem);
   return true;
@@ -406,8 +405,7 @@ void NfcService::handleReadNdefResponse(NfcEvent* event)
 
 bool NfcService::handleWriteNdefRequest(NdefMessage* ndef)
 {
-  NfcEvent *event = new NfcEvent();
-  event->type = MSG_WRITE_NDEF;
+  NfcEvent *event = new NfcEvent(MSG_WRITE_NDEF);
   event->obj = ndef;
   mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -425,8 +423,7 @@ void NfcService::handleWriteNdefResponse(NfcEvent* event)
 
 void NfcService::handleCloseRequest()
 {
-  NfcEvent *event = new NfcEvent();
-  event->type = MSG_CLOSE;
+  NfcEvent *event = new NfcEvent(MSG_CLOSE);
   mQueue.push_back(event);
   sem_post(&thread_sem);
 }
@@ -441,16 +438,14 @@ void NfcService::handleCloseResponse(NfcEvent* event)
 
 void NfcService::onConnected()
 {
-  NfcEvent *event = new NfcEvent();
-  event->type = MSG_SOCKET_CONNECTED;
+  NfcEvent *event = new NfcEvent(MSG_SOCKET_CONNECTED);
   mQueue.push_back(event);
   sem_post(&thread_sem);
 }
 
 bool NfcService::handlePushNdefRequest(NdefMessage* ndef)
 {
-  NfcEvent *event = new NfcEvent();
-  event->type = MSG_PUSH_NDEF;
+  NfcEvent *event = new NfcEvent(MSG_PUSH_NDEF);
   event->obj = ndef;
   mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -473,8 +468,7 @@ void NfcService::handlePushNdefResponse(NfcEvent* event)
 
 bool NfcService::handleMakeNdefReadonlyRequest()
 {
-  NfcEvent *event = new NfcEvent();
-  event->type = MSG_MAKE_NDEF_READONLY;
+  NfcEvent *event = new NfcEvent(MSG_MAKE_NDEF_READONLY);
   mQueue.push_back(event);
   sem_post(&thread_sem);
   return true;
@@ -490,8 +484,7 @@ void NfcService::handleMakeNdefReadonlyResponse(NfcEvent* event)
 
 bool NfcService::handlePowerOnOffRequest(bool onOff)
 {
-  NfcEvent *event = new NfcEvent();
-  event->type = MSG_POWER_ON_OFF;
+  NfcEvent *event = new NfcEvent(MSG_POWER_ON_OFF);
   event->arg1 = onOff;
   mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -512,8 +505,7 @@ void NfcService::handlePowerOnOffResponse(NfcEvent* event)
 
 bool NfcService::handleNfcEnableDisableRequest(bool enableDisable)
 {
-  NfcEvent *event = new NfcEvent();
-  event->type = MSG_NFC_ENABLE_DISABLE;
+  NfcEvent *event = new NfcEvent(MSG_NFC_ENABLE_DISABLE);
   event->arg1 = enableDisable;
   mQueue.push_back(event);
   sem_post(&thread_sem);

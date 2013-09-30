@@ -19,10 +19,6 @@ public:
   ~NfcService();
   void initialize(NfcManager* pNfcManager, MessageHandler* msgHandler);
 
-  void handleTagDiscovered(NfcEvent* event);
-  void handleTagLost(NfcEvent* event);
-  void handleLlcpLinkActivation(NfcEvent* event);
-  void handleLlcpLinkDeactivation(NfcEvent* event);
   static NfcService* Instance();
   static INfcManager* getNfcManager();
 
@@ -34,6 +30,11 @@ public:
   static void notifySETransactionListeners();
 
   static bool handleDisconnect();
+
+  void handleTagDiscovered(NfcEvent* event);
+  void handleTagLost(NfcEvent* event);
+  void handleLlcpLinkActivation(NfcEvent* event);
+  void handleLlcpLinkDeactivation(NfcEvent* event);
   int handleConnect(int technology);
   bool handleConfigRequest();
   void handleConfigResponse(NfcEvent* event);
