@@ -120,7 +120,7 @@ void NfcService::handleLlcpLinkDeactivation(NfcEvent* event)
   IP2pDevice* pIP2pDevice = reinterpret_cast<IP2pDevice*>(pDevice);
 
   if (pIP2pDevice->getMode() == NfcDepEndpoint::MODE_P2P_TARGET) {
-    pIP2pDevice->doDisconnect();
+    pIP2pDevice->disconnect();
   }
 }
 
@@ -133,7 +133,7 @@ void NfcService::handleLlcpLinkActivation(NfcEvent* event)
   if (pIP2pDevice->getMode() == NfcDepEndpoint::MODE_P2P_TARGET ||
       pIP2pDevice->getMode() == NfcDepEndpoint::MODE_P2P_INITIATOR) {
     if (pIP2pDevice->getMode() == NfcDepEndpoint::MODE_P2P_TARGET) {
-      if (pIP2pDevice->doConnect()) {
+      if (pIP2pDevice->connect()) {
         ALOGD("Connected to device!");
       }
       else {

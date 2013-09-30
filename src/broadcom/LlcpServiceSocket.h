@@ -9,13 +9,29 @@
 
 class ILlcpSocket;
 
-class LlcpServiceSocket : public ILlcpServerSocket
+/**
+ * LlcpServiceSocket represents a LLCP Service to be used in a
+ * Connection-oriented communication.
+ */
+class LlcpServiceSocket
+  : public ILlcpServerSocket
 {
 public:
   LlcpServiceSocket(uint32_t handle, int localLinearBufferLength, int localMiu, int localRw);
   virtual ~LlcpServiceSocket();
 
+  /**
+   * Accept a connection request from a peer.
+   *
+   * @return ILlcpSocket interface.
+   */
   ILlcpSocket* accept();
+
+  /**
+   * Close a server socket.
+   *
+   * @return True if ok.
+   */
   bool close();
 
 private:

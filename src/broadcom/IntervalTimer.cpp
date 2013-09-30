@@ -66,10 +66,8 @@ bool IntervalTimer::create(TIMER_FUNC cb)
   struct sigevent se;
   int stat = 0;
 
-  /**
-    * Set the sigevent structure to cause the signal to be
-    * delivered by creating a new thread.
-    */
+  // Set the sigevent structure to cause the signal to be
+  // delivered by creating a new thread.
   se.sigev_notify = SIGEV_THREAD;
   se.sigev_value.sival_ptr = &mTimerId;
   se.sigev_notify_function = cb;

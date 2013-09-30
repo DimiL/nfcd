@@ -7,23 +7,23 @@
 
 #include "IP2pDevice.h"
 
-class P2pDevice : public IP2pDevice
+class P2pDevice
+  : public IP2pDevice
 {
 public:
   P2pDevice();
   virtual ~P2pDevice();
-
-  bool doConnect();
-  bool doDisconnect();
-  void doTransceive();
-  void doReceive();
-  bool doSend();
+  
+  bool connect();
+  bool disconnect();
+  void transceive();
+  void receive();
+  bool send();
 
   int& getHandle();
   int& getMode();
 
 private:
-
   int mHandle;
   int mMode;
   unsigned char* mGeneralBytes;

@@ -11,7 +11,18 @@ class ILlcpServerSocket {
 public:
   virtual ~ILlcpServerSocket() {};
 
+  /**
+   * Accept a connection request from a peer.
+   *
+   * @return ILlcpSocket interface
+   */
   virtual ILlcpSocket* accept() = 0;
+
+  /**
+   * Close a server socket.
+   *
+   * @return True if ok.
+   */
   virtual bool close() = 0;
 };
 

@@ -13,7 +13,9 @@ class NfcTagManager;
 class ILlcpServerSocket;
 class ILlcpSocket;
 
-class NfcManager : public DeviceHost, public INfcManager
+class NfcManager
+  : public DeviceHost
+  , public INfcManager
 {
 public:
   static const int DEFAULT_LLCP_MIU = 1980;
@@ -24,19 +26,85 @@ public:
 
   void* queryInterface(const char* name);
 
+  /**
+   * Turn on NFC.
+   *
+   * @return True if ok.
+   */
   bool doInitialize();
+
+  /**
+   * Turn off NFC.
+   *
+   * @return True if ok.
+   */
   bool doDeinitialize();
 
+  /**
+   * Start polling and listening for devices.
+   *
+   * @return None.
+   */
   void enableDiscovery();
+
+  /**
+   * Stop polling and listening for devices.
+   *
+   * @return None.
+   */
   void disableDiscovery();
 
+  /**
+   * Not used.
+   *
+   * @return True.
+   */
   bool doCheckLlcp();
+
+  /**
+   * Not used.
+   *
+   * @return True.
+   */
   bool doActivateLlcp();
 
+  /**
+   * Create a LLCP connection-oriented socket.
+   *
+   * @param  sap                Service access point.
+   * @param  miu                Maximum information unit.
+   * @param  rw                 Receive window size.
+   * @param  linearBufferLength Max buffer size.
+   * @return                    ILlcpSocket interface.
+   */
   ILlcpSocket* createLlcpSocket(int sap, int miu, int rw, int linearBufferLength);
+
+  /**
+   * Create a new LLCP server socket.
+   *
+   * @param  nSap               Service access point.
+   * @param  sn                 Service name.
+   * @param  miu                Maximum information unit.
+   * @param  rw                 Receive window size.
+   * @param  linearBufferLength Max buffer size.
+   * @return                    ILlcpServerSocket interface.
+   */
   ILlcpServerSocket* createLlcpServerSocket(int nSap, const char* sn, int miu, int rw, int linearBufferLength);
 
+  /**
+   * Set P2P initiator's activation modes.
+   *
+   * @param  modes Active and/or passive modes.
+   * @return       None.
+   */
   void setP2pInitiatorModes(int modes);
+
+  /**
+   * Set P2P target's activation modes.
+   *
+   * @param  modes Active and/or passive modes.
+   * @return       None.
+   */
   void setP2pTargetModes(int modes);
 
   int getDefaultLlcpMiu();

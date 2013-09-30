@@ -12,7 +12,6 @@ public:
   virtual ~NfcSecureElement();
 
 private:
-
 };
 
 #endif // mozilla_nfcd_NfcSecureElement_h

@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- *  Adjust the controller's power states.
+/**
+ * Adjust the controller's power states.
  */
 #include "PowerSwitch.h"
+
 #include "config.h"
 
 #undef LOG_TAG
@@ -95,7 +96,7 @@ bool PowerSwitch::setLevel(PowerLevel newLevel)
   case POWER_OFF:
     if (isPowerOffSleepFeatureEnabled()) {
       retval = setPowerOffSleepState(true);
-    } else if (mDesiredScreenOffPowerState == 1) { //.conf file desires full-power
+    } else if (mDesiredScreenOffPowerState == 1) { //.conf file desires full-power.
       mCurrLevel = FULL_POWER;
       retval = true;
     }
@@ -143,8 +144,8 @@ bool PowerSwitch::setPowerOffSleepState(bool sleep)
   tNFA_STATUS stat = NFA_STATUS_FAILED;
   bool retval = false;
 
-  if (sleep) { //enter power-off-sleep state
-    //make sure the current power state is ON
+  if (sleep) { // Enter power-off-sleep state.
+    // Make sure the current power state is ON
     if (mCurrDeviceMgtPowerState != NFA_DM_PWR_MODE_OFF_SLEEP) {
       SyncEventGuard guard(mPowerStateEvent);
 
@@ -162,8 +163,8 @@ bool PowerSwitch::setPowerOffSleepState(bool sleep)
         deviceMgtPowerStateToString(mCurrDeviceMgtPowerState), mCurrDeviceMgtPowerState);
       goto TheEnd;
     }
-  } else { //exit power-off-sleep state
-    //make sure the current power state is OFF
+  } else { // Exit power-off-sleep state.
+    // Make sure the current power state is OFF
     if (mCurrDeviceMgtPowerState != NFA_DM_PWR_MODE_FULL) {
       mCurrDeviceMgtPowerState = NFA_DM_PWR_STATE_UNKNOWN;
       SyncEventGuard guard(mPowerStateEvent);

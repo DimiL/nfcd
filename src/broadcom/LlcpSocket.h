@@ -8,14 +8,32 @@
 #include <vector>
 #include "ILlcpSocket.h"
 
-class LlcpSocket : public ILlcpSocket
+/**
+ * LlcpClientSocket represents a LLCP Connection-Oriented client to be used in a
+ * connection-oriented communication.
+ */
+class LlcpSocket 
+  : public ILlcpSocket
 {
 public:
   LlcpSocket(unsigned int handle, int sap, int miu, int rw);
   LlcpSocket(unsigned int handle, int miu, int rw);
   virtual ~LlcpSocket();
 
-  bool connectToSap(int sap);
+  /**
+   * Establish a connection to the peer.
+   *
+   * @param nSap Establish a connection to the peer.
+   * return      True if ok.
+   */
+  bool connectToSap(int nSap);
+
+  /**
+   * Establish a connection to the peer.
+   *
+   * @param sn Service name.
+   * return    True if ok.
+   */
   bool connectToService(const char* serviceName);
   void close();
   bool send(std::vector<uint8_t>& data);
@@ -33,14 +51,15 @@ private:
   int mLocalMiu;
   int mLocalRw;
 
-  bool LlcpSocket_doConnect(int nSap);
-  bool LlcpSocket_doConnectBy(const char* sn);
-  bool LlcpSocket_doSend(std::vector<uint8_t>& data);
-  int LlcpSocket_doReceive(std::vector<uint8_t>& recvBuff);
+  bool doConnect(int nSap);
+  bool doConnectBy(const char* sn);
+  bool doClose();
 
-  bool LlcpSocket_doClose();
-  int LlcpSocket_doGetRemoteSocketMIU();
-  int LlcpSocket_doGetRemoteSocketRW();
+  bool doSend(std::vector<uint8_t>& data);
+  int doReceive(std::vector<uint8_t>& recvBuff);
+
+  int doGetRemoteSocketMIU();
+  int doGetRemoteSocketRW();
 };
 
 #endif // mozilla_nfcd_LlcpSocket_h

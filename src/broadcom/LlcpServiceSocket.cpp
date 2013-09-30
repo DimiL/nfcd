@@ -41,6 +41,7 @@ ILlcpSocket* LlcpServiceSocket::accept()
 bool LlcpServiceSocket::close()
 {
   ALOGD("%s: enter", __FUNCTION__);
+
   uint32_t serverHandle = mHandle;
   bool stat = false;
 

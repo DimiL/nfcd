@@ -5,7 +5,6 @@
 /**
  *  Encapsulate a condition variable for thread synchronization.
  */
-
 #include "CondVar.h"
 #include <errno.h>
 
@@ -54,15 +53,15 @@ bool CondVar::wait(Mutex& mutex, long millisec)
       absoluteTime.tv_nsec = ns;
     }
   }
-  //pthread_cond_timedwait_monotonic_np() is an Android-specific function
-  //declared in /development/ndk/platforms/android-9/include/pthread.h;
-  //it uses monotonic clock.
-  //the standard pthread_cond_timedwait() uses realtime clock.
+  // pthread_cond_timedwait_monotonic_np() is an Android-specific function.
+  // Declared in /development/ndk/platforms/android-9/include/pthread.h.
+  // It uses monotonic clock.
+  // The standard pthread_cond_timedwait() uses realtime clock.
   int waitResult = pthread_cond_timedwait_monotonic_np(&mCondition, mutex.nativeHandle(), &absoluteTime);
   if ((waitResult != 0) && (waitResult != ETIMEDOUT)) {
     ALOGE("%s: fail timed wait; error=0x%X", __FUNCTION__, waitResult);
   }
-  retVal = (waitResult == 0); //waited successfully
+  retVal = (waitResult == 0); // Waited successfully.
   return retVal;
 }
 

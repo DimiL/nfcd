@@ -11,20 +11,63 @@ class ILlcpSocket {
 public:
   virtual ~ILlcpSocket() {};
 
+  /**
+   * Establish a connection to the peer.
+   *
+   * @param nSap Establish a connection to the peer.
+   * return      True if ok.
+   */
   virtual bool connectToSap(int sap) = 0;
+
+  /**
+   * Establish a connection to the peer.
+   *
+   * @param sn Service name.
+   * return    True if ok.
+   */
   virtual bool connectToService(const char* serviceName) = 0;
 
+  /**
+   * Close socket.
+   *
+   * return Close socket.
+   */
+  virtual void close() = 0;
+
+  /**
+   * Send data to peer.
+   *
+   * @param data Buffer of data.
+   * return      True if sent ok.
+   */
   virtual bool send(std::vector<uint8_t>& data) = 0;
+
+  /**
+   * Receive data from peer.
+   *
+   * @param recvBuff Buffer to put received data.
+   * return          Number of bytes received.
+   */
   virtual int receive(std::vector<uint8_t>& recvBuff) = 0;
 
+  /**
+   * Get peer's maximum information unit.
+   *
+   * return Peer's maximum information unit.
+   */
+
   virtual int getRemoteMiu() = 0;
+
+  /**
+   * Peer's maximum information unit.
+   *
+   * return Peer's receive window size.
+   */
   virtual int getRemoteRw() = 0;
 
   virtual int getLocalSap() = 0;
   virtual int getLocalMiu() = 0;
   virtual int getLocalRw() = 0;
-
-  virtual void close() = 0;
 };
 
 #endif

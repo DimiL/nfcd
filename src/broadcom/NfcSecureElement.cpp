@@ -7,4 +7,3 @@ NfcSecureElement::NfcSecureElement()
 NfcSecureElement::~NfcSecureElement()
 {
 }
-

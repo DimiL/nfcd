@@ -26,41 +26,40 @@ LlcpSocket::~LlcpSocket()
 
 bool LlcpSocket::connectToSap(int sap)
 {
-  return LlcpSocket::LlcpSocket_doConnect(sap);
+  return LlcpSocket::doConnect(sap);
 }
 
 bool LlcpSocket::connectToService(const char* serviceName)
 {
-  return LlcpSocket::LlcpSocket_doConnectBy(serviceName);
+  return LlcpSocket::doConnectBy(serviceName);
 }
 
 void LlcpSocket::close()
 {
-  LlcpSocket::LlcpSocket_doClose();
-  return;
+  LlcpSocket::doClose();
 }
 
 bool LlcpSocket::send(std::vector<uint8_t>& data)
 {
-  return LlcpSocket::LlcpSocket_doSend(data);
+  return LlcpSocket::doSend(data);
 }
 
 int LlcpSocket::receive(std::vector<uint8_t>& recvBuff)
 {
-  return LlcpSocket::LlcpSocket_doReceive(recvBuff);;
+  return LlcpSocket::doReceive(recvBuff);;
 }
 
 int LlcpSocket::getRemoteMiu()
 {
-  return LlcpSocket::LlcpSocket_doGetRemoteSocketMIU();
+  return LlcpSocket::doGetRemoteSocketMIU();
 }
 
 int LlcpSocket::getRemoteRw()
 {
-  return LlcpSocket::LlcpSocket_doGetRemoteSocketRW();
+  return LlcpSocket::doGetRemoteSocketRW();
 }
 
-bool LlcpSocket::LlcpSocket_doConnect(int nSap)
+bool LlcpSocket::doConnect(int nSap)
 {
   ALOGD("%s: enter; sap=%d", __FUNCTION__, nSap);
 
@@ -70,7 +69,7 @@ bool LlcpSocket::LlcpSocket_doConnect(int nSap)
   return stat ? true : false;
 }
 
-bool LlcpSocket::LlcpSocket_doConnectBy(const char* sn)
+bool LlcpSocket::doConnectBy(const char* sn)
 {
   ALOGD("%s: enter", __FUNCTION__);
 
@@ -83,7 +82,17 @@ bool LlcpSocket::LlcpSocket_doConnectBy(const char* sn)
   return stat;
 }
 
-bool LlcpSocket::LlcpSocket_doSend(std::vector<uint8_t>& data)
+bool LlcpSocket::doClose()
+{
+  ALOGD("%s: enter", __FUNCTION__);
+
+  bool stat = PeerToPeer::getInstance().disconnectConnOriented(mHandle);
+
+  ALOGD("%s: exit", __FUNCTION__);
+  return true;  // TODO: stat?
+}
+
+bool LlcpSocket::doSend(std::vector<uint8_t>& data)
 {
   UINT8* raw_ptr = new UINT8[data.size()];
 
@@ -97,7 +106,7 @@ bool LlcpSocket::LlcpSocket_doSend(std::vector<uint8_t>& data)
   return stat;
 }
 
-int LlcpSocket::LlcpSocket_doReceive(std::vector<uint8_t>& recvBuff)
+int LlcpSocket::doReceive(std::vector<uint8_t>& recvBuff)
 {
   uint16_t actualLen = 0;
   uint16_t MAX_BUF_SIZE = 4096;
@@ -115,21 +124,11 @@ int LlcpSocket::LlcpSocket_doReceive(std::vector<uint8_t>& recvBuff)
   }
 
   delete[] raw_ptr;
-  
+
   return retval;
 }
 
-bool LlcpSocket::LlcpSocket_doClose()
-{   
-  ALOGD("%s: enter", __FUNCTION__);
-    
-  bool stat = PeerToPeer::getInstance().disconnectConnOriented(mHandle);
-
-  ALOGD("%s: exit", __FUNCTION__);
-  return true;  // TODO: stat?
-}
-
-int LlcpSocket::LlcpSocket_doGetRemoteSocketMIU()
+int LlcpSocket::doGetRemoteSocketMIU()
 {
   ALOGD("%s: enter", __FUNCTION__);
 
@@ -139,7 +138,7 @@ int LlcpSocket::LlcpSocket_doGetRemoteSocketMIU()
   return miu;
 }
 
-int LlcpSocket::LlcpSocket_doGetRemoteSocketRW()
+int LlcpSocket::doGetRemoteSocketRW()
 {
   ALOGD("%s: enter", __FUNCTION__);
 

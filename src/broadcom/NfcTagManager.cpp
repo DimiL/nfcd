@@ -29,8 +29,10 @@ extern "C"
 extern bool nfcManager_isNfcActive();
 extern int gGeneralTransceiveTimeout;
 
-bool    gIsTagDeactivating = false;    // flag for nfa callback indicating we are deactivating for RF interface switch
-bool    gIsSelectingRfInterface = false; // flag for nfa callback indicating we are selecting for RF interface switch
+// Flag for nfa callback indicating we are deactivating for RF interface switch.
+bool    gIsTagDeactivating = false;
+// Flag for nfa callback indicating we are selecting for RF interface switch.
+bool    gIsSelectingRfInterface = false;
 
 // Pre-defined tag type values. These must match the values in
 // framework Ndef.java for Google public NFC API.
@@ -41,11 +43,11 @@ bool    gIsSelectingRfInterface = false; // flag for nfa callback indicating we 
 #define NDEF_TYPE4_TAG             4
 #define NDEF_MIFARE_CLASSIC_TAG    101
 
-#define STATUS_CODE_TARGET_LOST    146  // this error code comes from the service
+#define STATUS_CODE_TARGET_LOST    146  // This error code comes from the service.
 
 static uint32_t     sCheckNdefCurrentSize = 0;
-static tNFA_STATUS  sCheckNdefStatus = 0; //whether tag already contains a NDEF message
-static bool         sCheckNdefCapable = false; //whether tag has NDEF capability
+static tNFA_STATUS  sCheckNdefStatus = 0;      // Whether tag already contains a NDEF message.
+static bool         sCheckNdefCapable = false; // Whether tag has NDEF capability.
 static tNFA_HANDLE  sNdefTypeHandlerHandle = NFA_HANDLE_INVALID;
 static tNFA_INTF_TYPE   sCurrentRfInterface = NFA_INTERFACE_ISO_DEP;
 static uint8_t*     sTransceiveData = NULL;
@@ -64,7 +66,7 @@ static SyncEvent    sReconnectEvent;
 static sem_t        sCheckNdefSem;
 static sem_t        sPresenceCheckSem;
 static sem_t        sMakeReadonlySem;
-static IntervalTimer sSwitchBackTimer; // timer used to tell us to switch back to ISO_DEP frame interface
+static IntervalTimer sSwitchBackTimer; // Timer used to tell us to switch back to ISO_DEP frame interface.
 static bool     	sWriteOk = false;
 static bool     	sWriteWaitingForComplete = false;
 static bool         sFormatOk = false;
@@ -74,7 +76,7 @@ static bool         sGotDeactivate = false;
 static uint32_t     sCheckNdefMaxSize = 0;
 static bool         sCheckNdefCardReadOnly = false;
 static bool     	sCheckNdefWaitingForComplete = false;
-static int          sCountTagAway = 0; //count the consecutive number of presence-check failures
+static int          sCountTagAway = 0;  // Count the consecutive number of presence-check failures.
 static tNFA_STATUS  sMakeReadonlyStatus = NFA_STATUS_FAILED;
 static bool     	sMakeReadonlyWaitingForComplete = false;
 
@@ -142,10 +144,10 @@ NdefMessage* NfcTagManager::findAndReadNdef()
   int status;
 
   for(uint32_t techIndex = 0; techIndex < mTechList.size(); techIndex++) {
-    // have we seen this handle before?
+    // Have we seen this handle before?
     for (uint32_t i = 0; i < techIndex; i++) {
       if (mTechHandles[i] == mTechHandles[techIndex]) {
-        continue;  // don't check duplicate handles
+        continue;  // Don't check duplicate handles.
       }
     }
 
@@ -155,7 +157,7 @@ NdefMessage* NfcTagManager::findAndReadNdef()
       if (status == STATUS_CODE_TARGET_LOST) {
         break;
       }
-      continue;  // try next handle
+      continue;  // Try next handle.
     } else {
       ALOGI("Connect Succeeded! (status = %d)", status);
     }
@@ -167,12 +169,12 @@ NdefMessage* NfcTagManager::findAndReadNdef()
       if (status == STATUS_CODE_TARGET_LOST) {
         break;
       }
-      continue;  // try next handle
+      continue;  // Try next handle.
     } else {
       ALOGI("Check Succeeded! (status = %d)", status);
     }
 
-    // found our NDEF handle
+    // Found our NDEF handle.
     bool generateEmptyNdef = false;
     int supportedNdefLength = ndefinfo[0];
     int cardState = ndefinfo[1];
@@ -194,7 +196,7 @@ NdefMessage* NfcTagManager::findAndReadNdef()
     if (generateEmptyNdef == true) {
       ALOGI("Couldn't read NDEF!");
       // TODO : Implement generate empty Ndef
-      //stop()
+      // stop()
     }           
   }
   return pNdefMsg;
@@ -240,13 +242,13 @@ int NfcTagManager::reconnectWithStatus()
     goto TheEnd;
   }
 
-  // special case for Kovio
+  // Special case for Kovio.
   if (NfcTag::getInstance().mTechList [0] == TARGET_TYPE_KOVIO_BARCODE) {
     ALOGD("%s: fake out reconnect for Kovio", __FUNCTION__);
     goto TheEnd;
   }
 
-  // this is only supported for type 2 or 4 (ISO_DEP) tags
+  // This is only supported for type 2 or 4 (ISO_DEP) tags.
   if (natTag.mTechLibNfcTypes[0] == NFA_PROTOCOL_ISO_DEP)
     retCode = reSelect(NFA_INTERFACE_ISO_DEP);
   else if (natTag.mTechLibNfcTypes[0] == NFA_PROTOCOL_T2T)
@@ -271,7 +273,7 @@ int NfcTagManager::connectWithStatus(int technology)
   int status = -1;
   for (uint32_t i = 0; i < mTechList.size(); i++) {
     if (mTechList[i] == technology) {
-      // Get the handle and connect, if not already connected
+      // Get the handle and connect, if not already connected.
       if (mConnectedHandle != mTechHandles[i]) {
         // We're not yet connected, there are a few scenario's
         // here:
@@ -286,10 +288,10 @@ int NfcTagManager::connectWithStatus(int technology)
         // 4) We are connecting to the ndef technology - always
         //    allowed.
         if (mConnectedHandle == -1) {
-          // Not connected yet
+          // Not connected yet.
           status = doConnect(i);
         } else {
-          // Connect to a tech with a different handle
+          // Connect to a tech with a different handle.
           ALOGD("%s: Connect to a tech with a different handle", __FUNCTION__);
           status = reconnectWithStatus(i);
         }
@@ -336,11 +338,11 @@ void NfcTagManager::doRead(std::vector<uint8_t>& buf)
       SyncEventGuard g(sReadEvent);
       sIsReadingNdefMessage = true;
       status = NFA_RwReadNDef();
-      sReadEvent.wait(); //wait for NFA_READ_CPLT_EVT
+      sReadEvent.wait(); // Wait for NFA_READ_CPLT_EVT.
     }
     sIsReadingNdefMessage = false;
    
-    if (sReadDataLen > 0) { //if stack actually read data from the tag
+    if (sReadDataLen > 0) { // If stack actually read data from the tag.
       ALOGD("%s: read %u bytes", __FUNCTION__, sReadDataLen);
       for(uint32_t idx = 0; idx < sReadDataLen; idx++) {
         buf.push_back(sReadData[idx]);
@@ -378,7 +380,7 @@ int NfcTagManager::doCheckNdef(int ndefInfo[])
 
   ALOGD("%s: enter", __FUNCTION__);
 
-  // special case for Kovio
+  // Special case for Kovio.
   if (NfcTag::getInstance().mTechList [0] == TARGET_TYPE_KOVIO_BARCODE) {
     ALOGD("%s: Kovio tag, no NDEF", __FUNCTION__);
     ndefInfo[0] = 0;
@@ -386,7 +388,7 @@ int NfcTagManager::doCheckNdef(int ndefInfo[])
     return NFA_STATUS_FAILED;
   }
 
-  // special case for Kovio
+  // Special case for Kovio.
   if (NfcTag::getInstance().mTechList [0] == TARGET_TYPE_KOVIO_BARCODE) {
     ALOGD("%s: Kovio tag, no NDEF", __FUNCTION__);
     ndefInfo[0] = 0;
@@ -394,7 +396,7 @@ int NfcTagManager::doCheckNdef(int ndefInfo[])
     return NFA_STATUS_FAILED;
   }
 
-  /* Create the write semaphore */
+  // Create the write semaphore.
   if (sem_init(&sCheckNdefSem, 0, 0) == -1) {
     ALOGE("%s: Check NDEF semaphore creation failed (errno=0x%08x)", __FUNCTION__, errno);
     return false;
@@ -414,14 +416,14 @@ int NfcTagManager::doCheckNdef(int ndefInfo[])
     goto TheEnd;
   }
 
-  /* Wait for check NDEF completion status */
+  // Wait for check NDEF completion status.
   if (sem_wait(&sCheckNdefSem)) {
     ALOGE("%s: Failed to wait for check NDEF semaphore (errno=0x%08x)", __FUNCTION__, errno);
     goto TheEnd;
   }
 
   if (sCheckNdefStatus == NFA_STATUS_OK) {
-    //stack found a NDEF message on the tag
+    // Stack found a NDEF message on the tag.
     if (NfcTag::getInstance().getProtocol() == NFA_PROTOCOL_T1T)
       ndefInfo[0] = NfcTag::getInstance().getT1tMaxMessageSize();
     else
@@ -432,7 +434,7 @@ int NfcTagManager::doCheckNdef(int ndefInfo[])
       ndefInfo[1] = NDEF_MODE_READ_WRITE;
     status = NFA_STATUS_OK;
   } else if (sCheckNdefStatus == NFA_STATUS_FAILED) {
-    //stack did not find a NDEF message on the tag;
+    // Stack did not find a NDEF message on the tag.
     if (NfcTag::getInstance().getProtocol() == NFA_PROTOCOL_T1T)
       ndefInfo[0] = NfcTag::getInstance().getT1tMaxMessageSize();
     else
@@ -451,7 +453,7 @@ int NfcTagManager::doCheckNdef(int ndefInfo[])
   }
 
 TheEnd:
-  /* Destroy semaphore */
+  // Destroy semaphore.
   if (sem_destroy(&sCheckNdefSem)) {
     ALOGE("%s: Failed to destroy check NDEF semaphore (errno=0x%08x)", __FUNCTION__, errno);
   }
@@ -488,7 +490,7 @@ void NfcTagManager::doReadCompleted(tNFA_STATUS status)
   ALOGD("%s: status=0x%X; is reading=%u", __FUNCTION__, status, sIsReadingNdefMessage);
 
   if (sIsReadingNdefMessage == false)
-    return; //not reading NDEF message right now, so just return
+    return; // Not reading NDEF message right now, so just return.
 
   if (status != NFA_STATUS_OK) {
     sReadDataLen = 0;
@@ -536,13 +538,13 @@ void NfcTagManager::doPresenceCheckResult(tNFA_STATUS status)
 
 void NfcTagManager::doCheckNdefResult(tNFA_STATUS status, uint32_t maxSize, uint32_t currentSize, uint8_t flags)
 {
-  //this function's flags parameter is defined using the following macros
-  //in nfc/include/rw_api.h;
-  //#define RW_NDEF_FL_READ_ONLY  0x01    /* Tag is read only              */
-  //#define RW_NDEF_FL_FORMATED   0x02    /* Tag formated for NDEF         */
-  //#define RW_NDEF_FL_SUPPORTED  0x04    /* NDEF supported by the tag     */
-  //#define RW_NDEF_FL_UNKNOWN    0x08    /* Unable to find if tag is ndef capable/formated/read only */
-  //#define RW_NDEF_FL_FORMATABLE 0x10    /* Tag supports format operation */
+  // This function's flags parameter is defined using the following macros
+  // in nfc/include/rw_api.h;
+  // #define RW_NDEF_FL_READ_ONLY  0x01    /* Tag is read only              */
+  // #define RW_NDEF_FL_FORMATED   0x02    /* Tag formated for NDEF         */
+  // #define RW_NDEF_FL_SUPPORTED  0x04    /* NDEF supported by the tag     */
+  // #define RW_NDEF_FL_UNKNOWN    0x08    /* Unable to find if tag is ndef capable/formated/read only */
+  // #define RW_NDEF_FL_FORMATABLE 0x10    /* Tag supports format operation */
 
   if (status == NFC_STATUS_BUSY) {
     ALOGE("%s: stack is busy", __FUNCTION__);
@@ -567,20 +569,20 @@ void NfcTagManager::doCheckNdefResult(tNFA_STATUS status, uint32_t maxSize, uint
 
   sCheckNdefWaitingForComplete = false;
   sCheckNdefStatus = status;
-  sCheckNdefCapable = false; //assume tag is NOT ndef capable
+  sCheckNdefCapable = false; // Assume tag is NOT ndef capable.
   if (sCheckNdefStatus == NFA_STATUS_OK) {
-    //NDEF content is on the tag
+    // NDEF content is on the tag.
     sCheckNdefMaxSize = maxSize;
     sCheckNdefCurrentSize = currentSize;
     sCheckNdefCardReadOnly = flags & RW_NDEF_FL_READ_ONLY;
     sCheckNdefCapable = true;
   } else if (sCheckNdefStatus == NFA_STATUS_FAILED) {
-    //no NDEF content on the tag
+    // No NDEF content on the tag.
     sCheckNdefMaxSize = 0;
     sCheckNdefCurrentSize = 0;
     sCheckNdefCardReadOnly = flags & RW_NDEF_FL_READ_ONLY;
-    if ((flags & RW_NDEF_FL_UNKNOWN) == 0) { //if stack understands the tag
-      if (flags & RW_NDEF_FL_SUPPORTED) {//if tag is ndef capable
+    if ((flags & RW_NDEF_FL_UNKNOWN) == 0) { // If stack understands the tag.
+      if (flags & RW_NDEF_FL_SUPPORTED) {    // If tag is ndef capable.
         sCheckNdefCapable = true;
       }
     }
@@ -610,7 +612,7 @@ bool NfcTagManager::doMakeReadonly()
 
   ALOGD("%s", __FUNCTION__);
 
-  /* Create the make_readonly semaphore */
+  // Create the make_readonly semaphore.
   if (sem_init(&sMakeReadonlySem, 0, 0) == -1) {
     ALOGE("%s: Make readonly semaphore creation failed (errno=0x%08x)", __FUNCTION__, errno);
     return false;
@@ -618,7 +620,7 @@ bool NfcTagManager::doMakeReadonly()
 
   sMakeReadonlyWaitingForComplete = true;
 
-  // Hard-lock the tag (cannot be reverted)
+  // Hard-lock the tag (cannot be reverted).
   status = NFA_RwSetTagReadOnly(true);
 
   if (status != NFA_STATUS_OK) {
@@ -626,7 +628,7 @@ bool NfcTagManager::doMakeReadonly()
     goto TheEnd;
   }
 
-  /* Wait for check NDEF completion status */
+  // Wait for check NDEF completion status.
   if (sem_wait(&sMakeReadonlySem)) {
     ALOGE("%s: Failed to wait for make_readonly semaphore (errno=0x%08x)", __FUNCTION__, errno);
     goto TheEnd;
@@ -637,7 +639,7 @@ bool NfcTagManager::doMakeReadonly()
   }
 
 TheEnd:
-  /* Destroy semaphore */
+  // Destroy semaphore.
   if (sem_destroy(&sMakeReadonlySem)) {
     ALOGE("%s: Failed to destroy read_only semaphore (errno=0x%08x)", __FUNCTION__, errno);
   }
@@ -645,8 +647,8 @@ TheEnd:
   return result;
 }
 
-//register a callback to receive NDEF message from the tag
-//from the NFA_NDEF_DATA_EVT;
+// Register a callback to receive NDEF message from the tag
+// from the NFA_NDEF_DATA_EVT.
 void NfcTagManager::doRegisterNdefTypeHandler()
 {
   ALOGD("%s", __FUNCTION__);
@@ -689,10 +691,10 @@ int NfcTagManager::doConnect(int targetHandle)
 
   if (natTag.mTechList[i] == TARGET_TYPE_ISO14443_3A || natTag.mTechList[i] == TARGET_TYPE_ISO14443_3B) {
     ALOGD("%s: switching to tech: %d need to switch rf intf to frame", __FUNCTION__, natTag.mTechList[i]);
-    // connecting to NfcA or NfcB don't actually switch until/unless we get a transceive
+    // Connecting to NfcA or NfcB don't actually switch until/unless we get a transceive.
     sNeedToSwitchRf = true;
   } else {
-    // connecting back to IsoDep or NDEF
+    // Connecting back to IsoDep or NDEF.
     return (switchRfInterface(NFA_INTERFACE_ISO_DEP) ? NFCSTATUS_SUCCESS : NFCSTATUS_FAILED);
   }
 
@@ -707,7 +709,7 @@ bool NfcTagManager::doPresenceCheck()
   tNFA_STATUS status = NFA_STATUS_OK;
   bool isPresent = false;
 
-  // Special case for Kovio.  The deactivation would have already occurred
+  // Special case for Kovio. The deactivation would have already occurred
   // but was ignored so that normal tag opertions could complete.  Now we
   // want to process as if the deactivate just happened.
   if (NfcTag::getInstance().mTechList [0] == TARGET_TYPE_KOVIO_BARCODE) {
@@ -767,7 +769,7 @@ int NfcTagManager::reSelect(tNFA_INTF_TYPE rfInterface)
 
   do
   {
-    //if tag has shutdown, abort this method
+    // If tag has shutdown, abort this method.
     if (NfcTag::getInstance().isNdefDetectionTimedOut()) {
       ALOGD("%s: ndef detection timeout; break", __FUNCTION__);
       rVal = STATUS_CODE_TARGET_LOST;
@@ -779,12 +781,12 @@ int NfcTagManager::reSelect(tNFA_INTF_TYPE rfInterface)
       gIsTagDeactivating = true;
       sGotDeactivate = false;
       ALOGD("%s: deactivate to sleep", __FUNCTION__);
-      if (NFA_STATUS_OK != (status = NFA_Deactivate(TRUE))) { //deactivate to sleep state
+      if (NFA_STATUS_OK != (status = NFA_Deactivate(TRUE))) { // Deactivate to sleep state.
         ALOGE("%s: deactivate failed, status = %d", __FUNCTION__, status);
         break;
       }
 
-      if (sReconnectEvent.wait(1000) == false) { //if timeout occurred
+      if (sReconnectEvent.wait(1000) == false) { // If timeout occurred.
         ALOGE("%s: timeout waiting for deactivate", __FUNCTION__);
       }
     }
@@ -809,7 +811,7 @@ int NfcTagManager::reSelect(tNFA_INTF_TYPE rfInterface)
       }
 
       sConnectOk = false;
-      if (sReconnectEvent.wait(1000) == false) { //if timeout occured
+      if (sReconnectEvent.wait(1000) == false) { // If timeout occured.
           ALOGE("%s: timeout waiting for select", __FUNCTION__);
           break;
       }
@@ -890,7 +892,7 @@ bool NfcTagManager::doWrite(std::vector<uint8_t>& buf)
 
   ALOGD("%s: enter; len = %zu", __FUNCTION__, buf.size());
 
-  /* Create the write semaphore */
+  // Create the write semaphore.
   if (sem_init(&sWriteSem, 0, 0) == -1) {
     ALOGE("%s: semaphore creation failed (errno=0x%08x)", __FUNCTION__, errno);
     free(p_data);
@@ -899,8 +901,8 @@ bool NfcTagManager::doWrite(std::vector<uint8_t>& buf)
 
   sWriteWaitingForComplete = true;
   if (sCheckNdefStatus == NFA_STATUS_FAILED) {
-    //if tag does not contain a NDEF message
-    //and tag is capable of storing NDEF message
+    // If tag does not contain a NDEF message
+    // and tag is capable of storing NDEF message.
     if (sCheckNdefCapable) {
       ALOGD("%s: try format", __FUNCTION__);
       sem_init(&sFormatSem, 0, 0);
@@ -908,13 +910,13 @@ bool NfcTagManager::doWrite(std::vector<uint8_t>& buf)
       status = NFA_RwFormatTag();
       sem_wait(&sFormatSem);
       sem_destroy(&sFormatSem);
-      if (sFormatOk == false) //if format operation failed
+      if (sFormatOk == false) // If format operation failed.
         goto TheEnd;
     }
     ALOGD("%s: try write", __FUNCTION__);
     status = NFA_RwWriteNDef(p_data, buf.size());
   } else if (buf.size() == 0) {
-    //if (NXP TagWriter wants to erase tag) then create and write an empty ndef message
+    // If (NXP TagWriter wants to erase tag) then create and write an empty ndef message.
     NDEF_MsgInit(buffer, maxBufferSize, &curDataSize);
     status = NDEF_MsgAddRec(buffer, maxBufferSize, &curDataSize, NDEF_TNF_EMPTY, NULL, 0, NULL, 0, NULL, 0);
     ALOGD("%s: create empty ndef msg; status=%u; size=%lu", __FUNCTION__, status, curDataSize);
@@ -929,7 +931,7 @@ bool NfcTagManager::doWrite(std::vector<uint8_t>& buf)
     goto TheEnd;
   }
 
-  /* Wait for write completion status */
+  // Wait for write completion status
   sWriteOk = false;
   if (sem_wait(&sWriteSem)) {
     ALOGE("%s: wait semaphore (errno=0x%08x)", __FUNCTION__, errno);
@@ -939,7 +941,7 @@ bool NfcTagManager::doWrite(std::vector<uint8_t>& buf)
   result = sWriteOk;
 
 TheEnd:
-  /* Destroy semaphore */
+  // Destroy semaphore
   if (sem_destroy(&sWriteSem)) {
     ALOGE("%s: failed destroy semaphore (errno=0x%08x)", __FUNCTION__, errno);
   }

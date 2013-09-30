@@ -4,6 +4,24 @@
 
 #pragma once
 
+/**
+ * Stop polling to let NXP PN544 controller poll.
+ * PN544 should activate in P2P mode.
+ *
+ * @return None.
+ */
 void pn544InteropStopPolling();
+
+/**
+ * Is the code performing operations?
+ *
+ * @return True if the code is busy.
+ */
 bool pn544InteropIsBusy();
+
+/**
+ * Request to abort all operations.
+ *
+ * @return None.
+ */
 void pn544InteropAbortNow();

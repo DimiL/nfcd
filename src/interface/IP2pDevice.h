@@ -9,11 +9,11 @@ class IP2pDevice {
 public:
   virtual ~IP2pDevice() {};
 
-  virtual bool doConnect() = 0;
-  virtual bool doDisconnect() = 0;
-  virtual void doTransceive() = 0;
-  virtual void doReceive() = 0;
-  virtual bool doSend() = 0;
+  virtual bool connect() = 0;
+  virtual bool disconnect() = 0;
+  virtual void transceive() = 0;
+  virtual void receive() = 0;
+  virtual bool send() = 0;
 
   virtual int& getMode() =0;
   virtual int& getHandle() = 0;

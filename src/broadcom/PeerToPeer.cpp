@@ -20,7 +20,8 @@
 
 using namespace android;
 
-/* Some older PN544-based solutions would only send the first SYMM back
+/**
+ * Some older PN544-based solutions would only send the first SYMM back
  * (as an initiator) after the full LTO (750ms). But our connect timer
  * starts immediately, and hence we may timeout if the timer is set to
  * 1000 ms. Worse, this causes us to immediately connect to the NPP
@@ -74,7 +75,7 @@ sp<P2pServer> PeerToPeer::findServerLocked(tNFA_HANDLE nfaP2pServerHandle)
     }
   }
 
-  // If here, not found
+  // If here, not found.
   return NULL;
 }
 
@@ -87,7 +88,7 @@ sp<P2pServer> PeerToPeer::findServerLocked(unsigned int handle)
     }
   }
 
-  // If here, not found
+  // If here, not found.
   return NULL;
 }
 
@@ -98,7 +99,7 @@ sp<P2pServer> PeerToPeer::findServerLocked(const char *serviceName)
       return mServers [i];
   }
 
-  // If here, not found
+  // If here, not found.
   return NULL;
 }
 
@@ -109,10 +110,10 @@ bool PeerToPeer::registerServer(unsigned int handle, const char *serviceName)
   sp<P2pServer>   pSrv = NULL;
 
   mMutex.lock();
-  // Check if already registered
+  // Check if already registered.
   if ((pSrv = findServerLocked(serviceName)) != NULL) {
     ALOGD("%s: service name=%s  already registered, handle: 0x%04x", fn, serviceName, pSrv->mNfaP2pServerHandle);
-    // Update handle
+    // Update handle.
     pSrv->mHandle = handle;
     mMutex.unlock();
     return true;
@@ -172,7 +173,7 @@ void PeerToPeer::llcpActivatedHandler(tNFA_LLCP_ACTIVATED& activated)
     return;
   }
     
-  //no longer need to receive NDEF message from a tag
+  // No longer need to receive NDEF message from a tag.
   NfcTagManager::doDeregisterNdefTypeHandler();
 
   if (activated.is_initiator == true) {
@@ -254,7 +255,7 @@ bool PeerToPeer::deregisterServer(unsigned int handle)
   mMutex.unlock();
 
   {
-    // Server does not call NFA_P2pDisconnect(), so unblock the accept()
+    // Server does not call NFA_P2pDisconnect(), so unblock the accept().
     SyncEventGuard guard(pSrv->mConnRequestEvent);
     pSrv->mConnRequestEvent.notifyOne();
   }
@@ -300,7 +301,7 @@ bool PeerToPeer::createClient(unsigned int handle, UINT16 miu, UINT8 rw)
   {
     SyncEventGuard guard(mClients[i]->mRegisteringEvent);
     NFA_P2pRegisterClient(NFA_P2P_DLINK_TYPE, nfaClientCallback);
-    mClients[i]->mRegisteringEvent.wait(); //wait for NFA_P2P_REG_CLIENT_EVT
+    mClients[i]->mRegisteringEvent.wait(); // Wait for NFA_P2P_REG_CLIENT_EVT.
   }
 
   if (mClients[i]->mNfaP2pClientHandle != NFA_HANDLE_INVALID) {
@@ -318,7 +319,7 @@ void PeerToPeer::removeConn(unsigned int handle)
   static const char fn[] = "PeerToPeer::removeConn";
 
   AutoMutex mutex(mMutex);
-  // If the connection is a for a client, delete the client itself
+  // If the connection is a for a client, delete the client itself.
   for (int ii = 0; ii < sMax; ii++) {
     if ((mClients[ii] != NULL) && (mClients[ii]->mClientConn->mHandle == handle)) {
       if (mClients[ii]->mNfaP2pClientHandle != NFA_HANDLE_INVALID)
@@ -330,7 +331,7 @@ void PeerToPeer::removeConn(unsigned int handle)
     }
   }
 
-  // If the connection is for a server, just delete the connection
+  // If the connection is for a server, just delete the connection.
   for (int ii = 0; ii < sMax; ii++) {
     if (mServers[ii] != NULL) {
       if (mServers[ii]->removeServerConnection(handle)) {
@@ -439,7 +440,7 @@ sp<P2pClient> PeerToPeer::findClientCon(tNFA_HANDLE nfaConnHandle)
 sp<NfaConn> PeerToPeer::findConnection(tNFA_HANDLE nfaConnHandle)
 {
   AutoMutex mutex(mMutex);
-  // First, look through all the client control blocks
+  // First, look through all the client control blocks.
   for (int ii = 0; ii < sMax; ii++) {
     if ((mClients[ii] != NULL)
       &&(mClients[ii]->mClientConn->mNfaConnHandle == nfaConnHandle) ) {
@@ -447,7 +448,7 @@ sp<NfaConn> PeerToPeer::findConnection(tNFA_HANDLE nfaConnHandle)
     }
   }
 
-  // Not found yet. Look through all the server control blocks
+  // Not found yet. Look through all the server control blocks.
   for (int ii = 0; ii < sMax; ii++) {
     if (mServers[ii] != NULL) {
       sp<NfaConn> conn = mServers[ii]->findServerConnection(nfaConnHandle);
@@ -464,7 +465,7 @@ sp<NfaConn> PeerToPeer::findConnection(tNFA_HANDLE nfaConnHandle)
 sp<NfaConn> PeerToPeer::findConnection(unsigned int handle)
 {
   AutoMutex mutex(mMutex);
-  // First, look through all the client control blocks
+  // First, look through all the client control blocks.
   for (int ii = 0; ii < sMax; ii++) {
     if ((mClients[ii] != NULL)
       && (mClients[ii]->mClientConn->mHandle == handle) ) {
@@ -472,7 +473,7 @@ sp<NfaConn> PeerToPeer::findConnection(unsigned int handle)
     }
   }
 
-  // Not found yet. Look through all the server control blocks
+  // Not found yet. Look through all the server control blocks.
   for (int ii = 0; ii < sMax; ii++) {
     if (mServers[ii] != NULL) {
       sp<NfaConn> conn = mServers[ii]->findServerConnection(handle);
@@ -504,11 +505,11 @@ bool PeerToPeer::send(unsigned int handle, UINT8 *buffer, UINT16 bufferLen)
     SyncEventGuard guard(pConn->mCongEvent);
     nfaStat = NFA_P2pSendData(pConn->mNfaConnHandle, bufferLen, buffer);
     if (nfaStat == NFA_STATUS_CONGESTED)
-      pConn->mCongEvent.wait(); //wait for NFA_P2P_CONGEST_EVT
+      pConn->mCongEvent.wait(); // Wait for NFA_P2P_CONGEST_EVT.
     else
       break;
 
-    if (pConn->mNfaConnHandle == NFA_HANDLE_INVALID) { //peer already disconnected
+    if (pConn->mNfaConnHandle == NFA_HANDLE_INVALID) { // Peer already disconnected.
       ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "%s: peer disconnected", fn);
       return false;
     }
@@ -541,9 +542,9 @@ bool PeerToPeer::receive(unsigned int handle, UINT8* buffer, UINT16 bufferLen, U
   ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "%s: handle: %u  nfaHandle: 0x%04X  buf len=%u", fn, pConn->mHandle, pConn->mNfaConnHandle, bufferLen);
 
   while (pConn->mNfaConnHandle != NFA_HANDLE_INVALID) {
-    //NFA_P2pReadData() is synchronous
+    // NFA_P2pReadData() is synchronous.
     stat = NFA_P2pReadData(pConn->mNfaConnHandle, bufferLen, &actualDataLen2, buffer, &isMoreData);
-    if ((stat == NFA_STATUS_OK) && (actualDataLen2 > 0)) { //received some data
+    if ((stat == NFA_STATUS_OK) && (actualDataLen2 > 0)) { // Received some data.
       actualLen = (UINT16) actualDataLen2;
       retVal = true;
       break;
@@ -553,7 +554,7 @@ bool PeerToPeer::receive(unsigned int handle, UINT8* buffer, UINT16 bufferLen, U
       SyncEventGuard guard(pConn->mReadEvent);
       pConn->mReadEvent.wait();
     }
-  } //while
+  } // while.
 
   ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "%s: exit; nfa h: 0x%X  ok: %u  actual len: %u", fn, pConn->mNfaConnHandle, retVal, actualLen);
   return retVal;
@@ -573,7 +574,7 @@ bool PeerToPeer::disconnectConnOriented(unsigned int handle)
     return false;
   }
 
-  // If this is a client, he may not be connected yet, so unblock him just in case
+  // If this is a client, he may not be connected yet, so unblock him just in case.
   if (((pClient = findClient(handle)) != NULL) && (pClient->mIsConnecting) ) {
     SyncEventGuard guard(pClient->mConnectingEvent);
     pClient->mConnectingEvent.notifyOne();
@@ -582,11 +583,11 @@ bool PeerToPeer::disconnectConnOriented(unsigned int handle)
 
   {
     SyncEventGuard guard1(pConn->mCongEvent);
-    pConn->mCongEvent.notifyOne(); //unblock send() if congested
+    pConn->mCongEvent.notifyOne(); // Unblock send() if congested.
   }
   {
     SyncEventGuard guard2(pConn->mReadEvent);
-    pConn->mReadEvent.notifyOne(); //unblock receive()
+    pConn->mReadEvent.notifyOne(); // Unblock receive().
   }
 
   if (pConn->mNfaConnHandle != NFA_HANDLE_INVALID) {
@@ -646,7 +647,7 @@ void PeerToPeer::enableP2pListening(bool isEnable)
 
   ALOGD("%s: enter isEnable: %u  mIsP2pListening: %u", fn, isEnable, mIsP2pListening);
 
-  // If request to enable P2P listening, and we were not already listening
+  // If request to enable P2P listening, and we were not already listening.
   if ((isEnable == true) && (mIsP2pListening == false) && (mP2pListenTechMask != 0) ) {
     SyncEventGuard guard(mSetTechEvent);
     if ((nfaStat = NFA_SetP2pListenTech(mP2pListenTechMask)) == NFA_STATUS_OK) {
@@ -657,7 +658,7 @@ void PeerToPeer::enableP2pListening(bool isEnable)
       ALOGE("%s: fail enable listen; error=0x%X", fn, nfaStat);
   } else if ((isEnable == false) && (mIsP2pListening == true) ) {
     SyncEventGuard guard(mSetTechEvent);
-    // Request to disable P2P listening, check if it was enabled
+    // Request to disable P2P listening, check if it was enabled.
     if ((nfaStat = NFA_SetP2pListenTech(0)) == NFA_STATUS_OK) {
       mSetTechEvent.wait();
       mIsP2pListening = false;
@@ -673,15 +674,15 @@ void PeerToPeer::handleNfcOnOff(bool isOn)
   static const char fn [] = "PeerToPeer::handleNfcOnOff";
   ALOGD("%s: enter; is on=%u", fn, isOn);
 
-  mIsP2pListening = false;            // In both cases, P2P will not be listening
+  mIsP2pListening = false;            // In both cases, P2P will not be listening.
 
   AutoMutex mutex(mMutex);
   if (isOn) {
-    // Start with no clients or servers
+    // Start with no clients or servers.
     memset(mServers, 0, sizeof(mServers));
     memset(mClients, 0, sizeof(mClients));
   } else {
-    // Disconnect through all the clients
+    // Disconnect through all the clients.
     for (int ii = 0; ii < sMax; ii++) {
       if (mClients[ii] != NULL) {
         if (mClients[ii]->mClientConn->mNfaConnHandle == NFA_HANDLE_INVALID) {
@@ -691,22 +692,22 @@ void PeerToPeer::handleNfcOnOff(bool isOn)
           mClients[ii]->mClientConn->mNfaConnHandle = NFA_HANDLE_INVALID;
           {
             SyncEventGuard guard1(mClients[ii]->mClientConn->mCongEvent);
-            mClients[ii]->mClientConn->mCongEvent.notifyOne(); //unblock send()
+            mClients[ii]->mClientConn->mCongEvent.notifyOne(); // Unblock send().
           }
           {
             SyncEventGuard guard2(mClients[ii]->mClientConn->mReadEvent);
-            mClients[ii]->mClientConn->mReadEvent.notifyOne(); //unblock receive()
+            mClients[ii]->mClientConn->mReadEvent.notifyOne(); // Unblock receive().
           }
         }
       }
-    } //loop
+    } // Loop.
 
-    // Now look through all the server control blocks
+    // Now look through all the server control blocks.
     for (int ii = 0; ii < sMax; ii++) {
       if (mServers[ii] != NULL) {
         mServers[ii]->unblockAll();
       }
-    } //loop
+    } // Loop.
 
   }
   ALOGD("%s: exit", fn);
@@ -722,7 +723,7 @@ void PeerToPeer::nfaServerCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
 
   switch (p2pEvent)
   {
-  case NFA_P2P_REG_SERVER_EVT:  // NFA_P2pRegisterServer() has started to listen
+  case NFA_P2P_REG_SERVER_EVT:  // NFA_P2pRegisterServer() has started to listen.
     ALOGD("%s: NFA_P2P_REG_SERVER_EVT; handle: 0x%04x; service sap=0x%02x  name: %s", fn,
       eventData->reg_server.server_handle, eventData->reg_server.server_sap, eventData->reg_server.service_name);
 
@@ -734,11 +735,11 @@ void PeerToPeer::nfaServerCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
     } else {
       SyncEventGuard guard(pSrv->mRegServerEvent);
       pSrv->mNfaP2pServerHandle = eventData->reg_server.server_handle;
-      pSrv->mRegServerEvent.notifyOne(); //unblock registerServer()
+      pSrv->mRegServerEvent.notifyOne(); // Unblock registerServer().
     }
     break;
 
-  case NFA_P2P_ACTIVATED_EVT: //remote device has activated
+  case NFA_P2P_ACTIVATED_EVT: // Remote device has activated.
     ALOGD("%s: NFA_P2P_ACTIVATED_EVT; handle: 0x%04x", fn, eventData->activated.handle);
     break;
 
@@ -759,7 +760,7 @@ void PeerToPeer::nfaServerCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
     }
     ALOGD("%s: NFA_P2P_CONN_REQ_EVT; server h=%u", fn, pSrv->mHandle);
 
-    // Look for a connection block that is waiting (handle invalid)
+    // Look for a connection block that is waiting (handle invalid).
     if ((pConn = pSrv->findServerConnection((tNFA_HANDLE) NFA_HANDLE_INVALID)) == NULL) {
       ALOGE("%s: NFA_P2P_CONN_REQ_EVT; server not listening", fn);
     } else {
@@ -768,7 +769,7 @@ void PeerToPeer::nfaServerCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
       pConn->mRemoteMaxInfoUnit = eventData->conn_req.remote_miu;
       pConn->mRemoteRecvWindow = eventData->conn_req.remote_rw;
       ALOGD("%s: NFA_P2P_CONN_REQ_EVT; server h=%u; conn h=%u; notify conn req", fn, pSrv->mHandle, pConn->mHandle);
-      pSrv->mConnRequestEvent.notifyOne(); //unblock accept()
+      pSrv->mConnRequestEvent.notifyOne(); // Unblock accept().
     }
     break;
 
@@ -779,7 +780,7 @@ void PeerToPeer::nfaServerCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
 
   case NFA_P2P_DISC_EVT:
     ALOGD("%s: NFA_P2P_DISC_EVT; h=0x%04x; reason=0x%X", fn, eventData->disc.handle, eventData->disc.reason);
-    // Look for the connection block
+    // Look for the connection block.
     if ((pConn = sP2p.findConnection(eventData->disc.handle)) == NULL) {
       ALOGE("%s: NFA_P2P_DISC_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->disc.handle);
     } else {
@@ -794,13 +795,13 @@ void PeerToPeer::nfaServerCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
       {
         ALOGD("%s: NFA_P2P_DISC_EVT; try guard congest event", fn);
         SyncEventGuard guard1(pConn->mCongEvent);
-        pConn->mCongEvent.notifyOne(); //unblock write (if congested)
+        pConn->mCongEvent.notifyOne(); // Unblock write (if congested).
         ALOGD("%s: NFA_P2P_DISC_EVT; notified congest event", fn);
       }
       {
         ALOGD("%s: NFA_P2P_DISC_EVT; try guard read event", fn);
         SyncEventGuard guard2(pConn->mReadEvent);
-        pConn->mReadEvent.notifyOne(); //unblock receive()
+        pConn->mReadEvent.notifyOne(); // Unblock receive().
         ALOGD("%s: NFA_P2P_DISC_EVT; notified read event", fn);
       }
       sP2p.mDisconnectMutex.unlock();
@@ -808,7 +809,7 @@ void PeerToPeer::nfaServerCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
     break;
 
   case NFA_P2P_DATA_EVT:
-    // Look for the connection block
+    // Look for the connection block.
     if ((pConn = sP2p.findConnection(eventData->data.handle)) == NULL) {
       ALOGE("%s: NFA_P2P_DATA_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->data.handle);
     } else {
@@ -820,7 +821,7 @@ void PeerToPeer::nfaServerCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
     break;
 
   case NFA_P2P_CONGEST_EVT:
-    // Look for the connection block
+    // Look for the connection block.
     if ((pConn = sP2p.findConnection(eventData->congest.handle)) == NULL) {
       ALOGE("%s: NFA_P2P_CONGEST_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->congest.handle);
     } else {
@@ -851,7 +852,7 @@ void PeerToPeer::nfaClientCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
   switch (p2pEvent)
   {
   case NFA_P2P_REG_CLIENT_EVT:
-    // Look for a client that is trying to register
+    // Look for a client that is trying to register.
     if ((pClient = sP2p.findClient((tNFA_HANDLE)NFA_HANDLE_INVALID)) == NULL) {
       ALOGE("%s: NFA_P2P_REG_CLIENT_EVT: can't find waiting client", fn);
     } else {
@@ -864,7 +865,7 @@ void PeerToPeer::nfaClientCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
     break;
 
   case NFA_P2P_ACTIVATED_EVT:
-    // Look for a client that is trying to register
+    // Look for a client that is trying to register.
     if ((pClient = sP2p.findClient(eventData->activated.handle)) == NULL) {
       ALOGE("%s: NFA_P2P_ACTIVATED_EVT: can't find client", fn);
     } else {
@@ -877,7 +878,7 @@ void PeerToPeer::nfaClientCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
     break;
 
   case NFA_P2P_CONNECTED_EVT:
-    // Look for the client that is trying to connect
+    // Look for the client that is trying to connect.
     if ((pClient = sP2p.findClient(eventData->connected.client_handle)) == NULL) {
       ALOGE("%s: NFA_P2P_CONNECTED_EVT: can't find client: 0x%04x", fn, eventData->connected.client_handle);
     } else {
@@ -888,20 +889,20 @@ void PeerToPeer::nfaClientCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
       pClient->mClientConn->mNfaConnHandle     = eventData->connected.conn_handle;
       pClient->mClientConn->mRemoteMaxInfoUnit = eventData->connected.remote_miu;
       pClient->mClientConn->mRemoteRecvWindow  = eventData->connected.remote_rw;
-      pClient->mConnectingEvent.notifyOne(); //unblock createDataLinkConn()
+      pClient->mConnectingEvent.notifyOne(); // Unblock createDataLinkConn().
     }
     break;
 
   case NFA_P2P_DISC_EVT:
     ALOGD("%s: NFA_P2P_DISC_EVT; h=0x%04x; reason=0x%X", fn, eventData->disc.handle, eventData->disc.reason);
-    // Look for the connection block
+    // Look for the connection block.
     if ((pConn = sP2p.findConnection(eventData->disc.handle)) == NULL) {
-      // If no connection, may be a client that is trying to connect
+      // If no connection, may be a client that is trying to connect.
       if ((pClient = sP2p.findClient(eventData->disc.handle)) == NULL) {
         ALOGE("%s: NFA_P2P_DISC_EVT: can't find client for NFA handle: 0x%04x", fn, eventData->disc.handle);
         return;
       }
-      // Unblock createDataLinkConn()
+      // Unblock createDataLinkConn().
       SyncEventGuard guard(pClient->mConnectingEvent);
       pClient->mConnectingEvent.notifyOne();
     } else {
@@ -916,13 +917,13 @@ void PeerToPeer::nfaClientCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
       {
         ALOGD("%s: NFA_P2P_DISC_EVT; try guard congest event", fn);
         SyncEventGuard guard1(pConn->mCongEvent);
-        pConn->mCongEvent.notifyOne(); //unblock write (if congested)
+        pConn->mCongEvent.notifyOne(); // Unblock write (if congested).
         ALOGD("%s: NFA_P2P_DISC_EVT; notified congest event", fn);
       }
       {
         ALOGD("%s: NFA_P2P_DISC_EVT; try guard read event", fn);
         SyncEventGuard guard2(pConn->mReadEvent);
-        pConn->mReadEvent.notifyOne(); //unblock receive()
+        pConn->mReadEvent.notifyOne(); // Unblock receive().
         ALOGD("%s: NFA_P2P_DISC_EVT; notified read event", fn);
       }
       sP2p.mDisconnectMutex.unlock();
@@ -930,7 +931,7 @@ void PeerToPeer::nfaClientCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
     break;
 
   case NFA_P2P_DATA_EVT:
-    // Look for the connection block
+    // Look for the connection block.
     if ((pConn = sP2p.findConnection(eventData->data.handle)) == NULL) {
       ALOGE("%s: NFA_P2P_DATA_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->data.handle);
     } else {
@@ -942,7 +943,7 @@ void PeerToPeer::nfaClientCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
     break;
 
   case NFA_P2P_CONGEST_EVT:
-    // Look for the connection block
+    // Look for the connection block.
     if ((pConn = sP2p.findConnection(eventData->congest.handle)) == NULL) {
       ALOGE("%s: NFA_P2P_CONGEST_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->congest.handle);
     } else {
@@ -967,7 +968,7 @@ void PeerToPeer::connectionEventHandler(UINT8 event, tNFA_CONN_EVT_DATA* /*event
   case NFA_SET_P2P_LISTEN_TECH_EVT:
     {
       SyncEventGuard guard(mSetTechEvent);
-      mSetTechEvent.notifyOne(); //unblock NFA_SetP2pListenTech()
+      mSetTechEvent.notifyOne(); // Unblock NFA_SetP2pListenTech().
       break;
     }
   }
@@ -999,24 +1000,24 @@ bool P2pServer::registerWithStack()
   tNFA_STATUS     stat  = NFA_STATUS_OK;
   UINT8           serverSap = NFA_P2P_ANY_SAP;
 
-  /**********************
-  default values for all LLCP parameters:
-  - Local Link MIU (LLCP_MIU)
-  - Option parameter (LLCP_OPT_VALUE)
-  - Response Waiting Time Index (LLCP_WAITING_TIME)
-  - Local Link Timeout (LLCP_LTO_VALUE)
-  - Inactivity Timeout as initiator role (LLCP_INIT_INACTIVITY_TIMEOUT)
-  - Inactivity Timeout as target role (LLCP_TARGET_INACTIVITY_TIMEOUT)
-  - Delay SYMM response (LLCP_DELAY_RESP_TIME)
-  - Data link connection timeout (LLCP_DATA_LINK_CONNECTION_TOUT)
-  - Delay timeout to send first PDU as initiator (LLCP_DELAY_TIME_TO_SEND_FIRST_PDU)
-  ************************/
+  /**
+   * default values for all LLCP parameters:
+   * - Local Link MIU (LLCP_MIU)
+   * - Option parameter (LLCP_OPT_VALUE)
+   * - Response Waiting Time Index (LLCP_WAITING_TIME)
+   * - Local Link Timeout (LLCP_LTO_VALUE)
+   * - Inactivity Timeout as initiator role (LLCP_INIT_INACTIVITY_TIMEOUT)
+   * - Inactivity Timeout as target role (LLCP_TARGET_INACTIVITY_TIMEOUT)
+   * - Delay SYMM response (LLCP_DELAY_RESP_TIME)
+   * - Data link connection timeout (LLCP_DATA_LINK_CONNECTION_TOUT)
+   * - Delay timeout to send first PDU as initiator (LLCP_DELAY_TIME_TO_SEND_FIRST_PDU)
+   */
   stat = NFA_P2pSetLLCPConfig(LLCP_MAX_MIU,
          LLCP_OPT_VALUE,
          LLCP_WAITING_TIME,
          LLCP_LTO_VALUE,
-         0, //use 0 for infinite timeout for symmetry procedure when acting as initiator
-         0, //use 0 for infinite timeout for symmetry procedure when acting as target
+         0, // Use 0 for infinite timeout for symmetry procedure when acting as initiator.
+         0, // Use 0 for infinite timeout for symmetry procedure when acting as target.
          LLCP_DELAY_RESP_TIME,
          LLCP_DATA_LINK_TIMEOUT,
          LLCP_DELAY_TIME_TO_SEND_FIRST_PDU);
@@ -1024,7 +1025,7 @@ bool P2pServer::registerWithStack()
     ALOGE("%s: fail set LLCP config; error=0x%X", fn, stat);
 
   if (sSnepServiceName.compare(mServiceName) == 0)
-    serverSap = LLCP_SAP_SNEP; //LLCP_SAP_SNEP == 4
+    serverSap = LLCP_SAP_SNEP; // LLCP_SAP_SNEP == 4.
 
   {
     SyncEventGuard guard(mRegServerEvent);
@@ -1035,7 +1036,7 @@ bool P2pServer::registerWithStack()
       return false;
     }
     ALOGD("%s: wait for listen-completion event", fn);
-    // Wait for NFA_P2P_REG_SERVER_EVT
+    // Wait for NFA_P2P_REG_SERVER_EVT.
     mRegServerEvent.wait();
   }
 
@@ -1055,7 +1056,7 @@ bool P2pServer::accept(unsigned int serverHandle, unsigned int connHandle,
   }
 
   {
-    // Wait for NFA_P2P_CONN_REQ_EVT or NFA_NDEF_DATA_EVT when remote device requests connection
+    // Wait for NFA_P2P_CONN_REQ_EVT or NFA_NDEF_DATA_EVT when remote device requests connection.
     SyncEventGuard guard(mConnRequestEvent);
     ALOGD("%s: serverHandle: %u; connHandle: %u; wait for incoming connection", fn,
       serverHandle, connHandle);
@@ -1092,11 +1093,11 @@ void P2pServer::unblockAll()
       mServerConn[jj]->mNfaConnHandle = NFA_HANDLE_INVALID;
       {
         SyncEventGuard guard1(mServerConn[jj]->mCongEvent);
-        mServerConn[jj]->mCongEvent.notifyOne(); //unblock write (if congested)
+        mServerConn[jj]->mCongEvent.notifyOne(); // Unblock write (if congested).
       }
       {
         SyncEventGuard guard2(mServerConn[jj]->mReadEvent);
-        mServerConn[jj]->mReadEvent.notifyOne(); //unblock receive()
+        mServerConn[jj]->mReadEvent.notifyOne(); // Unblock receive().
       }
     }
   }
@@ -1105,7 +1106,7 @@ void P2pServer::unblockAll()
 sp<NfaConn> P2pServer::allocateConnection(unsigned int handle)
 {
   AutoMutex mutex(mMutex);
-  // First, find a free connection block to handle the connection
+  // First, find a free connection block to handle the connection.
   for (int ii = 0; ii < MAX_NFA_CONNS_PER_SERVER; ii++) {
     if (mServerConn[ii] == NULL) {
       mServerConn[ii] = new NfaConn;
@@ -1127,7 +1128,7 @@ sp<NfaConn> P2pServer::findServerConnection(tNFA_HANDLE nfaConnHandle)
       return mServerConn[jj];
   }
 
-  // If here, not found
+  // If here, not found.
   return NULL;
 }
 
@@ -1141,7 +1142,7 @@ sp<NfaConn> P2pServer::findServerConnection(unsigned int handle)
       return (mServerConn[jj]);
   }
 
-  // If here, not found
+  // If here, not found.
   return (NULL);
 }
 
@@ -1157,7 +1158,7 @@ bool P2pServer::removeServerConnection(unsigned int handle)
     }
   }
 
-  // If here, not found
+  // If here, not found.
   return false;
 }
 

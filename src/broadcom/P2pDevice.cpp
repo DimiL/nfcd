@@ -11,25 +11,25 @@ P2pDevice::~P2pDevice()
 {
 }
 
-bool P2pDevice::doConnect()
+bool P2pDevice::connect()
 {
   return true;
 }
 
-bool P2pDevice::doDisconnect()
+bool P2pDevice::disconnect()
 {
   return true;
 }
 
-void P2pDevice::doTransceive()
+void P2pDevice::transceive()
 {
 }
 
-void P2pDevice::doReceive()
+void P2pDevice::receive()
 { 
 }
 
-bool P2pDevice::doSend()
+bool P2pDevice::send()
 {
   return true;
 }
