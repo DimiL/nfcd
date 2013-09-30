@@ -54,7 +54,6 @@ public:
   bool handleNfcEnableDisableRequest(bool enableDisable);
   void handleNfcEnableDisableResponse(NfcEvent* event);
 
-
   void onConnected();
 
   //TODO put these in public because serviceThread will need to access this.

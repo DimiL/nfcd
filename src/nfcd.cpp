@@ -9,8 +9,6 @@
 #include "DeviceHost.h"
 #include "MessageHandler.h"
 #include "SnepServer.h"
-#include "NdefPushServer.h"
-#include "HandoverServer.h"
 
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
@@ -18,26 +16,25 @@
 
 int main() {
 
-  // 1. Create NFC Manager and do initialize
+  // Create NFC Manager and do initialize.
   NfcManager* pNfcManager = new NfcManager();
   pNfcManager->doInitialize();
 
-  // 2. Create service thread to receive message from nfc library
+  // Create service thread to receive message from nfc library.
   NfcService* service = NfcService::Instance();
   MessageHandler* msgHandler = new MessageHandler(service);
   service->initialize(pNfcManager, msgHandler);
 
-  // 3. Create snep server
-  // TODO : Maybe we should put this when p2p connection is established ?
-  // Mark first because the function is not yet complete
+  // Create SNEP server.
   SnepCallback snepCallback;
   SnepServer snepServer(static_cast<ISnepCallback*>(&snepCallback));
   snepServer.start();
 
-  // 4. Enable discovery MUST after push,snep,handover servers are established
+  // Enable discovery MUST SNEP server is established.
+  // Otherwise, P2P device will not be discovered.
   pNfcManager->enableDiscovery();
 
-  // 5. Create IPC socket & main thread will enter while loop to read data from socket
+  // Create IPC socket & main thread will enter while loop to read data from socket.
   NfcIpcSocket* socket = NfcIpcSocket::Instance();
   socket->initialize(msgHandler);
   socket->setSocketListener(service);
