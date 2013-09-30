@@ -64,6 +64,37 @@ static sem_t thread_sem;
 NfcService* NfcService::sInstance = NULL;
 NfcManager* NfcService::sNfcManager = NULL;
 
+NfcService::NfcService()
+{
+}
+
+NfcService::~NfcService()
+{
+}
+
+static void *serviceThreadFunc(void *arg)
+{
+  pthread_setname_np(pthread_self(), "NFCService thread");
+  NfcService* service = reinterpret_cast<NfcService*>(arg);
+  return service->eventLoop();
+}
+
+void NfcService::initialize(NfcManager* pNfcManager, MessageHandler* msgHandler)
+{
+  if (sem_init(&thread_sem, 0, 0) == -1) {
+    ALOGE("%s: init_nfc_service Semaphore creation failed", __func__);
+    abort();
+  }
+
+  if (pthread_create(&thread_id, NULL, serviceThreadFunc, this) != 0) {
+    ALOGE("%s: init_nfc_service pthread_create failed", __func__);
+    abort();
+  }
+
+  mMsgHandler = msgHandler;
+  sNfcManager = pNfcManager;
+}
+
 void NfcService::notifyLlcpLinkActivation(void* pDevice)
 {
   ALOGD("%s: enter", __func__);
@@ -221,15 +252,6 @@ void NfcService::handleTagLost(NfcEvent* event)
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_LOST, NULL);
 }
 
-static void *serviceThreadFunc(void *arg)
-{
-  pthread_setname_np(pthread_self(), "NFCService thread");
-
-  NfcService* service = reinterpret_cast<NfcService*>(arg);
-
-  return service->eventLoop();
-}
-
 void* NfcService::eventLoop()
 {
   ALOGD("%s: NFCService started", __func__);
@@ -302,32 +324,6 @@ NfcService* NfcService::Instance() {
     if (!sInstance)
         sInstance = new NfcService();
     return sInstance;
-}
-
-NfcService::NfcService()
-{
-}
-
-NfcService::~NfcService()
-{
-}
-
-void NfcService::initialize(NfcManager* pNfcManager, MessageHandler* msgHandler)
-{
-  if (sem_init(&thread_sem, 0, 0) == -1)
-  {
-    ALOGE("%s: init_nfc_service Semaphore creation failed", __func__);
-    abort();
-  }
-
-  if (pthread_create(&thread_id, NULL, serviceThreadFunc, this) != 0)
-  {
-    ALOGE("%s: init_nfc_service pthread_create failed", __func__);
-    abort();
-  }
-
-  mMsgHandler = msgHandler;
-  sNfcManager = pNfcManager;
 }
 
 INfcManager* NfcService::getNfcManager()
@@ -506,7 +502,6 @@ void NfcService::handlePowerOnOffResponse(NfcEvent* event)
 
   return;
 }
-
 
 bool NfcService::handleNfcEnableDisableRequest(bool enableDisable)
 {
