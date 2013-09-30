@@ -19,8 +19,8 @@ public:
   void processRequest(const uint8_t* data, size_t length);
   void processResponse(NfcResponseType response, NfcErrorCode error, void* data);
   void processNotification(NfcNotificationType notification, void* data);
-  //TODO a better naming?
-  void setSocket(NfcIpcSocket* socket);
+
+  void setOutgoingSocket(NfcIpcSocket* socket);
 
 private:
   void notifyInitialized(android::Parcel& parcel);

@@ -135,7 +135,7 @@ void MessageHandler::processNotification(NfcNotificationType notification, void*
   }
 }
 
-void MessageHandler::setSocket(NfcIpcSocket* socket)
+void MessageHandler::setOutgoingSocket(NfcIpcSocket* socket)
 {
   mSocket = socket;
 }

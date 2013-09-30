@@ -38,7 +38,7 @@ int main() {
   NfcIpcSocket* socket = NfcIpcSocket::Instance();
   socket->initialize(msgHandler);
   socket->setSocketListener(service);
-  msgHandler->setSocket(socket);
+  msgHandler->setOutgoingSocket(socket);
   socket->loop();
 
   //TODO delete NfcIpcSocket, NfcService
