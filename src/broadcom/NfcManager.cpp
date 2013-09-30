@@ -84,8 +84,8 @@ NfcManager::NfcManager()
 
 NfcManager::~NfcManager()
 {
-  if (mP2pDevice != NULL)    delete mP2pDevice;
-  if (mNfcTagManager != NULL)       delete mNfcTagManager;
+  if (mP2pDevice != NULL)      delete mP2pDevice;
+  if (mNfcTagManager != NULL)  delete mNfcTagManager;
 }
 
 void* NfcManager::queryInterface(const char* name)
@@ -127,7 +127,7 @@ bool NfcManager::doInitialize()
             
       sNfaEnableEvent.wait(); // Wait for NFA command to finish.
     } else {
-      ALOGE("%s: NFA Enable Fail", __FUNCTION__);
+      ALOGE("%s: NFA_Enable fail, error = 0x%X", __FUNCTION__, stat);
     }
   }
 
@@ -287,7 +287,7 @@ void NfcManager::disableDiscovery()
       sDiscoveryEnabled = false;
       sNfaEnableDisablePollingEvent.wait(); // Wait for NFA_POLL_DISABLED_EVT.
     } else {
-      ALOGE("%s: Failed to disable polling; error=0x%X", __FUNCTION__, status);
+      ALOGE("%s: NFA_DisablePolling fail, error=0x%X", __FUNCTION__, status);
     }
   }
 
@@ -595,7 +595,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
       if (status == NFA_STATUS_OK) {
         ALOGD("%s: Disabled RF field events", __FUNCTION__);
       } else {
-        ALOGE("%s: Failed to disable RF field events", __FUNCTION__);
+        ALOGE("%s: NFA_SetConfig fail, error = 0x%X", __FUNCTION__, status);
       }
       // For the SE, consider the field to be on while p2p is active.
       // TODO : Implement SE
@@ -761,22 +761,24 @@ void startRfDiscovery(bool isStart)
     sNfaEnableDisablePollingEvent.wait(); // Wait for NFA_RF_DISCOVERY_xxxx_EVT.
     sRfEnabled = isStart;
   } else {
-    ALOGE("%s: Failed to start/stop RF discovery; error=0x%X", __FUNCTION__, status);
+    ALOGE("%s: NFA_StartRfDiscovery/NFA_StopRfDiscovery fail, error=0x%X", __FUNCTION__, status);
   }
 }
 
 void doStartupConfig()
 {
-  unsigned long num = 0;
   tNFA_STATUS stat = NFA_STATUS_FAILED;
 
   // If polling for Active mode, set the ordering so that we choose Active over Passive mode first.
   if (gNat.tech_mask & (NFA_TECHNOLOGY_MASK_A_ACTIVE | NFA_TECHNOLOGY_MASK_F_ACTIVE)) {
     UINT8  act_mode_order_param[] = { 0x01 };
     SyncEventGuard guard(sNfaSetConfigEvent);
+
     stat = NFA_SetConfig(NCI_PARAM_ID_ACT_ORDER, sizeof(act_mode_order_param), &act_mode_order_param[0]);
     if (stat == NFA_STATUS_OK)
       sNfaSetConfigEvent.wait();
+    else
+      ALOGE("%s: NFA_SetConfig fail, error = 0x%X", __FUNCTION__, stat);
   }
 }
 
@@ -804,7 +806,7 @@ void startStopPolling(bool isStartPolling)
       ALOGD("%s: wait for enable event", __FUNCTION__);
       sNfaEnableDisablePollingEvent.wait(); // Wait for NFA_POLL_ENABLED_EVT.
     } else {
-      ALOGE ("%s: fail enable polling; error=0x%X", __FUNCTION__, stat);
+      ALOGE ("%s: NFA_EnablePolling fail, error=0x%X", __FUNCTION__, stat);
     }
   } else {
     SyncEventGuard guard(sNfaEnableDisablePollingEvent);
@@ -813,7 +815,7 @@ void startStopPolling(bool isStartPolling)
     if (stat == NFA_STATUS_OK) {
       sNfaEnableDisablePollingEvent.wait(); // Wait for NFA_POLL_DISABLED_EVT.
     } else {
-      ALOGE("%s: fail disable polling; error=0x%X", __FUNCTION__, stat);
+      ALOGE("%s: NFA_DisablePolling fail, error=0x%X", __FUNCTION__, stat);
     }
   }
   startRfDiscovery(true);
