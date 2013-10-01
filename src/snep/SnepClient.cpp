@@ -71,26 +71,29 @@ void SnepClient::put(NdefMessage& msg)
 {
   SnepMessenger* messenger = NULL;
   if (mState != SnepClient::CONNECTED) {
-    ALOGE("%s: Socket not connected", __FUNCTION__);
+    ALOGE("%s: socket is not connected", __FUNCTION__);
     return;
   }
   messenger = mMessenger;
 
-  // TODO : Need to do error handling.
   SnepMessage* snepMessage = SnepMessage::getPutRequest(msg);
-  messenger->sendMessage(*snepMessage);
+  if (snepMessage) {
+    messenger->sendMessage(*snepMessage);
+  } else {
+    ALOGE("%s: get put request fail", __FUNCTION__);
+  }
 
-  // TODO : Don't know why android call this function.
-  //messenger->getMessage();
+  SnepMessage* response = messenger->getMessage();
 
   delete snepMessage;
+  delete response;
 }
 
 SnepMessage* SnepClient::get(NdefMessage& msg)
 {
   SnepMessenger* messenger = NULL;
   if (mState != SnepClient::CONNECTED) {
-    ALOGE("%s: Socket not connected", __FUNCTION__);
+    ALOGE("%s: socket is not connected", __FUNCTION__);
     return NULL;
   }
   messenger = mMessenger;  
@@ -98,35 +101,35 @@ SnepMessage* SnepClient::get(NdefMessage& msg)
   SnepMessage* snepMessage = SnepMessage::getGetRequest(mAcceptableLength, msg);
   messenger->sendMessage(*snepMessage);
   delete snepMessage;
- 
-  return messenger->getMessage();  
+
+  return messenger->getMessage();
 }
 
 void SnepClient::connect()
 {
   if (mState != SnepClient::DISCONNECTED) {
-    ALOGE("%s: Socket already in use", __FUNCTION__);
+    ALOGE("%s: socket already in use", __FUNCTION__);
     return;
   }
   mState = SnepClient::CONNECTING;
 
   INfcManager* pINfcManager = NfcService::getNfcManager();
   ILlcpSocket* socket = pINfcManager->createLlcpSocket(0, mMiu, mRwSize, 1024);
-  if (socket == NULL) {
-    ALOGE("%s: Could not connect to socket", __FUNCTION__);
+  if (!socket) {
+    ALOGE("%s: could not connect to socket", __FUNCTION__);
     return;
   }
 
   bool ret = false;
   if (mPort == -1) {
     if (!socket->connectToService(mServiceName)) {
-      ALOGE("%s: Could not connect to service (%s)", __FUNCTION__, mServiceName);
+      ALOGE("%s: could not connect to service (%s)", __FUNCTION__, mServiceName);
       delete socket;
       return;
     }
   } else {
     if (!socket->connectToSap(mPort)) {
-      ALOGE("%s: Could not connect to sap (%d)", __FUNCTION__, mPort);
+      ALOGE("%s: could not connect to sap (%d)", __FUNCTION__, mPort);
       delete socket;
       return;
     }    

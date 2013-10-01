@@ -82,7 +82,7 @@ SnepMessage* SnepMessage::getMessage(uint8_t field) {
 }
 
 SnepMessage* getSuccessResponse(NdefMessage* ndef) {
-  if (ndef == NULL) {
+  if (!ndef) {
     return new SnepMessage(SnepMessage::VERSION, SnepMessage::RESPONSE_SUCCESS, 0, 0, NULL);
   } else {
     std::vector<uint8_t> buf;
@@ -105,7 +105,7 @@ SnepMessage* SnepMessage::fromByteArray(uint8_t* pBuf, int size)
 
 void SnepMessage::toByteArray(std::vector<uint8_t>& buf)
 {
-  if (mNdefMessage != NULL) {
+  if (!mNdefMessage) {
     mNdefMessage->toByteArray(buf);
   }
 

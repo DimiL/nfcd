@@ -1,4 +1,4 @@
-/* This Source Code Form is subject to the terms of the Mozilla 
+/* This Source Code Form is subject to the terms of the Mozilla
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -24,7 +24,7 @@ public:
 
   static SnepMessage* getPutRequest(NdefMessage& ndef);
 
-private: 
+private:
   static const int HEADER_LENGTH = 6;
 
   bool socketSend(uint8_t field);

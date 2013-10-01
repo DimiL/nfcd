@@ -1,4 +1,4 @@
-/* This Source Code Form is subject to the terms of the Mozilla 
+/* This Source Code Form is subject to the terms of the Mozilla
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -34,24 +34,24 @@ public:
   static const uint8_t RESPONSE_UNSUPPORTED_VERSION = 0xE1;
   static const uint8_t RESPONSE_REJECT = 0xFF;
 
-  NdefMessage* getNdefMessage() {  return mNdefMessage;  }
-  uint8_t getField() {  return mField;  }
-  uint8_t getVersion() {  return mVersion;  }
-  int getLength() {  return mLength;  }
-  int getAcceptableLength() {  return mField != REQUEST_GET ? 0 : mAcceptableLength;  }
+  NdefMessage* getNdefMessage() { return mNdefMessage; }
+  uint8_t getField() { return mField; }
+  uint8_t getVersion() { return mVersion; }
+  int getLength() { return mLength; }
+  int getAcceptableLength() { return mField != REQUEST_GET ? 0 : mAcceptableLength; }
 
   void toByteArray(std::vector<uint8_t>& buf);
 
   static SnepMessage* getGetRequest(int acceptableLength, NdefMessage& ndef);
-  static SnepMessage* getPutRequest(NdefMessage& ndef); 
+  static SnepMessage* getPutRequest(NdefMessage& ndef);
   static SnepMessage* getMessage(uint8_t field);
   static SnepMessage* getSuccessResponse(NdefMessage* ndef);
   static SnepMessage* fromByteArray(std::vector<uint8_t>& buf);
   static SnepMessage* fromByteArray(uint8_t* pBuf, int size);
-private: 
+private:
 
   static const int HEADER_LENGTH = 6;
-  
+
   uint8_t mVersion;
   uint8_t mField;
   uint32_t mLength;

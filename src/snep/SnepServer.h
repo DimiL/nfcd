@@ -53,7 +53,7 @@ public:
   ~ConnectionThread();
 
   void run();
-  bool isServerRunning();
+  bool isServerRunning() const;
 
   ILlcpSocket* mSock;
   SnepMessenger* mMessenger;

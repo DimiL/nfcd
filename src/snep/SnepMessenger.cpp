@@ -15,7 +15,7 @@ SnepMessenger::SnepMessenger(bool isClient, ILlcpSocket* socket, uint32_t fragme
 
 SnepMessenger::~SnepMessenger()
 {
-  delete mSocket;
+  if (mSocket)  delete mSocket;
 }
 
 void SnepMessenger::sendMessage(SnepMessage& msg)
@@ -23,6 +23,8 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
   std::vector<uint8_t> buf;
   uint8_t remoteContinue;
   uint32_t offset;
+
+  ALOGD("%s: enter", __FUNCTION__);
 
   msg.toByteArray(buf);
   if (mIsClient) {
@@ -37,6 +39,7 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
   mSocket->send(buf);
 
   if (length == buf.size()) {
+    ALOGD("%s: exit", __FUNCTION__);
     return;
   }
 
@@ -46,13 +49,13 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
   mSocket->receive(responseBytes);
 
   SnepMessage* snepResponse = SnepMessage::fromByteArray(responseBytes);
-  if (snepResponse == NULL) {
-    ALOGE("%s: Invalid SNEP message", __FUNCTION__);
+  if (!snepResponse) {
+    ALOGE("%s: invalid SNEP message", __FUNCTION__);
     return;
   }
 
   if (snepResponse->getField() != remoteContinue) {
-    ALOGE("%s: Invalid response from server (%d)", __FUNCTION__, snepResponse->getField());
+    ALOGE("%s: invalid response from server (%d)", __FUNCTION__, snepResponse->getField());
     delete snepResponse;
     return;
   }
@@ -67,10 +70,16 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
     mSocket->send(tmpBuf);
     offset += length;
   }
+  ALOGD("%s: exit", __FUNCTION__);
 }
-  
+
+/**
+ * get Snep message from remote side
+ */
 SnepMessage* SnepMessenger::getMessage()
 {
+  ALOGD("%s: enter", __FUNCTION__);
+
   std::vector<uint8_t> partial;
   std::vector<uint8_t> buffer;
 
@@ -89,7 +98,7 @@ SnepMessage* SnepMessenger::getMessage()
   int size = mSocket->receive(partial);
   if (size < 0 || size < HEADER_LENGTH) {
     if (!socketSend(fieldReject)) {
-      ALOGE("snep message send fail");
+      ALOGE("%s: snep message send fail", __FUNCTION__);
       return NULL;
     }
   } else {
@@ -106,13 +115,15 @@ SnepMessage* SnepMessenger::getMessage()
 
   if (((requestVersion & 0xF0) >> 4) != SnepMessage::VERSION_MAJOR) {
     // Invalid protocol version; treat message as complete.
+    ALOGE("%s: invalid protocol version %d != %d",
+       __FUNCTION__, ((requestVersion & 0xF0) >> 4), SnepMessage::VERSION_MAJOR);
     return new SnepMessage(requestVersion, requestField, 0, 0, NULL);
   }
 
   bool doneReading = false;
   if (requestSize > readSize) {
     if (!socketSend(fieldContinue)) {
-      ALOGE("snep message send fail");
+      ALOGE("%s: snep message send fail", __FUNCTION__);
       return NULL;
     }
   } else {
@@ -139,12 +150,11 @@ SnepMessage* SnepMessenger::getMessage()
   }
 
   SnepMessage* snep = SnepMessage::fromByteArray(buffer);
-  if (snep == NULL) {
-    ALOGE("%s: Badly formatted NDEF message, ignoring", __FUNCTION__);
-    return NULL;
-  } else {
-    return snep;
-  }
+  if (!snep)
+    ALOGE("%s: nadly formatted NDEF message, ignoring", __FUNCTION__);
+
+  ALOGD("%s: enter", __FUNCTION__);
+  return snep;
 }
 
 void SnepMessenger::close()
