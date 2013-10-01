@@ -67,42 +67,60 @@ SnepClient::~SnepClient()
   }
 }
 
+/**
+ * Request Codes : PUT
+ * The client requests that the server accept the NDEF message
+ * transmitted with the request.
+ */
 void SnepClient::put(NdefMessage& msg)
 {
-  SnepMessenger* messenger = NULL;
+  if (!mMessenger) {
+    ALOGE("%s: no messenger", __FUNCTION__);
+    return;
+  }
+
   if (mState != SnepClient::CONNECTED) {
     ALOGE("%s: socket is not connected", __FUNCTION__);
     return;
   }
-  messenger = mMessenger;
 
-  SnepMessage* snepMessage = SnepMessage::getPutRequest(msg);
-  if (snepMessage) {
-    messenger->sendMessage(*snepMessage);
+  SnepMessage* snepRequest = SnepMessage::getPutRequest(msg);
+  if (snepRequest) {
+    // Send request.
+    mMessenger->sendMessage(*snepRequest);
   } else {
     ALOGE("%s: get put request fail", __FUNCTION__);
   }
 
-  SnepMessage* response = messenger->getMessage();
+  // Get response.
+  SnepMessage* snepResponse = mMessenger->getMessage();
 
-  delete snepMessage;
-  delete response;
+  delete snepRequest;
+  delete snepResponse;
 }
 
+/**
+ * Request Codes : GET
+ * The client requests that the server return an NDEF message
+ * designated by the NDEF message transmitted with the request
+ */
 SnepMessage* SnepClient::get(NdefMessage& msg)
 {
-  SnepMessenger* messenger = NULL;
+  if (!mMessenger) {
+    ALOGE("%s: no messenger", __FUNCTION__);
+    return NULL;
+  }
+
   if (mState != SnepClient::CONNECTED) {
     ALOGE("%s: socket is not connected", __FUNCTION__);
     return NULL;
   }
-  messenger = mMessenger;  
 
-  SnepMessage* snepMessage = SnepMessage::getGetRequest(mAcceptableLength, msg);
-  messenger->sendMessage(*snepMessage);
-  delete snepMessage;
+  SnepMessage* snepRequest = SnepMessage::getGetRequest(mAcceptableLength, msg);
+  mMessenger->sendMessage(*snepRequest);
+  delete snepRequest;
 
-  return messenger->getMessage();
+  return mMessenger->getMessage();
 }
 
 void SnepClient::connect()
@@ -114,6 +132,11 @@ void SnepClient::connect()
   mState = SnepClient::CONNECTING;
 
   INfcManager* pINfcManager = NfcService::getNfcManager();
+
+  /**
+   * SNEP messages SHALL be transmitted over LLCP data link connections
+   * using LLCP connection-oriented transport service.
+   */
   ILlcpSocket* socket = pINfcManager->createLlcpSocket(0, mMiu, mRwSize, 1024);
   if (!socket) {
     ALOGE("%s: could not connect to socket", __FUNCTION__);
@@ -137,14 +160,14 @@ void SnepClient::connect()
 
   int miu = socket->getRemoteMiu();
   int fragmentLength = (mFragmentLength == -1) ?  miu : miu < mFragmentLength ? miu : mFragmentLength;
-  SnepMessenger* messenger = new SnepMessenger(true, socket, fragmentLength);
 
   // Remove old messenger.
   if (mMessenger) {
     mMessenger->close();
     delete mMessenger;
   }
-  mMessenger = messenger;
+
+  mMessenger = new SnepMessenger(true, socket, fragmentLength);
 
   mState = SnepClient::CONNECTED;
 }

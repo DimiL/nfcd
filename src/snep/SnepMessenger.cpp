@@ -6,6 +6,12 @@
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
 
+/**
+ * The Simple NDEF Exchange Protocol (SNEP) is a request/response protocol.
+ * A SNEP client sends a request to a SNEP server in the form of a protocol
+ * version, a request method, the length of an information field in octets,
+ * and an information field.
+ */
 SnepMessenger::SnepMessenger(bool isClient, ILlcpSocket* socket, uint32_t fragmentLength)
  : mSocket(socket)
  , mFragmentLength(fragmentLength)
@@ -20,19 +26,16 @@ SnepMessenger::~SnepMessenger()
 
 void SnepMessenger::sendMessage(SnepMessage& msg)
 {
-  std::vector<uint8_t> buf;
-  uint8_t remoteContinue;
-  uint32_t offset;
-
   ALOGD("%s: enter", __FUNCTION__);
 
-  msg.toByteArray(buf);
+  uint8_t remoteContinue;
   if (mIsClient) {
     remoteContinue = SnepMessage::RESPONSE_CONTINUE;
   } else {
     remoteContinue = SnepMessage::REQUEST_CONTINUE;
   }
 
+  std::vector<uint8_t> buf;
   msg.toByteArray(buf);
   uint32_t length = buf.size() <  mFragmentLength ? buf.size() : mFragmentLength;
 
@@ -43,8 +46,9 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
     return;
   }
 
+  // Fragmented SNEP message handling.
   // Look for Continue or Reject from peer.
-  offset = length;
+  uint32_t offset = length;
   std::vector<uint8_t> responseBytes;
   mSocket->receive(responseBytes);
 
@@ -87,9 +91,27 @@ SnepMessage* SnepMessenger::getMessage()
   uint8_t fieldReject = 0;
 
   if (mIsClient) {
+    /**
+     * Request Codes : CONTINUE
+     * The client requests that the server send the remaining fragments
+     * of a fragmented SNEP response message.
+     * 
+     * Request Codes : REJECT
+     * The client is unable to receive remaining fragments of a fragmented
+     * SNEP response message.
+     */
     fieldContinue = SnepMessage::REQUEST_CONTINUE;
     fieldReject = SnepMessage::REQUEST_REJECT;
   } else {
+    /**
+     * Response Codes : CONTINUE
+     * The server received the first fragment of a fragmented SNEP request
+     * message and is able to receive the remaining fragments.
+     * 
+     * Response Codes : REJECT
+     * The server is unable to receive remaining fragments of a fragmented
+     * SNEP request message.
+     */
     fieldContinue = SnepMessage::RESPONSE_CONTINUE;
     fieldReject = SnepMessage::RESPONSE_REJECT;
   }
@@ -106,12 +128,12 @@ SnepMessage* SnepMessenger::getMessage()
     buffer.insert(buffer.end(), partial.begin(), partial.end());
   }
 
-  uint8_t requestVersion = partial[0];
-  uint8_t requestField = partial[1];
-  uint32_t requestSize = ((uint32_t)partial[2] << 24) |
-                         ((uint32_t)partial[3] << 16) |
-                         ((uint32_t)partial[4] <<  8) |
-                         ((uint32_t)partial[5]);
+  const uint8_t requestVersion = partial[0];
+  const uint8_t requestField = partial[1];
+  const uint32_t requestSize = ((uint32_t)partial[2] << 24) |
+                               ((uint32_t)partial[3] << 16) |
+                               ((uint32_t)partial[4] <<  8) |
+                               ((uint32_t)partial[5]);
 
   if (((requestVersion & 0xF0) >> 4) != SnepMessage::VERSION_MAJOR) {
     // Invalid protocol version; treat message as complete.
@@ -130,10 +152,10 @@ SnepMessage* SnepMessenger::getMessage()
     doneReading = true;
   }
 
-  // TODO : DO we need clear partial here?
-  partial.clear();
+  // Fragmented SNEP message handling.
   // Remaining fragments.
   while (!doneReading) {
+    partial.clear();
     size = mSocket->receive(partial);
     if (size < 0) {
       if (!socketSend(fieldReject)) {
