@@ -12,7 +12,6 @@ public:
   virtual ~LlcpConnectionlessSocket();
 
 private:
-
 };
 
 #endif  // mozilla_nfcd_LlcpConnectionlessSocket_h

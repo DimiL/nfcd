@@ -18,7 +18,7 @@ int main() {
 
   // Create NFC Manager and do initialize.
   NfcManager* pNfcManager = new NfcManager();
-  pNfcManager->doInitialize();
+  pNfcManager->initialize();
 
   // Create service thread to receive message from nfc library.
   NfcService* service = NfcService::Instance();

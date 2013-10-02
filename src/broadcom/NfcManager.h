@@ -24,6 +24,12 @@ public:
   NfcManager();
   virtual ~NfcManager();
 
+  /**
+   * To get a specific interface from NfcManager
+   *
+   * @param  name Interface name
+   * @return      Return specific interface if exist, null if cannot find.
+   */
   void* queryInterface(const char* name);
 
   /**
@@ -31,14 +37,14 @@ public:
    *
    * @return True if ok.
    */
-  bool doInitialize();
+  bool initialize();
 
   /**
    * Turn off NFC.
    *
    * @return True if ok.
    */
-  bool doDeinitialize();
+  bool deinitialize();
 
   /**
    * Start polling and listening for devices.
@@ -55,18 +61,20 @@ public:
   void disableDiscovery();
 
   /**
-   * Not used.
+   * Check Llcp connection.
+   * Not used in NCI case.
    *
-   * @return True.
+   * @return True if ok.
    */
-  bool doCheckLlcp();
+  bool checkLlcp();
 
   /**
-   * Not used.
+   * Activate Llcp connection.
+   * Not used in NCI case.
    *
-   * @return True.
+   * @return True if ok.
    */
-  bool doActivateLlcp();
+  bool activateLlcp();
 
   /**
    * Create a LLCP connection-oriented socket.
@@ -107,8 +115,19 @@ public:
    */
   void setP2pTargetModes(int modes);
 
-  int getDefaultLlcpMiu();
-  int getDefaultLlcpRwSize();
+  /**
+   * Get default Llcp connection maxumum information unit
+   *
+   * @return Default MIU.
+   */
+  int getDefaultLlcpMiu() const { return NfcManager::DEFAULT_LLCP_MIU; };
+
+  /**
+   * Get default Llcp connection receive window size
+   *
+   * @return Default receive window size
+   */
+  int getDefaultLlcpRwSize() const { return NfcManager::DEFAULT_LLCP_RWSIZE; };
 
 private:
   P2pDevice* mP2pDevice;

@@ -5,7 +5,7 @@
 #include <time.h>
 
 /**
- *  Asynchronous interval timer.
+ * Asynchronous interval timer.
  */
 class IntervalTimer
 {

@@ -721,124 +721,123 @@ void PeerToPeer::nfaServerCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
 
   ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "%s: enter; event=0x%X", fn, p2pEvent);
 
-  switch (p2pEvent)
-  {
-  case NFA_P2P_REG_SERVER_EVT:  // NFA_P2pRegisterServer() has started to listen.
-    ALOGD("%s: NFA_P2P_REG_SERVER_EVT; handle: 0x%04x; service sap=0x%02x  name: %s", fn,
-      eventData->reg_server.server_handle, eventData->reg_server.server_sap, eventData->reg_server.service_name);
+  switch (p2pEvent) {
+    case NFA_P2P_REG_SERVER_EVT:  // NFA_P2pRegisterServer() has started to listen.
+      ALOGD("%s: NFA_P2P_REG_SERVER_EVT; handle: 0x%04x; service sap=0x%02x  name: %s", fn,
+        eventData->reg_server.server_handle, eventData->reg_server.server_sap, eventData->reg_server.service_name);
 
-    sP2p.mMutex.lock();
-    pSrv = sP2p.findServerLocked(eventData->reg_server.service_name);
-    sP2p.mMutex.unlock();
-    if (pSrv == NULL) {
-      ALOGE("%s: NFA_P2P_REG_SERVER_EVT for unknown service: %s", fn, eventData->reg_server.service_name);
-    } else {
-      SyncEventGuard guard(pSrv->mRegServerEvent);
-      pSrv->mNfaP2pServerHandle = eventData->reg_server.server_handle;
-      pSrv->mRegServerEvent.notifyOne(); // Unblock registerServer().
-    }
-    break;
+      sP2p.mMutex.lock();
+      pSrv = sP2p.findServerLocked(eventData->reg_server.service_name);
+      sP2p.mMutex.unlock();
+      if (pSrv == NULL) {
+        ALOGE("%s: NFA_P2P_REG_SERVER_EVT for unknown service: %s", fn, eventData->reg_server.service_name);
+      } else {
+        SyncEventGuard guard(pSrv->mRegServerEvent);
+        pSrv->mNfaP2pServerHandle = eventData->reg_server.server_handle;
+        pSrv->mRegServerEvent.notifyOne(); // Unblock registerServer().
+      }
+      break;
 
-  case NFA_P2P_ACTIVATED_EVT: // Remote device has activated.
-    ALOGD("%s: NFA_P2P_ACTIVATED_EVT; handle: 0x%04x", fn, eventData->activated.handle);
-    break;
+    case NFA_P2P_ACTIVATED_EVT: // Remote device has activated.
+      ALOGD("%s: NFA_P2P_ACTIVATED_EVT; handle: 0x%04x", fn, eventData->activated.handle);
+      break;
 
-  case NFA_P2P_DEACTIVATED_EVT:
-    ALOGD("%s: NFA_P2P_DEACTIVATED_EVT; handle: 0x%04x", fn, eventData->activated.handle);
-    break;
+    case NFA_P2P_DEACTIVATED_EVT:
+      ALOGD("%s: NFA_P2P_DEACTIVATED_EVT; handle: 0x%04x", fn, eventData->activated.handle);
+      break;
 
-  case NFA_P2P_CONN_REQ_EVT:
-    ALOGD("%s: NFA_P2P_CONN_REQ_EVT; nfa server h=0x%04x; nfa conn h=0x%04x; remote sap=0x%02x", fn,
-      eventData->conn_req.server_handle, eventData->conn_req.conn_handle, eventData->conn_req.remote_sap);
+    case NFA_P2P_CONN_REQ_EVT:
+      ALOGD("%s: NFA_P2P_CONN_REQ_EVT; nfa server h=0x%04x; nfa conn h=0x%04x; remote sap=0x%02x", fn,
+        eventData->conn_req.server_handle, eventData->conn_req.conn_handle, eventData->conn_req.remote_sap);
 
-    sP2p.mMutex.lock();
-    pSrv = sP2p.findServerLocked(eventData->conn_req.server_handle);
-    sP2p.mMutex.unlock();
-    if (pSrv == NULL) {
-      ALOGE("%s: NFA_P2P_CONN_REQ_EVT; unknown server h", fn);
-      return;
-    }
-    ALOGD("%s: NFA_P2P_CONN_REQ_EVT; server h=%u", fn, pSrv->mHandle);
+      sP2p.mMutex.lock();
+      pSrv = sP2p.findServerLocked(eventData->conn_req.server_handle);
+      sP2p.mMutex.unlock();
+      if (pSrv == NULL) {
+        ALOGE("%s: NFA_P2P_CONN_REQ_EVT; unknown server h", fn);
+        return;
+      }
+      ALOGD("%s: NFA_P2P_CONN_REQ_EVT; server h=%u", fn, pSrv->mHandle);
 
-    // Look for a connection block that is waiting (handle invalid).
-    if ((pConn = pSrv->findServerConnection((tNFA_HANDLE) NFA_HANDLE_INVALID)) == NULL) {
-      ALOGE("%s: NFA_P2P_CONN_REQ_EVT; server not listening", fn);
-    } else {
-      SyncEventGuard guard(pSrv->mConnRequestEvent);
-      pConn->mNfaConnHandle = eventData->conn_req.conn_handle;
-      pConn->mRemoteMaxInfoUnit = eventData->conn_req.remote_miu;
-      pConn->mRemoteRecvWindow = eventData->conn_req.remote_rw;
-      ALOGD("%s: NFA_P2P_CONN_REQ_EVT; server h=%u; conn h=%u; notify conn req", fn, pSrv->mHandle, pConn->mHandle);
-      pSrv->mConnRequestEvent.notifyOne(); // Unblock accept().
-    }
-    break;
+      // Look for a connection block that is waiting (handle invalid).
+      if ((pConn = pSrv->findServerConnection((tNFA_HANDLE) NFA_HANDLE_INVALID)) == NULL) {
+        ALOGE("%s: NFA_P2P_CONN_REQ_EVT; server not listening", fn);
+      } else {
+        SyncEventGuard guard(pSrv->mConnRequestEvent);
+        pConn->mNfaConnHandle = eventData->conn_req.conn_handle;
+        pConn->mRemoteMaxInfoUnit = eventData->conn_req.remote_miu;
+        pConn->mRemoteRecvWindow = eventData->conn_req.remote_rw;
+        ALOGD("%s: NFA_P2P_CONN_REQ_EVT; server h=%u; conn h=%u; notify conn req", fn, pSrv->mHandle, pConn->mHandle);
+        pSrv->mConnRequestEvent.notifyOne(); // Unblock accept().
+      }
+      break;
 
-  case NFA_P2P_CONNECTED_EVT:
-    ALOGD("%s: NFA_P2P_CONNECTED_EVT; h=0x%x  remote sap=0x%X", fn,
+    case NFA_P2P_CONNECTED_EVT:
+      ALOGD("%s: NFA_P2P_CONNECTED_EVT; h=0x%x  remote sap=0x%X", fn,
       eventData->connected.client_handle, eventData->connected.remote_sap);
-    break;
+      break;
 
-  case NFA_P2P_DISC_EVT:
-    ALOGD("%s: NFA_P2P_DISC_EVT; h=0x%04x; reason=0x%X", fn, eventData->disc.handle, eventData->disc.reason);
-    // Look for the connection block.
-    if ((pConn = sP2p.findConnection(eventData->disc.handle)) == NULL) {
-      ALOGE("%s: NFA_P2P_DISC_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->disc.handle);
-    } else {
-      sP2p.mDisconnectMutex.lock();
-      pConn->mNfaConnHandle = NFA_HANDLE_INVALID;
-      {
-        ALOGD("%s: NFA_P2P_DISC_EVT; try guard disconn event", fn);
-        SyncEventGuard guard3(pConn->mDisconnectingEvent);
-        pConn->mDisconnectingEvent.notifyOne();
-        ALOGD("%s: NFA_P2P_DISC_EVT; notified disconn event", fn);
+    case NFA_P2P_DISC_EVT:
+      ALOGD("%s: NFA_P2P_DISC_EVT; h=0x%04x; reason=0x%X", fn, eventData->disc.handle, eventData->disc.reason);
+      // Look for the connection block.
+      if ((pConn = sP2p.findConnection(eventData->disc.handle)) == NULL) {
+        ALOGE("%s: NFA_P2P_DISC_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->disc.handle);
+      } else {
+        sP2p.mDisconnectMutex.lock();
+        pConn->mNfaConnHandle = NFA_HANDLE_INVALID;
+        {
+          ALOGD("%s: NFA_P2P_DISC_EVT; try guard disconn event", fn);
+          SyncEventGuard guard3(pConn->mDisconnectingEvent);
+          pConn->mDisconnectingEvent.notifyOne();
+          ALOGD("%s: NFA_P2P_DISC_EVT; notified disconn event", fn);
+        }
+        {
+          ALOGD("%s: NFA_P2P_DISC_EVT; try guard congest event", fn);
+          SyncEventGuard guard1(pConn->mCongEvent);
+          pConn->mCongEvent.notifyOne(); // Unblock write (if congested).
+          ALOGD("%s: NFA_P2P_DISC_EVT; notified congest event", fn);
+        }
+        {
+          ALOGD("%s: NFA_P2P_DISC_EVT; try guard read event", fn);
+          SyncEventGuard guard2(pConn->mReadEvent);
+          pConn->mReadEvent.notifyOne(); // Unblock receive().
+          ALOGD("%s: NFA_P2P_DISC_EVT; notified read event", fn);
+        }
+        sP2p.mDisconnectMutex.unlock();
       }
-      {
-        ALOGD("%s: NFA_P2P_DISC_EVT; try guard congest event", fn);
-        SyncEventGuard guard1(pConn->mCongEvent);
-        pConn->mCongEvent.notifyOne(); // Unblock write (if congested).
-        ALOGD("%s: NFA_P2P_DISC_EVT; notified congest event", fn);
-      }
-      {
-        ALOGD("%s: NFA_P2P_DISC_EVT; try guard read event", fn);
-        SyncEventGuard guard2(pConn->mReadEvent);
-        pConn->mReadEvent.notifyOne(); // Unblock receive().
-        ALOGD("%s: NFA_P2P_DISC_EVT; notified read event", fn);
-      }
-      sP2p.mDisconnectMutex.unlock();
-    }
-    break;
+      break;
 
-  case NFA_P2P_DATA_EVT:
-    // Look for the connection block.
-    if ((pConn = sP2p.findConnection(eventData->data.handle)) == NULL) {
-      ALOGE("%s: NFA_P2P_DATA_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->data.handle);
-    } else {
-      ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "%s: NFA_P2P_DATA_EVT; h=0x%X; remote sap=0x%X", fn,
+    case NFA_P2P_DATA_EVT:
+      // Look for the connection block.
+      if ((pConn = sP2p.findConnection(eventData->data.handle)) == NULL) {
+        ALOGE("%s: NFA_P2P_DATA_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->data.handle);
+      } else {
+        ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "%s: NFA_P2P_DATA_EVT; h=0x%X; remote sap=0x%X", fn,
                     eventData->data.handle, eventData->data.remote_sap);
-      SyncEventGuard guard(pConn->mReadEvent);
-      pConn->mReadEvent.notifyOne();
-    }
-    break;
-
-  case NFA_P2P_CONGEST_EVT:
-    // Look for the connection block.
-    if ((pConn = sP2p.findConnection(eventData->congest.handle)) == NULL) {
-      ALOGE("%s: NFA_P2P_CONGEST_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->congest.handle);
-    } else {
-      ALOGD("%s: NFA_P2P_CONGEST_EVT; nfa handle: 0x%04x  congested: %u", fn,
-        eventData->congest.handle, eventData->congest.is_congested);
-      if (eventData->congest.is_congested == FALSE) {
-        SyncEventGuard guard(pConn->mCongEvent);
-        pConn->mCongEvent.notifyOne();
+        SyncEventGuard guard(pConn->mReadEvent);
+        pConn->mReadEvent.notifyOne();
       }
-    }
-    break;
+      break;
 
-  default:
-    ALOGE("%s: unknown event 0x%X ????", fn, p2pEvent);
-    break;
-  }
-  ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "%s: exit", fn);
+    case NFA_P2P_CONGEST_EVT:
+      // Look for the connection block.
+      if ((pConn = sP2p.findConnection(eventData->congest.handle)) == NULL) {
+        ALOGE("%s: NFA_P2P_CONGEST_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->congest.handle);
+      } else {
+        ALOGD("%s: NFA_P2P_CONGEST_EVT; nfa handle: 0x%04x  congested: %u", fn,
+          eventData->congest.handle, eventData->congest.is_congested);
+        if (eventData->congest.is_congested == FALSE) {
+          SyncEventGuard guard(pConn->mCongEvent);
+          pConn->mCongEvent.notifyOne();
+        }
+      }
+      break;
+
+    default:
+      ALOGE("%s: unknown event 0x%X ????", fn, p2pEvent);
+      break;
+    }
+    ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "%s: exit", fn);
 }
 
 void PeerToPeer::nfaClientCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eventData)
@@ -849,124 +848,121 @@ void PeerToPeer::nfaClientCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
 
   ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "%s: enter; event=%u", fn, p2pEvent);
 
-  switch (p2pEvent)
-  {
-  case NFA_P2P_REG_CLIENT_EVT:
-    // Look for a client that is trying to register.
-    if ((pClient = sP2p.findClient((tNFA_HANDLE)NFA_HANDLE_INVALID)) == NULL) {
-      ALOGE("%s: NFA_P2P_REG_CLIENT_EVT: can't find waiting client", fn);
-    } else {
-      ALOGD("%s: NFA_P2P_REG_CLIENT_EVT; Conn Handle: 0x%04x, pClient: 0x%p", fn, eventData->reg_client.client_handle, pClient.get());
+  switch (p2pEvent) {
+    case NFA_P2P_REG_CLIENT_EVT:
+      // Look for a client that is trying to register.
+      if ((pClient = sP2p.findClient((tNFA_HANDLE)NFA_HANDLE_INVALID)) == NULL) {
+        ALOGE("%s: NFA_P2P_REG_CLIENT_EVT: can't find waiting client", fn);
+      } else {
+        ALOGD("%s: NFA_P2P_REG_CLIENT_EVT; Conn Handle: 0x%04x, pClient: 0x%p", fn, eventData->reg_client.client_handle, pClient.get());
 
-      SyncEventGuard guard(pClient->mRegisteringEvent);
-      pClient->mNfaP2pClientHandle = eventData->reg_client.client_handle;
-      pClient->mRegisteringEvent.notifyOne();
-    }
-    break;
-
-  case NFA_P2P_ACTIVATED_EVT:
-    // Look for a client that is trying to register.
-    if ((pClient = sP2p.findClient(eventData->activated.handle)) == NULL) {
-      ALOGE("%s: NFA_P2P_ACTIVATED_EVT: can't find client", fn);
-    } else {
-      ALOGD("%s: NFA_P2P_ACTIVATED_EVT; Conn Handle: 0x%04x, pClient: 0x%p", fn, eventData->activated.handle, pClient.get());
-    }
-    break;
-
-  case NFA_P2P_DEACTIVATED_EVT:
-    ALOGD("%s: NFA_P2P_DEACTIVATED_EVT: conn handle: 0x%X", fn, eventData->deactivated.handle);
-    break;
-
-  case NFA_P2P_CONNECTED_EVT:
-    // Look for the client that is trying to connect.
-    if ((pClient = sP2p.findClient(eventData->connected.client_handle)) == NULL) {
-      ALOGE("%s: NFA_P2P_CONNECTED_EVT: can't find client: 0x%04x", fn, eventData->connected.client_handle);
-    } else {
-      ALOGD("%s: NFA_P2P_CONNECTED_EVT; client_handle=0x%04x  conn_handle: 0x%04x  remote sap=0x%X  pClient: 0x%p", fn,
-      eventData->connected.client_handle, eventData->connected.conn_handle, eventData->connected.remote_sap, pClient.get());
-
-      SyncEventGuard guard(pClient->mConnectingEvent);
-      pClient->mClientConn->mNfaConnHandle     = eventData->connected.conn_handle;
-      pClient->mClientConn->mRemoteMaxInfoUnit = eventData->connected.remote_miu;
-      pClient->mClientConn->mRemoteRecvWindow  = eventData->connected.remote_rw;
-      pClient->mConnectingEvent.notifyOne(); // Unblock createDataLinkConn().
-    }
-    break;
-
-  case NFA_P2P_DISC_EVT:
-    ALOGD("%s: NFA_P2P_DISC_EVT; h=0x%04x; reason=0x%X", fn, eventData->disc.handle, eventData->disc.reason);
-    // Look for the connection block.
-    if ((pConn = sP2p.findConnection(eventData->disc.handle)) == NULL) {
-      // If no connection, may be a client that is trying to connect.
-      if ((pClient = sP2p.findClient(eventData->disc.handle)) == NULL) {
-        ALOGE("%s: NFA_P2P_DISC_EVT: can't find client for NFA handle: 0x%04x", fn, eventData->disc.handle);
-        return;
+        SyncEventGuard guard(pClient->mRegisteringEvent);
+        pClient->mNfaP2pClientHandle = eventData->reg_client.client_handle;
+        pClient->mRegisteringEvent.notifyOne();
       }
-      // Unblock createDataLinkConn().
-      SyncEventGuard guard(pClient->mConnectingEvent);
-      pClient->mConnectingEvent.notifyOne();
-    } else {
-      sP2p.mDisconnectMutex.lock();
-      pConn->mNfaConnHandle = NFA_HANDLE_INVALID;
-      {
-        ALOGD("%s: NFA_P2P_DISC_EVT; try guard disconn event", fn);
-        SyncEventGuard guard3(pConn->mDisconnectingEvent);
-        pConn->mDisconnectingEvent.notifyOne();
-        ALOGD("%s: NFA_P2P_DISC_EVT; notified disconn event", fn);
-      }
-      {
-        ALOGD("%s: NFA_P2P_DISC_EVT; try guard congest event", fn);
-        SyncEventGuard guard1(pConn->mCongEvent);
-        pConn->mCongEvent.notifyOne(); // Unblock write (if congested).
-        ALOGD("%s: NFA_P2P_DISC_EVT; notified congest event", fn);
-      }
-      {
-        ALOGD("%s: NFA_P2P_DISC_EVT; try guard read event", fn);
-        SyncEventGuard guard2(pConn->mReadEvent);
-        pConn->mReadEvent.notifyOne(); // Unblock receive().
-        ALOGD("%s: NFA_P2P_DISC_EVT; notified read event", fn);
-      }
-      sP2p.mDisconnectMutex.unlock();
-    }
-    break;
+      break;
 
-  case NFA_P2P_DATA_EVT:
-    // Look for the connection block.
-    if ((pConn = sP2p.findConnection(eventData->data.handle)) == NULL) {
-      ALOGE("%s: NFA_P2P_DATA_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->data.handle);
-    } else {
-      ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "%s: NFA_P2P_DATA_EVT; h=0x%X; remote sap=0x%X", fn,
-        eventData->data.handle, eventData->data.remote_sap);
+    case NFA_P2P_ACTIVATED_EVT:
+      // Look for a client that is trying to register.
+      if ((pClient = sP2p.findClient(eventData->activated.handle)) == NULL) {
+        ALOGE("%s: NFA_P2P_ACTIVATED_EVT: can't find client", fn);
+      } else {
+        ALOGD("%s: NFA_P2P_ACTIVATED_EVT; Conn Handle: 0x%04x, pClient: 0x%p", fn, eventData->activated.handle, pClient.get());
+      }
+      break;
+
+    case NFA_P2P_DEACTIVATED_EVT:
+      ALOGD("%s: NFA_P2P_DEACTIVATED_EVT: conn handle: 0x%X", fn, eventData->deactivated.handle);
+      break;
+
+    case NFA_P2P_CONNECTED_EVT:
+      // Look for the client that is trying to connect.
+      if ((pClient = sP2p.findClient(eventData->connected.client_handle)) == NULL) {
+        ALOGE("%s: NFA_P2P_CONNECTED_EVT: can't find client: 0x%04x", fn, eventData->connected.client_handle);
+      } else {
+        ALOGD("%s: NFA_P2P_CONNECTED_EVT; client_handle=0x%04x  conn_handle: 0x%04x  remote sap=0x%X  pClient: 0x%p", fn,
+        eventData->connected.client_handle, eventData->connected.conn_handle, eventData->connected.remote_sap, pClient.get());
+
+        SyncEventGuard guard(pClient->mConnectingEvent);
+        pClient->mClientConn->mNfaConnHandle     = eventData->connected.conn_handle;
+        pClient->mClientConn->mRemoteMaxInfoUnit = eventData->connected.remote_miu;
+        pClient->mClientConn->mRemoteRecvWindow  = eventData->connected.remote_rw;
+        pClient->mConnectingEvent.notifyOne(); // Unblock createDataLinkConn().
+      }
+      break;
+
+    case NFA_P2P_DISC_EVT:
+      ALOGD("%s: NFA_P2P_DISC_EVT; h=0x%04x; reason=0x%X", fn, eventData->disc.handle, eventData->disc.reason);
+      // Look for the connection block.
+      if ((pConn = sP2p.findConnection(eventData->disc.handle)) == NULL) {
+        // If no connection, may be a client that is trying to connect.
+        if ((pClient = sP2p.findClient(eventData->disc.handle)) == NULL) {
+          ALOGE("%s: NFA_P2P_DISC_EVT: can't find client for NFA handle: 0x%04x", fn, eventData->disc.handle);
+          return;
+        }
+        // Unblock createDataLinkConn().
+        SyncEventGuard guard(pClient->mConnectingEvent);
+        pClient->mConnectingEvent.notifyOne();
+      } else {
+        sP2p.mDisconnectMutex.lock();
+        pConn->mNfaConnHandle = NFA_HANDLE_INVALID;
+        {
+          ALOGD("%s: NFA_P2P_DISC_EVT; try guard disconn event", fn);
+          SyncEventGuard guard3(pConn->mDisconnectingEvent);
+          pConn->mDisconnectingEvent.notifyOne();
+          ALOGD("%s: NFA_P2P_DISC_EVT; notified disconn event", fn);
+        }
+        {
+          ALOGD("%s: NFA_P2P_DISC_EVT; try guard congest event", fn);
+          SyncEventGuard guard1(pConn->mCongEvent);
+          pConn->mCongEvent.notifyOne(); // Unblock write (if congested).
+          ALOGD("%s: NFA_P2P_DISC_EVT; notified congest event", fn);
+        }
+        {
+          ALOGD("%s: NFA_P2P_DISC_EVT; try guard read event", fn);
+          SyncEventGuard guard2(pConn->mReadEvent);
+          pConn->mReadEvent.notifyOne(); // Unblock receive().
+          ALOGD("%s: NFA_P2P_DISC_EVT; notified read event", fn);
+        }
+        sP2p.mDisconnectMutex.unlock();
+      }
+      break;
+
+    case NFA_P2P_DATA_EVT:
+      // Look for the connection block.
+      if ((pConn = sP2p.findConnection(eventData->data.handle)) == NULL) {
+        ALOGE("%s: NFA_P2P_DATA_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->data.handle);
+      } else {
+        ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "%s: NFA_P2P_DATA_EVT; h=0x%X; remote sap=0x%X", fn,
+          eventData->data.handle, eventData->data.remote_sap);
         SyncEventGuard guard(pConn->mReadEvent);
         pConn->mReadEvent.notifyOne();
+      }
+      break;
+
+    case NFA_P2P_CONGEST_EVT:
+      // Look for the connection block.
+      if ((pConn = sP2p.findConnection(eventData->congest.handle)) == NULL) {
+        ALOGE("%s: NFA_P2P_CONGEST_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->congest.handle);
+      } else {
+        ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "%s: NFA_P2P_CONGEST_EVT; nfa handle: 0x%04x  congested: %u", fn,
+        eventData->congest.handle, eventData->congest.is_congested);
+
+        SyncEventGuard guard(pConn->mCongEvent);
+        pConn->mCongEvent.notifyOne();
+      }
+      break;
+
+    default:
+      ALOGE("%s: unknown event 0x%X ????", fn, p2pEvent);
+      break;
     }
-    break;
-
-  case NFA_P2P_CONGEST_EVT:
-    // Look for the connection block.
-    if ((pConn = sP2p.findConnection(eventData->congest.handle)) == NULL) {
-      ALOGE("%s: NFA_P2P_CONGEST_EVT: can't find conn for NFA handle: 0x%04x", fn, eventData->congest.handle);
-    } else {
-      ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "%s: NFA_P2P_CONGEST_EVT; nfa handle: 0x%04x  congested: %u", fn,
-      eventData->congest.handle, eventData->congest.is_congested);
-
-      SyncEventGuard guard(pConn->mCongEvent);
-      pConn->mCongEvent.notifyOne();
-    }
-    break;
-
-  default:
-    ALOGE("%s: unknown event 0x%X ????", fn, p2pEvent);
-    break;
-  }
 }
 
 void PeerToPeer::connectionEventHandler(UINT8 event, tNFA_CONN_EVT_DATA* /*eventData*/)
 {
-  switch (event)
-  {
-  case NFA_SET_P2P_LISTEN_TECH_EVT:
-    {
+  switch (event)  {
+    case NFA_SET_P2P_LISTEN_TECH_EVT:  {
       SyncEventGuard guard(mSetTechEvent);
       mSetTechEvent.notifyOne(); // Unblock NFA_SetP2pListenTech().
       break;

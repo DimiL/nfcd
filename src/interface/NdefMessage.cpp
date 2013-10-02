@@ -19,6 +19,9 @@ bool NdefMessage::init(std::vector<uint8_t>& buf)
   return NdefRecord::parse(buf, false, mRecords);
 }
 
+/**
+ * This method will generate current NDEF message to byte array(vector)
+ */
 void NdefMessage::toByteArray(std::vector<uint8_t>& buf)
 {
   int recordSize = mRecords.size();

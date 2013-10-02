@@ -6,7 +6,7 @@
 #include <pthread.h>
 
 /**
- *  Encapsulate a mutex for thread synchronization.
+ * Encapsulate a mutex for thread synchronization.
  */
 class Mutex
 {

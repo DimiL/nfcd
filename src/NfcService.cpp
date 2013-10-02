@@ -185,9 +185,9 @@ void NfcService::handleLlcpLinkActivation(NfcEvent* event)
     }
 
     INfcManager* pINfcManager = NfcService::getNfcManager();
-    bool ret = pINfcManager->doCheckLlcp();
+    bool ret = pINfcManager->checkLlcp();
     if (ret == true) {
-      ret = pINfcManager->doActivateLlcp();
+      ret = pINfcManager->activateLlcp();
       if (ret == true) {
         ALOGD("%s: Target Activate LLCP OK", __func__);
       } else {
@@ -207,6 +207,7 @@ void NfcService::handleLlcpLinkActivation(NfcEvent* event)
   data->techList = &techs;
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
   delete data;
+  ALOGD("%s: exit", __func__);
 }
 
 static void *pollingThreadFunc(void *arg)
@@ -517,13 +518,12 @@ void NfcService::handleNfcEnableDisableResponse(NfcEvent* event)
   bool enableDisable = event->arg1;
   if (enableDisable) {
     // TODO : p2p init
-    sNfcManager->doInitialize();
+    sNfcManager->initialize();
   }
   else {
     // TODO : p2p deinit
-    sNfcManager->doDeinitialize();
+    sNfcManager->deinitialize();
   }
 
   return;
 }
-

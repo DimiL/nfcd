@@ -7,15 +7,12 @@
 #include "SyncEvent.h"
 
 /**
- *  Adjust the controller's power states.
+ * Adjust the controller's power states.
  */
 class PowerSwitch
 {
 public:
-
-  /**
-   * Define the power level.
-   */
+  // Define the power level.
   enum PowerLevel {
     /**
      * Power level is unknown because the stack is off.

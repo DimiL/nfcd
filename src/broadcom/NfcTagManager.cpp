@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "NfcTagManager.h"
 
 #include <semaphore.h>
@@ -84,28 +88,25 @@ static void ndefHandlerCallback(tNFA_NDEF_EVT event, tNFA_NDEF_EVT_DATA *eventDa
 {
   ALOGD("%s: event=%u, eventData=%p", __FUNCTION__, event, eventData);
 
-  switch (event)
-  {
-  case NFA_NDEF_REGISTER_EVT:
-    {
+  switch (event)  {
+    case NFA_NDEF_REGISTER_EVT:  {
       tNFA_NDEF_REGISTER& ndef_reg = eventData->ndef_reg;
       ALOGD("%s: NFA_NDEF_REGISTER_EVT; status=0x%X; h=0x%X", __FUNCTION__, ndef_reg.status, ndef_reg.ndef_type_handle);
       sNdefTypeHandlerHandle = ndef_reg.ndef_type_handle;
+      break;
     }
-    break;
 
-  case NFA_NDEF_DATA_EVT:
-    {
+    case NFA_NDEF_DATA_EVT: {
       ALOGD("%s: NFA_NDEF_DATA_EVT; data_len = %lu", __FUNCTION__, eventData->ndef_data.len);
       sReadDataLen = eventData->ndef_data.len;
       sReadData = (uint8_t*) malloc(sReadDataLen);
       memcpy(sReadData, eventData->ndef_data.p_data, eventData->ndef_data.len);
+      break;
     }
-    break;
 
-  default:
-    ALOGE("%s: Unknown event %u ????", __FUNCTION__, event);
-    break;
+    default:
+      ALOGE("%s: Unknown event %u ????", __FUNCTION__, event);
+      break;
   }
 }
 

@@ -24,7 +24,7 @@ public:
    * Establish a connection to the peer.
    *
    * @param nSap Establish a connection to the peer.
-   * return      True if ok.
+   * @return      True if ok.
    */
   bool connectToSap(int nSap);
 
@@ -35,15 +35,47 @@ public:
    * return    True if ok.
    */
   bool connectToService(const char* serviceName);
-  void close();
-  bool send(std::vector<uint8_t>& data);
-  int receive(std::vector<uint8_t>& recvBuff);
-  int getRemoteMiu();
-  int getRemoteRw();
 
-  int getLocalSap() { return mSap; }
-  int getLocalMiu() { return mLocalMiu; }
-  int getLocalRw() { return mLocalRw; }
+  /**
+   * Close socket.
+   *
+   * @return True if ok.
+   */
+  void close();
+
+  /**
+   * Send data to peer.
+   *
+   * @param sendBuff Buffer of data.
+   * @return         True if sent ok.
+   */
+  bool send(std::vector<uint8_t>& sendBuff);
+
+  /**
+   * Receive data from peer.
+   *
+   * @param recvBuff Buffer to put received data.
+   * @return         Buffer to put received data.
+   */
+  int receive(std::vector<uint8_t>& recvBuff);
+
+  /**
+   * Get peer's maximum information unit.
+   *
+   * @return Peer's maximum information unit.
+   */
+  int getRemoteMiu() const;
+
+  /**
+   * Peer's maximum information unit.
+   *
+   * @return Peer's receive window size.
+   */
+  int getRemoteRw() const;
+
+  int getLocalSap() const { return mSap; }
+  int getLocalMiu() const { return mLocalMiu; }
+  int getLocalRw() const { return mLocalRw; }
 
 private:
   uint32_t mHandle;
@@ -58,8 +90,8 @@ private:
   bool doSend(std::vector<uint8_t>& data);
   int doReceive(std::vector<uint8_t>& recvBuff);
 
-  int doGetRemoteSocketMIU();
-  int doGetRemoteSocketRW();
+  int doGetRemoteSocketMIU() const;
+  int doGetRemoteSocketRW() const;
 };
 
 #endif // mozilla_nfcd_LlcpSocket_h
