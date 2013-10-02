@@ -88,8 +88,8 @@ static void ndefHandlerCallback(tNFA_NDEF_EVT event, tNFA_NDEF_EVT_DATA *eventDa
 {
   ALOGD("%s: event=%u, eventData=%p", __FUNCTION__, event, eventData);
 
-  switch (event)  {
-    case NFA_NDEF_REGISTER_EVT:  {
+  switch (event) {
+    case NFA_NDEF_REGISTER_EVT: {
       tNFA_NDEF_REGISTER& ndef_reg = eventData->ndef_reg;
       ALOGD("%s: NFA_NDEF_REGISTER_EVT; status=0x%X; h=0x%X", __FUNCTION__, ndef_reg.status, ndef_reg.ndef_type_handle);
       sNdefTypeHandlerHandle = ndef_reg.ndef_type_handle;

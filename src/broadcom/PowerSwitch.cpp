@@ -45,7 +45,7 @@ void PowerSwitch::initialize(PowerLevel level)
   GetNumValue(NAME_SCREEN_OFF_POWER_STATE, &mDesiredScreenOffPowerState, sizeof(mDesiredScreenOffPowerState));
   ALOGD("%s: desired screen-off state=%d", __FUNCTION__, mDesiredScreenOffPowerState);
 
-  switch (level)  {
+  switch (level) {
     case FULL_POWER:
       mCurrDeviceMgtPowerState = NFA_DM_PWR_MODE_FULL;
       mCurrLevel = level;
@@ -82,7 +82,7 @@ bool PowerSwitch::setLevel(PowerLevel newLevel)
     goto TheEnd;
   }
 
-  switch (newLevel)  {
+  switch (newLevel) {
     case FULL_POWER:
       if (mCurrDeviceMgtPowerState == NFA_DM_PWR_MODE_OFF_SLEEP)
         retval = setPowerOffSleepState(false);
@@ -191,7 +191,7 @@ TheEnd:
 
 const char* PowerSwitch::deviceMgtPowerStateToString(UINT8 deviceMgtPowerState)
 {
-  switch (deviceMgtPowerState)  {
+  switch (deviceMgtPowerState) {
     case NFA_DM_PWR_MODE_FULL:
       return "DM-FULL";
     case NFA_DM_PWR_MODE_OFF_SLEEP:
@@ -203,7 +203,7 @@ const char* PowerSwitch::deviceMgtPowerStateToString(UINT8 deviceMgtPowerState)
 
 const char* PowerSwitch::powerLevelToString(PowerLevel level)
 {
-  switch (level)  {
+  switch (level) {
     case UNKNOWN_LEVEL:
       return "PS-UNKNOWN";
     case FULL_POWER:
@@ -226,8 +226,8 @@ void PowerSwitch::abort()
 
 void PowerSwitch::deviceManagementCallback(UINT8 event, tNFA_DM_CBACK_DATA* eventData)
 {
-  switch (event)  {
-    case NFA_DM_PWR_MODE_CHANGE_EVT:  {
+  switch (event) {
+    case NFA_DM_PWR_MODE_CHANGE_EVT: {
       tNFA_DM_PWR_MODE_CHANGE& power_mode = eventData->power_mode;
       ALOGD("%s: NFA_DM_PWR_MODE_CHANGE_EVT; status=%u; device mgt power mode=%s (%u)", __FUNCTION__,
         power_mode.status, sPowerSwitch.deviceMgtPowerStateToString(power_mode.power_mode), power_mode.power_mode);

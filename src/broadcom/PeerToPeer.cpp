@@ -961,8 +961,8 @@ void PeerToPeer::nfaClientCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA* eve
 
 void PeerToPeer::connectionEventHandler(UINT8 event, tNFA_CONN_EVT_DATA* /*eventData*/)
 {
-  switch (event)  {
-    case NFA_SET_P2P_LISTEN_TECH_EVT:  {
+  switch (event) {
+    case NFA_SET_P2P_LISTEN_TECH_EVT: {
       SyncEventGuard guard(mSetTechEvent);
       mSetTechEvent.notifyOne(); // Unblock NFA_SetP2pListenTech().
       break;

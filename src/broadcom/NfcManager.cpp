@@ -414,9 +414,9 @@ void nfaDeviceManagementCallback(UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
 {
   ALOGD("%s: enter; event=0x%X", __FUNCTION__, dmEvent);
 
-  switch (dmEvent)  {
+  switch (dmEvent) {
     // Result of NFA_Enable.
-    case NFA_DM_ENABLE_EVT:  {
+    case NFA_DM_ENABLE_EVT: {
       SyncEventGuard guard(sNfaEnableEvent);
       ALOGD("%s: NFA_DM_ENABLE_EVT; status=0x%X",__FUNCTION__, eventData->status);
       sIsNfaEnabled = eventData->status == NFA_STATUS_OK;
@@ -425,7 +425,7 @@ void nfaDeviceManagementCallback(UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
       break;
     }
     // Result of NFA_Disable.
-    case NFA_DM_DISABLE_EVT:  {
+    case NFA_DM_DISABLE_EVT: {
       SyncEventGuard guard(sNfaDisableEvent);
       ALOGD("%s: NFA_DM_DISABLE_EVT", __FUNCTION__);
       sIsNfaEnabled = false;
@@ -471,7 +471,7 @@ void nfaDeviceManagementCallback(UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
       break;
 
     case NFA_DM_NFCC_TRANSPORT_ERR_EVT:
-    case NFA_DM_NFCC_TIMEOUT_EVT:  {
+    case NFA_DM_NFCC_TIMEOUT_EVT: {
       if (dmEvent == NFA_DM_NFCC_TIMEOUT_EVT)
         ALOGD("%s: NFA_DM_NFCC_TIMEOUT_EVT; abort all outstanding operations", __FUNCTION__);
       else
@@ -525,9 +525,9 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
   tNFA_STATUS status = NFA_STATUS_FAILED;
   ALOGD("%s: enter; event=0x%X", __FUNCTION__, connEvent);
 
-  switch (connEvent)  {
+  switch (connEvent) {
     // Whether polling successfully started.
-    case NFA_POLL_ENABLED_EVT:  {
+    case NFA_POLL_ENABLED_EVT: {
       ALOGD("%s: NFA_POLL_ENABLED_EVT: status = 0x%X", __FUNCTION__, eventData->status);
 
       SyncEventGuard guard(sNfaEnableDisablePollingEvent);
@@ -535,7 +535,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
       break;
     }
     // Listening/Polling stopped.
-    case NFA_POLL_DISABLED_EVT:  {
+    case NFA_POLL_DISABLED_EVT: {
       ALOGD("%s: NFA_POLL_DISABLED_EVT: status = 0x%X", __FUNCTION__, eventData->status);
 
       SyncEventGuard guard(sNfaEnableDisablePollingEvent);
@@ -543,7 +543,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
       break;
     }
     // RF Discovery started.
-    case NFA_RF_DISCOVERY_STARTED_EVT:  {
+    case NFA_RF_DISCOVERY_STARTED_EVT: {
       ALOGD("%s: NFA_RF_DISCOVERY_STARTED_EVT: status = 0x%X", __FUNCTION__, eventData->status);
 
       SyncEventGuard guard(sNfaEnableDisablePollingEvent);
@@ -551,7 +551,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
       break;
     }
     // RF Discovery stopped event.
-    case NFA_RF_DISCOVERY_STOPPED_EVT:  {
+    case NFA_RF_DISCOVERY_STOPPED_EVT: {
       ALOGD("%s: NFA_RF_DISCOVERY_STOPPED_EVT: status = 0x%X", __FUNCTION__, eventData->status);
  
       SyncEventGuard guard(sNfaEnableDisablePollingEvent);

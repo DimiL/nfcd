@@ -156,7 +156,7 @@ void NfcTag::discoverTechnologies(tNFA_ACTIVATED& activationData)
   // Save the stack's data structure for interpretation later
   memcpy(&(mTechParams[mNumTechList]), &(rfDetail.rf_tech_param), sizeof(rfDetail.rf_tech_param));
 
-  switch (rfDetail.protocol)  {
+  switch (rfDetail.protocol) {
     case NFC_PROTOCOL_T1T:
       mTechList[mNumTechList] = TARGET_TYPE_ISO14443_3A;  // Is TagTechnology.NFC_A by Java API.
       break;
@@ -252,7 +252,7 @@ void NfcTag::discoverTechnologies(tNFA_DISC_RESULT& discoveryData)
   // Save the stack's data structure for interpretation later.
   memcpy(&(mTechParams[mNumTechList]), &(discovery_ntf.rf_tech_param), sizeof(discovery_ntf.rf_tech_param));
 
-  switch (discovery_ntf.protocol)  {
+  switch (discovery_ntf.protocol) {
     case NFC_PROTOCOL_T1T:
       mTechList[mNumTechList] = TARGET_TYPE_ISO14443_3A; // Is TagTechnology.NFC_A by Java API.
       break;
@@ -431,7 +431,7 @@ void NfcTag::fillNfcTagMembers3(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
       case NFC_DISCOVERY_TYPE_POLL_F:
       case NFC_DISCOVERY_TYPE_POLL_F_ACTIVE:
       case NFC_DISCOVERY_TYPE_LISTEN_F:
-      case NFC_DISCOVERY_TYPE_LISTEN_F_ACTIVE:  {
+      case NFC_DISCOVERY_TYPE_LISTEN_F_ACTIVE: {
         // See NFC Forum Type 3 Tag Operation Specification; sections 2.3.2, 2.3.1.2.
         // See NFC Forum Digital Protocol Specification; sections 6.6.2.
         // PMm: manufacture parameter; 8 bytes.
@@ -462,7 +462,7 @@ void NfcTag::fillNfcTagMembers3(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
       }
 
       case NFC_DISCOVERY_TYPE_POLL_ISO15693:
-      case NFC_DISCOVERY_TYPE_LISTEN_ISO15693:  {
+      case NFC_DISCOVERY_TYPE_LISTEN_ISO15693: {
         ALOGD("%s: tech iso 15693", fn);
         // iso 15693 response flags: 1 octet.
         // iso 15693 Data Structure Format Identifier (DSF ID): 1 octet.
@@ -492,29 +492,29 @@ void NfcTag::fillNfcTagMembers4(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
 
   for (int i = 0; i < mNumTechList; i++) {
     ALOGD("%s: index=%d", fn, i);
-    switch (mTechLibNfcTypes[i])  {
-      case NFC_PROTOCOL_T1T:  {
+    switch (mTechLibNfcTypes[i]) {
+      case NFC_PROTOCOL_T1T: {
         ALOGD("%s: T1T; tech A", fn);
         actBytes.clear();
         actBytes.push_back(mTechParams[i].param.pa.sel_rsp);
         break;
       }
 
-      case NFC_PROTOCOL_T2T:  { // TODO: why is this code a duplicate of NFC_PROTOCOL_T1T?
+      case NFC_PROTOCOL_T2T: { // TODO: why is this code a duplicate of NFC_PROTOCOL_T1T?
         ALOGD("%s: T2T; tech A", fn);
         actBytes.clear();
         actBytes.push_back(mTechParams[i].param.pa.sel_rsp);
         break;
       }
 
-      case NFC_PROTOCOL_T3T:  { // Felica.
+      case NFC_PROTOCOL_T3T: { // Felica.
         ALOGD("%s: T3T; felica; tech F", fn);
         // Really, there is no data.
         actBytes.clear();
         break;
       }
 
-      case NFC_PROTOCOL_ISO_DEP:  { // t4t.
+      case NFC_PROTOCOL_ISO_DEP: { // t4t.
         if (mTechList [i] == TARGET_TYPE_ISO14443_4) { // Is TagTechnology.ISO_DEP by Java API.
           if ( (mTechParams[i].mode == NFC_DISCOVERY_TYPE_POLL_A) ||
                (mTechParams[i].mode == NFC_DISCOVERY_TYPE_POLL_A_ACTIVE) ||
@@ -567,7 +567,7 @@ void NfcTag::fillNfcTagMembers4(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
         break;
       } // Case NFC_PROTOCOL_ISO_DEP: //t4t.
 
-      case NFC_PROTOCOL_15693:  {
+      case NFC_PROTOCOL_15693: {
         ALOGD("%s: tech iso 15693", fn);
         // iso 15693 response flags: 1 octet.
         // iso 15693 Data Structure Format Identifier (DSF ID): 1 octet.
@@ -596,7 +596,7 @@ void NfcTag::fillNfcTagMembers5(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
   std::vector<unsigned char> uid;
   std::vector<std::vector<uint8_t> >& nfcTagUid = pINfcTag->getUid();
 
-  switch (mTechParams [0].mode)  {
+  switch (mTechParams [0].mode) {
     case NFC_DISCOVERY_TYPE_POLL_KOVIO:
       ALOGD("%s: Kovio", fn);
       len = mTechParams [0].param.pk.uid_len;
@@ -641,7 +641,7 @@ void NfcTag::fillNfcTagMembers5(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
       break;
 
     case NFC_DISCOVERY_TYPE_POLL_ISO15693:
-    case NFC_DISCOVERY_TYPE_LISTEN_ISO15693:  {
+    case NFC_DISCOVERY_TYPE_LISTEN_ISO15693: {
       ALOGD("%s: tech iso 15693", fn);
       unsigned char data [I93_UID_BYTE_LEN];  // 8 bytes.
       for (int i=0; i<I93_UID_BYTE_LEN; ++i)  // Reverse the ID.
@@ -766,7 +766,7 @@ void NfcTag::calculateT1tMaxMessageSize(tNFA_ACTIVATED& activate)
   }
 
   // Examine the first byte of header ROM bytes.
-  switch (activate.params.t1t.hr[0])  {
+  switch (activate.params.t1t.hr[0]) {
     case RW_T1T_IS_TOPAZ96:
       mtT1tMaxMessageSize = 90;
       break;
@@ -838,8 +838,8 @@ void NfcTag::connectionEventHandler(UINT8 event, tNFA_CONN_EVT_DATA* data)
 {
   static const char fn [] = "NfcTag::connectionEventHandler";
 
-  switch (event)  {
-    case NFA_DISC_RESULT_EVT:  {
+  switch (event) {
+    case NFA_DISC_RESULT_EVT: {
       tNFA_DISC_RESULT& disc_result = data->disc_result;
       if (disc_result.status == NFA_STATUS_OK) {
         discoverTechnologies(disc_result);
@@ -867,14 +867,14 @@ void NfcTag::connectionEventHandler(UINT8 event, tNFA_CONN_EVT_DATA* data)
       resetTechnologies();
       break;
 
-    case NFA_READ_CPLT_EVT:  {
+    case NFA_READ_CPLT_EVT: {
       SyncEventGuard g (mReadCompleteEvent);
       mReadCompletedStatus = data->status;
       mReadCompleteEvent.notifyOne();
       break;
     }
 
-    case NFA_NDEF_DETECT_EVT:  {
+    case NFA_NDEF_DETECT_EVT: {
       tNFA_NDEF_DETECT& ndef_detect = data->ndef_detect;
       mNdefDetectionTimedOut = ndef_detect.status == NFA_STATUS_TIMEOUT;
       if (mNdefDetectionTimedOut)
