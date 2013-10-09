@@ -9,7 +9,7 @@
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
 
-// Well-known LLCP SAP Values defined by NFC forum
+// Well-known LLCP SAP Values defined by NFC forum.
 const char* SnepServer::DEFAULT_SERVICE_NAME = "urn:nfc:sn:snep";
 
 SnepCallback::SnepCallback()
@@ -52,11 +52,11 @@ SnepMessage* SnepCallback::doGet(int acceptableLength, NdefMessage* ndef)
 }
 
 // Connection thread, used to handle incoming connections.
-void* connectionThreadFunc(void* arg)
+void* SnepConnectionThreadFunc(void* arg)
 {
   ALOGD("%s: connection thread enter", __FUNCTION__);
 
-  ConnectionThread* pConnectionThread = reinterpret_cast<ConnectionThread*>(arg);
+  SnepConnectionThread* pConnectionThread = reinterpret_cast<SnepConnectionThread*>(arg);
   if (!pConnectionThread) {
     ALOGE("%s: invalid parameter", __FUNCTION__);
     return NULL;
@@ -83,7 +83,7 @@ void* connectionThreadFunc(void* arg)
 /**
  * Connection thread is created when Snep server accept a connection request.
  */
-ConnectionThread::ConnectionThread(
+SnepConnectionThread::SnepConnectionThread(
   SnepServer* server,ILlcpSocket* socket, int fragmentLength, ISnepCallback* ICallback)
  : mSock(socket)
  , mCallback(ICallback)
@@ -92,21 +92,21 @@ ConnectionThread::ConnectionThread(
   mMessenger = new SnepMessenger(false, socket, fragmentLength);
 }
 
-ConnectionThread::~ConnectionThread()
+SnepConnectionThread::~SnepConnectionThread()
 {
   delete mMessenger;
 }
 
-void ConnectionThread::run()
+void SnepConnectionThread::run()
 {
   pthread_t tid;
-  if(pthread_create(&tid, NULL, connectionThreadFunc, this) != 0) {
+  if(pthread_create(&tid, NULL, SnepConnectionThreadFunc, this) != 0) {
     ALOGE("%s: pthread_create fail", __FUNCTION__);
     abort();
   }
 }
 
-bool ConnectionThread::isServerRunning() const
+bool SnepConnectionThread::isServerRunning() const
 {
   return mServer->mServerRunning;
 }
@@ -114,7 +114,7 @@ bool ConnectionThread::isServerRunning() const
 /**
  * Server thread, used to listen for incoming connection request/
  */
-void* serverThreadFunc(void* arg)
+void* snepServerThreadFunc(void* arg)
 {
   SnepServer* pSnepServer = reinterpret_cast<SnepServer*>(arg);
   if (!pSnepServer) {
@@ -143,8 +143,8 @@ void* serverThreadFunc(void* arg)
       const int miu = communicationSocket->getRemoteMiu();
       const int length = (fragmentLength == -1) ? miu : miu < fragmentLength ? miu : fragmentLength;
 
-      ConnectionThread* pConnectionThread = 
-          new ConnectionThread(pSnepServer, communicationSocket, length, ICallback);
+      SnepConnectionThread* pConnectionThread = 
+          new SnepConnectionThread(pSnepServer, communicationSocket, length, ICallback);
       pConnectionThread->run();
     }
   }
@@ -205,7 +205,7 @@ void SnepServer::start()
   }
 
   pthread_t tid;
-  if(pthread_create(&tid, NULL, serverThreadFunc, this) != 0)
+  if(pthread_create(&tid, NULL, snepServerThreadFunc, this) != 0)
   {
     ALOGE("%s: pthread_create failed", __FUNCTION__);
     abort();

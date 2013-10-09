@@ -74,6 +74,7 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
     mSocket->send(tmpBuf);
     offset += length;
   }
+
   ALOGD("%s: exit", __FUNCTION__);
 }
 

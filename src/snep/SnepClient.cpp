@@ -60,11 +60,7 @@ SnepClient::SnepClient(const char* serviceName, int acceptableLength, int fragme
 
 SnepClient::~SnepClient()
 {
-  if (mMessenger) {
-    mMessenger->close();
-    delete mMessenger;
-    mMessenger = NULL;
-  }
+  close();
 }
 
 /**

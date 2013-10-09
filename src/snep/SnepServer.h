@@ -47,10 +47,10 @@ public:
   int                mRwSize;
 };
 
-class ConnectionThread {
+class SnepConnectionThread {
 public:
-  ConnectionThread(SnepServer* server, ILlcpSocket* socket, int fragmentLength, ISnepCallback* callback);
-  ~ConnectionThread();
+  SnepConnectionThread(SnepServer* server, ILlcpSocket* socket, int fragmentLength, ISnepCallback* callback);
+  ~SnepConnectionThread();
 
   void run();
   bool isServerRunning() const;
