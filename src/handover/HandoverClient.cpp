@@ -47,6 +47,7 @@ void HandoverClient::connect()
   if (!mSocket->connectToService(mServiceName)) {
     ALOGE("%s: could not connect to service (%s)", __FUNCTION__, mServiceName);
     delete mSocket;
+    mState = HandoverClient::DISCONNECTED;
     return;
   }
 

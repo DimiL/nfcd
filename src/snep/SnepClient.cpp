@@ -114,6 +114,7 @@ SnepMessage* SnepClient::get(NdefMessage& msg)
 
   SnepMessage* snepRequest = SnepMessage::getGetRequest(mAcceptableLength, msg);
   mMessenger->sendMessage(*snepRequest);
+
   delete snepRequest;
 
   return mMessenger->getMessage();
@@ -122,7 +123,7 @@ SnepMessage* SnepClient::get(NdefMessage& msg)
 void SnepClient::connect()
 {
   if (mState != SnepClient::DISCONNECTED) {
-    ALOGE("%s: socket already in use", __FUNCTION__);
+    ALOGE("%s: snep already connected", __FUNCTION__);
     return;
   }
   mState = SnepClient::CONNECTING;
@@ -136,6 +137,7 @@ void SnepClient::connect()
   ILlcpSocket* socket = pINfcManager->createLlcpSocket(0, mMiu, mRwSize, 1024);
   if (!socket) {
     ALOGE("%s: could not connect to socket", __FUNCTION__);
+    mState = SnepClient::DISCONNECTED;
     return;
   }
 
@@ -143,19 +145,21 @@ void SnepClient::connect()
   if (mPort == -1) {
     if (!socket->connectToService(mServiceName)) {
       ALOGE("%s: could not connect to service (%s)", __FUNCTION__, mServiceName);
+      mState = SnepClient::DISCONNECTED;
       delete socket;
       return;
     }
   } else {
     if (!socket->connectToSap(mPort)) {
       ALOGE("%s: could not connect to sap (%d)", __FUNCTION__, mPort);
+      mState = SnepClient::DISCONNECTED;
       delete socket;
       return;
-    }    
+    }
   }
 
-  int miu = socket->getRemoteMiu();
-  int fragmentLength = (mFragmentLength == -1) ?  miu : miu < mFragmentLength ? miu : mFragmentLength;
+  const int miu = socket->getRemoteMiu();
+  const int fragmentLength = (mFragmentLength == -1) ?  miu : miu < mFragmentLength ? miu : mFragmentLength;
 
   // Remove old messenger.
   if (mMessenger) {

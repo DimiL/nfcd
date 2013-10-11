@@ -112,7 +112,7 @@ bool SnepConnectionThread::isServerRunning() const
 }
 
 /**
- * Server thread, used to listen for incoming connection request/
+ * Server thread, used to listen for incoming connection request.
  */
 void* snepServerThreadFunc(void* arg)
 {
@@ -143,7 +143,7 @@ void* snepServerThreadFunc(void* arg)
       const int miu = communicationSocket->getRemoteMiu();
       const int length = (fragmentLength == -1) ? miu : miu < fragmentLength ? miu : fragmentLength;
 
-      SnepConnectionThread* pConnectionThread = 
+      SnepConnectionThread* pConnectionThread =
           new SnepConnectionThread(pSnepServer, communicationSocket, length, ICallback);
       pConnectionThread->run();
     }

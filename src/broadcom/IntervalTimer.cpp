@@ -19,7 +19,7 @@ IntervalTimer::IntervalTimer()
 bool IntervalTimer::set(int ms, TIMER_FUNC cb)
 {
   if (mTimerId == 0) {
-    if (cb == NULL)
+    if (!cb)
       return false;
 
     if (!create(cb))

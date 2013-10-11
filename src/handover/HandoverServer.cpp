@@ -45,7 +45,7 @@ void* HandoverConnectionThreadFunc(void* arg)
     }
 
     // Check if buffer can be create a NDEF message.
-    // If yes. need to notify upper layer
+    // If yes. need to notify upper layer.
   }
 
   if (pConnectionThread->mSock)
@@ -59,10 +59,10 @@ void* HandoverConnectionThreadFunc(void* arg)
 }
 
 HandoverConnectionThread::HandoverConnectionThread(
-  HandoverServer* server, ILlcpSocket* socket, IHandoverCallback* ICallback):
-mSock(socket),
-mCallback(ICallback),
-mServer(server)
+  HandoverServer* server, ILlcpSocket* socket, IHandoverCallback* ICallback)
+ : mSock(socket)
+ , mCallback(ICallback)
+ , mServer(server)
 {
 }
 
@@ -79,7 +79,7 @@ void HandoverConnectionThread::run()
   }
 }
 
-bool HandoverConnectionThread::isServerRunning()
+bool HandoverConnectionThread::isServerRunning() const
 {
   return mServer->mServerRunning;
 }
@@ -107,9 +107,9 @@ void* handoverServerThreadFunc(void* arg)
     }
 
     ILlcpSocket* communicationSocket = serverSocket->accept();
-    
+
     if (communicationSocket != NULL) {
-      HandoverConnectionThread* pConnectionThread = 
+      HandoverConnectionThread* pConnectionThread =
           new HandoverConnectionThread(pHandoverServer, communicationSocket, ICallback);
       pConnectionThread->run();
     }
@@ -126,7 +126,6 @@ HandoverServer::HandoverServer(IHandoverCallback* ICallback) {
 
 HandoverServer::~HandoverServer()
 {
-
 }
 
 void HandoverServer::start()

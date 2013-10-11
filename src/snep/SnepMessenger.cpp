@@ -21,7 +21,7 @@ SnepMessenger::SnepMessenger(bool isClient, ILlcpSocket* socket, uint32_t fragme
 
 SnepMessenger::~SnepMessenger()
 {
-  if (mSocket)  delete mSocket;
+  close();
 }
 
 void SnepMessenger::sendMessage(SnepMessage& msg)
@@ -79,7 +79,7 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
 }
 
 /**
- * get Snep message from remote side
+ * Get Snep message from remote side.
  */
 SnepMessage* SnepMessenger::getMessage()
 {

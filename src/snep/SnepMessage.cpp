@@ -6,13 +6,14 @@
 #include <cutils/log.h>
 
 SnepMessage::SnepMessage()
+ : mNdefMessage(NULL)
 {
-  mNdefMessage = NULL;
 }
 
 SnepMessage::~SnepMessage()
 {
-  delete mNdefMessage;
+  if (mNdefMessage)
+    delete mNdefMessage;
 }
 
 SnepMessage::SnepMessage(std::vector<uint8_t>& buf)
@@ -24,16 +25,16 @@ SnepMessage::SnepMessage(std::vector<uint8_t>& buf)
   mVersion = buf[idx++];
   mField = buf[idx++];
 
-  mLength = ((uint32_t)buf[idx]     << 24) | 
-            ((uint32_t)buf[idx + 1] << 16) | 
-            ((uint32_t)buf[idx + 2] <<  8) | 
+  mLength = ((uint32_t)buf[idx]     << 24) |
+            ((uint32_t)buf[idx + 1] << 16) |
+            ((uint32_t)buf[idx + 2] <<  8) |
              (uint32_t)buf[idx + 3];
   idx += 4 ;
 
   if (mField == SnepMessage::REQUEST_GET) {
-    mAcceptableLength = ((uint32_t)buf[idx]     << 24) | 
-                        ((uint32_t)buf[idx + 1] << 16) | 
-                        ((uint32_t)buf[idx + 2] <<  8) | 
+    mAcceptableLength = ((uint32_t)buf[idx]     << 24) |
+                        ((uint32_t)buf[idx + 1] << 16) |
+                        ((uint32_t)buf[idx + 2] <<  8) |
                          (uint32_t)buf[idx + 3];
     idx += 4;
     ndefOffset = SnepMessage::HEADER_LENGTH + 4;
@@ -77,11 +78,13 @@ SnepMessage* SnepMessage::getPutRequest(NdefMessage& ndef)
   return new SnepMessage(SnepMessage::VERSION, SnepMessage::REQUEST_PUT, buf.size(), 0, &ndef);
 }
 
-SnepMessage* SnepMessage::getMessage(uint8_t field) {
+SnepMessage* SnepMessage::getMessage(uint8_t field)
+{
   return new SnepMessage(SnepMessage::VERSION, field, 0, 0, NULL);
 }
 
-SnepMessage* getSuccessResponse(NdefMessage* ndef) {
+SnepMessage* getSuccessResponse(NdefMessage* ndef)
+{
   if (!ndef) {
     return new SnepMessage(SnepMessage::VERSION, SnepMessage::RESPONSE_SUCCESS, 0, 0, NULL);
   } else {
@@ -99,7 +102,9 @@ SnepMessage* SnepMessage::fromByteArray(std::vector<uint8_t>& buf)
 SnepMessage* SnepMessage::fromByteArray(uint8_t* pBuf, int size)
 {
   std::vector<uint8_t> buf;
-  for (int i = 0; i < size; i++)  buf[i] = pBuf[i];
+  for (int i = 0; i < size; i++)
+    buf[i] = pBuf[i];
+
   return new SnepMessage(buf);
 }
 

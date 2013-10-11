@@ -34,7 +34,7 @@ public:
 
   void start();
   void stop();
-  
+
   static bool handleRequest(SnepMessenger* messenger, ISnepCallback* callback);
 
   ILlcpServerSocket* mServerSocket;

@@ -25,7 +25,7 @@ public:
 
   void start();
   void stop();
-  
+
   ILlcpServerSocket* mServerSocket;
   int                mServiceSap;
   IHandoverCallback* mCallback;
@@ -38,11 +38,12 @@ public:
   ~HandoverConnectionThread();
 
   void run();
-  bool isServerRunning();
+  bool isServerRunning() const;
 
   ILlcpSocket* mSock;
   IHandoverCallback* mCallback;
   HandoverServer* mServer;
 };
+
 #endif
 
