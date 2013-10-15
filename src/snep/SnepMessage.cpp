@@ -110,7 +110,7 @@ SnepMessage* SnepMessage::fromByteArray(uint8_t* pBuf, int size)
 
 void SnepMessage::toByteArray(std::vector<uint8_t>& buf)
 {
-  if (!mNdefMessage) {
+  if (mNdefMessage) {
     mNdefMessage->toByteArray(buf);
   }
 
