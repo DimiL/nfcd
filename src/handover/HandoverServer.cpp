@@ -5,6 +5,7 @@
 #include "NfcService.h"
 #include "NfcManager.h"
 #include "HandoverServer.h"
+#include "IHandoverCallback.h"
 #include "NdefMessage.h"
 
 #define LOG_TAG "nfcd"
@@ -12,14 +13,6 @@
 
 // Registered LLCP Service Names.
 const char* HandoverServer::DEFAULT_SERVICE_NAME = "urn:nfc:sn:handover";
-
-HandoverCallback::HandoverCallback()
-{
-}
-
-HandoverCallback::~HandoverCallback()
-{
-}
 
 void* HandoverConnectionThreadFunc(void* arg)
 {

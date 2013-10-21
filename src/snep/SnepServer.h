@@ -6,18 +6,9 @@
 #define mozilla_nfcd_SnepServer_h
 
 #include "SnepMessenger.h"
-#include "ISnepCallback.h"
 
-class SnepCallback
-  : public ISnepCallback
-{
-public:
-   SnepCallback();
-   virtual ~SnepCallback();
-
-   virtual SnepMessage* doPut(NdefMessage* msg);
-   virtual SnepMessage* doGet(int acceptableLength, NdefMessage* msg);
-};
+class ILlcpServerSocket;
+class ISnepCallback;
 
 class SnepServer{
 public:

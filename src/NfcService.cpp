@@ -14,9 +14,7 @@
 #include "NfcGonkMessage.h"
 #include "NfcService.h"
 #include "NfcUtil.h"
-#include "SnepClient.h"
-#include "SnepServer.h"
-#include "HandoverServer.h"
+#include "P2pLinkManager.h"
 
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
@@ -68,19 +66,12 @@ NfcManager* NfcService::sNfcManager = NULL;
 
 NfcService::NfcService()
 {
-  mSnepCallback = new SnepCallback();
-  mSnepServer = new SnepServer(static_cast<ISnepCallback*>(mSnepCallback));
-
-  mHandoverCallback = new HandoverCallback();
-  mHandoverServer = new HandoverServer(static_cast<IHandoverCallback*>(mHandoverCallback));
+  mP2pLinkManager = new P2pLinkManager();
 }
 
 NfcService::~NfcService()
 {
-  delete mSnepCallback;
-  delete mSnepServer;
-  delete mHandoverCallback;
-  delete mHandoverServer;
+  delete mP2pLinkManager;
 }
 
 static void *serviceThreadFunc(void *arg)
@@ -469,11 +460,7 @@ void NfcService::handlePushNdefResponse(NfcEvent* event)
 {
   NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->obj);
 
-  // TODO : Do we need create a thread to do this ? And can we use the same snep client each time ?
-  SnepClient snep;
-  snep.connect();
-  snep.put(*ndef);
-  snep.close();
+  mP2pLinkManager->push(ndef);
 
   delete ndef;
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
@@ -543,14 +530,8 @@ void NfcService::enableNfc()
 
   sNfcManager->initialize();
 
-  // Create SNEP server.
-  if (mSnepServer) {
-    mSnepServer->start();
-  }
-
-  if (mHandoverServer) {
-    mHandoverServer->start();
-  }
+  if (mP2pLinkManager)
+    mP2pLinkManager->enableDisable(true);
 
   // Enable discovery MUST SNEP server is established.
   // Otherwise, P2P device will not be discovered.
@@ -563,13 +544,8 @@ void NfcService::disableNfc()
 {
   ALOGD("%s: enter", __FUNCTION__);
 
-  if (mSnepServer) {
-    mSnepServer->stop();
-  }
-
-  if (mHandoverServer) {
-    mHandoverServer->stop();
-  }
+  if (mP2pLinkManager)
+    mP2pLinkManager->enableDisable(false);
 
   sNfcManager->disableDiscovery();
 

@@ -19,6 +19,7 @@ LOCAL_SRC_FILES := \
     src/NfcUtil.cpp \
     src/MessageHandler.cpp \
     src/SessionId.cpp \
+    src/P2pLinkManager.cpp \
     src/snep/SnepServer.cpp \
     src/snep/SnepClient.cpp \
     src/snep/SnepMessage.cpp \

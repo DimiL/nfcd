@@ -5,51 +5,13 @@
 #include "NfcService.h"
 #include "NfcManager.h"
 #include "SnepServer.h"
+#include "ISnepCallback.h"
 
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
 
 // Well-known LLCP SAP Values defined by NFC forum.
 const char* SnepServer::DEFAULT_SERVICE_NAME = "urn:nfc:sn:snep";
-
-SnepCallback::SnepCallback()
-{
-}
-
-SnepCallback::~SnepCallback()
-{
-}
-
-SnepMessage* SnepCallback::doPut(NdefMessage* ndef)
-{
-  if (!ndef) {
-    ALOGE("%s: invalid parameter", __FUNCTION__);
-    return NULL;
-  }
-  // TODO : We should send the ndef message to gecko
-  // onReceiveComplete(msg);
-  return SnepMessage::getMessage(SnepMessage::RESPONSE_SUCCESS);
-}
-
-// The NFC Forum Default SNEP server is not allowed to respond to
-// SNEP GET requests - see SNEP 1.0 TS section 6.1. However,
-// since Android 4.1 used the NFC Forum default server to
-// implement connection handover, we will support this
-// until we can deprecate it.
-SnepMessage* SnepCallback::doGet(int acceptableLength, NdefMessage* ndef)
-{
-  if (!ndef) {
-    ALOGE("%s: invalid parameter", __FUNCTION__);
-    return NULL;
-  }
-  
-  /**
-   * Response Codes : NOT IMPLEMENTED
-   * The server does not support the functionality required to fulfill
-   * the request.
-   */
-  return SnepMessage::getMessage(SnepMessage::RESPONSE_NOT_IMPLEMENTED);
-}
 
 // Connection thread, used to handle incoming connections.
 void* SnepConnectionThreadFunc(void* arg)

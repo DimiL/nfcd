@@ -5,14 +5,7 @@
 #ifndef mozilla_nfcd_HandoverPushServer_h
 #define mozilla_nfcd_HandoverPushServer_h
 
-#include "IHandoverCallback.h"
-
-class HandoverCallback : public IHandoverCallback
-{
-public:
-   HandoverCallback();
-   virtual ~HandoverCallback();
-};
+class IHandoverCallback;
 
 class HandoverServer{
 public:
