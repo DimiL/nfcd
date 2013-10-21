@@ -176,7 +176,7 @@ SnepMessage* SnepMessenger::getMessage()
   if (!snep)
     ALOGE("%s: nadly formatted NDEF message, ignoring", __FUNCTION__);
 
-  ALOGD("%s: enter", __FUNCTION__);
+  ALOGD("%s: exit", __FUNCTION__);
   return snep;
 }
 

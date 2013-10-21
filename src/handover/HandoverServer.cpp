@@ -5,6 +5,7 @@
 #include "NfcService.h"
 #include "NfcManager.h"
 #include "HandoverServer.h"
+#include "NdefMessage.h"
 
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
@@ -38,6 +39,7 @@ void* HandoverConnectionThreadFunc(void* arg)
     std::vector<uint8_t> partial;
     int size = pConnectionThread->mSock->receive(partial);
     if (size < 0) {
+      ALOGE("%s: connection broken", __FUNCTION__);
       connectionBroken = true;
       break;
     } else {
@@ -46,6 +48,13 @@ void* HandoverConnectionThreadFunc(void* arg)
 
     // Check if buffer can be create a NDEF message.
     // If yes. need to notify upper layer.
+    NdefMessage* ndef = new NdefMessage();
+    if(ndef->init(buffer)) {
+      ALOGD("%s: get a complete NDEF message", __FUNCTION__);
+    } else {
+      ALOGD("%s: cannot get a complete NDEF message", __FUNCTION__);
+    }
+    delete ndef;
   }
 
   if (pConnectionThread->mSock)
