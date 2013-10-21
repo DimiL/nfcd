@@ -68,16 +68,18 @@ NfcManager* NfcService::sNfcManager = NULL;
 
 NfcService::NfcService()
 {
-  SnepCallback snepCallback;
-  mSnepServer = new SnepServer(static_cast<ISnepCallback*>(&snepCallback));
+  mSnepCallback = new SnepCallback();
+  mSnepServer = new SnepServer(static_cast<ISnepCallback*>(mSnepCallback));
 
-  HandoverCallback handoverCallback;
-  mHandoverServer = new HandoverServer(static_cast<IHandoverCallback*>(&handoverCallback));
+  mHandoverCallback = new HandoverCallback();
+  mHandoverServer = new HandoverServer(static_cast<IHandoverCallback*>(mHandoverCallback));
 }
 
 NfcService::~NfcService()
 {
+  delete mSnepCallback;
   delete mSnepServer;
+  delete mHandoverCallback;
   delete mHandoverServer;
 }
 

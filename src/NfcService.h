@@ -15,6 +15,8 @@ class NfcEvent;
 class INfcManager;
 class SnepServer;
 class HandoverServer;
+class SnepCallback;
+class HandoverCallback;
 
 class NfcService : public IpcSocketListener {
 public:
@@ -73,6 +75,8 @@ private:
   android::List<NfcEvent*> mQueue;
   MessageHandler* mMsgHandler;
 
+  SnepCallback* mSnepCallback;
+  HandoverCallback* mHandoverCallback;
   SnepServer* mSnepServer;
   HandoverServer* mHandoverServer;
 };
