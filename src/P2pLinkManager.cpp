@@ -11,6 +11,10 @@
 #define LOG_TAG "nfcd"
 #include "utils/Log.h"
 
+static const char* HANDOVER_REQUEST = "urn:nfc:wkt:Hr";
+static const char* HANDOVER_SELECT = "urn:nfc:wkt:Hs";
+static const char* HANDOVER_CARRIER = "urn:nfc:wkt:Hc";
+
 SnepCallback::SnepCallback()
 {
 }
@@ -89,8 +93,37 @@ void P2pLinkManager::enableDisable(bool bEnable)
 
 void P2pLinkManager::push(NdefMessage* ndef)
 {
-  SnepClient snep;
-  snep.connect();
-  snep.put(*ndef);
-  snep.close();
+  if (!ndef)
+    return;
+
+  bool handover = false;
+
+  if (ndef->mRecords.size() > 0) {
+    NdefRecord* record = &(ndef->mRecords[0]);
+    if (NdefRecord::TNF_WELL_KNOWN == record->mTnf) {
+      const int size = record->mType.size();
+      char* type = new char[size];
+      for(int i = 0; i < size; i++) {
+        type[i] = record->mType[i];
+      }
+      
+      if (strncmp(HANDOVER_REQUEST, type, size) == 0 ||
+          strncmp(HANDOVER_SELECT, type, size) == 0 ||
+          strncmp(HANDOVER_CARRIER, type, size) == 0) {
+        handover = true;
+      }
+  
+      delete type;
+    }
+  }
+
+  if (handover) {
+    // TODO : This is an handover protocol push
+    ALOGD("%s: pushed by handover protocol", __FUNCTION__);
+  } else { 
+    SnepClient snep;
+    snep.connect();
+    snep.put(*ndef);
+    snep.close();
+  }
 }
