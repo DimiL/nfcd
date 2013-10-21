@@ -12,8 +12,7 @@ SnepMessage::SnepMessage()
 
 SnepMessage::~SnepMessage()
 {
-  if (mNdefMessage)
-    delete mNdefMessage;
+  delete mNdefMessage;
 }
 
 SnepMessage::SnepMessage(std::vector<uint8_t>& buf)

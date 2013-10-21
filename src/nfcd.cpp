@@ -18,21 +18,14 @@ int main() {
 
   // Create NFC Manager and do initialize.
   NfcManager* pNfcManager = new NfcManager();
-  pNfcManager->initialize();
 
   // Create service thread to receive message from nfc library.
   NfcService* service = NfcService::Instance();
   MessageHandler* msgHandler = new MessageHandler(service);
   service->initialize(pNfcManager, msgHandler);
 
-  // Create SNEP server.
-  SnepCallback snepCallback;
-  SnepServer snepServer(static_cast<ISnepCallback*>(&snepCallback));
-  snepServer.start();
-
-  // Enable discovery MUST SNEP server is established.
-  // Otherwise, P2P device will not be discovered.
-  pNfcManager->enableDiscovery();
+  // TODO: remove this after gaia support enable/disable.
+  service->enableNfc();
 
   // Create IPC socket & main thread will enter while loop to read data from socket.
   NfcIpcSocket* socket = NfcIpcSocket::Instance();

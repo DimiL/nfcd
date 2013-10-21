@@ -15,6 +15,8 @@
 #include "NfcService.h"
 #include "NfcUtil.h"
 #include "SnepClient.h"
+#include "SnepServer.h"
+#include "HandoverServer.h"
 
 #undef LOG_TAG
 #define LOG_TAG "nfcd"
@@ -66,10 +68,17 @@ NfcManager* NfcService::sNfcManager = NULL;
 
 NfcService::NfcService()
 {
+  SnepCallback snepCallback;
+  mSnepServer = new SnepServer(static_cast<ISnepCallback*>(&snepCallback));
+
+  HandoverCallback handoverCallback;
+  mHandoverServer = new HandoverServer(static_cast<IHandoverCallback*>(&handoverCallback));
 }
 
 NfcService::~NfcService()
 {
+  delete mSnepServer;
+  delete mHandoverServer;
 }
 
 static void *serviceThreadFunc(void *arg)
@@ -517,13 +526,53 @@ void NfcService::handleNfcEnableDisableResponse(NfcEvent* event)
 {
   bool enableDisable = event->arg1;
   if (enableDisable) {
-    // TODO : p2p init
-    sNfcManager->initialize();
+    enableNfc();
   }
   else {
-    // TODO : p2p deinit
-    sNfcManager->deinitialize();
+    disableNfc();
   }
 
   return;
 }
+
+void NfcService::enableNfc()
+{
+  ALOGD("%s: enter", __FUNCTION__);
+
+  sNfcManager->initialize();
+
+  // Create SNEP server.
+  if (mSnepServer) {
+    mSnepServer->start();
+  }
+
+  if (mHandoverServer) {
+    mHandoverServer->start();
+  }
+
+  // Enable discovery MUST SNEP server is established.
+  // Otherwise, P2P device will not be discovered.
+  sNfcManager->enableDiscovery();
+
+  ALOGD("%s: exit", __FUNCTION__);
+}
+
+void NfcService::disableNfc()
+{
+  ALOGD("%s: enter", __FUNCTION__);
+
+  if (mSnepServer) {
+    mSnepServer->stop();
+  }
+
+  if (mHandoverServer) {
+    mHandoverServer->stop();
+  }
+
+  sNfcManager->disableDiscovery();
+
+  sNfcManager->deinitialize();
+
+  ALOGD("%s: exit", __FUNCTION__);
+}
+

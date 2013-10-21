@@ -13,6 +13,8 @@ class NdefMessage;
 class MessageHandler;
 class NfcEvent;
 class INfcManager;
+class SnepServer;
+class HandoverServer;
 
 class NfcService : public IpcSocketListener {
 public:
@@ -60,6 +62,9 @@ public:
 
   void onConnected();
 
+  void enableNfc();
+  void disableNfc();
+
 private:
   NfcService();
 
@@ -67,6 +72,9 @@ private:
   static NfcManager* sNfcManager;
   android::List<NfcEvent*> mQueue;
   MessageHandler* mMsgHandler;
+
+  SnepServer* mSnepServer;
+  HandoverServer* mHandoverServer;
 };
 
 #endif // mozilla_nfcd_NfcService_h
