@@ -7,20 +7,18 @@
 #include "HandoverServer.h"
 #include "IHandoverCallback.h"
 #include "NdefMessage.h"
-
-#define LOG_TAG "nfcd"
-#include <cutils/log.h>
+#include "NfcDebug.h"
 
 // Registered LLCP Service Names.
 const char* HandoverServer::DEFAULT_SERVICE_NAME = "urn:nfc:sn:handover";
 
 void* HandoverConnectionThreadFunc(void* arg)
 {
-  ALOGD("%s: connection thread enter", __FUNCTION__);
+  ALOGD("%s: connection thread enter", FUNC);
 
   HandoverConnectionThread* pConnectionThread = reinterpret_cast<HandoverConnectionThread*>(arg);
   if (!pConnectionThread) {
-    ALOGE("%s: invalid parameter", __FUNCTION__);
+    ALOGE("%s: invalid parameter", FUNC);
     return NULL;
   }
 
@@ -32,7 +30,7 @@ void* HandoverConnectionThreadFunc(void* arg)
     std::vector<uint8_t> partial;
     int size = pConnectionThread->mSock->receive(partial);
     if (size < 0) {
-      ALOGE("%s: connection broken", __FUNCTION__);
+      ALOGE("%s: connection broken", FUNC);
       connectionBroken = true;
       break;
     } else {
@@ -44,9 +42,9 @@ void* HandoverConnectionThreadFunc(void* arg)
     NdefMessage* ndef = new NdefMessage();
     if(ndef->init(buffer)) {
       ICallback->onMessageReceived(ndef);
-      ALOGD("%s: get a complete NDEF message", __FUNCTION__);
+      ALOGD("%s: get a complete NDEF message", FUNC);
     } else {
-      ALOGD("%s: cannot get a complete NDEF message", __FUNCTION__);
+      ALOGD("%s: cannot get a complete NDEF message", FUNC);
     }
     delete ndef;
   }
@@ -57,7 +55,7 @@ void* HandoverConnectionThreadFunc(void* arg)
   // TODO : is this correct ??
   delete pConnectionThread;
 
-  ALOGD("%s: connection thread exit", __FUNCTION__);
+  ALOGD("%s: connection thread exit", FUNC);
   return NULL;
 }
 
@@ -91,7 +89,7 @@ void* handoverServerThreadFunc(void* arg)
 {
   HandoverServer* pHandoverServer = reinterpret_cast<HandoverServer*>(arg);
   if (!pHandoverServer) {
-    ALOGE("%s: invalid parameter", __FUNCTION__);
+    ALOGE("%s: invalid parameter", FUNC);
     return NULL;
   }
 
@@ -99,13 +97,13 @@ void* handoverServerThreadFunc(void* arg)
   IHandoverCallback* ICallback = pHandoverServer->mCallback;
 
   if (!serverSocket) {
-    ALOGE("%s: no server socket", __FUNCTION__);
+    ALOGE("%s: no server socket", FUNC);
     return NULL;
   }
 
   while(pHandoverServer->mServerRunning) {
     if (!serverSocket) {
-        ALOGE("%s: server socket shut down", __FUNCTION__);
+        ALOGE("%s: server socket shut down", FUNC);
         return NULL;
     }
 
@@ -133,24 +131,24 @@ HandoverServer::~HandoverServer()
 
 void HandoverServer::start()
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", FUNC);
 
   INfcManager* pINfcManager = NfcService::getNfcManager();
   mServerSocket = pINfcManager->createLlcpServerSocket(mServiceSap, DEFAULT_SERVICE_NAME, DEFAULT_MIU, 1, 1024);
 
   if (!mServerSocket) {
-    ALOGE("%s: cannot create llcp server socket", __FUNCTION__);
+    ALOGE("%s: cannot create llcp server socket", FUNC);
   }
 
   pthread_t tid;
   if(pthread_create(&tid, NULL, handoverServerThreadFunc, this) != 0)
   {
-    ALOGE("%s: pthread_create failed", __FUNCTION__);
+    ALOGE("%s: pthread_create failed", FUNC);
     abort();
   }
   mServerRunning = true;
 
-  ALOGD("%s exit", __FUNCTION__);
+  ALOGD("%s exit", FUNC);
 }
 
 void HandoverServer::stop()

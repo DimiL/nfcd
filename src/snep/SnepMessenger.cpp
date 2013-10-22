@@ -2,9 +2,7 @@
 #include <vector>
 
 #include "ILlcpSocket.h"
-
-#define LOG_TAG "nfcd"
-#include <cutils/log.h>
+#include "NfcDebug.h"
 
 /**
  * The Simple NDEF Exchange Protocol (SNEP) is a request/response protocol.
@@ -26,7 +24,7 @@ SnepMessenger::~SnepMessenger()
 
 void SnepMessenger::sendMessage(SnepMessage& msg)
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", FUNC);
 
   uint8_t remoteContinue;
   if (mIsClient) {
@@ -42,7 +40,7 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
   mSocket->send(buf);
 
   if (length == buf.size()) {
-    ALOGD("%s: exit", __FUNCTION__);
+    ALOGD("%s: exit", FUNC);
     return;
   }
 
@@ -54,12 +52,12 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
 
   SnepMessage* snepResponse = SnepMessage::fromByteArray(responseBytes);
   if (!snepResponse) {
-    ALOGE("%s: invalid SNEP message", __FUNCTION__);
+    ALOGE("%s: invalid SNEP message", FUNC);
     return;
   }
 
   if (snepResponse->getField() != remoteContinue) {
-    ALOGE("%s: invalid response from server (%d)", __FUNCTION__, snepResponse->getField());
+    ALOGE("%s: invalid response from server (%d)", FUNC, snepResponse->getField());
     delete snepResponse;
     return;
   }
@@ -75,7 +73,7 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
     offset += length;
   }
 
-  ALOGD("%s: exit", __FUNCTION__);
+  ALOGD("%s: exit", FUNC);
 }
 
 /**
@@ -83,7 +81,7 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
  */
 SnepMessage* SnepMessenger::getMessage()
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", FUNC);
 
   std::vector<uint8_t> partial;
   std::vector<uint8_t> buffer;
@@ -121,7 +119,7 @@ SnepMessage* SnepMessenger::getMessage()
   int size = mSocket->receive(partial);
   if (size < 0 || size < HEADER_LENGTH) {
     if (!socketSend(fieldReject)) {
-      ALOGE("%s: snep message send fail", __FUNCTION__);
+      ALOGE("%s: snep message send fail", FUNC);
       return NULL;
     }
   } else {
@@ -139,14 +137,14 @@ SnepMessage* SnepMessenger::getMessage()
   if (((requestVersion & 0xF0) >> 4) != SnepMessage::VERSION_MAJOR) {
     // Invalid protocol version; treat message as complete.
     ALOGE("%s: invalid protocol version %d != %d",
-       __FUNCTION__, ((requestVersion & 0xF0) >> 4), SnepMessage::VERSION_MAJOR);
+       FUNC, ((requestVersion & 0xF0) >> 4), SnepMessage::VERSION_MAJOR);
     return new SnepMessage(requestVersion, requestField, 0, 0, NULL);
   }
 
   bool doneReading = false;
   if (requestSize > readSize) {
     if (!socketSend(fieldContinue)) {
-      ALOGE("%s: snep message send fail", __FUNCTION__);
+      ALOGE("%s: snep message send fail", FUNC);
       return NULL;
     }
   } else {
@@ -160,7 +158,7 @@ SnepMessage* SnepMessenger::getMessage()
     size = mSocket->receive(partial);
     if (size < 0) {
       if (!socketSend(fieldReject)) {
-        ALOGE("%s: snep message send fail", __FUNCTION__);
+        ALOGE("%s: snep message send fail", FUNC);
         return NULL;
       }
     } else {
@@ -174,9 +172,9 @@ SnepMessage* SnepMessenger::getMessage()
 
   SnepMessage* snep = SnepMessage::fromByteArray(buffer);
   if (!snep)
-    ALOGE("%s: nadly formatted NDEF message, ignoring", __FUNCTION__);
+    ALOGE("%s: nadly formatted NDEF message, ignoring", FUNC);
 
-  ALOGD("%s: exit", __FUNCTION__);
+  ALOGD("%s: exit", FUNC);
   return snep;
 }
 

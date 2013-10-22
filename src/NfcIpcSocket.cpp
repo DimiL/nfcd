@@ -16,12 +16,11 @@
 #include <unistd.h>
 #include <queue>
 #include <string>
-#define LOG_TAG "nfcd"
-#include <cutils/log.h>
 
 #include "IpcSocketListener.h"
 #include "NfcIpcSocket.h"
 #include "MessageHandler.h"
+#include "NfcDebug.h"
 
 #define NFCD_SOCKET_NAME "nfcd"
 #define MAX_COMMAND_BYTES (8 * 1024)

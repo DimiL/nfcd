@@ -7,10 +7,7 @@
 #include "HandoverServer.h"
 #include "HandoverClient.h"
 #include "NfcService.h"
-
-#undef LOG_TAG
-#define LOG_TAG "nfcd"
-#include "utils/Log.h"
+#include "NfcDebug.h"
 
 static const char* HANDOVER_REQUEST = "urn:nfc:wkt:Hr";
 static const char* HANDOVER_SELECT = "urn:nfc:wkt:Hs";
@@ -29,7 +26,7 @@ SnepCallback::~SnepCallback()
 SnepMessage* SnepCallback::doPut(NdefMessage* ndef)
 {
   if (!ndef) {
-    ALOGE("%s: invalid parameter", __FUNCTION__);
+    ALOGE("%s: invalid parameter", FUNC);
     return NULL;
   }
 
@@ -46,7 +43,7 @@ SnepMessage* SnepCallback::doPut(NdefMessage* ndef)
 SnepMessage* SnepCallback::doGet(int acceptableLength, NdefMessage* ndef)
 {
   if (!ndef) {
-    ALOGE("%s: invalid parameter", __FUNCTION__);
+    ALOGE("%s: invalid parameter", FUNC);
     return NULL;
   }
 
@@ -143,16 +140,16 @@ void P2pLinkManager::push(NdefMessage* ndef)
   }
 
   if (handover) {
-    ALOGD("%s: pushed by handover protocol", __FUNCTION__);
+    ALOGD("%s: pushed by handover protocol", FUNC);
     if (mHandoverClient)
       mHandoverClient->put(*ndef);
     else
-      ALOGE("%s: handover client not connected", __FUNCTION__);
+      ALOGE("%s: handover client not connected", FUNC);
   } else {
     if (mSnepClient)
       mSnepClient->put(*ndef);
     else
-      ALOGE("%s: snep client not connected", __FUNCTION__);
+      ALOGE("%s: snep client not connected", FUNC);
   }
 }
 

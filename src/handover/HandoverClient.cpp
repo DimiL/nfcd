@@ -9,9 +9,7 @@
 #include "HandoverServer.h"
 #include "ILlcpSocket.h"
 #include "NdefMessage.h"
-
-#define LOG_TAG "nfcd"
-#include <cutils/log.h>
+#include "NfcDebug.h"
 
 HandoverClient::HandoverClient()
 {
@@ -27,10 +25,10 @@ HandoverClient::~HandoverClient()
 
 bool HandoverClient::connect()
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", FUNC);
 
   if (mState != HandoverClient::DISCONNECTED) {
-    ALOGE("%s: socket already in use", __FUNCTION__);
+    ALOGE("%s: socket already in use", FUNC);
     return false;
   }
   mState = HandoverClient::CONNECTING;
@@ -39,13 +37,13 @@ bool HandoverClient::connect()
 
   mSocket = pINfcManager->createLlcpSocket(0, mMiu, 1, 1024);
   if (!mSocket) {
-    ALOGE("%s: could not connect to socket", __FUNCTION__);
+    ALOGE("%s: could not connect to socket", FUNC);
     mState = HandoverClient::DISCONNECTED;
     return false;
   }
 
   if (!mSocket->connectToService(mServiceName)) {
-    ALOGE("%s: could not connect to service (%s)", __FUNCTION__, mServiceName);
+    ALOGE("%s: could not connect to service (%s)", FUNC, mServiceName);
     delete mSocket;
     mState = HandoverClient::DISCONNECTED;
     return false;
@@ -53,16 +51,16 @@ bool HandoverClient::connect()
 
   mState = HandoverClient::CONNECTED;
 
-  ALOGD("%s: exit", __FUNCTION__);
+  ALOGD("%s: exit", FUNC);
   return true;
 }
 
 void HandoverClient::put(NdefMessage& msg)
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", FUNC);
 
   if (mState != HandoverClient::CONNECTED) {
-    ALOGE("%s: not connected", __FUNCTION__);
+    ALOGE("%s: not connected", FUNC);
     return;
   }
 
@@ -70,12 +68,12 @@ void HandoverClient::put(NdefMessage& msg)
   msg.toByteArray(buf);
   mSocket->send(buf);
 
-  ALOGD("%s: exit", __FUNCTION__);
+  ALOGD("%s: exit", FUNC);
 }
 
 void HandoverClient::close()
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", FUNC);
 
   if (mSocket) {
     mSocket->close();
@@ -83,5 +81,5 @@ void HandoverClient::close()
 
   mState = HandoverClient::DISCONNECTED;
 
-  ALOGD("%s: exit", __FUNCTION__);
+  ALOGD("%s: exit", FUNC);
 }

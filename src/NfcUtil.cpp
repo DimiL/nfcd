@@ -1,8 +1,5 @@
 #include "NfcUtil.h"
 
-#define LOG_TAG "nfcd"
-#include <cutils/log.h>
-
 void NfcUtil::convertNdefPduToNdefMessage(NdefMessagePdu& ndefPdu, NdefMessage* ndefMessage) {
   for (uint32_t i = 0; i < ndefPdu.numRecords; i++) {
     NdefRecordPdu& record = ndefPdu.records[i];

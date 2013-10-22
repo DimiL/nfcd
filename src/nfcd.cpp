@@ -10,10 +10,6 @@
 #include "MessageHandler.h"
 #include "SnepServer.h"
 
-#undef LOG_TAG
-#define LOG_TAG "nfcd"
-#include <cutils/log.h>
-
 int main() {
 
   // Create NFC Manager and do initialize.

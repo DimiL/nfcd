@@ -14,11 +14,8 @@
 #include "NfcGonkMessage.h"
 #include "NfcService.h"
 #include "NfcUtil.h"
+#include "NfcDebug.h"
 #include "P2pLinkManager.h"
-
-#undef LOG_TAG
-#define LOG_TAG "nfcd"
-#include "utils/Log.h"
 
 using namespace android;
 
@@ -84,12 +81,12 @@ static void *serviceThreadFunc(void *arg)
 void NfcService::initialize(NfcManager* pNfcManager, MessageHandler* msgHandler)
 {
   if (sem_init(&thread_sem, 0, 0) == -1) {
-    ALOGE("%s: init_nfc_service Semaphore creation failed", __func__);
+    ALOGE("%s: init_nfc_service Semaphore creation failed", FUNC);
     abort();
   }
 
   if (pthread_create(&thread_id, NULL, serviceThreadFunc, this) != 0) {
-    ALOGE("%s: init_nfc_service pthread_create failed", __func__);
+    ALOGE("%s: init_nfc_service pthread_create failed", FUNC);
     abort();
   }
 
@@ -99,7 +96,7 @@ void NfcService::initialize(NfcManager* pNfcManager, MessageHandler* msgHandler)
 
 void NfcService::notifyLlcpLinkActivation(void* pDevice)
 {
-  ALOGD("%s: enter", __func__);
+  ALOGD("%s: enter", FUNC);
   NfcEvent *event = new NfcEvent(MSG_LLCP_LINK_ACTIVATION);
   event->obj = pDevice;
   NfcService::Instance()->mQueue.push_back(event);
@@ -108,7 +105,7 @@ void NfcService::notifyLlcpLinkActivation(void* pDevice)
 
 void NfcService::notifyLlcpLinkDeactivation(void* pDevice)
 {
-  ALOGD("%s: enter", __func__);
+  ALOGD("%s: enter", FUNC);
   NfcEvent *event = new NfcEvent(MSG_LLCP_LINK_DEACTIVATION);
   event->obj = pDevice;
   NfcService::Instance()->mQueue.push_back(event);
@@ -117,7 +114,7 @@ void NfcService::notifyLlcpLinkDeactivation(void* pDevice)
 
 void NfcService::notifyTagDiscovered(void* pTag)
 {
-  ALOGD("%s: enter", __func__);
+  ALOGD("%s: enter", FUNC);
   NfcEvent *event = new NfcEvent(MSG_TAG_DISCOVERED);
   event->obj = pTag;
   NfcService::Instance()->mQueue.push_back(event);
@@ -126,7 +123,7 @@ void NfcService::notifyTagDiscovered(void* pTag)
 
 void NfcService::notifyTagLost()
 {
-  ALOGD("%s: enter", __func__);
+  ALOGD("%s: enter", FUNC);
   NfcEvent *event = new NfcEvent(MSG_TAG_LOST);
   event->obj = NULL;
   NfcService::Instance()->mQueue.push_back(event);
@@ -135,7 +132,7 @@ void NfcService::notifyTagLost()
 
 void NfcService::notifySEFieldActivated()
 {
-  ALOGD("%s: enter", __func__);
+  ALOGD("%s: enter", FUNC);
   NfcEvent *event = new NfcEvent(MSG_SE_FIELD_ACTIVATED);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -143,7 +140,7 @@ void NfcService::notifySEFieldActivated()
 
 void NfcService::notifySEFieldDeactivated()
 {
-  ALOGD("%s: enter", __func__);
+  ALOGD("%s: enter", FUNC);
   NfcEvent *event = new NfcEvent(MSG_SE_FIELD_DEACTIVATED);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -151,7 +148,7 @@ void NfcService::notifySEFieldDeactivated()
 
 void NfcService::notifySETransactionListeners()
 {
-  ALOGD("%s: enter", __func__);
+  ALOGD("%s: enter", FUNC);
   NfcEvent *event = new NfcEvent(MSG_SE_NOTIFY_TRANSACTION_LISTENERS);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -159,7 +156,7 @@ void NfcService::notifySETransactionListeners()
 
 void NfcService::handleLlcpLinkDeactivation(NfcEvent* event)
 {
-  ALOGD("%s: enter", __func__);
+  ALOGD("%s: enter", FUNC);
 
   void* pDevice = event->obj;
   IP2pDevice* pIP2pDevice = reinterpret_cast<IP2pDevice*>(pDevice);
@@ -173,7 +170,7 @@ void NfcService::handleLlcpLinkDeactivation(NfcEvent* event)
 
 void NfcService::handleLlcpLinkActivation(NfcEvent* event)
 {
-  ALOGD("%s: enter", __func__);
+  ALOGD("%s: enter", FUNC);
   void* pDevice = event->obj;
   IP2pDevice* pIP2pDevice = reinterpret_cast<IP2pDevice*>(pDevice);
 
@@ -181,10 +178,10 @@ void NfcService::handleLlcpLinkActivation(NfcEvent* event)
       pIP2pDevice->getMode() == NfcDepEndpoint::MODE_P2P_INITIATOR) {
     if (pIP2pDevice->getMode() == NfcDepEndpoint::MODE_P2P_TARGET) {
       if (pIP2pDevice->connect()) {
-        ALOGD("%s: Connected to device!", __func__);
+        ALOGD("%s: Connected to device!", FUNC);
       }
       else {
-        ALOGE("%s: Cannot connect remote Target. Polling loop restarted.", __func__);
+        ALOGE("%s: Cannot connect remote Target. Polling loop restarted.", FUNC);
       }
     }
 
@@ -193,15 +190,15 @@ void NfcService::handleLlcpLinkActivation(NfcEvent* event)
     if (ret == true) {
       ret = pINfcManager->activateLlcp();
       if (ret == true) {
-        ALOGD("%s: Target Activate LLCP OK", __func__);
+        ALOGD("%s: Target Activate LLCP OK", FUNC);
       } else {
-        ALOGE("%s: doActivateLLcp failed", __func__);
+        ALOGE("%s: doActivateLLcp failed", FUNC);
       }
     } else {
-      ALOGE("%s: doCheckLLcp failed", __func__);
+      ALOGE("%s: doCheckLLcp failed", FUNC);
     }
   } else {
-    ALOGE("%s: Unknown LLCP P2P mode", __func__);
+    ALOGE("%s: Unknown LLCP P2P mode", FUNC);
     //stop();
   }
 
@@ -213,7 +210,7 @@ void NfcService::handleLlcpLinkActivation(NfcEvent* event)
   data->techList = &techs;
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
   delete data;
-  ALOGD("%s: exit", __func__);
+  ALOGD("%s: exit", FUNC);
 }
 
 static void *pollingThreadFunc(void *arg)
@@ -261,10 +258,10 @@ void NfcService::handleTagLost(NfcEvent* event)
 
 void* NfcService::eventLoop()
 {
-  ALOGD("%s: NFCService started", __func__);
+  ALOGD("%s: NFCService started", FUNC);
   while(true) {
     if(sem_wait(&thread_sem)) {
-      ALOGE("%s: Failed to wait for semaphore", __func__);
+      ALOGE("%s: Failed to wait for semaphore", FUNC);
       abort();
     }
 
@@ -273,7 +270,7 @@ void* NfcService::eventLoop()
       mQueue.erase(mQueue.begin());
       NfcEventType eventType = event->getType();
 
-      ALOGD("%s: NFCService msg=%d", __func__, eventType);
+      ALOGD("%s: NFCService msg=%d", FUNC, eventType);
       switch(eventType) {
         case MSG_LLCP_LINK_ACTIVATION:
           handleLlcpLinkActivation(event);
@@ -317,7 +314,7 @@ void* NfcService::eventLoop()
           handleNfcEnableDisableResponse(event);
           break;
         default:
-          ALOGE("%s: NFCService bad message", __func__);
+          ALOGE("%s: NFCService bad message", FUNC);
           abort();
       }
 
@@ -530,7 +527,7 @@ void NfcService::handleNfcEnableDisableResponse(NfcEvent* event)
 
 void NfcService::enableNfc()
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", FUNC);
 
   sNfcManager->initialize();
 
@@ -541,12 +538,12 @@ void NfcService::enableNfc()
   // Otherwise, P2P device will not be discovered.
   sNfcManager->enableDiscovery();
 
-  ALOGD("%s: exit", __FUNCTION__);
+  ALOGD("%s: exit", FUNC);
 }
 
 void NfcService::disableNfc()
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", FUNC);
 
   if (mP2pLinkManager)
     mP2pLinkManager->enableDisable(false);
@@ -555,7 +552,7 @@ void NfcService::disableNfc()
 
   sNfcManager->deinitialize();
 
-  ALOGD("%s: exit", __FUNCTION__);
+  ALOGD("%s: exit", FUNC);
 }
 
 void NfcService::onP2pReceiveNdef(NdefMessage* ndef)

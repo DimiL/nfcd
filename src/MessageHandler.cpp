@@ -9,10 +9,7 @@
 #include "NdefMessage.h"
 #include "NdefRecord.h"
 #include "SessionId.h"
-
-#undef LOG_TAG
-#define LOG_TAG "nfcd"
-#include <utils/Log.h>
+#include "NfcDebug.h"
 
 #define MAJOR_VERSION (1)
 #define MINOR_VERSION (5)
@@ -51,7 +48,7 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
   int32_t sizeLe, size, request;
   uint32_t status;
 
-  ALOGD("%s enter data=%p, dataLen=%d", __func__, data, dataLen);
+  ALOGD("%s enter data=%p, dataLen=%d", FUNC, data, dataLen);
   parcel.setData((uint8_t*)data, dataLen);
   status = parcel.readInt32(&request);
   if (status != 0) {
@@ -89,7 +86,7 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
 
 void MessageHandler::processResponse(NfcResponseType response, NfcErrorCode error, void* data)
 {
-  ALOGD("%s enter response=%d", __func__, response);
+  ALOGD("%s enter response=%d", FUNC, response);
   Parcel parcel;
   parcel.writeInt32(response);
   parcel.writeInt32(error);
@@ -219,7 +216,7 @@ bool MessageHandler::handleConnectRequest(Parcel& parcel)
 
   //TODO should only read 1 octet here.
   int32_t techType = parcel.readInt32();
-  ALOGD("%s techType=%d", __func__, techType);
+  ALOGD("%s techType=%d", FUNC, techType);
   mService->handleConnect(techType);
   return true;
 }

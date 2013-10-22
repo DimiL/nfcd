@@ -1,9 +1,7 @@
 #include "SnepMessage.h"
 
 #include "NdefMessage.h"
-
-#define LOG_TAG "nfcd"
-#include <cutils/log.h>
+#include "NfcDebug.h"
 
 SnepMessage::SnepMessage()
  : mNdefMessage(NULL)
