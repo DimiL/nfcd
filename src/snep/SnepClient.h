@@ -20,7 +20,7 @@ public:
 
   void put(NdefMessage& msg);
   SnepMessage* get(NdefMessage& msg);
-  void connect();
+  bool connect();
   void close();
 
 private:

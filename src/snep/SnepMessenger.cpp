@@ -182,8 +182,10 @@ SnepMessage* SnepMessenger::getMessage()
 
 void SnepMessenger::close()
 {
-  if (mSocket != NULL)
+  if (mSocket) {
     mSocket->close();
+    mSocket = NULL;
+  }
 }
 
 bool SnepMessenger::socketSend(uint8_t field)

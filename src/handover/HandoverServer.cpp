@@ -43,6 +43,7 @@ void* HandoverConnectionThreadFunc(void* arg)
     // If yes. need to notify upper layer.
     NdefMessage* ndef = new NdefMessage();
     if(ndef->init(buffer)) {
+      ICallback->onMessageReceived(ndef);
       ALOGD("%s: get a complete NDEF message", __FUNCTION__);
     } else {
       ALOGD("%s: cannot get a complete NDEF message", __FUNCTION__);

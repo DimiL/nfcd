@@ -12,6 +12,7 @@
 #include <cutils/log.h>
 
 SnepClient::SnepClient()
+ : mMessenger(NULL)
 {
   mState = SnepClient::DISCONNECTED;
   mServiceName = SnepServer::DEFAULT_SERVICE_NAME;
@@ -22,7 +23,9 @@ SnepClient::SnepClient()
   mRwSize = SnepClient::DEFAULT_RWSIZE;
 }
 
-SnepClient::SnepClient(const char* serviceName) {
+SnepClient::SnepClient(const char* serviceName)
+ : mMessenger(NULL)
+{
   mServiceName = serviceName;
   mPort = -1;
   mAcceptableLength = SnepClient::DEFAULT_ACCEPTABLE_LENGTH;
@@ -31,7 +34,9 @@ SnepClient::SnepClient(const char* serviceName) {
   mRwSize = SnepClient::DEFAULT_RWSIZE;
 }
 
-SnepClient::SnepClient(int miu, int rwSize) {
+SnepClient::SnepClient(int miu, int rwSize)
+ : mMessenger(NULL)
+{
   mServiceName = SnepServer::DEFAULT_SERVICE_NAME;
   mPort = SnepServer::DEFAULT_PORT;
   mAcceptableLength = SnepClient::DEFAULT_ACCEPTABLE_LENGTH;
@@ -40,7 +45,9 @@ SnepClient::SnepClient(int miu, int rwSize) {
   mRwSize = rwSize;
 }
 
-SnepClient::SnepClient(const char* serviceName, int fragmentLength) {
+SnepClient::SnepClient(const char* serviceName, int fragmentLength)
+ : mMessenger(NULL)
+{
   mServiceName = serviceName;
   mPort = -1;
   mAcceptableLength = SnepClient::DEFAULT_ACCEPTABLE_LENGTH;
@@ -49,7 +56,9 @@ SnepClient::SnepClient(const char* serviceName, int fragmentLength) {
   mRwSize = SnepClient::DEFAULT_RWSIZE;
 }
 
-SnepClient::SnepClient(const char* serviceName, int acceptableLength, int fragmentLength) {
+SnepClient::SnepClient(const char* serviceName, int acceptableLength, int fragmentLength)
+ : mMessenger(NULL)
+{
   mServiceName = serviceName;
   mPort = -1;
   mAcceptableLength = acceptableLength;
@@ -120,11 +129,11 @@ SnepMessage* SnepClient::get(NdefMessage& msg)
   return mMessenger->getMessage();
 }
 
-void SnepClient::connect()
+bool SnepClient::connect()
 {
   if (mState != SnepClient::DISCONNECTED) {
     ALOGE("%s: snep already connected", __FUNCTION__);
-    return;
+    return false;
   }
   mState = SnepClient::CONNECTING;
 
@@ -138,7 +147,7 @@ void SnepClient::connect()
   if (!socket) {
     ALOGE("%s: could not connect to socket", __FUNCTION__);
     mState = SnepClient::DISCONNECTED;
-    return;
+    return false;
   }
 
   bool ret = false;
@@ -147,14 +156,14 @@ void SnepClient::connect()
       ALOGE("%s: could not connect to service (%s)", __FUNCTION__, mServiceName);
       mState = SnepClient::DISCONNECTED;
       delete socket;
-      return;
+      return false;
     }
   } else {
     if (!socket->connectToSap(mPort)) {
       ALOGE("%s: could not connect to sap (%d)", __FUNCTION__, mPort);
       mState = SnepClient::DISCONNECTED;
       delete socket;
-      return;
+      return false;
     }
   }
 
@@ -170,6 +179,8 @@ void SnepClient::connect()
   mMessenger = new SnepMessenger(true, socket, fragmentLength);
 
   mState = SnepClient::CONNECTED;
+
+  return true;
 }
 
 void SnepClient::close()

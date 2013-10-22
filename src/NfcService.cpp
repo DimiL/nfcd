@@ -66,7 +66,7 @@ NfcManager* NfcService::sNfcManager = NULL;
 
 NfcService::NfcService()
 {
-  mP2pLinkManager = new P2pLinkManager();
+  mP2pLinkManager = new P2pLinkManager(this);
 }
 
 NfcService::~NfcService()
@@ -167,6 +167,8 @@ void NfcService::handleLlcpLinkDeactivation(NfcEvent* event)
   if (pIP2pDevice->getMode() == NfcDepEndpoint::MODE_P2P_TARGET) {
     pIP2pDevice->disconnect();
   }
+
+  mP2pLinkManager->onLlcpDeactivated();
 }
 
 void NfcService::handleLlcpLinkActivation(NfcEvent* event)
@@ -202,6 +204,8 @@ void NfcService::handleLlcpLinkActivation(NfcEvent* event)
     ALOGE("%s: Unknown LLCP P2P mode", __func__);
     //stop();
   }
+
+  mP2pLinkManager->onLlcpActivated();
 
   TechDiscoveredEvent* data = new TechDiscoveredEvent();
   data->techCount = 1;
@@ -554,3 +558,7 @@ void NfcService::disableNfc()
   ALOGD("%s: exit", __FUNCTION__);
 }
 
+void NfcService::onP2pReceiveNdef(NdefMessage* ndef)
+{
+  // TODO : Notifiy upper layer
+}

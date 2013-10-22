@@ -25,13 +25,13 @@ HandoverClient::~HandoverClient()
   close();
 }
 
-void HandoverClient::connect()
+bool HandoverClient::connect()
 {
   ALOGD("%s: enter", __FUNCTION__);
 
   if (mState != HandoverClient::DISCONNECTED) {
     ALOGE("%s: socket already in use", __FUNCTION__);
-    return;
+    return false;
   }
   mState = HandoverClient::CONNECTING;
 
@@ -41,19 +41,20 @@ void HandoverClient::connect()
   if (!mSocket) {
     ALOGE("%s: could not connect to socket", __FUNCTION__);
     mState = HandoverClient::DISCONNECTED;
-    return;
+    return false;
   }
 
   if (!mSocket->connectToService(mServiceName)) {
     ALOGE("%s: could not connect to service (%s)", __FUNCTION__, mServiceName);
     delete mSocket;
     mState = HandoverClient::DISCONNECTED;
-    return;
+    return false;
   }
 
   mState = HandoverClient::CONNECTED;
 
   ALOGD("%s: exit", __FUNCTION__);
+  return true;
 }
 
 void HandoverClient::put(NdefMessage& msg)

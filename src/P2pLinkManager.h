@@ -8,9 +8,12 @@
 #include "ISnepCallback.h"
 #include "IHandoverCallback.h"
 
+class NfcService;
 class NdefMessage;
 class SnepServer;
+class SnepClient;
 class HandoverServer;
+class HandoverClient;
 
 class SnepCallback
   : public ISnepCallback
@@ -29,21 +32,34 @@ class HandoverCallback
 public:
    HandoverCallback();
    virtual ~HandoverCallback();
+
+   virtual void onMessageReceived(NdefMessage* msg);
 };
 
 class P2pLinkManager{
 public:
-  P2pLinkManager();
+  P2pLinkManager(NfcService* service);
   ~P2pLinkManager();
 
+  void notifyNdefReceived(NdefMessage* ndef);
   void enableDisable(bool bEnable);
   void push(NdefMessage* ndef);
+  void onLlcpActivated();
+  void onLlcpDeactivated();
 
 private:
+  void connectClients();
+  void disconnectClients();
+
+  NfcService* mNfcService;
+
   SnepCallback* mSnepCallback;
-  HandoverCallback* mHandoverCallback;
   SnepServer* mSnepServer;
+  SnepClient* mSnepClient;
+
+  HandoverCallback* mHandoverCallback;
   HandoverServer* mHandoverServer;
+  HandoverClient* mHandoverClient;
 };
 
 #endif

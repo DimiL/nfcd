@@ -5,9 +5,13 @@
 #ifndef mozilla_nfcd_IHandoverCallback_h
 #define mozilla_nfcd_IHandoverCallback_h
 
+class NdefMessage;
+
 class IHandoverCallback {
 public:
-  virtual ~IHandoverCallback() {};
+  virtual void onMessageReceived(NdefMessage* msg) = 0;
+
+  virtual ~IHandoverCallback(){};
 };
 
 #endif

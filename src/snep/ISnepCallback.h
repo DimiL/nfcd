@@ -13,7 +13,7 @@ public:
   virtual SnepMessage* doPut(NdefMessage* msg) = 0;
   virtual SnepMessage* doGet(int acceptableLength, NdefMessage* msg) = 0;
 
-  virtual ~ISnepCallback() {};
+  virtual ~ISnepCallback(){};
 };
 
 #endif

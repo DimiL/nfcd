@@ -13,7 +13,7 @@ public:
   HandoverClient();
   ~HandoverClient();
 
-  void connect();
+  bool connect();
   void put(NdefMessage& msg);
   void close();
 
