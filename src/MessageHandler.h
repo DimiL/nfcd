@@ -12,6 +12,7 @@
 
 class NfcIpcSocket;
 class NfcService;
+class NdefMessage;
 
 class MessageHandler {
 public:
@@ -42,13 +43,18 @@ private:
 
   void sendResponse(android::Parcel& parcel);
 
+  bool sendNdefMsg(android::Parcel& parcel, NdefMessage* ndef);
+
   NfcIpcSocket* mSocket;
   NfcService* mService;
 };
 
 struct TechDiscoveredEvent {
+  bool isNewSession;
   uint32_t techCount;
   void* techList;
+  uint32_t ndefMsgCount;
+  NdefMessage* ndefMsg;
 };
 
 #endif // mozilla_nfcd_MessageHandler_h

@@ -205,9 +205,12 @@ void NfcService::handleLlcpLinkActivation(NfcEvent* event)
   mP2pLinkManager->onLlcpActivated();
 
   TechDiscoveredEvent* data = new TechDiscoveredEvent();
+  data->isNewSession = true;
   data->techCount = 1;
   uint8_t techs[] = { NFC_TECH_P2P };
   data->techList = &techs;
+  data->ndefMsgCount = 0;
+  data->ndefMsg = NULL;
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
   delete data;
   ALOGD("%s: exit", FUNC);
@@ -242,8 +245,11 @@ void NfcService::handleTagDiscovered(NfcEvent* event)
   }
 
   TechDiscoveredEvent* data = new TechDiscoveredEvent();
+  data->isNewSession = true;
   data->techCount = techCount;
   data->techList = &gonkTechList.front();
+  data->ndefMsgCount = 0;
+  data->ndefMsg = NULL;
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
   delete data;
 
@@ -517,8 +523,7 @@ void NfcService::handleEnableResponse(NfcEvent* event)
   bool enable = event->arg1;
   if (enable) {
     enableNfc();
-  }
-  else {
+  } else {
     disableNfc();
   }
   mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
@@ -554,7 +559,15 @@ void NfcService::disableNfc()
   ALOGD("%s: exit", FUNC);
 }
 
-void NfcService::onP2pReceiveNdef(NdefMessage* ndef)
+void NfcService::onP2pReceivedNdef(NdefMessage* ndef)
 {
-  // TODO : Notifiy upper layer
+  TechDiscoveredEvent* data = new TechDiscoveredEvent();
+  data->isNewSession = false;
+  data->techCount = 2;
+  uint8_t techs[] = { NFC_TECH_P2P, NFC_TECH_NDEF };
+  data->techList = &techs;
+  data->ndefMsgCount = 1;
+  data->ndefMsg = ndef;
+  mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
+  delete data;
 }

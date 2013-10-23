@@ -94,7 +94,7 @@ P2pLinkManager::~P2pLinkManager()
 
 void P2pLinkManager::notifyNdefReceived(NdefMessage* ndef)
 {
-  mNfcService->onP2pReceiveNdef(ndef);
+  mNfcService->onP2pReceivedNdef(ndef);
 }
 
 void P2pLinkManager::enableDisable(bool bEnable)

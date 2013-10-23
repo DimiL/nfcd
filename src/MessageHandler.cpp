@@ -12,7 +12,7 @@
 #include "NfcDebug.h"
 
 #define MAJOR_VERSION (1)
-#define MINOR_VERSION (5)
+#define MINOR_VERSION (7)
 
 using android::Parcel;
 
@@ -28,11 +28,16 @@ void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
 {
   TechDiscoveredEvent *event = reinterpret_cast<TechDiscoveredEvent*>(data);
 
-  parcel.writeInt32(SessionId::generateNewId());
+  if (event->isNewSession) {
+    parcel.writeInt32(SessionId::generateNewId());
+  } else {
+    parcel.writeInt32(SessionId::getCurrentId());
+  }
   parcel.writeInt32(event->techCount);
   void* dest = parcel.writeInplace(event->techCount);
   memcpy(dest, event->techList, event->techCount);
-
+  parcel.writeInt32(event->ndefMsgCount);
+  sendNdefMsg(parcel, event->ndefMsg);
   sendResponse(parcel);
 }
 
@@ -271,6 +276,20 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
 
   parcel.writeInt32(SessionId::getCurrentId());
 
+  sendNdefMsg(parcel, ndef);
+  sendResponse(parcel);
+  return true;
+}
+
+bool MessageHandler::handleResponse(Parcel& parcel)
+{
+  parcel.writeInt32(SessionId::getCurrentId());
+  sendResponse(parcel);
+  return true;
+}
+
+bool MessageHandler::sendNdefMsg(Parcel& parcel, NdefMessage* ndef)
+{
   int numRecords = ndef->mRecords.size();
   ALOGD("numRecords=%d", numRecords);
   parcel.writeInt32(numRecords);
@@ -307,13 +326,5 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
     }
   }
 
-  sendResponse(parcel);
-  return true;
-}
-
-bool MessageHandler::handleResponse(Parcel& parcel)
-{
-  parcel.writeInt32(SessionId::getCurrentId());
-  sendResponse(parcel);
   return true;
 }

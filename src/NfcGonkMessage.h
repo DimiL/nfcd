@@ -81,7 +81,8 @@ typedef enum {
   NFC_TECH_UNKNOWN = -1,
   NFC_TECH_NDEF = 0,
   NFC_TECH_NDEF_WRITABLE = 1,
-  NFC_TECH_P2P = 2,
+  NFC_TECH_NDEF_FORMATABLE = 2,
+  NFC_TECH_P2P = 3,
   NFC_TECH_NFCA = 3,
   NFC_TECH_NFCB = 4,
   NFC_TECH_NFCF = 5,
@@ -123,7 +124,7 @@ typedef struct {
 typedef uint32_t NfcSessionId;
 
 typedef struct {
-  NfcPowerLevel powerSave;
+  NfcPowerLevel powerLevel;
 } NfcConfigRequest;
 
 typedef struct {
@@ -289,6 +290,9 @@ typedef struct {
   NfcSessionId sessionId;
   uint32_t numOfTechnogies;
   uint8_t* technology;
+
+  uint32_t numOfNdefMsgs;
+  NdefMessagePdu* ndef;
 } NfcNotificationTechDiscovered;
 
 typedef enum {

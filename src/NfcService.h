@@ -60,7 +60,7 @@ public:
   void handleEnableResponse(NfcEvent* event);
 
   void onConnected();
-  void onP2pReceiveNdef(NdefMessage* ndef);
+  void onP2pReceivedNdef(NdefMessage* ndef);
   void enableNfc();
   void disableNfc();
 
