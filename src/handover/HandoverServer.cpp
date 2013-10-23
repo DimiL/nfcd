@@ -46,8 +46,6 @@ void* HandoverConnectionThreadFunc(void* arg)
     } else {
       ALOGD("%s: cannot get a complete NDEF message", FUNC);
     }
-    // TODO : Check if we need to delete here or it will be release at upper layer
-    // delete ndef;
   }
 
   if (pConnectionThread->mSock)
