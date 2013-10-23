@@ -12,10 +12,11 @@
 #include "NfcDebug.h"
 
 HandoverClient::HandoverClient()
+ : mSocket(NULL)
+ , mServiceName(HandoverServer::DEFAULT_SERVICE_NAME)
+ , mState(HandoverClient::DISCONNECTED)
+ , mMiu(HandoverClient::DEFAULT_MIU)
 {
-  mState = HandoverClient::DISCONNECTED;
-  mServiceName = HandoverServer::DEFAULT_SERVICE_NAME;
-  mMiu = HandoverClient::DEFAULT_MIU;
 }
 
 HandoverClient::~HandoverClient()
@@ -44,7 +45,9 @@ bool HandoverClient::connect()
 
   if (!mSocket->connectToService(mServiceName)) {
     ALOGE("%s: could not connect to service (%s)", FUNC, mServiceName);
+    mSocket->close();
     delete mSocket;
+    mSocket = NULL;
     mState = HandoverClient::DISCONNECTED;
     return false;
   }
@@ -77,6 +80,8 @@ void HandoverClient::close()
 
   if (mSocket) {
     mSocket->close();
+    delete mSocket;
+    mSocket = NULL;
   }
 
   mState = HandoverClient::DISCONNECTED;

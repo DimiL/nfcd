@@ -52,11 +52,11 @@ private:
 
   static const int HEADER_LENGTH = 6;
 
+  NdefMessage* mNdefMessage;
   uint8_t mVersion;
   uint8_t mField;
   uint32_t mLength;
   uint32_t mAcceptableLength;
-  NdefMessage* mNdefMessage;
 };
 
 #endif

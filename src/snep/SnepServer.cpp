@@ -112,44 +112,57 @@ void* snepServerThreadFunc(void* arg)
   return NULL;
 }
 
-SnepServer::SnepServer(ISnepCallback* ICallback) {
-  mCallback = ICallback;
-  mServiceName = DEFAULT_SERVICE_NAME;
-  mServiceSap = DEFAULT_PORT;
-  mFragmentLength = -1;
-  mMiu = DEFAULT_MIU;
-  mRwSize = DEFAULT_RW_SIZE;
+SnepServer::SnepServer(ISnepCallback* ICallback)
+ : mServerSocket(NULL)
+ , mCallback(ICallback)
+ , mServerRunning(false)
+ , mServiceName(DEFAULT_SERVICE_NAME)
+ , mServiceSap(DEFAULT_PORT)
+ , mFragmentLength(-1)
+ , mMiu(DEFAULT_MIU)
+ , mRwSize(DEFAULT_RW_SIZE)
+{
 }
 
-SnepServer::SnepServer(const char* serviceName, int serviceSap, ISnepCallback* ICallback) {
-  mCallback = ICallback;
-  mServiceName = serviceName;
-  mServiceSap = serviceSap;
-  mFragmentLength = -1;
-  mMiu = DEFAULT_MIU;
-  mRwSize = DEFAULT_RW_SIZE;
+SnepServer::SnepServer(const char* serviceName, int serviceSap, ISnepCallback* ICallback)
+ : mServerSocket(NULL)
+ , mCallback(ICallback)
+ , mServerRunning(false)
+ , mServiceName(serviceName)
+ , mServiceSap(serviceSap)
+ , mFragmentLength(-1)
+ , mMiu(DEFAULT_MIU)
+ , mRwSize(DEFAULT_RW_SIZE)
+{
 }
 
-SnepServer::SnepServer(ISnepCallback* ICallback, int miu, int rwSize) {
-  mCallback = ICallback;
-  mServiceName = DEFAULT_SERVICE_NAME;
-  mServiceSap = DEFAULT_PORT;
-  mFragmentLength = -1;
-  mMiu = miu;
-  mRwSize = rwSize;
+SnepServer::SnepServer(ISnepCallback* ICallback, int miu, int rwSize)
+ : mServerSocket(NULL)
+ , mCallback(ICallback)
+ , mServerRunning(false)
+ , mServiceName(DEFAULT_SERVICE_NAME)
+ , mServiceSap(DEFAULT_PORT)
+ , mFragmentLength(-1)
+ , mMiu(miu)
+ , mRwSize(rwSize)
+{
 }
 
-SnepServer::SnepServer(const char* serviceName, int serviceSap, int fragmentLength, ISnepCallback* ICallback) {
-  mCallback = ICallback;
-  mServiceName = serviceName;
-  mServiceSap = serviceSap;
-  mFragmentLength = fragmentLength;
-  mMiu = DEFAULT_MIU;
-  mRwSize = DEFAULT_RW_SIZE;
+SnepServer::SnepServer(const char* serviceName, int serviceSap, int fragmentLength, ISnepCallback* ICallback)
+ : mServerSocket(NULL)
+ , mCallback(ICallback)
+ , mServerRunning(false)
+ , mServiceName(serviceName)
+ , mServiceSap(serviceSap)
+ , mFragmentLength(fragmentLength)
+ , mMiu(DEFAULT_MIU)
+ , mRwSize(DEFAULT_RW_SIZE)
+{
 }
 
 SnepServer::~SnepServer()
 {
+  stop();
 }
 
 void SnepServer::start()
@@ -178,7 +191,11 @@ void SnepServer::start()
 void SnepServer::stop()
 {
   // TODO : need to kill thread here
-  mServerSocket->close();
+  if (mServerSocket) {
+    mServerSocket->close();
+    delete mServerSocket;
+    mServerSocket = NULL;
+  }
   mServerRunning = false;
 
   // Use pthread_join here to make sure all thread is finished ?

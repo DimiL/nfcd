@@ -41,12 +41,13 @@ void* HandoverConnectionThreadFunc(void* arg)
     // If yes. need to notify upper layer.
     NdefMessage* ndef = new NdefMessage();
     if(ndef->init(buffer)) {
-      ICallback->onMessageReceived(ndef);
       ALOGD("%s: get a complete NDEF message", FUNC);
+      ICallback->onMessageReceived(ndef);
     } else {
       ALOGD("%s: cannot get a complete NDEF message", FUNC);
     }
-    delete ndef;
+    // TODO : Check if we need to delete here or it will be release at upper layer
+    // delete ndef;
   }
 
   if (pConnectionThread->mSock)
@@ -120,9 +121,12 @@ void* handoverServerThreadFunc(void* arg)
 }
 
 
-HandoverServer::HandoverServer(IHandoverCallback* ICallback) {
-  mCallback = ICallback;
-  mServiceSap = HANDOVER_SAP;
+HandoverServer::HandoverServer(IHandoverCallback* ICallback)
+ : mServerSocket(NULL)
+ , mServiceSap(HANDOVER_SAP)
+ , mCallback(ICallback)
+ , mServerRunning(false)
+{
 }
 
 HandoverServer::~HandoverServer()
@@ -154,7 +158,11 @@ void HandoverServer::start()
 void HandoverServer::stop()
 {
   // TODO : need to kill thread here
-  mServerSocket->close();
+  if (mServerSocket) {
+    mServerSocket->close();
+    delete mServerSocket;
+    mServerSocket = NULL;
+  }
   mServerRunning = false;
 
   // use pthread_join here to make sure all thread is finished ?
