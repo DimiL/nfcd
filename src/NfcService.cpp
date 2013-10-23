@@ -236,6 +236,9 @@ void NfcService::handleTagDiscovered(NfcEvent* event)
 {
   void* pTag = event->obj;
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(pTag);
+
+  NdefMessage* pNdefMessage = pINfcTag->findAndReadNdef();
+
   std::vector<TagTechnology>& techList = pINfcTag->getTechList();
   std::vector<NfcTechnology> gonkTechList;
   int techCount = techList.size();
@@ -248,8 +251,8 @@ void NfcService::handleTagDiscovered(NfcEvent* event)
   data->isNewSession = true;
   data->techCount = techCount;
   data->techList = &gonkTechList.front();
-  data->ndefMsgCount = 0;
-  data->ndefMsg = NULL;
+  data->ndefMsgCount = pNdefMessage ? 1 : 0;
+  data->ndefMsg = pNdefMessage;
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
   delete data;
 

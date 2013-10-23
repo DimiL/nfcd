@@ -33,6 +33,7 @@ public:
   bool reconnect();
   bool presenceCheck();
   bool makeReadOnly();
+  bool isNdefFormatable();
 
   std::vector<TagTechnology>& getTechList() { return mTechList; };
   std::vector<int>& getTechHandles() { return mTechHandles; };
@@ -186,6 +187,9 @@ public:
    */
   static bool doMakeReadonly();
 
+
+  static bool doIsNdefFormatable();
+
 private:
   pthread_mutex_t mMutex;
 
@@ -229,6 +233,10 @@ private:
    * @return             True if ok.
    */
   static bool switchRfInterface(tNFA_INTF_TYPE rfInterface);
+
+  void addTechnology(TagTechnology tech, int handle, int libnfctype);
+
+  int getConnectedLibNfcType();
 };
 
 #endif // mozilla_nfcd_NfcTagManager_h

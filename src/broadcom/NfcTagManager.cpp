@@ -138,7 +138,7 @@ NdefDetail* NfcTagManager::ReadNdefDetail()
 
 NdefMessage* NfcTagManager::findAndReadNdef()
 {
-  NdefMessage* pNdefMsg = NULL;
+  NdefMessage* ndefMsg = NULL;
   bool foundFormattable = false;
   int formattableHandle = 0;
   int formattableLibNfcType = 0;
@@ -163,6 +163,20 @@ NdefMessage* NfcTagManager::findAndReadNdef()
       ALOGI("Connect Succeeded! (status = %d)", status);
     }
 
+    // Check if this type is NDEF formatable
+    if (!foundFormattable) {
+      if (isNdefFormatable()) {
+        foundFormattable = true;
+        formattableHandle = getConnectedHandle();
+        formattableLibNfcType = getConnectedLibNfcType();
+        // We'll only add formattable tech if no ndef is
+        // found - this is because libNFC refuses to format
+        // an already NDEF formatted tag.
+      }
+      // TODO : check why Android call reconnect here
+      //reconnect();
+    }
+
     int ndefinfo[2];
     status = checkNdefWithStatus(ndefinfo);
     if (status != 0) {
@@ -182,11 +196,11 @@ NdefMessage* NfcTagManager::findAndReadNdef()
     std::vector<uint8_t> buf;
     readNdef(buf);
     if (buf.size() != 0) {
-      pNdefMsg = new NdefMessage();
-      if (pNdefMsg->init(buf)) {
-        // TODO : Implement addNdefTechnology and reconnt
-        // addNdefTechnology
-        // reconnect();
+      ndefMsg = new NdefMessage();
+      if (ndefMsg->init(buf)) {
+        addTechnology(NDEF, getConnectedHandle(), getConnectedLibNfcType());
+        // TODO : check why android call reconnect here
+        //reconnect();
       } else {
         generateEmptyNdef = true;
       }
@@ -198,9 +212,17 @@ NdefMessage* NfcTagManager::findAndReadNdef()
       ALOGI("Couldn't read NDEF!");
       // TODO : Implement generate empty Ndef
       // stop()
-    }           
+    }
+    break;
   }
-  return pNdefMsg;
+  
+  if (!ndefMsg && foundFormattable) {
+    // Tag is not NDEF yet, and found a formattable target,
+    // so add formattable tech to tech list.
+    addTechnology(NDEF_FORMATABLE, formattableHandle, formattableLibNfcType);
+  } 
+
+  return ndefMsg;
 }
 
 bool NfcTagManager::disconnect()
@@ -858,6 +880,22 @@ bool NfcTagManager::switchRfInterface(tNFA_INTF_TYPE rfInterface)
   return rVal;
 }
 
+void NfcTagManager::addTechnology(TagTechnology tech, int handle, int libnfctype)
+{
+  mTechList.push_back(tech);
+  mTechHandles.push_back(handle);
+  mTechLibNfcTypes.push_back(libnfctype);
+}
+
+int NfcTagManager::getConnectedLibNfcType()
+{
+  if (mConnectedTechIndex != -1 && mConnectedTechIndex < (int)mTechLibNfcTypes.size()) {
+    return mTechLibNfcTypes[mConnectedTechIndex];
+  } else {
+    return 0;
+  }
+}
+
 bool NfcTagManager::doDisconnect()
 {
   ALOGD("%s: enter", __FUNCTION__);
@@ -952,6 +990,23 @@ TheEnd:
   return result;
 }
 
+bool NfcTagManager::doIsNdefFormatable()
+{
+  bool isFormattable = false;
+
+  switch (NfcTag::getInstance().getProtocol())
+  {
+    case NFA_PROTOCOL_T1T:
+    case NFA_PROTOCOL_ISO15693:
+      isFormattable = true;
+      break;
+    case NFA_PROTOCOL_T2T:
+        isFormattable = NfcTag::getInstance().isMifareUltralight() ? true : false;
+  }
+  ALOGD("%s: is formattable=%u", __FUNCTION__, isFormattable);
+  return isFormattable; 
+}
+
 bool NfcTagManager::presenceCheck() 
 {
   bool result;
@@ -995,4 +1050,9 @@ bool NfcTagManager::makeReadOnly()
   result = doMakeReadonly();
   pthread_mutex_unlock(&mMutex);
   return result;
+}
+
+bool NfcTagManager::isNdefFormatable()
+{
+  return doIsNdefFormatable();
 }
