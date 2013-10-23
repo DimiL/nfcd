@@ -147,9 +147,22 @@ void MessageHandler::sendResponse(Parcel& parcel)
 
 bool MessageHandler::handleConfigRequest(Parcel& parcel)
 {
-  int sessionId = parcel.readInt32();
-  //TODO check SessionId
-  return mService->handleConfigRequest();
+  // TODO, what does NFC_POWER_FULL mean
+  // - OFF -> ON?
+  // - Low Power -> Full Power?
+  int powerLevel = parcel.readInt32();
+  bool value;
+  switch (powerLevel) {
+    case NFC_POWER_OFF: // Fall through.
+    case NFC_POWER_FULL:
+      value = powerLevel == NFC_POWER_FULL;
+      return mService->handleEnableRequest(value);
+    case NFC_POWER_LOW:
+      value = powerLevel == NFC_POWER_LOW;
+      return mService->handleEnterLowPowerRequest(value);
+  }
+  return false;
+
 }
 
 bool MessageHandler::handleReadNdefDetailRequest(Parcel& parcel)

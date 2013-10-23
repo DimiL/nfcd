@@ -56,18 +56,23 @@ typedef enum {
    * No action, a no-op to be able to mimic optional parameters once
    * additional config parameters will be introduced.
    */
-  NFC_POWER_SAVING_NO_OP = -1,
+  NFC_POWER_NO_OP = -1,
 
   /**
-   * Exit power saving mode.
+   * Turn off NFC chip
    */
-  NFC_POWER_SAVING_EXIT = 0,
+  NFC_POWER_OFF = 0,
 
   /**
-   * Enter power saving mode.
+   * Request NFC chip to goto low-power mode.
    */
-  NFC_POWER_SAVING_ENTER = 1,
-} NfcPowerSavingMode;
+  NFC_POWER_LOW = 1,
+
+  /**
+   * Request NFC chip to goto full-power mode.
+   */
+  NFC_POWER_FULL = 2,
+} NfcPowerLevel;
 
 /**
  * NFC technologies.
@@ -118,22 +123,10 @@ typedef struct {
 typedef uint32_t NfcSessionId;
 
 typedef struct {
-  /**
-   * The sessionId must correspond to that of a prior
-   * NfcNotificationTechDiscovered.
-   */
-  NfcSessionId sessionId;
-
-  NfcPowerSavingMode powerSave;
+  NfcPowerLevel powerSave;
 } NfcConfigRequest;
 
 typedef struct {
-  /**
-   * The sessionId must correspond to that of a prior
-   * NfcNotificationTechDiscovered.
-   */
-  NfcSessionId sessionId;
-
   /**
    * possible values are : TODO
    */

@@ -40,7 +40,7 @@ public:
   void handleLlcpLinkActivation(NfcEvent* event);
   void handleLlcpLinkDeactivation(NfcEvent* event);
   int handleConnect(int technology);
-  bool handleConfigRequest();
+  bool handleConfigRequest(int powerLevel);
   void handleConfigResponse(NfcEvent* event);
   bool handleReadNdefDetailRequest();
   void handleReadNdefDetailResponse(NfcEvent* event);
@@ -54,10 +54,10 @@ public:
   void handlePushNdefResponse(NfcEvent* event);
   bool handleMakeNdefReadonlyRequest();
   void handleMakeNdefReadonlyResponse(NfcEvent* event);
-  bool handlePowerOnOffRequest(bool onOff);
-  void handlePowerOnOffResponse(NfcEvent* event);
-  bool handleNfcEnableDisableRequest(bool enableDisable);
-  void handleNfcEnableDisableResponse(NfcEvent* event);
+  bool handleEnterLowPowerRequest(bool enter);
+  void handleEnterLowPowerResponse(NfcEvent* event);
+  bool handleEnableRequest(bool enable);
+  void handleEnableResponse(NfcEvent* event);
 
   void onConnected();
 
