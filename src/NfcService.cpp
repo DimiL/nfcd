@@ -37,8 +37,8 @@ typedef enum {
   MSG_NDEF_TAG_LIST,
   MSG_CONFIG,
   MSG_MAKE_NDEF_READONLY,
-  MSG_POWER_ON_OFF,
-  MSG_NFC_ENABLE_DISABLE
+  MSG_LOW_POWER,
+  MSG_ENABLE,
 } NfcEventType;
 
 class NfcEvent {
@@ -307,11 +307,11 @@ void* NfcService::eventLoop()
         case MSG_MAKE_NDEF_READONLY:
           handleMakeNdefReadonlyResponse(event);
           break;
-        case MSG_POWER_ON_OFF:
-          handlePowerOnOffResponse(event);
+        case MSG_LOW_POWER:
+          handleEnterLowPowerResponse(event);
           break;
-        case MSG_NFC_ENABLE_DISABLE:
-          handleNfcEnableDisableResponse(event);
+        case MSG_ENABLE:
+          handleEnableResponse(event);
           break;
         default:
           ALOGE("%s: NFCService bad message", FUNC);
@@ -350,7 +350,7 @@ int NfcService::handleConnect(int technology)
   return status;
 }
 
-bool NfcService::handleConfigRequest()
+bool NfcService::handleConfigRequest(int powerLevel)
 {
   NfcEvent *event = new NfcEvent(MSG_CONFIG);
   mQueue.push_back(event);
@@ -483,46 +483,45 @@ void NfcService::handleMakeNdefReadonlyResponse(NfcEvent* event)
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
 }
 
-bool NfcService::handlePowerOnOffRequest(bool onOff)
+bool NfcService::handleEnterLowPowerRequest(bool enter)
 {
-  NfcEvent *event = new NfcEvent(MSG_POWER_ON_OFF);
-  event->arg1 = onOff;
+  NfcEvent *event = new NfcEvent(MSG_LOW_POWER);
+  event->arg1 = enter;
   mQueue.push_back(event);
   sem_post(&thread_sem);
   return true;
 }
 
-void NfcService::handlePowerOnOffResponse(NfcEvent* event)
+void NfcService::handleEnterLowPowerResponse(NfcEvent* event)
 {
-  bool onOff = event->arg1;
-  if (onOff)
-    sNfcManager->enableDiscovery();
-  else
+  bool enter = event->arg1;
+  if (enter)
     sNfcManager->disableDiscovery();
+  else
+    sNfcManager->enableDiscovery();
 
-  return;
+  mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
 }
 
-bool NfcService::handleNfcEnableDisableRequest(bool enableDisable)
+bool NfcService::handleEnableRequest(bool enable)
 {
-  NfcEvent *event = new NfcEvent(MSG_NFC_ENABLE_DISABLE);
-  event->arg1 = enableDisable;
+  NfcEvent *event = new NfcEvent(MSG_ENABLE);
+  event->arg1 = enable;
   mQueue.push_back(event);
   sem_post(&thread_sem);
   return true;
 }
 
-void NfcService::handleNfcEnableDisableResponse(NfcEvent* event)
+void NfcService::handleEnableResponse(NfcEvent* event)
 {
-  bool enableDisable = event->arg1;
-  if (enableDisable) {
+  bool enable = event->arg1;
+  if (enable) {
     enableNfc();
   }
   else {
     disableNfc();
   }
-
-  return;
+  mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
 }
 
 void NfcService::enableNfc()
