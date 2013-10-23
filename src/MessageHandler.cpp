@@ -294,6 +294,9 @@ bool MessageHandler::handleResponse(Parcel& parcel)
 
 bool MessageHandler::sendNdefMsg(Parcel& parcel, NdefMessage* ndef)
 {
+  if (!ndef)
+    return false;
+
   int numRecords = ndef->mRecords.size();
   ALOGD("numRecords=%d", numRecords);
   parcel.writeInt32(numRecords);
