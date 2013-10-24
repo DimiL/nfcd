@@ -9,9 +9,9 @@
 #include "NfcService.h"
 #include "NfcDebug.h"
 
-static const char* HANDOVER_REQUEST = "urn:nfc:wkt:Hr";
-static const char* HANDOVER_SELECT = "urn:nfc:wkt:Hs";
-static const char* HANDOVER_CARRIER = "urn:nfc:wkt:Hc";
+static const uint8_t RTD_HANDOVER_REQUEST[2] = {0x48, 0x72};  // "Hr"
+static const uint8_t RTD_HANDOVER_SELECT[2] = {0x48, 0x73};   // "Hs"
+static const uint8_t RTD_HANDOVER_CARRIER[2] = {0x48, 0x63};  // "Hc"
 
 static P2pLinkManager* sP2pLinkManager = NULL;
 
@@ -69,7 +69,8 @@ void HandoverCallback::onMessageReceived(NdefMessage* ndef)
 }
 
 P2pLinkManager::P2pLinkManager(NfcService* service)
- : mSnepClient(NULL)
+ : mLinkState(LINK_STATE_DOWN)
+ , mSnepClient(NULL)
  , mHandoverClient(NULL)
 {
   mSnepCallback = new SnepCallback();
@@ -124,18 +125,15 @@ void P2pLinkManager::push(NdefMessage* ndef)
     NdefRecord* record = &(ndef->mRecords[0]);
     if (NdefRecord::TNF_WELL_KNOWN == record->mTnf) {
       const int size = record->mType.size();
-      char* type = new char[size];
-      for(int i = 0; i < size; i++) {
-        type[i] = record->mType[i];
+      std::vector<uint8_t>& type = record->mType;
+
+      if (size == 2) {
+        if (((type[0] == RTD_HANDOVER_REQUEST[0]) && (type[1] == RTD_HANDOVER_REQUEST[1])) ||
+            ((type[0] == RTD_HANDOVER_SELECT[0])  && (type[1] == RTD_HANDOVER_SELECT[1] )) ||
+            ((type[0] == RTD_HANDOVER_CARRIER[0]) && (type[1] == RTD_HANDOVER_CARRIER[1]))) {
+          handover = true;
+        } 
       }
-      
-      if (strncmp(HANDOVER_REQUEST, type, size) == 0 ||
-          strncmp(HANDOVER_SELECT, type, size) == 0 ||
-          strncmp(HANDOVER_CARRIER, type, size) == 0) {
-        handover = true;
-      }
-  
-      delete type;
     }
   }
 
@@ -155,12 +153,16 @@ void P2pLinkManager::push(NdefMessage* ndef)
 
 void P2pLinkManager::onLlcpActivated()
 {
+  mLinkState = LINK_STATE_UP;
+
   // Connect SNEP/HANDOVER client once llcp is activated.
   connectClients();
 }
 
 void P2pLinkManager::onLlcpDeactivated()
 {
+  mLinkState = LINK_STATE_DOWN;
+
   disconnectClients();
 }
 
@@ -197,4 +199,9 @@ void P2pLinkManager::disconnectClients()
     delete mHandoverClient;
     mHandoverClient = NULL;
   }
+}
+
+bool P2pLinkManager::isLlcpActive()
+{
+  return mLinkState != LINK_STATE_DOWN;
 }

@@ -46,10 +46,16 @@ public:
   void push(NdefMessage* ndef);
   void onLlcpActivated();
   void onLlcpDeactivated();
+  bool isLlcpActive();
 
 private:
+  static const int LINK_STATE_DOWN = 1;
+  static const int LINK_STATE_UP = 2;
+
   void connectClients();
   void disconnectClients();
+
+  int mLinkState;
 
   NfcService* mNfcService;
 

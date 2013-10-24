@@ -432,8 +432,16 @@ bool NfcService::handleWriteNdefRequest(NdefMessage* ndef)
 void NfcService::handleWriteNdefResponse(NfcEvent* event)
 {
   NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->obj);
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
-  bool result = pINfcTag->writeNdef(*ndef);
+
+  // Use single API wirte to send data.
+  // nfcd check current connection is p2p or tag.
+  if (mP2pLinkManager->isLlcpActive()) {
+    mP2pLinkManager->push(ndef);
+  } else {
+    INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
+    pINfcTag->writeNdef(*ndef);
+  }
+
   delete ndef;
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
 }
