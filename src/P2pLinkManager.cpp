@@ -111,23 +111,19 @@ void P2pLinkManager::enableDisable(bool bEnable)
   }
 }
 
-void P2pLinkManager::push(NdefMessage* ndef)
+void P2pLinkManager::push(NdefMessage& ndef)
 {
-  if (!ndef)
-    return;
-
   // Handover protocol is processed in upper layer. Currently gonk-ptotocol support one
   // API called push to send NDEF message through a P2P link, but nfcd need to know if
   // an NDEF message should be sent by SNEP or HANDOVER client.
   // So we parse the NDEF message here to know if should sent through HANDOVER.
   bool handover = false;
-  if (ndef->mRecords.size() > 0) {
-    NdefRecord* record = &(ndef->mRecords[0]);
+  if (ndef.mRecords.size() > 0) {
+    NdefRecord* record = &(ndef.mRecords[0]);
     if (NdefRecord::TNF_WELL_KNOWN == record->mTnf) {
-      const int size = record->mType.size();
       std::vector<uint8_t>& type = record->mType;
 
-      if (size == 2) {
+      if (record->mType.size() == 2) {
         if (((type[0] == RTD_HANDOVER_REQUEST[0]) && (type[1] == RTD_HANDOVER_REQUEST[1])) ||
             ((type[0] == RTD_HANDOVER_SELECT[0])  && (type[1] == RTD_HANDOVER_SELECT[1] )) ||
             ((type[0] == RTD_HANDOVER_CARRIER[0]) && (type[1] == RTD_HANDOVER_CARRIER[1]))) {
@@ -140,12 +136,12 @@ void P2pLinkManager::push(NdefMessage* ndef)
   if (handover) {
     ALOGD("%s: pushed by handover protocol", FUNC);
     if (mHandoverClient)
-      mHandoverClient->put(*ndef);
+      mHandoverClient->put(ndef);
     else
       ALOGE("%s: handover client not connected", FUNC);
   } else {
     if (mSnepClient)
-      mSnepClient->put(*ndef);
+      mSnepClient->put(ndef);
     else
       ALOGE("%s: snep client not connected", FUNC);
   }

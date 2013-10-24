@@ -43,7 +43,7 @@ public:
 
   void notifyNdefReceived(NdefMessage* ndef);
   void enableDisable(bool bEnable);
-  void push(NdefMessage* ndef);
+  void push(NdefMessage& ndef);
   void onLlcpActivated();
   void onLlcpDeactivated();
   bool isLlcpActive();
