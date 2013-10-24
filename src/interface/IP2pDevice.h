@@ -5,6 +5,8 @@
 #ifndef mozilla_nfcd_IP2pDevice_h
 #define mozilla_nfcd_IP2pDevice_h
 
+#define INTERFACE_P2P_DEVICE  "P2pDevice"
+
 class IP2pDevice {
 public:
   virtual ~IP2pDevice() {};

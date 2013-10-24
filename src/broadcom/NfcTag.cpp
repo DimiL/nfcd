@@ -328,7 +328,7 @@ void NfcTag::createNfcTag(tNFA_ACTIVATED& activationData)
   static const char fn [] = "NfcTag::createNfcTag";
   ALOGD ("%s: enter", fn);
 
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(mNfcManager->queryInterface("NfcTagManager"));
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(mNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
 
   if (pINfcTag == NULL) {
     ALOGE("%s : cannot get nfc tag class", fn);

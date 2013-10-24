@@ -166,7 +166,7 @@ void PeerToPeer::llcpActivatedHandler(tNFA_LLCP_ACTIVATED& activated)
   ALOGD("%s: enter", fn);
 
   IP2pDevice* pIP2pDevice = 
-    reinterpret_cast<IP2pDevice*>(mNfcManager->queryInterface("P2pDevice"));
+    reinterpret_cast<IP2pDevice*>(mNfcManager->queryInterface(INTERFACE_P2P_DEVICE));
 
   if (pIP2pDevice == NULL) {
     ALOGE("%s : cannot get p2p device class", fn);
@@ -197,7 +197,7 @@ void PeerToPeer::llcpDeactivatedHandler(tNFA_LLCP_DEACTIVATED& /*deactivated*/)
   ALOGD("%s: enter", fn);
 
   IP2pDevice* pIP2pDevice =
-    reinterpret_cast<IP2pDevice*>(mNfcManager->queryInterface("P2pDevice"));
+    reinterpret_cast<IP2pDevice*>(mNfcManager->queryInterface(INTERFACE_P2P_DEVICE));
 
   if (pIP2pDevice == NULL) {
     ALOGE("%s : cannot get p2p device class", fn);

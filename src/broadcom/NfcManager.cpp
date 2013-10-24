@@ -88,8 +88,8 @@ NfcManager::NfcManager()
 
 NfcManager::~NfcManager()
 {
-  if (mP2pDevice)      delete mP2pDevice;
-  if (mNfcTagManager)  delete mNfcTagManager;
+  delete mP2pDevice;
+  delete mNfcTagManager;
 }
 
 /**
@@ -98,9 +98,9 @@ NfcManager::~NfcManager()
 
 void* NfcManager::queryInterface(const char* name)
 {
-  if (0 == strcmp(name, "P2pDevice"))
+  if (0 == strcmp(name, INTERFACE_P2P_DEVICE))
     return reinterpret_cast<void*>(mP2pDevice);
-  else if (0 == strcmp(name, "NfcTagManager"))
+  else if (0 == strcmp(name, INTERFACE_TAG_MANAGER))
     return reinterpret_cast<void*>(mNfcTagManager);
 
   return NULL;

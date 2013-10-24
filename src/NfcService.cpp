@@ -237,8 +237,11 @@ void NfcService::handleTagDiscovered(NfcEvent* event)
   void* pTag = event->obj;
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(pTag);
 
+  // To get complete tag information, need to call read ndef first.
+  // In findAndReadNdef function, it will add NDEF related info in NfcTagManager.
   NdefMessage* pNdefMessage = pINfcTag->findAndReadNdef();
 
+  // Do the following after read ndef.
   std::vector<TagTechnology>& techList = pINfcTag->getTechList();
   std::vector<NfcTechnology> gonkTechList;
   int techCount = techList.size();
@@ -346,14 +349,14 @@ INfcManager* NfcService::getNfcManager()
 
 bool NfcService::handleDisconnect()
 {
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NfcTagManager"));
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
   bool result = pINfcTag->disconnect();
   return result;
 }
 
 int NfcService::handleConnect(int technology)
 {
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NfcTagManager"));
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
   int status = pINfcTag->connectWithStatus(technology);
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS,  NULL);
   return status;
@@ -382,7 +385,7 @@ void NfcService::handleConfigResponse(NfcEvent* event)
 
 void NfcService::handleReadNdefDetailResponse(NfcEvent* event)
 {
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NfcTagManager"));
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
   NdefDetail* pNdefDetail = pINfcTag->ReadNdefDetail();
 
   if (pNdefDetail != NULL) {
@@ -404,7 +407,7 @@ bool NfcService::handleReadNdefRequest()
 
 void NfcService::handleReadNdefResponse(NfcEvent* event)
 {
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NfcTagManager"));
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
   NdefMessage* pNdefMessage = pINfcTag->findAndReadNdef();
 
   ALOGD("pNdefMessage=%p",pNdefMessage);
@@ -429,7 +432,7 @@ bool NfcService::handleWriteNdefRequest(NdefMessage* ndef)
 void NfcService::handleWriteNdefResponse(NfcEvent* event)
 {
   NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->obj);
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NfcTagManager"));
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
   bool result = pINfcTag->writeNdef(*ndef);
   delete ndef;
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
@@ -486,7 +489,7 @@ bool NfcService::handleMakeNdefReadonlyRequest()
 
 void NfcService::handleMakeNdefReadonlyResponse(NfcEvent* event)
 {
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface("NfcTagManager"));
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
   bool result = pINfcTag->makeReadOnly();
 
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);

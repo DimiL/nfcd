@@ -9,6 +9,8 @@
 #include "TagTechnology.h"
 #include <vector>
 
+#define INTERFACE_TAG_MANAGER "NfcTagManager"
+
 class INfcTag {
 public:
   virtual ~INfcTag() {};
