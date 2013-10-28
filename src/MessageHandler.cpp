@@ -263,8 +263,15 @@ bool MessageHandler::handleReadNdefDetailResponse(Parcel& parcel, void* data)
 
   parcel.writeInt32(SessionId::getCurrentId());
 
+  // TODO: hardcode these two booleans for now.
+  bool isReadOnly = false;
+  bool canBeMadeReadOnly = false;
+
+  bool params[] = {isReadOnly, canBeMadeReadOnly};
+  void* dest = parcel.writeInplace(2);
+  memcpy(dest, params, sizeof(params));
+
   parcel.writeInt32(ndefDetail->maxSupportedLength);
-  parcel.writeInt32(ndefDetail->mode);
 
   sendResponse(parcel);
   return true;
