@@ -268,7 +268,7 @@ bool MessageHandler::handleReadNdefDetailResponse(Parcel& parcel, void* data)
   bool canBeMadeReadOnly = false;
 
   bool params[] = {isReadOnly, canBeMadeReadOnly};
-  void* dest = parcel.writeInplace(2);
+  void* dest = parcel.writeInplace(sizeof(params));
   memcpy(dest, params, sizeof(params));
 
   parcel.writeInt32(ndefDetail->maxSupportedLength);
