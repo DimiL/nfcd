@@ -62,6 +62,7 @@ NfcService* NfcService::sInstance = NULL;
 NfcManager* NfcService::sNfcManager = NULL;
 
 NfcService::NfcService()
+ : mIsEnable(false)
 {
   mP2pLinkManager = new P2pLinkManager(this);
 }
@@ -551,14 +552,18 @@ void NfcService::enableNfc()
 {
   ALOGD("%s: enter", FUNC);
 
-  sNfcManager->initialize();
+  if (!mIsEnable) {
+    sNfcManager->initialize();
 
-  if (mP2pLinkManager)
-    mP2pLinkManager->enableDisable(true);
+    if (mP2pLinkManager)
+      mP2pLinkManager->enableDisable(true);
 
-  // Enable discovery MUST SNEP server is established.
-  // Otherwise, P2P device will not be discovered.
-  sNfcManager->enableDiscovery();
+    // Enable discovery MUST SNEP server is established.
+    // Otherwise, P2P device will not be discovered.
+    sNfcManager->enableDiscovery();
+
+    mIsEnable = true;
+  }
 
   ALOGD("%s: exit", FUNC);
 }
@@ -567,13 +572,16 @@ void NfcService::disableNfc()
 {
   ALOGD("%s: enter", FUNC);
 
-  if (mP2pLinkManager)
-    mP2pLinkManager->enableDisable(false);
+  if (mIsEnable) {
+    if (mP2pLinkManager)
+      mP2pLinkManager->enableDisable(false);
 
-  sNfcManager->disableDiscovery();
+    sNfcManager->disableDiscovery();
 
-  sNfcManager->deinitialize();
+    sNfcManager->deinitialize();
 
+    mIsEnable = false;
+  }
   ALOGD("%s: exit", FUNC);
 }
 
