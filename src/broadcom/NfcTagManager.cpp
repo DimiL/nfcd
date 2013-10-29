@@ -208,6 +208,10 @@ NdefMessage* NfcTagManager::findAndReadNdef()
         generateEmptyNdef = true;
     }
 
+    if (cardState == NDEF_MODE_READ_WRITE) {
+      addTechnology(NDEF_WRITABLE, getConnectedHandle(), getConnectedLibNfcType());
+    }
+
     if (generateEmptyNdef == true) {
       ALOGI("Couldn't read NDEF!");
       // TODO : Implement generate empty Ndef
