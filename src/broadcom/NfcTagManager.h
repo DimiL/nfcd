@@ -34,6 +34,7 @@ public:
   bool presenceCheck();
   bool makeReadOnly();
   bool isNdefFormatable();
+  bool formatNdef();
 
   std::vector<TagTechnology>& getTechList() { return mTechList; };
   std::vector<int>& getTechHandles() { return mTechHandles; };
@@ -187,6 +188,20 @@ public:
    */
   static bool doMakeReadonly();
 
+  /**
+   * Receive the completion status of format operation. Called by NFA_FORMAT_CPLT_EVT.
+   *
+   * @param  isOk Status of operation.
+   * @return      None.
+   */
+  static void formatStatus(bool isOk);
+
+  /**
+   * Format a tag so it can store NDEF message.
+   *
+   * @return True if ok.
+   */
+  static bool doNdefFormat();
 
   static bool doIsNdefFormatable();
 

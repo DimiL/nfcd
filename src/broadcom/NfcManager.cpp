@@ -729,7 +729,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
 
     case NFA_FORMAT_CPLT_EVT:
       ALOGD("%s: NFA_FORMAT_CPLT_EVT: status=0x%X", __FUNCTION__, eventData->status);
-      ALOGE("%s: Unimplement function", __FUNCTION__);
+      NfcTagManager::formatStatus(eventData->status == NFA_STATUS_OK);
       break;
 
     case NFA_I93_CMD_CPLT_EVT:

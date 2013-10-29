@@ -560,6 +560,26 @@ void NfcTagManager::doPresenceCheckResult(tNFA_STATUS status)
   sem_post(&sPresenceCheckSem);
 }
 
+bool NfcTagManager::doNdefFormat()
+{
+  ALOGD ("%s: enter", __FUNCTION__);
+  tNFA_STATUS status = NFA_STATUS_OK;
+
+  sem_init (&sFormatSem, 0, 0);
+  sFormatOk = false;
+  status = NFA_RwFormatTag ();
+  if (status == NFA_STATUS_OK) {
+    ALOGD ("%s: wait for completion", __FUNCTION__);
+    sem_wait (&sFormatSem);
+    status = sFormatOk ? NFA_STATUS_OK : NFA_STATUS_FAILED;
+  } else
+    ALOGE ("%s: error status=%u", __FUNCTION__, status);
+  sem_destroy (&sFormatSem);
+
+  ALOGD ("%s: exit", __FUNCTION__);
+  return (status == NFA_STATUS_OK) ? true : false;
+}
+
 void NfcTagManager::doCheckNdefResult(tNFA_STATUS status, uint32_t maxSize, uint32_t currentSize, uint8_t flags)
 {
   // This function's flags parameter is defined using the following macros
@@ -918,6 +938,12 @@ TheEnd:
   return (nfaStat == NFA_STATUS_OK) ? true : false;
 }
 
+void NfcTagManager::formatStatus(bool isOk)
+{
+  sFormatOk = isOk;
+  sem_post (&sFormatSem);
+}
+
 bool NfcTagManager::doWrite(std::vector<uint8_t>& buf)
 {
   bool result = false;
@@ -1056,4 +1082,13 @@ bool NfcTagManager::makeReadOnly()
 bool NfcTagManager::isNdefFormatable()
 {
   return doIsNdefFormatable();
+}
+
+bool NfcTagManager::formatNdef()
+{
+  bool result;
+  pthread_mutex_lock(&mMutex);
+  result = doNdefFormat();
+  pthread_mutex_unlock(&mMutex);
+  return result;
 }
