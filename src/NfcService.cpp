@@ -418,8 +418,6 @@ void NfcService::handleReadNdefResponse(NfcEvent* event)
   } else {
     //TODO can we notify null ndef?
   }
-
-  delete pNdefMessage;
 }
 
 bool NfcService::handleWriteNdefRequest(NdefMessage* ndef)
