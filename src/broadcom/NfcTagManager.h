@@ -249,6 +249,8 @@ private:
    */
   static bool switchRfInterface(tNFA_INTF_TYPE rfInterface);
 
+  int getNdefType(int libnfcType);
+
   void addTechnology(TagTechnology tech, int handle, int libnfctype);
 
   int getConnectedLibNfcType();
