@@ -286,9 +286,6 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
   sendNdefMsg(parcel, ndef);
   sendResponse(parcel);
 
-  // NDEF message is written to parcel, delete it here.
-  delete ndef;
-
   return true;
 }
 

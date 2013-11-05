@@ -39,16 +39,17 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
 
 bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<NdefRecord>& records, int offset)
 {
-  std::vector<uint8_t> type;
-  std::vector<uint8_t> id;
-  std::vector<uint8_t> payload;
   bool inChunk = false;
-  std::vector<std::vector<uint8_t> > chunks;
   uint8_t chunkTnf = -1;
   bool me = false;
   uint32_t index = offset;
 
   while(!me) {
+    std::vector<uint8_t> type;
+    std::vector<uint8_t> id;
+    std::vector<uint8_t> payload;
+    std::vector<std::vector<uint8_t> > chunks;
+
     uint8_t flag = buf[index++];
 
     bool mb = (flag & NdefRecord::FLAG_MB) != 0;
