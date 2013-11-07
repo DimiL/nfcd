@@ -13,9 +13,9 @@ public:
   virtual ~INfcManager() {};
 
   /**
-   * Tp get a specific interface from NfcManager
+   * To get a specific interface from NfcManager.
    *
-   * @param  name Interface name
+   * @param  name Interface name.
    * @return      Return specific interface if exist, null if cannot find.
    */
   virtual void* queryInterface(const char* name) = 0;

@@ -389,7 +389,7 @@ void NfcService::handleConfigResponse(NfcEvent* event)
 void NfcService::handleReadNdefDetailResponse(NfcEvent* event)
 {
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
-  NdefDetail* pNdefDetail = pINfcTag->ReadNdefDetail();
+  NdefDetail* pNdefDetail = pINfcTag->readNdefDetail();
 
   if (pNdefDetail != NULL) {
     mMsgHandler->processResponse(NFC_RESPONSE_READ_NDEF_DETAILS, NFC_ERROR_SUCCESS, pNdefDetail);

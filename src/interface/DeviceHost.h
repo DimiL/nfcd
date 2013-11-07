@@ -6,7 +6,6 @@
 #define mozilla_nfcd_DeviceHost_h
 
 #include <stdio.h>
-#include <vector>
 
 class DeviceHost{
 public:

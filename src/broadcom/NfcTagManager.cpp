@@ -119,7 +119,7 @@ NfcTagManager::~NfcTagManager()
 {
 }
 
-NdefDetail* NfcTagManager::ReadNdefDetail()
+NdefDetail* NfcTagManager::readNdefDetail()
 {
   int ndefinfo[2];
   int status;

@@ -22,7 +22,7 @@ public:
   virtual ~NfcTagManager();
 
   NdefMessage* findAndReadNdef();
-  NdefDetail* ReadNdefDetail();
+  NdefDetail* readNdefDetail();
   int reconnectWithStatus(int technology);
   int reconnectWithStatus();
   int connectWithStatus(int technology);
