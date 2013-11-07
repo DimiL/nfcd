@@ -13,10 +13,18 @@ typedef enum {
   NFC_V = 4,
   NDEF = 5,
   NDEF_FORMATABLE = 6,
-  MIFARE_CLASSIC = 7,
-  MIFARE_ULTRALIGHT = 8,
-  NFC_BARCODE = 9,
-  UNKNOWN_TECH = 10
+  NDEF_WRITABLE = 7,
+  MIFARE_CLASSIC = 8,
+  MIFARE_ULTRALIGHT = 9,
+  NFC_BARCODE = 10,
+  UNKNOWN_TECH = 11
 } TagTechnology;
+
+#define NDEF_UNKNOWN_TYPE          -1
+#define NDEF_TYPE1_TAG             1
+#define NDEF_TYPE2_TAG             2
+#define NDEF_TYPE3_TAG             3
+#define NDEF_TYPE4_TAG             4
+#define NDEF_MIFARE_CLASSIC_TAG    101
 
 #endif

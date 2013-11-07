@@ -14,7 +14,7 @@ public:
   /**
    * Accept a connection request from a peer.
    *
-   * @return ILlcpSocket interface
+   * @return ILlcpSocket interface.
    */
   virtual ILlcpSocket* accept() = 0;
 

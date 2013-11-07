@@ -119,7 +119,7 @@ NfcTagManager::~NfcTagManager()
 {
 }
 
-NdefDetail* NfcTagManager::ReadNdefDetail()
+NdefDetail* NfcTagManager::readNdefDetail()
 {
   int ndefinfo[2];
   int status;
@@ -128,12 +128,15 @@ NdefDetail* NfcTagManager::ReadNdefDetail()
   if (status != 0) {
     ALOGE("%s: Check NDEF Failed - status = %d", __FUNCTION__, status);
   } else {
+    int ndefType = getNdefType(getConnectedLibNfcType());
+
     pNdefDetail = new NdefDetail();
     pNdefDetail->maxSupportedLength = ndefinfo[0];
-    pNdefDetail->mode = ndefinfo[1];
+    pNdefDetail->isReadOnly = (ndefinfo[1] == NDEF_MODE_READ_ONLY);
+    pNdefDetail->canBeMadeReadOnly = (ndefType == NDEF_TYPE1_TAG || ndefType == NDEF_TYPE2_TAG);
   }
 
-  return pNdefDetail;    
+  return pNdefDetail;
 }
 
 NdefMessage* NfcTagManager::findAndReadNdef()
@@ -206,6 +209,10 @@ NdefMessage* NfcTagManager::findAndReadNdef()
       }
     } else {
         generateEmptyNdef = true;
+    }
+
+    if (cardState == NDEF_MODE_READ_WRITE) {
+      addTechnology(NDEF_WRITABLE, getConnectedHandle(), getConnectedLibNfcType());
     }
 
     if (generateEmptyNdef == true) {
@@ -560,6 +567,27 @@ void NfcTagManager::doPresenceCheckResult(tNFA_STATUS status)
   sem_post(&sPresenceCheckSem);
 }
 
+bool NfcTagManager::doNdefFormat()
+{
+  ALOGD("%s: enter", __FUNCTION__);
+  tNFA_STATUS status = NFA_STATUS_OK;
+
+  sem_init(&sFormatSem, 0, 0);
+  sFormatOk = false;
+  status = NFA_RwFormatTag();
+  if (status == NFA_STATUS_OK) {
+    ALOGD("%s: wait for completion", __FUNCTION__);
+    sem_wait(&sFormatSem);
+    status = sFormatOk ? NFA_STATUS_OK : NFA_STATUS_FAILED;
+  } else {
+    ALOGE("%s: error status=%u", __FUNCTION__, status);
+  }
+  sem_destroy(&sFormatSem);
+
+  ALOGD("%s: exit", __FUNCTION__);
+  return status == NFA_STATUS_OK;
+}
+
 void NfcTagManager::doCheckNdefResult(tNFA_STATUS status, uint32_t maxSize, uint32_t currentSize, uint8_t flags)
 {
   // This function's flags parameter is defined using the following macros
@@ -881,6 +909,39 @@ bool NfcTagManager::switchRfInterface(tNFA_INTF_TYPE rfInterface)
   return rVal;
 }
 
+int NfcTagManager::getNdefType(int libnfcType)
+{
+  int ndefType = NDEF_UNKNOWN_TYPE;
+
+  // For NFA, libnfcType is mapped to the protocol value received
+  // in the NFA_ACTIVATED_EVT and NFA_DISC_RESULT_EVT event.
+  switch (libnfcType) {
+    case NFA_PROTOCOL_T1T:
+      ndefType = NDEF_TYPE1_TAG;
+      break;
+    case NFA_PROTOCOL_T2T:
+      ndefType = NDEF_TYPE2_TAG;
+      break;
+    case NFA_PROTOCOL_T3T:
+      ndefType = NDEF_TYPE3_TAG;
+      break;
+    case NFA_PROTOCOL_ISO_DEP:
+      ndefType = NDEF_TYPE4_TAG;
+      break;
+    case NFA_PROTOCOL_ISO15693:
+      ndefType = NDEF_UNKNOWN_TYPE;
+      break;
+    case NFA_PROTOCOL_INVALID:
+      ndefType = NDEF_UNKNOWN_TYPE;
+      break;
+    default:
+      ndefType = NDEF_UNKNOWN_TYPE;
+      break;
+  }
+
+  return ndefType;
+}
+
 void NfcTagManager::addTechnology(TagTechnology tech, int handle, int libnfctype)
 {
   mTechList.push_back(tech);
@@ -916,6 +977,12 @@ bool NfcTagManager::doDisconnect()
 TheEnd:
   ALOGD("%s: exit", __FUNCTION__);
   return (nfaStat == NFA_STATUS_OK) ? true : false;
+}
+
+void NfcTagManager::formatStatus(bool isOk)
+{
+  sFormatOk = isOk;
+  sem_post(&sFormatSem);
 }
 
 bool NfcTagManager::doWrite(std::vector<uint8_t>& buf)
@@ -1056,4 +1123,13 @@ bool NfcTagManager::makeReadOnly()
 bool NfcTagManager::isNdefFormatable()
 {
   return doIsNdefFormatable();
+}
+
+bool NfcTagManager::formatNdef()
+{
+  bool result;
+  pthread_mutex_lock(&mMutex);
+  result = doNdefFormat();
+  pthread_mutex_unlock(&mMutex);
+  return result;
 }

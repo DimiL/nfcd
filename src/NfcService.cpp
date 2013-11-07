@@ -62,6 +62,7 @@ NfcService* NfcService::sInstance = NULL;
 NfcManager* NfcService::sNfcManager = NULL;
 
 NfcService::NfcService()
+ : mIsEnabled(false)
 {
   mP2pLinkManager = new P2pLinkManager(this);
 }
@@ -388,7 +389,7 @@ void NfcService::handleConfigResponse(NfcEvent* event)
 void NfcService::handleReadNdefDetailResponse(NfcEvent* event)
 {
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
-  NdefDetail* pNdefDetail = pINfcTag->ReadNdefDetail();
+  NdefDetail* pNdefDetail = pINfcTag->readNdefDetail();
 
   if (pNdefDetail != NULL) {
     mMsgHandler->processResponse(NFC_RESPONSE_READ_NDEF_DETAILS, NFC_ERROR_SUCCESS, pNdefDetail);
@@ -553,6 +554,11 @@ void NfcService::enableNfc()
 {
   ALOGD("%s: enter", FUNC);
 
+  if (mIsEnabled) {
+    ALOGW("%s: NFC is already enabled", FUNC);
+    return;
+  }
+
   sNfcManager->initialize();
 
   if (mP2pLinkManager)
@@ -562,6 +568,8 @@ void NfcService::enableNfc()
   // Otherwise, P2P device will not be discovered.
   sNfcManager->enableDiscovery();
 
+  mIsEnabled = true;
+
   ALOGD("%s: exit", FUNC);
 }
 
@@ -569,12 +577,19 @@ void NfcService::disableNfc()
 {
   ALOGD("%s: enter", FUNC);
 
+  if (!mIsEnabled) {
+    ALOGW("%s: NFC is already disabled", FUNC);
+    return;
+  }
+
   if (mP2pLinkManager)
     mP2pLinkManager->enableDisable(false);
 
   sNfcManager->disableDiscovery();
 
   sNfcManager->deinitialize();
+
+  mIsEnabled = false;
 
   ALOGD("%s: exit", FUNC);
 }

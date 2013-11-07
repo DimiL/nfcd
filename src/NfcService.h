@@ -67,6 +67,7 @@ public:
 private:
   NfcService();
 
+  bool mIsEnabled;
   static NfcService* sInstance;
   static NfcManager* sNfcManager;
   android::List<NfcEvent*> mQueue;
