@@ -128,12 +128,15 @@ NdefDetail* NfcTagManager::readNdefDetail()
   if (status != 0) {
     ALOGE("%s: Check NDEF Failed - status = %d", __FUNCTION__, status);
   } else {
+    int ndefType = getNdefType(getConnectedLibNfcType());
+
     pNdefDetail = new NdefDetail();
     pNdefDetail->maxSupportedLength = ndefinfo[0];
-    pNdefDetail->mode = ndefinfo[1];
+    pNdefDetail->isReadOnly = (ndefinfo[1] == NDEF_MODE_READ_ONLY);
+    pNdefDetail->canBeMadeReadOnly = (ndefType == NDEF_TYPE1_TAG || ndefType == NDEF_TYPE2_TAG);
   }
 
-  return pNdefDetail;    
+  return pNdefDetail;
 }
 
 NdefMessage* NfcTagManager::findAndReadNdef()
@@ -904,6 +907,39 @@ bool NfcTagManager::switchRfInterface(tNFA_INTF_TYPE rfInterface)
 
   sRfInterfaceMutex.unlock();
   return rVal;
+}
+
+int NfcTagManager::getNdefType(int libnfcType)
+{
+  int ndefType = NDEF_UNKNOWN_TYPE;
+
+  // For NFA, libnfcType is mapped to the protocol value received
+  // in the NFA_ACTIVATED_EVT and NFA_DISC_RESULT_EVT event.
+  switch (libnfcType) {
+    case NFA_PROTOCOL_T1T:
+      ndefType = NDEF_TYPE1_TAG;
+      break;
+    case NFA_PROTOCOL_T2T:
+      ndefType = NDEF_TYPE2_TAG;
+      break;
+    case NFA_PROTOCOL_T3T:
+      ndefType = NDEF_TYPE3_TAG;
+      break;
+    case NFA_PROTOCOL_ISO_DEP:
+      ndefType = NDEF_TYPE4_TAG;
+      break;
+    case NFA_PROTOCOL_ISO15693:
+      ndefType = NDEF_UNKNOWN_TYPE;
+      break;
+    case NFA_PROTOCOL_INVALID:
+      ndefType = NDEF_UNKNOWN_TYPE;
+      break;
+    default:
+      ndefType = NDEF_UNKNOWN_TYPE;
+      break;
+  }
+
+  return ndefType;
 }
 
 void NfcTagManager::addTechnology(TagTechnology tech, int handle, int libnfctype)

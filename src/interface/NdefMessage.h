@@ -26,7 +26,9 @@ public:
   ~NdefDetail();
 
   int maxSupportedLength;
-  int mode;
+  bool isReadOnly;
+  bool canBeMadeReadOnly;
+
 };
 
 #endif
