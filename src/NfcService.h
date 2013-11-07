@@ -13,6 +13,8 @@ class NdefMessage;
 class MessageHandler;
 class NfcEvent;
 class INfcManager;
+class INfcTag;
+class IP2pDevice;
 class P2pLinkManager;
 
 class NfcService : public IpcSocketListener {
@@ -23,9 +25,9 @@ public:
   static NfcService* Instance();
   static INfcManager* getNfcManager();
 
-  static void notifyLlcpLinkActivation(void* pDevice);
-  static void notifyLlcpLinkDeactivation(void* pDevice);
-  static void notifyTagDiscovered(void* pTag);
+  static void notifyLlcpLinkActivation(IP2pDevice* pDevice);
+  static void notifyLlcpLinkDeactivation(IP2pDevice* pDevice);
+  static void notifyTagDiscovered(INfcTag* pTag);
   static void notifyTagLost();
   static void notifySEFieldActivated();
   static void notifySEFieldDeactivated();

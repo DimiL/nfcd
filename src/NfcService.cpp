@@ -95,29 +95,29 @@ void NfcService::initialize(NfcManager* pNfcManager, MessageHandler* msgHandler)
   sNfcManager = pNfcManager;
 }
 
-void NfcService::notifyLlcpLinkActivation(void* pDevice)
+void NfcService::notifyLlcpLinkActivation(IP2pDevice* pDevice)
 {
   ALOGD("%s: enter", FUNC);
   NfcEvent *event = new NfcEvent(MSG_LLCP_LINK_ACTIVATION);
-  event->obj = pDevice;
+  event->obj = reinterpret_cast<void*>(pDevice);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
 }
 
-void NfcService::notifyLlcpLinkDeactivation(void* pDevice)
+void NfcService::notifyLlcpLinkDeactivation(IP2pDevice* pDevice)
 {
   ALOGD("%s: enter", FUNC);
   NfcEvent *event = new NfcEvent(MSG_LLCP_LINK_DEACTIVATION);
-  event->obj = pDevice;
+  event->obj = reinterpret_cast<void*>(pDevice);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
 }
 
-void NfcService::notifyTagDiscovered(void* pTag)
+void NfcService::notifyTagDiscovered(INfcTag* pTag)
 {
   ALOGD("%s: enter", FUNC);
   NfcEvent *event = new NfcEvent(MSG_TAG_DISCOVERED);
-  event->obj = pTag;
+  event->obj = reinterpret_cast<void*>(pTag);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
 }
@@ -239,8 +239,8 @@ void NfcService::handleTagDiscovered(NfcEvent* event)
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(pTag);
 
   // To get complete tag information, need to call read ndef first.
-  // In findAndReadNdef function, it will add NDEF related info in NfcTagManager.
-  NdefMessage* pNdefMessage = pINfcTag->findAndReadNdef();
+  // In readNdef function, it will add NDEF related info in NfcTagManager.
+  NdefMessage* pNdefMessage = pINfcTag->readNdef();
 
   // Do the following after read ndef.
   std::vector<TagTechnology>& techList = pINfcTag->getTechList();
@@ -360,7 +360,7 @@ bool NfcService::handleDisconnect()
 int NfcService::handleConnect(int technology)
 {
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
-  int status = pINfcTag->connectWithStatus(technology);
+  int status = pINfcTag->connect(technology);
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS,  NULL);
   return status;
 }
@@ -411,7 +411,7 @@ bool NfcService::handleReadNdefRequest()
 void NfcService::handleReadNdefResponse(NfcEvent* event)
 {
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
-  NdefMessage* pNdefMessage = pINfcTag->findAndReadNdef();
+  NdefMessage* pNdefMessage = pINfcTag->readNdef();
 
   ALOGD("pNdefMessage=%p",pNdefMessage);
   if (pNdefMessage != NULL) {

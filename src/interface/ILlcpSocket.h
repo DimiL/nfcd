@@ -58,14 +58,31 @@ public:
   virtual int getRemoteMiu() const = 0;
 
   /**
-   * Peer's maximum information unit.
+   * Get peer's receive window size.
    *
    * @return Peer's receive window size.
    */
   virtual int getRemoteRw() const = 0;
 
+  /**
+   * Get local service access point.
+   *
+   * @return Local service access point.
+   */
   virtual int getLocalSap() const = 0;
+
+  /**
+   * Get local maximum information unit.
+   *
+   * @return Local receive window size.
+   */
   virtual int getLocalMiu() const = 0;
+
+  /**
+   * Get local receive window size.
+   *
+   * @return Local receive window size.
+   */
   virtual int getLocalRw() const = 0;
 };
 

@@ -139,7 +139,7 @@ NdefDetail* NfcTagManager::readNdefDetail()
   return pNdefDetail;
 }
 
-NdefMessage* NfcTagManager::findAndReadNdef()
+NdefMessage* NfcTagManager::readNdef()
 {
   NdefMessage* ndefMsg = NULL;
   bool foundFormattable = false;
@@ -258,7 +258,8 @@ bool NfcTagManager::disconnect()
 
 bool NfcTagManager::reconnect()
 {
-  return reconnectWithStatus() == 0;
+  int status = reconnectWithStatus();
+  return NFCSTATUS_SUCCESS == status;
 }
 
 int NfcTagManager::reconnectWithStatus()
@@ -299,8 +300,16 @@ int NfcTagManager::reconnectWithStatus(int technology)
   return status;
 }
 
+bool NfcTagManager::connect(int technology)
+{
+  int status = connectWithStatus(technology);
+  return NFCSTATUS_SUCCESS == status;
+}
+
 int NfcTagManager::connectWithStatus(int technology)
 {
+  pthread_mutex_lock(&mMutex);
+
   int status = -1;
   for (uint32_t i = 0; i < mTechList.size(); i++) {
     if (mTechList[i] == technology) {
@@ -350,6 +359,8 @@ int NfcTagManager::connectWithStatus(int technology)
       break;
     }
   }
+
+  pthread_mutex_unlock(&mMutex);
   return status;
 }
 

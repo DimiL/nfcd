@@ -13,22 +13,43 @@ public:
   NdefMessage();
   ~NdefMessage();
 
-  bool init(std::vector<uint8_t>& buf, int offset);
+  /**
+   * Initialize NDEF meesage with NDEF binary data.
+   *
+   * @param  buf Input buffer contain raw NDEF data.
+   * @return     True if the buffer can be correctly parsed.
+   */
   bool init(std::vector<uint8_t>& buf);
+
+  /**
+   * Initialize NDEF meesage with NDEF binary data.
+   *
+   * @param  buf    Input buffer contain raw NDEF data.
+   * @param  offset Indicate the start position of buffer to be parsed.
+   * @return        True if the buffer can be correctly parsed.
+   */
+  bool init(std::vector<uint8_t>& buf, int offset);
+
+  /**
+   * Write current NdefMessage to byte buffer.
+   *
+   * @param  buf Output raw buffer.
+   * @return     None.
+   */
   void toByteArray(std::vector<uint8_t>& buf);
 
+  // Array of NDEF records.
   std::vector<NdefRecord> mRecords;
 };
 
+/**
+ * NdefDetail structure contain the information should be returned by readNdefDetail of INfcTag
+ */
 class NdefDetail{
 public:
-  NdefDetail();
-  ~NdefDetail();
-
   int maxSupportedLength;
   bool isReadOnly;
   bool canBeMadeReadOnly;
-
 };
 
 #endif

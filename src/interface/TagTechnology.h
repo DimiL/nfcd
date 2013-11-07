@@ -5,6 +5,8 @@
 #ifndef mozilla_nfcd_TagTechnology_h
 #define mozilla_nfcd_TagTechnology_h
 
+// Used by getTechList() of INfcTag.
+// Define the tag technology.
 typedef enum {
   NFC_A = 0,
   NFC_B = 1,
@@ -19,12 +21,5 @@ typedef enum {
   NFC_BARCODE = 10,
   UNKNOWN_TECH = 11
 } TagTechnology;
-
-#define NDEF_UNKNOWN_TYPE          -1
-#define NDEF_TYPE1_TAG             1
-#define NDEF_TYPE2_TAG             2
-#define NDEF_TYPE3_TAG             3
-#define NDEF_TYPE4_TAG             4
-#define NDEF_MIFARE_CLASSIC_TAG    101
 
 #endif

@@ -352,7 +352,7 @@ void NfcTag::createNfcTag(tNFA_ACTIVATED& activationData)
 
   // Notify NFC service about this new tag.
   ALOGD("%s: try notify nfc service", fn);
-  mNfcManager->notifyTagDiscovered(reinterpret_cast<void*>(pINfcTag));
+  mNfcManager->notifyTagDiscovered(pINfcTag);
 
   ALOGD("%s: exit", fn);
 }
