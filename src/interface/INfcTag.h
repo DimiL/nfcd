@@ -23,6 +23,7 @@ public:
   virtual bool writeNdef(NdefMessage& ndef) = 0;
   virtual bool presenceCheck() = 0;
   virtual bool makeReadOnly() = 0;
+  virtual bool formatNdef() = 0;
 
   virtual std::vector<TagTechnology>& getTechList() = 0;
   virtual std::vector<int>& getTechHandles() = 0;
