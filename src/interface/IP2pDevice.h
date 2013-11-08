@@ -7,6 +7,9 @@
 
 #define INTERFACE_P2P_DEVICE  "P2pDevice"
 
+/**
+ * In current implementation, this interface is not yet being used.
+ */
 class IP2pDevice {
 public:
   virtual ~IP2pDevice() {};

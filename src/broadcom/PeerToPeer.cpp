@@ -186,7 +186,7 @@ void PeerToPeer::llcpActivatedHandler(tNFA_LLCP_ACTIVATED& activated)
 
   pIP2pDevice->getHandle() = 0x1234;
 
-  mNfcManager->notifyLlcpLinkActivation(reinterpret_cast<void*>(pIP2pDevice));
+  mNfcManager->notifyLlcpLinkActivated(pIP2pDevice);
 
   ALOGD("%s: exit", fn);
 }
@@ -204,7 +204,7 @@ void PeerToPeer::llcpDeactivatedHandler(tNFA_LLCP_DEACTIVATED& /*deactivated*/)
     return;
   }
 
-  mNfcManager->notifyLlcpLinkDeactivated(reinterpret_cast<void*>(pIP2pDevice));
+  mNfcManager->notifyLlcpLinkDeactivated(pIP2pDevice);
 
   NfcTagManager::doRegisterNdefTypeHandler();
   ALOGD("%s: exit", fn);

@@ -18,6 +18,14 @@ public:
   virtual ~INfcTag() {};
 
   /**
+   * Connect to the tag in RF field.
+   *
+   * @param  technology Specify the tag technology to be connected.
+   * @return            True if ok.
+   */
+  virtual bool connect(int technology) = 0;
+
+  /**
    * Deactivate the RF field.
    *
    * @return True if ok.
@@ -32,19 +40,11 @@ public:
   virtual bool reconnect() = 0;
 
   /**
-   * Connect to the tag in RF field.
-   *
-   * @param  technology Specify the tag technology to be connected.
-   * @return            Status code.
-   */
-  virtual int connectWithStatus(int technology) = 0;
-
-  /**
    * Read the NDEF message on the tag.
    *
    * @return NDEF message.
    */
-  virtual NdefMessage* findAndReadNdef() = 0;
+  virtual NdefMessage* readNdef() = 0;
 
   /**
    * Read tag information and fill the NdefDetail structure.
@@ -82,7 +82,13 @@ public:
    */
   virtual bool formatNdef() = 0;
 
+  /**
+   * Get detected tag supported technologies.
+   *
+   * @return Technologies supported by the tag.
+   */
   virtual std::vector<TagTechnology>& getTechList() = 0;
+
   virtual std::vector<int>& getTechHandles() = 0;
   virtual std::vector<int>& getTechLibNfcTypes() = 0;
   virtual std::vector<std::vector<uint8_t> >& getTechPollBytes() = 0;

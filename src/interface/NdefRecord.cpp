@@ -4,6 +4,18 @@
 #define LOG_TAG "nfcd"
 #include <utils/Log.h>
 
+static bool ensureSanePayloadSize(long size);
+static bool validateTnf(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload);
+
+static const uint8_t FLAG_MB = 0x80;
+static const uint8_t FLAG_ME = 0x40;
+static const uint8_t FLAG_CF = 0x20;
+static const uint8_t FLAG_SR = 0x10;
+static const uint8_t FLAG_IL = 0x08;
+
+// 10 MB payload limit.
+static const int MAX_PAYLOAD_SIZE = 10 * (1 << 20);
+
 NdefRecord::NdefRecord(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload)
 {
   mTnf = tnf;
@@ -52,11 +64,11 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
 
     uint8_t flag = buf[index++];
 
-    bool mb = (flag & NdefRecord::FLAG_MB) != 0;
-    me = (flag & NdefRecord::FLAG_ME) != 0;
-    bool cf = (flag & NdefRecord::FLAG_CF) != 0;
-    bool sr = (flag & NdefRecord::FLAG_SR) != 0;
-    bool il = (flag & NdefRecord::FLAG_IL) != 0;
+    bool mb = (flag & FLAG_MB) != 0;
+    me = (flag & FLAG_ME) != 0;
+    bool cf = (flag & FLAG_CF) != 0;
+    bool sr = (flag & FLAG_SR) != 0;
+    bool il = (flag & FLAG_IL) != 0;
     uint8_t tnf = flag & 0x07;
 
     if (!mb && records.size() == 0 && !inChunk && !ignoreMbMe) {
@@ -90,7 +102,7 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
                       ((uint32_t)buf[index + 3]);
       index += 4;
     }
-    uint32_t idLength = il ? (buf[index++] & 0xFF) : 0;   
+    uint32_t idLength = il ? (buf[index++] & 0xFF) : 0;
 
     if (inChunk && typeLength != 0) {
       ALOGE("expected zero-length type in non-leading chunk");
@@ -115,16 +127,16 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
     }
 
     if (cf && !inChunk) {
-      // first chunk
+      // first chunk.
       chunks.clear();
       chunkTnf = tnf;
     }
     if (cf || inChunk) {
-      // any chunk
+      // any chunk.
       chunks.push_back(payload);
     }
     if (!cf && inChunk) {
-      // last chunk, flatten the payload
+      // last chunk, flatten the payload.
       payloadLength = 0;
       for (uint32_t idx = 0; idx < chunks.size(); idx++) {
         payloadLength += chunks[idx].size();
@@ -141,7 +153,7 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
       tnf = chunkTnf;
     }
     if (cf) {
-      // more chunks to come
+      // more chunks to come.
       inChunk = true;
       continue;
     } else {
@@ -156,45 +168,45 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
     NdefRecord record(tnf, type, id, payload);
     records.push_back(record);
 
-    if (ignoreMbMe) {  // for parsing a single NdefRecord
+    if (ignoreMbMe) {  // for parsing a single NdefRecord.
       break;
     }
   }
   return true;
 }
 
-bool NdefRecord::ensureSanePayloadSize(long size)
+bool ensureSanePayloadSize(long size)
 {
-  if (size > NdefRecord::MAX_PAYLOAD_SIZE) {
-    ALOGE("payload above max limit: %d > ", NdefRecord::MAX_PAYLOAD_SIZE);
+  if (size > MAX_PAYLOAD_SIZE) {
+    ALOGE("payload above max limit: %d > ", MAX_PAYLOAD_SIZE);
     return false;
   }
   return true;
 }
 
-bool NdefRecord::validateTnf(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload)
+bool validateTnf(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload)
 {
   bool isValid = true;
   switch (tnf) {
-    case TNF_EMPTY:
+    case NdefRecord::TNF_EMPTY:
       if (type.size() != 0 || id.size() != 0 || payload.size() != 0) {
         ALOGE("unexpected data in TNF_EMPTY record");
         isValid = false;
       }
       break;
-    case TNF_WELL_KNOWN:
-    case TNF_MIME_MEDIA:
-    case TNF_ABSOLUTE_URI:
-    case TNF_EXTERNAL_TYPE:
+    case NdefRecord::TNF_WELL_KNOWN:
+    case NdefRecord::TNF_MIME_MEDIA:
+    case NdefRecord::TNF_ABSOLUTE_URI:
+    case NdefRecord::TNF_EXTERNAL_TYPE:
       break;
-    case TNF_UNKNOWN:
-    case TNF_RESERVED:
+    case NdefRecord::TNF_UNKNOWN:
+    case NdefRecord::TNF_RESERVED:
       if (type.size() != 0) {
         ALOGE("unexpected type field in TNF_UNKNOWN or TNF_RESERVEd record");
         isValid = false;
       }
       break;
-    case TNF_UNCHANGED:
+    case NdefRecord::TNF_UNCHANGED:
       ALOGE("unexpected TNF_UNCHANGED in first chunk or logical record");
       isValid = false;
       break;
@@ -211,17 +223,16 @@ void NdefRecord::writeToByteBuffer(std::vector<uint8_t>& buf, bool mb, bool me)
   bool sr = mPayload.size() < 256;
   bool il = mId.size() > 0;
 
-  uint8_t flags = (uint8_t)((mb ? NdefRecord::FLAG_MB : 0) |
-                            (me ? NdefRecord::FLAG_ME : 0) |
-                            (sr ? NdefRecord::FLAG_SR : 0) |
-                            (il ? NdefRecord::FLAG_IL : 0) | mTnf);
+  uint8_t flags = (uint8_t)((mb ? FLAG_MB : 0) |
+                            (me ? FLAG_ME : 0) |
+                            (sr ? FLAG_SR : 0) |
+                            (il ? FLAG_IL : 0) | mTnf);
   buf.push_back(flags);
 
   buf.push_back((uint8_t)mType.size());
   if (sr) {
     buf.push_back((uint8_t)mPayload.size());
   } else {
-    // TODO : check this
     buf.push_back((mPayload.size() >> 24) & 0xff);
     buf.push_back((mPayload.size() >> 16) & 0xff);
     buf.push_back((mPayload.size() >>  8) & 0xff);

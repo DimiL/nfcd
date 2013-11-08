@@ -21,19 +21,15 @@ public:
   NfcTagManager();
   virtual ~NfcTagManager();
 
-  NdefMessage* findAndReadNdef();
-  NdefDetail* readNdefDetail();
-  int reconnectWithStatus(int technology);
-  int reconnectWithStatus();
-  int connectWithStatus(int technology);
-  void readNdef(std::vector<uint8_t>& buf);
-  bool writeNdef(NdefMessage& ndef);
-  int checkNdefWithStatus(int ndefinfo[]);
+  // INfcTag interface.
+  bool connect(int technology);
   bool disconnect();
   bool reconnect();
+  NdefMessage* readNdef();
+  NdefDetail* readNdefDetail();
+  bool writeNdef(NdefMessage& ndef);
   bool presenceCheck();
   bool makeReadOnly();
-  bool isNdefFormatable();
   bool formatNdef();
 
   std::vector<TagTechnology>& getTechList() { return mTechList; };
@@ -204,6 +200,13 @@ public:
   static bool doNdefFormat();
 
   static bool doIsNdefFormatable();
+
+  int connectWithStatus(int technology);
+  int reconnectWithStatus(int technology);
+  int reconnectWithStatus();
+  int checkNdefWithStatus(int ndefinfo[]);
+  void readNdef(std::vector<uint8_t>& buf);
+  bool isNdefFormatable();
 
 private:
   pthread_mutex_t mMutex;
