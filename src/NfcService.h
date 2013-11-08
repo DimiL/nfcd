@@ -25,8 +25,8 @@ public:
   static NfcService* Instance();
   static INfcManager* getNfcManager();
 
-  static void notifyLlcpLinkActivation(IP2pDevice* pDevice);
-  static void notifyLlcpLinkDeactivation(IP2pDevice* pDevice);
+  static void notifyLlcpLinkActivated(IP2pDevice* pDevice);
+  static void notifyLlcpLinkDeactivated(IP2pDevice* pDevice);
   static void notifyTagDiscovered(INfcTag* pTag);
   static void notifyTagLost();
   static void notifySEFieldActivated();

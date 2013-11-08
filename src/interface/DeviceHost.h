@@ -29,7 +29,7 @@ public:
    * @param pDevice IP2pDevice interface.
    * @return        None.
    */
-  void notifyLlcpLinkActivation(IP2pDevice* pDevice);
+  void notifyLlcpLinkActivated(IP2pDevice* pDevice);
 
   /**
    * Notifies P2P Device is out of range, to deactivate LLCP link.

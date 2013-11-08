@@ -44,7 +44,7 @@ public:
   /**
    * Utility function to fill NdefRecord.
    *
-   * @param  buf        Input buffer contain raw NDEF data.
+   * @param  buf        Input buffer contains raw NDEF data.
    * @param  ignoreMbMe Set if only want to parse single NdefRecord and do not care about Mb,Me field.
    * @param  records    Output formatted NdefRecord parsed from buf.
    * @return            True if the buffer can be correctly parsed.
@@ -54,7 +54,7 @@ public:
   /**
    * Utility function to fill NdefRecord.
    *
-   * @param  buf        Input buffer contain raw NDEF data.
+   * @param  buf        Input buffer contains raw NDEF data.
    * @param  ignoreMbMe Set if only want to parse single NdefRecord and do not care about Mb,Me field.
    * @param  records    Output formatted NdefRecord parsed from buf.
    * @param  offset     Indicate the start position of buffer to be parsed.

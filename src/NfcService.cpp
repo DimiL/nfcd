@@ -95,7 +95,7 @@ void NfcService::initialize(NfcManager* pNfcManager, MessageHandler* msgHandler)
   sNfcManager = pNfcManager;
 }
 
-void NfcService::notifyLlcpLinkActivation(IP2pDevice* pDevice)
+void NfcService::notifyLlcpLinkActivated(IP2pDevice* pDevice)
 {
   ALOGD("%s: enter", FUNC);
   NfcEvent *event = new NfcEvent(MSG_LLCP_LINK_ACTIVATION);
@@ -104,7 +104,7 @@ void NfcService::notifyLlcpLinkActivation(IP2pDevice* pDevice)
   sem_post(&thread_sem);
 }
 
-void NfcService::notifyLlcpLinkDeactivation(IP2pDevice* pDevice)
+void NfcService::notifyLlcpLinkDeactivated(IP2pDevice* pDevice)
 {
   ALOGD("%s: enter", FUNC);
   NfcEvent *event = new NfcEvent(MSG_LLCP_LINK_DEACTIVATION);

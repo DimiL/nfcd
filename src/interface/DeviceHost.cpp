@@ -19,14 +19,14 @@ void DeviceHost::notifyTransactionListeners()
   ALOGE("%s: not implement", __FUNCTION__);
 }
 
-void DeviceHost::notifyLlcpLinkActivation(IP2pDevice* pDevice)
+void DeviceHost::notifyLlcpLinkActivated(IP2pDevice* pDevice)
 {
-  NfcService::notifyLlcpLinkActivation(pDevice);
+  NfcService::notifyLlcpLinkActivated(pDevice);
 }
 
 void DeviceHost::notifyLlcpLinkDeactivated(IP2pDevice* pDevice)
 {
-  NfcService::notifyLlcpLinkDeactivation(pDevice);
+  NfcService::notifyLlcpLinkDeactivated(pDevice);
 }
 
 void DeviceHost::notifyLlcpLinkFirstPacketReceived()

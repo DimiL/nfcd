@@ -16,7 +16,7 @@ public:
   /**
    * Initialize NDEF meesage with NDEF binary data.
    *
-   * @param  buf Input buffer contain raw NDEF data.
+   * @param  buf Input buffer contains raw NDEF data.
    * @return     True if the buffer can be correctly parsed.
    */
   bool init(std::vector<uint8_t>& buf);
@@ -24,7 +24,7 @@ public:
   /**
    * Initialize NDEF meesage with NDEF binary data.
    *
-   * @param  buf    Input buffer contain raw NDEF data.
+   * @param  buf    Input buffer contains raw NDEF data.
    * @param  offset Indicate the start position of buffer to be parsed.
    * @return        True if the buffer can be correctly parsed.
    */
@@ -43,9 +43,9 @@ public:
 };
 
 /**
- * NdefDetail structure contain the information should be returned by readNdefDetail of INfcTag
+ * NdefDetail structure contains the information should be returned by readNdefDetail of INfcTag.
  */
-class NdefDetail{
+class NdefDetail {
 public:
   int maxSupportedLength;
   bool isReadOnly;
