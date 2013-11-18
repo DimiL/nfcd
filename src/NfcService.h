@@ -54,8 +54,8 @@ public:
   void handlePushNdefResponse(NfcEvent* event);
   bool handleMakeNdefReadonlyRequest();
   void handleMakeNdefReadonlyResponse(NfcEvent* event);
-  bool handleEnterLowPowerRequest(bool enter);
-  void handleEnterLowPowerResponse(NfcEvent* event);
+  bool handleEnableDiscoveryRequest(bool enter);
+  void handleEnableDiscoveryResponse(NfcEvent* event);
   bool handleEnableRequest(bool enable);
   void handleEnableResponse(NfcEvent* event);
 
@@ -63,6 +63,7 @@ public:
   void onP2pReceivedNdef(NdefMessage* ndef);
   void enableNfc();
   void disableNfc();
+  bool enableNfcDiscovery(bool enable);
 
 private:
   NfcService();

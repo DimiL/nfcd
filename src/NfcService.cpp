@@ -37,7 +37,7 @@ typedef enum {
   MSG_NDEF_TAG_LIST,
   MSG_CONFIG,
   MSG_MAKE_NDEF_READONLY,
-  MSG_LOW_POWER,
+  MSG_ENABLE_DISCOVERY,
   MSG_ENABLE,
 } NfcEventType;
 
@@ -322,8 +322,8 @@ void* NfcService::eventLoop()
         case MSG_MAKE_NDEF_READONLY:
           handleMakeNdefReadonlyResponse(event);
           break;
-        case MSG_LOW_POWER:
-          handleEnterLowPowerResponse(event);
+        case MSG_ENABLE_DISCOVERY:
+          handleEnableDiscoveryResponse(event);
           break;
         case MSG_ENABLE:
           handleEnableResponse(event);
@@ -508,22 +508,21 @@ void NfcService::handleMakeNdefReadonlyResponse(NfcEvent* event)
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
 }
 
-bool NfcService::handleEnterLowPowerRequest(bool enter)
+bool NfcService::handleEnableDiscoveryRequest(bool enable)
 {
-  NfcEvent *event = new NfcEvent(MSG_LOW_POWER);
-  event->arg1 = enter;
+  NfcEvent *event = new NfcEvent(MSG_ENABLE_DISCOVERY);
+  event->arg1 = enable;
   mQueue.push_back(event);
   sem_post(&thread_sem);
   return true;
 }
 
-void NfcService::handleEnterLowPowerResponse(NfcEvent* event)
+// Enable discovery MUST be called before calling mP2pLinkManager->enableDisable
+// Otherwise, P2P device will not be discovered.
+void NfcService::handleEnableDiscoveryResponse(NfcEvent* event)
 {
-  bool enter = event->arg1;
-  if (enter)
-    sNfcManager->disableDiscovery();
-  else
-    sNfcManager->enableDiscovery();
+  bool enable = event->arg1;
+  enableNfcDiscovery(enable);
 
   mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
 }
@@ -558,10 +557,6 @@ void NfcService::enableNfc()
     if (mP2pLinkManager)
       mP2pLinkManager->enableDisable(true);
 
-    // Enable discovery MUST SNEP server is established.
-    // Otherwise, P2P device will not be discovered.
-    sNfcManager->enableDiscovery();
-
     mIsEnable = true;
   }
 
@@ -576,13 +571,35 @@ void NfcService::disableNfc()
     if (mP2pLinkManager)
       mP2pLinkManager->enableDisable(false);
 
-    sNfcManager->disableDiscovery();
-
     sNfcManager->deinitialize();
 
     mIsEnable = false;
   }
   ALOGD("%s: exit", FUNC);
+}
+
+bool NfcService::enableNfcDiscovery(bool enable)
+{
+  ALOGD("%s: enter, enable = %d", FUNC, enable);
+
+  if (enable) {
+    if (mIsEnable) {
+      sNfcManager->enableDiscovery();
+    } else {
+      ALOGE("%s: try to enable discovery before library is initialized.", FUNC);
+      return false;
+    }
+  } else {
+    if (mIsEnable) {
+      sNfcManager->disableDiscovery();
+    } else {
+      ALOGE("%s: try to disable discovery before library is initialized.", FUNC);
+      return false;
+    }
+  }
+
+  ALOGD("%s: exit", FUNC);
+  return true;
 }
 
 void NfcService::onP2pReceivedNdef(NdefMessage* ndef)
