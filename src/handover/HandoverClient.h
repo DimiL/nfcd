@@ -14,8 +14,11 @@ public:
   ~HandoverClient();
 
   bool connect();
-  void put(NdefMessage& msg);
+  NdefMessage* receive();
+  bool put(NdefMessage& msg);
   void close();
+
+  NdefMessage* processHandoverRequest(NdefMessage& msg);
 
 private:
   static const int DEFAULT_MIU = 128;
