@@ -12,6 +12,14 @@
 static const uint8_t RTD_HANDOVER_REQUEST[2] = {0x48, 0x72};  // "Hr"
 static const uint8_t RTD_HANDOVER_SELECT[2] = {0x48, 0x73};   // "Hs"
 static const uint8_t RTD_HANDOVER_CARRIER[2] = {0x48, 0x63};  // "Hc"
+static const uint8_t RTD_HANDOVER_SIZE = 2;
+
+enum HandoverType {
+  NOT_HANDOVER = -1,
+  HANDOVER_REQUEST,
+  HANDOVER_SELECT,
+  HANDOVER_CARRIER,
+};
 
 static P2pLinkManager* sP2pLinkManager = NULL;
 
@@ -113,37 +121,48 @@ void P2pLinkManager::enableDisable(bool bEnable)
 
 void P2pLinkManager::push(NdefMessage& ndef)
 {
-  // Handover protocol is processed in upper layer. Currently gonk-ptotocol support one
-  // API called push to send NDEF message through a P2P link, but nfcd need to know if
-  // an NDEF message should be sent by SNEP or HANDOVER client.
-  // So we parse the NDEF message here to know if should sent through HANDOVER.
-  bool handover = false;
-  if (ndef.mRecords.size() > 0) {
-    NdefRecord* record = &(ndef.mRecords[0]);
-    if (NdefRecord::TNF_WELL_KNOWN == record->mTnf) {
-      std::vector<uint8_t>& type = record->mType;
+  if (ndef.mRecords.size() == 0) {
+    ALOGE("%s: no NDEF record", FUNC);
+    return;
+  }
 
-      if (record->mType.size() == 2) {
-        if (((type[0] == RTD_HANDOVER_REQUEST[0]) && (type[1] == RTD_HANDOVER_REQUEST[1])) ||
-            ((type[0] == RTD_HANDOVER_SELECT[0])  && (type[1] == RTD_HANDOVER_SELECT[1] )) ||
-            ((type[0] == RTD_HANDOVER_CARRIER[0]) && (type[1] == RTD_HANDOVER_CARRIER[1]))) {
-          handover = true;
-        } 
-      }
+  // In current design nfcd only provide one "push" API to send a NDEF message through P2P link.
+  // But nfcd will need to know if an NDEF message should be sent by SNEP client or HANDOVER client.
+  // So parse NDEF message here to get correct client to send NDEF message.
+  HandoverType handoverType = NOT_HANDOVER;
+  NdefRecord* record = &(ndef.mRecords[0]);
+  if (NdefRecord::TNF_WELL_KNOWN == record->mTnf && RTD_HANDOVER_SIZE == record->mType.size()) {
+    std::vector<uint8_t>& type = record->mType;
+
+    if ((type[0] == RTD_HANDOVER_REQUEST[0]) && (type[1] == RTD_HANDOVER_REQUEST[1])) {
+      handoverType = HANDOVER_REQUEST;
+    } else if ((type[0] == RTD_HANDOVER_SELECT[0])  && (type[1] == RTD_HANDOVER_SELECT[1])) {
+      handoverType = HANDOVER_SELECT;
+    } else if ((type[0] == RTD_HANDOVER_CARRIER[0]) && (type[1] == RTD_HANDOVER_CARRIER[1])) {
+      handoverType = HANDOVER_CARRIER;
     }
   }
 
-  if (handover) {
-    ALOGD("%s: pushed by handover protocol", FUNC);
-    if (mHandoverClient)
-      mHandoverClient->put(ndef);
-    else
+  if (handoverType != NOT_HANDOVER) {
+    if (mHandoverClient) {
+      ALOGD("%s: send NDEF by HANDOVER client", FUNC);
+      if (HANDOVER_REQUEST == handoverType) {
+        NdefMessage* selectMsg = mHandoverClient->processHandoverRequest(ndef);
+        notifyNdefReceived(selectMsg);
+        delete selectMsg;
+      } else {
+        mHandoverClient->put(ndef);
+      }
+    } else {
       ALOGE("%s: handover client not connected", FUNC);
+    }
   } else {
-    if (mSnepClient)
+    if (mSnepClient) {
+      ALOGD("%s: send NDEF by SNEP client", FUNC);
       mSnepClient->put(ndef);
-    else
+    } else {
       ALOGE("%s: snep client not connected", FUNC);
+    }
   }
 }
 

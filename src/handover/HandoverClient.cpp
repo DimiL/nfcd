@@ -58,13 +58,49 @@ bool HandoverClient::connect()
   return true;
 }
 
-void HandoverClient::put(NdefMessage& msg)
+NdefMessage* HandoverClient::processHandoverRequest(NdefMessage& msg)
+{
+  NdefMessage* ndef = NULL;
+  // Send handover request message.
+  if (put(msg)) {
+    // Get handover select message sent from remote.
+    ndef = receive();
+  }
+
+  return ndef;
+}
+
+NdefMessage* HandoverClient::receive()
+{
+  std::vector<uint8_t> buffer;
+  while(true) {
+    std::vector<uint8_t> partial;
+    int size = mSocket->receive(partial);
+    if (size < 0) {
+      ALOGE("%s: connection broken", FUNC);
+      break;
+    } else {
+      buffer.insert(buffer.end(), partial.begin(), partial.end());
+    }
+
+    NdefMessage* ndef = new NdefMessage();
+    if(ndef->init(buffer)) {
+      ALOGD("%s: get a complete NDEF message", FUNC);
+      return ndef;
+    } else {
+      delete ndef;
+    }
+  }
+  return NULL;
+}
+
+bool HandoverClient::put(NdefMessage& msg)
 {
   ALOGD("%s: enter", FUNC);
 
   if (mState != HandoverClient::CONNECTED) {
     ALOGE("%s: not connected", FUNC);
-    return;
+    return false;
   }
 
   std::vector<uint8_t> buf;
@@ -72,6 +108,7 @@ void HandoverClient::put(NdefMessage& msg)
   mSocket->send(buf);
 
   ALOGD("%s: exit", FUNC);
+  return true;
 }
 
 void HandoverClient::close()
