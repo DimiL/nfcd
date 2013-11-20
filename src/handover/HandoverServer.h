@@ -6,6 +6,8 @@
 #define mozilla_nfcd_HandoverPushServer_h
 
 class IHandoverCallback;
+class NdefMessage;
+class HandoverConnectionThread;
 
 class HandoverServer{
 public:
@@ -18,11 +20,16 @@ public:
 
   void start();
   void stop();
+  bool put(NdefMessage& msg);
+  void setConnectionThread(HandoverConnectionThread* pThread);
 
   ILlcpServerSocket* mServerSocket;
   int                mServiceSap;
   IHandoverCallback* mCallback;
   bool               mServerRunning;
+
+private:
+  HandoverConnectionThread* mConnectionThread;
 };
 
 class HandoverConnectionThread {
@@ -33,6 +40,11 @@ public:
   void run();
   bool isServerRunning() const;
 
+  ILlcpSocket* getSocket() {  return mSock;  }
+  IHandoverCallback* getCallback() {  return mCallback;  }
+  HandoverServer* getServer() {  return mServer;  }
+
+private:
   ILlcpSocket* mSock;
   IHandoverCallback* mCallback;
   HandoverServer* mServer;
