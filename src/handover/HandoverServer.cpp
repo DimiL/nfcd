@@ -12,6 +12,7 @@
 // Registered LLCP Service Names.
 const char* HandoverServer::DEFAULT_SERVICE_NAME = "urn:nfc:sn:handover";
 
+// Handover conncetion thread is responsible for sending/receiving NDEF message.
 void* HandoverConnectionThreadFunc(void* arg)
 {
   ALOGD("%s: connection thread enter", FUNC);
@@ -22,13 +23,13 @@ void* HandoverConnectionThreadFunc(void* arg)
     return NULL;
   }
 
-  IHandoverCallback* ICallback = pConnectionThread->mCallback;
-
+  IHandoverCallback* ICallback = pConnectionThread->getCallback();
+  ILlcpSocket* socket = pConnectionThread->getSocket();
   bool connectionBroken = false;
   std::vector<uint8_t> buffer;
   while(!connectionBroken) {
     std::vector<uint8_t> partial;
-    int size = pConnectionThread->mSock->receive(partial);
+    int size = socket->receive(partial);
     if (size < 0) {
       ALOGE("%s: connection broken", FUNC);
       connectionBroken = true;
@@ -48,8 +49,12 @@ void* HandoverConnectionThreadFunc(void* arg)
     }
   }
 
-  if (pConnectionThread->mSock)
-    pConnectionThread->mSock->close();
+  if (socket)
+    socket->close();
+
+  HandoverServer* server = pConnectionThread->getServer();
+  if (server)
+    server->setConnectionThread(NULL);
 
   // TODO : is this correct ??
   delete pConnectionThread;
@@ -84,6 +89,7 @@ bool HandoverConnectionThread::isServerRunning() const
   return mServer->mServerRunning;
 }
 
+// Handover server thread is responsible for handling incoming connect request.
 void* handoverServerThreadFunc(void* arg)
 {
   HandoverServer* pHandoverServer = reinterpret_cast<HandoverServer*>(arg);
@@ -111,6 +117,7 @@ void* handoverServerThreadFunc(void* arg)
     if (communicationSocket != NULL) {
       HandoverConnectionThread* pConnectionThread =
           new HandoverConnectionThread(pHandoverServer, communicationSocket, ICallback);
+      pHandoverServer->setConnectionThread(pConnectionThread);
       pConnectionThread->run();
     }
   }
@@ -124,6 +131,7 @@ HandoverServer::HandoverServer(IHandoverCallback* ICallback)
  , mServiceSap(HANDOVER_SAP)
  , mCallback(ICallback)
  , mServerRunning(false)
+ , mConnectionThread(NULL)
 {
 }
 
@@ -150,7 +158,7 @@ void HandoverServer::start()
   }
   mServerRunning = true;
 
-  ALOGD("%s exit", FUNC);
+  ALOGD("%s: exit", FUNC);
 }
 
 void HandoverServer::stop()
@@ -164,4 +172,29 @@ void HandoverServer::stop()
   mServerRunning = false;
 
   // use pthread_join here to make sure all thread is finished ?
+}
+
+bool HandoverServer::put(NdefMessage& msg)
+{
+  ALOGD("%s: enter", FUNC);
+
+  if (!mConnectionThread || !mConnectionThread->getSocket()) {
+    ALOGE("%s: connection is not established", FUNC);
+    return false;
+  }
+
+  std::vector<uint8_t> buf;
+  msg.toByteArray(buf);
+  mConnectionThread->getSocket()->send(buf);
+
+  ALOGD("%s: exit", FUNC);
+  return true;
+}
+
+void HandoverServer::setConnectionThread(HandoverConnectionThread* pThread)
+{
+  if (mConnectionThread != NULL) {
+    ALOGE("%s: there is more than one connection, should not happen!", FUNC);
+  }
+  mConnectionThread = pThread;
 }

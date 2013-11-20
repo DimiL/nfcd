@@ -119,6 +119,8 @@ void P2pLinkManager::enableDisable(bool bEnable)
   }
 }
 
+// TODO : P2P push will block in llcp socket send/receive.
+//        Maybe we should create a thread to do it ?
 void P2pLinkManager::push(NdefMessage& ndef)
 {
   if (ndef.mRecords.size() == 0) {
@@ -138,24 +140,31 @@ void P2pLinkManager::push(NdefMessage& ndef)
       handoverType = HANDOVER_REQUEST;
     } else if ((type[0] == RTD_HANDOVER_SELECT[0])  && (type[1] == RTD_HANDOVER_SELECT[1])) {
       handoverType = HANDOVER_SELECT;
-    } else if ((type[0] == RTD_HANDOVER_CARRIER[0]) && (type[1] == RTD_HANDOVER_CARRIER[1])) {
-      handoverType = HANDOVER_CARRIER;
     }
   }
 
-  if (handoverType != NOT_HANDOVER) {
+  // Handover Reuqest:
+  // Hr is sent by handover client and will receive response Hs.
+  if (HANDOVER_REQUEST == handoverType) {
     if (mHandoverClient) {
-      ALOGD("%s: send NDEF by HANDOVER client", FUNC);
-      if (HANDOVER_REQUEST == handoverType) {
-        NdefMessage* selectMsg = mHandoverClient->processHandoverRequest(ndef);
-        notifyNdefReceived(selectMsg);
-        delete selectMsg;
-      } else {
-        mHandoverClient->put(ndef);
-      }
+      ALOGD("%s: send Handover Request by handover client", FUNC);
+      NdefMessage* selectMsg = mHandoverClient->processHandoverRequest(ndef);
+      notifyNdefReceived(selectMsg);
+      delete selectMsg;
     } else {
       ALOGE("%s: handover client not connected", FUNC);
     }
+  // Handover Select:
+  // Hs is always sent in order to response for receiving Hr.
+  // So we should send by the same socket receiving Hr (Hr is always received by HANDOVER server).
+  } else if (HANDOVER_SELECT == handoverType) {
+    if (mHandoverServer) {
+      ALOGD("%s: send Handover Select by handover server", FUNC);
+      mHandoverServer->put(ndef);
+    } else {
+      ALOGE("%s: handover server not created", FUNC);
+    }
+  // For all other non-handover message, send through SNEP protocol.
   } else {
     if (mSnepClient) {
       ALOGD("%s: send NDEF by SNEP client", FUNC);
