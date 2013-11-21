@@ -193,7 +193,7 @@ bool HandoverServer::put(NdefMessage& msg)
 
 void HandoverServer::setConnectionThread(HandoverConnectionThread* pThread)
 {
-  if (mConnectionThread != NULL) {
+  if (pThread != NULL && mConnectionThread != NULL) {
     ALOGE("%s: there is more than one connection, should not happen!", FUNC);
   }
   mConnectionThread = pThread;
