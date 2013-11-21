@@ -204,8 +204,8 @@ public:
   int connectWithStatus(int technology);
   int reconnectWithStatus(int technology);
   int reconnectWithStatus();
-  int checkNdefWithStatus(int ndefinfo[]);
-  void readNdef(std::vector<uint8_t>& buf);
+  NdefMessage* doReadNdef();
+  NdefDetail* doReadNdefDetail();
   bool isNdefFormatable();
 
 private:
