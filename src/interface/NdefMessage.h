@@ -11,6 +11,7 @@
 class NdefMessage{
 public:
   NdefMessage();
+  NdefMessage(NdefMessage* ndef);
   ~NdefMessage();
 
   /**

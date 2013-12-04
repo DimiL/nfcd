@@ -58,7 +58,7 @@ SnepMessage::SnepMessage(uint8_t version, uint8_t field, int length,
   mField = field;
   mLength = length;
   mAcceptableLength = acceptableLength;
-  mNdefMessage = ndefMessage;
+  mNdefMessage = new NdefMessage(ndefMessage);
 }
 
 SnepMessage* SnepMessage::getGetRequest(int acceptableLength, NdefMessage& ndef)
