@@ -4,6 +4,17 @@ NdefMessage::NdefMessage()
 {
 }
 
+NdefMessage::NdefMessage(NdefMessage* ndef)
+{
+  if (!ndef)
+    return;
+
+  std::vector<NdefRecord>& record = ndef->mRecords;
+  for (uint32_t i = 0; i < record.size(); i++) {
+    mRecords.push_back(NdefRecord(record[i].mTnf, record[i].mType, record[i].mId, record[i].mPayload));
+  }
+}
+
 NdefMessage::~NdefMessage()
 {
   mRecords.clear();
