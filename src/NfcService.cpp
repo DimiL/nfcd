@@ -167,6 +167,7 @@ void NfcService::handleLlcpLinkDeactivation(NfcEvent* event)
   }
 
   mP2pLinkManager->onLlcpDeactivated();
+  mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_LOST, NULL);
 }
 
 void NfcService::handleLlcpLinkActivation(NfcEvent* event)
