@@ -35,9 +35,18 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
 
   std::vector<uint8_t> buf;
   msg.toByteArray(buf);
-  uint32_t length = buf.size() <  mFragmentLength ? buf.size() : mFragmentLength;
+  uint32_t length = -1;
 
-  mSocket->send(buf);
+  if (buf.size() <  mFragmentLength) {
+    length = buf.size();
+    mSocket->send(buf);
+  } else {
+    length = mFragmentLength;
+    std::vector<uint8_t> tmpBuf;
+    for (uint32_t i = 0; i < mFragmentLength; i++)
+      tmpBuf.push_back(buf[i]);
+    mSocket->send(tmpBuf);
+  }
 
   if (length == buf.size()) {
     ALOGD("%s: exit", FUNC);
