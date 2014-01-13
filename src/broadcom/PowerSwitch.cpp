@@ -13,6 +13,25 @@
 #define LOG_TAG "BroadcomNfc"
 #include <cutils/log.h>
 
+// Bug 934835 : B2G NFC: NFC Daemon crash sometimes when enabled
+// Set a delay between power off and power on,because libnfc-nci will crash if
+// turn off then turn on immediatelly.
+// 500 millis-seconds is experiment result.
+#define PowerOnOffDelay 500   // milli-seconds.
+
+static UINT32 TimeDiff(timespec start, timespec end)
+{
+  timespec temp;
+  if ((end.tv_nsec-start.tv_nsec)<0) {
+    temp.tv_sec = end.tv_sec-start.tv_sec-1;
+    temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
+  } else {
+    temp.tv_sec = end.tv_sec-start.tv_sec;
+    temp.tv_nsec = end.tv_nsec-start.tv_nsec;
+  }
+  return (temp.tv_sec * 1000) + (temp.tv_nsec / 1000000);
+}
+
 void doStartupConfig();
 
 PowerSwitch PowerSwitch::sPowerSwitch;
@@ -26,6 +45,7 @@ PowerSwitch::PowerSwitch()
  , mDesiredScreenOffPowerState(0)
  , mCurrActivity(0)
 {
+  mLastPowerOffTime = (struct timespec){0, 0};
 }
 
 PowerSwitch::~PowerSwitch()
@@ -146,6 +166,7 @@ bool PowerSwitch::setPowerOffSleepState(bool sleep)
       if (stat == NFA_STATUS_OK) {
         mPowerStateEvent.wait();
         mCurrLevel = LOW_POWER;
+        clock_gettime(CLOCK_REALTIME, &mLastPowerOffTime);
       } else {
         ALOGE("%s: API fail; stat=0x%X", __FUNCTION__, stat);
         goto TheEnd;
@@ -162,6 +183,13 @@ bool PowerSwitch::setPowerOffSleepState(bool sleep)
       SyncEventGuard guard(mPowerStateEvent);
 
       ALOGD("%s: try full power", __FUNCTION__);
+
+      struct timespec now;
+      clock_gettime(CLOCK_REALTIME, &now);
+      int timediff = TimeDiff(mLastPowerOffTime, now);
+      if (timediff < PowerOnOffDelay) {
+        usleep((PowerOnOffDelay -timediff) * 1000);
+      }
       stat = NFA_PowerOffSleepMode(FALSE);
       if (stat == NFA_STATUS_OK) {
         mPowerStateEvent.wait();
