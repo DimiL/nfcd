@@ -175,11 +175,7 @@ bool NfcManager::initialize()
 
 TheEnd:
   if (sIsNfaEnabled) {
-    // TODO : remove this temporarily.
-    // It cause enable crash becase this will close NFC and if at the same time
-    // we get enable callback and do enable NFC accordingly. This may cause exception
-    // some times.
-    //PowerSwitch::getInstance().setLevel(PowerSwitch::LOW_POWER);
+    PowerSwitch::getInstance().setLevel(PowerSwitch::LOW_POWER);
   }
 
   return sIsNfaEnabled;

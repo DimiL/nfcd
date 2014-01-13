@@ -5,6 +5,7 @@
 #pragma once
 #include "nfa_api.h"
 #include "SyncEvent.h"
+#include "sys/time.h"
 
 /**
  * Adjust the controller's power states.
@@ -181,4 +182,5 @@ private:
   SyncEvent mPowerStateEvent;
   PowerActivity mCurrActivity;
   Mutex mMutex;
+  struct timespec mLastPowerOffTime;
 };
