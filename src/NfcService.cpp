@@ -41,6 +41,12 @@ typedef enum {
   MSG_ENABLE,
 } NfcEventType;
 
+typedef enum {
+  STATE_NFC_OFF = 0,
+  STATE_NFC_ON_DISCOVERY_OFF,
+  STATE_NFC_ON_DISCOVERY_ON,
+} NfcState;
+
 class NfcEvent {
 public:
   NfcEvent (NfcEventType type) :mType(type) {}
@@ -62,7 +68,7 @@ NfcService* NfcService::sInstance = NULL;
 NfcManager* NfcService::sNfcManager = NULL;
 
 NfcService::NfcService()
- : mIsEnabled(false)
+ : mState(STATE_NFC_OFF)
 {
   mP2pLinkManager = new P2pLinkManager(this);
 }
@@ -522,11 +528,12 @@ bool NfcService::handleEnterLowPowerRequest(bool enter)
 
 void NfcService::handleEnterLowPowerResponse(NfcEvent* event)
 {
-  bool enter = event->arg1;
-  if (enter)
-    sNfcManager->disableDiscovery();
-  else
-    sNfcManager->enableDiscovery();
+  bool low = event->arg1;
+  if (low) {
+    disableDiscovery();
+  } else {
+    enableDiscovery();
+  }
 
   mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
 }
@@ -540,13 +547,25 @@ bool NfcService::handleEnableRequest(bool enable)
   return true;
 }
 
+/**
+ * There are two case for enable:
+ * 1. NFC is off -> enable NFC and then enable discovery.
+ * 2. NFC is already on but discovery mode is off -> enable discovery.
+ */
 void NfcService::handleEnableResponse(NfcEvent* event)
 {
   bool enable = event->arg1;
   if (enable) {
-    enableNfc();
+    // Do different action depends on current state.
+    if (mState == STATE_NFC_ON_DISCOVERY_OFF) {
+      enableDiscovery();
+    } else if (mState == STATE_NFC_OFF) {
+      enableNfc();
+      enableDiscovery();
+    }
   } else {
     disableNfc();
+    disableDiscovery();
   }
   mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
 }
@@ -555,21 +574,17 @@ void NfcService::enableNfc()
 {
   ALOGD("%s: enter", FUNC);
 
-  if (mIsEnabled) {
-    ALOGW("%s: NFC is already enabled", FUNC);
+  if (mState != STATE_NFC_OFF) {
     return;
   }
 
   sNfcManager->initialize();
 
-  if (mP2pLinkManager)
+  if (mP2pLinkManager) {
     mP2pLinkManager->enableDisable(true);
+  }
 
-  // Enable discovery MUST SNEP server is established.
-  // Otherwise, P2P device will not be discovered.
-  sNfcManager->enableDiscovery();
-
-  mIsEnabled = true;
+  mState = STATE_NFC_ON_DISCOVERY_OFF;
 
   ALOGD("%s: exit", FUNC);
 }
@@ -578,7 +593,7 @@ void NfcService::disableNfc()
 {
   ALOGD("%s: enter", FUNC);
 
-  if (!mIsEnabled) {
+  if (mState == STATE_NFC_OFF) {
     ALOGW("%s: NFC is already disabled", FUNC);
     return;
   }
@@ -586,11 +601,39 @@ void NfcService::disableNfc()
   if (mP2pLinkManager)
     mP2pLinkManager->enableDisable(false);
 
-  sNfcManager->disableDiscovery();
-
   sNfcManager->deinitialize();
 
-  mIsEnabled = false;
+  mState = STATE_NFC_OFF;
+
+  ALOGD("%s: exit", FUNC);
+}
+
+void NfcService::enableDiscovery()
+{
+  ALOGD("%s: enter", FUNC);
+
+  if (mState != STATE_NFC_ON_DISCOVERY_OFF) {
+    return;
+  }
+
+  sNfcManager->enableDiscovery();
+
+  mState = STATE_NFC_ON_DISCOVERY_ON;
+
+  ALOGD("%s: exit", FUNC);
+}
+
+void NfcService::disableDiscovery()
+{
+  ALOGD("%s: enter", FUNC);
+
+  if (mState != STATE_NFC_ON_DISCOVERY_ON) {
+    return;
+  }
+
+  sNfcManager->disableDiscovery();
+
+  mState = STATE_NFC_ON_DISCOVERY_OFF;
 
   ALOGD("%s: exit", FUNC);
 }
