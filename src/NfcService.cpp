@@ -311,6 +311,7 @@ void* NfcService::eventLoop()
           break;
         case MSG_READ_NDEF_DETAIL:
           handleReadNdefDetailResponse(event);
+          break;
         case MSG_READ_NDEF:
           handleReadNdefResponse(event);
           break;
