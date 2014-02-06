@@ -69,7 +69,10 @@ public:
 private:
   NfcService();
 
-  bool mIsEnabled;
+  void enableDiscovery();
+  void disableDiscovery();
+
+  uint32_t mState;
   static NfcService* sInstance;
   static NfcManager* sNfcManager;
   android::List<NfcEvent*> mQueue;
