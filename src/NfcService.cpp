@@ -174,6 +174,11 @@ void NfcService::handleLlcpLinkDeactivation(NfcEvent* event)
 
   mP2pLinkManager->onLlcpDeactivated();
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_LOST, NULL);
+
+  // TODO : Handle in SE related code in the future ?
+  // Bug 961667 - [NFC] Multiple pairing when tapped phones together
+  // RF field should be reset when link deactivate.
+  sNfcManager->resetRFField();
 }
 
 void NfcService::handleLlcpLinkActivation(NfcEvent* event)
