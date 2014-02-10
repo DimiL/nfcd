@@ -389,6 +389,13 @@ void NfcManager::setP2pTargetModes(int modes)
   // This function is not called by the NFC service nor exposed by public API.
 }
 
+// TODO : Handle in SE
+void NfcManager::resetRFField()
+{
+  startRfDiscovery(false);
+  startRfDiscovery(true);
+}
+
 /**
  * Private functions.
  */
@@ -462,8 +469,9 @@ void nfaDeviceManagementCallback(UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
       ALOGD("%s: NFA_DM_RF_FIELD_EVT; status=0x%X; field status=%u", __FUNCTION__,
               eventData->rf_field.status, eventData->rf_field.rf_field_status);
 
-      if (sIsDisabling || !sIsNfaEnabled)
+      if (sIsDisabling || !sIsNfaEnabled) {
         break;
+      }
 
       if (!sP2pActive && eventData->rf_field.status == NFA_STATUS_OK) {
         // TODO : Implement SE
@@ -633,6 +641,27 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
       if ((eventData->deactivated.type == NFA_DEACTIVATE_TYPE_IDLE)
        || (eventData->deactivated.type == NFA_DEACTIVATE_TYPE_DISCOVERY)) {
         // TODO : Implement SE
+        if (sP2pActive) {
+          sP2pActive = false;
+          // Make sure RF field events are re-enabled.
+          ALOGD("%s: NFA_DEACTIVATED_EVT; is p2p", __FUNCTION__);
+          // Disable RF field events in case of p2p.
+          UINT8 nfa_enable_rf_events[] = { 0x01 };
+
+          if (!sIsDisabling && sIsNfaEnabled) {
+            ALOGD("%s: Enabling RF field events", __FUNCTION__);
+            status = NFA_SetConfig(NCI_PARAM_ID_RF_FIELD_INFO, sizeof(nfa_enable_rf_events),
+                                   &nfa_enable_rf_events[0]);
+            if (status == NFA_STATUS_OK) {
+              ALOGD("%s: Enabled RF field events", __FUNCTION__);
+            } else {
+              ALOGE("%s: Failed to enable RF field events", __FUNCTION__);
+            }
+            // TODO : Implement SE
+            // Consider the field to be off at this point
+            //SecureElement::getInstance().notifyRfFieldEvent (false);
+          }
+        }
       }
       break;
     // TLV Detection complete.

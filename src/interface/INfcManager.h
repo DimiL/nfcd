@@ -118,6 +118,8 @@ public:
    * @return Default receive window size.
    */
   virtual int getDefaultLlcpRwSize() const = 0;
+
+  virtual void resetRFField() = 0;
 };
 
 #endif

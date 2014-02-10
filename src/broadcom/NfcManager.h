@@ -129,6 +129,8 @@ public:
    */
   int getDefaultLlcpRwSize() const { return NfcManager::DEFAULT_LLCP_RWSIZE; };
 
+  void resetRFField();
+
 private:
   P2pDevice* mP2pDevice;
   NfcTagManager* mNfcTagManager;
