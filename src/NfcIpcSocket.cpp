@@ -163,9 +163,6 @@ void NfcIpcSocket::writeToOutgoingQueue(uint8_t* data, size_t dataLen)
   size_t writeOffset = 0;
   int written = 0;
 
-  size_t size = __builtin_bswap32(dataLen);
-  write(nfcdRw, (void*)&size, sizeof(uint32_t));
-
   ALOGD("Writing %d bytes to gecko ", dataLen);
   while (writeOffset < dataLen) {
     do {

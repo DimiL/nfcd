@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MessageHandler.h"
+#include <arpa/inet.h> // for htonl
 #include "NfcService.h"
 #include "NfcIpcSocket.h"
 #include "NfcUtil.h"
@@ -93,6 +94,7 @@ void MessageHandler::processResponse(NfcResponseType response, NfcErrorCode erro
 {
   ALOGD("%s enter response=%d", FUNC, response);
   Parcel parcel;
+  parcel.writeInt32(0); // Parcel Size.
   parcel.writeInt32(response);
   parcel.writeInt32(error);
 
@@ -119,6 +121,7 @@ void MessageHandler::processNotification(NfcNotificationType notification, void*
 {
   ALOGD("processNotificaton notification=%d", notification);
   Parcel parcel;
+  parcel.writeInt32(0); // Parcel Size.
   parcel.writeInt32(notification);
 
   switch (notification) {
@@ -144,6 +147,9 @@ void MessageHandler::setOutgoingSocket(NfcIpcSocket* socket)
 
 void MessageHandler::sendResponse(Parcel& parcel)
 {
+  parcel.setDataPosition(0);
+  uint32_t sizeBE = htonl(parcel.dataSize() - sizeof(int));
+  parcel.writeInt32(sizeBE);
   mSocket->writeToOutgoingQueue(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
 }
 
