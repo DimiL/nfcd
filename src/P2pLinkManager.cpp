@@ -146,9 +146,10 @@ void P2pLinkManager::push(NdefMessage& ndef)
   // Handover Reuqest:
   // Hr is sent by handover client and will receive response Hs.
   if (HANDOVER_REQUEST == handoverType) {
-    if (mHandoverClient) {
+    HandoverClient* pClient = getHandoverClient();
+    if (pClient) {
       ALOGD("%s: send Handover Request by handover client", FUNC);
-      NdefMessage* selectMsg = mHandoverClient->processHandoverRequest(ndef);
+      NdefMessage* selectMsg = pClient->processHandoverRequest(ndef);
       notifyNdefReceived(selectMsg);
       delete selectMsg;
     } else {
@@ -166,9 +167,10 @@ void P2pLinkManager::push(NdefMessage& ndef)
     }
   // For all other non-handover message, send through SNEP protocol.
   } else {
-    if (mSnepClient) {
+    SnepClient* pClient = getSnepClient();
+    if (pClient) {
       ALOGD("%s: send NDEF by SNEP client", FUNC);
-      mSnepClient->put(ndef);
+      pClient->put(ndef);
     } else {
       ALOGE("%s: snep client not connected", FUNC);
     }
@@ -178,9 +180,6 @@ void P2pLinkManager::push(NdefMessage& ndef)
 void P2pLinkManager::onLlcpActivated()
 {
   mLinkState = LINK_STATE_UP;
-
-  // Connect SNEP/HANDOVER client once llcp is activated.
-  connectClients();
 }
 
 void P2pLinkManager::onLlcpDeactivated()
@@ -190,7 +189,7 @@ void P2pLinkManager::onLlcpDeactivated()
   disconnectClients();
 }
 
-void P2pLinkManager::connectClients()
+SnepClient* P2pLinkManager::getSnepClient()
 {
   if (!mSnepClient) {
     mSnepClient = new SnepClient();
@@ -200,7 +199,11 @@ void P2pLinkManager::connectClients()
       mSnepClient = NULL;
     }
   }
+  return mSnepClient;
+}
 
+HandoverClient* P2pLinkManager::getHandoverClient()
+{
   if (!mHandoverClient) {
     mHandoverClient = new HandoverClient();
     if (!mHandoverClient->connect()) {
@@ -209,6 +212,7 @@ void P2pLinkManager::connectClients()
       mHandoverClient = NULL;
     }
   }
+  return mHandoverClient;
 }
 
 void P2pLinkManager::disconnectClients()
