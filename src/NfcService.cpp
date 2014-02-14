@@ -178,6 +178,7 @@ void NfcService::handleLlcpLinkDeactivation(NfcEvent* event)
   // TODO : Handle in SE related code in the future ?
   // Bug 961667 - [NFC] Multiple pairing when tapped phones together
   // RF field should be reset when link deactivate.
+  ALOGD("%s: reset RF field", FUNC);
   sNfcManager->resetRFField();
 }
 

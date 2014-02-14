@@ -52,7 +52,8 @@ private:
   static const int LINK_STATE_DOWN = 1;
   static const int LINK_STATE_UP = 2;
 
-  void connectClients();
+  SnepClient* getSnepClient();
+  HandoverClient* getHandoverClient();
   void disconnectClients();
 
   int mLinkState;
