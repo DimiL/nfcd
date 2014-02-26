@@ -55,6 +55,8 @@ public:
 
   virtual void doDeselectSecureElement() = 0;
 
+  virtual int doOpenSecureElementConnection() = 0;
+
   /**
    * Check Llcp connection.
    *

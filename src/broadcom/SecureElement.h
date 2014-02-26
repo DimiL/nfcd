@@ -85,7 +85,8 @@ public:
    *
    * @return True if ok.
    */
-  bool transceive();
+  bool transceive(UINT8* xmitBuffer, INT32 xmitBufferSize, UINT8* recvBuffer,
+        INT32 recvBufferMaxSize, INT32& recvBufferActualSize, INT32 timeoutMillisec);
 
   /**
    * Notify the NFC service about whether the SE was activated

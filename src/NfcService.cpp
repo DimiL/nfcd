@@ -592,10 +592,11 @@ void NfcService::handleEnableSecureElementResponse(NfcEvent* event)
   // mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
 }
 
-// for testing
+// For testing
 void NfcService::selectSE()
 {
   sNfcManager->doSelectSecureElement();
+  sNfcManager->doOpenSecureElementConnection();
 }
 
 void NfcService::enableNfc()

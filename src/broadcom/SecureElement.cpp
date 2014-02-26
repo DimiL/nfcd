@@ -19,6 +19,8 @@ bool gUseStaticPipe = false;    // if true, use gGatePipe as static pipe id.  if
 SecureElement SecureElement::sSecElem;
 const char* SecureElement::APP_NAME = "nfc";
 
+extern void startRfDiscovery(bool isStart);
+
 SecureElement::SecureElement()
  : mActiveEeHandle(NFA_HANDLE_INVALID)
  , mDestinationGate(4) //loopback gate
@@ -455,14 +457,12 @@ bool SecureElement::connectEE()
     return false;
   }
 
-  // TODO
-  /*
   // Disable RF discovery completely while the DH is connected
-    android::startRfDiscovery(false);
+  startRfDiscovery(false);
 
+  // TODO:
     // Disable UICC idle timeout while the DH is connected
-    android::setUiccIdleTimeout (false);
-  */
+  //setUiccIdleTimeout (false);
 
   mNewSourceGate = 0;
 
@@ -623,9 +623,93 @@ bool SecureElement::disconnectEE(uint32_t seID)
   return true;
 }
 
-bool SecureElement::transceive()
+bool SecureElement::transceive(UINT8* xmitBuffer, INT32 xmitBufferSize, UINT8* recvBuffer,
+        INT32 recvBufferMaxSize, INT32& recvBufferActualSize, INT32 timeoutMillisec)
 {
-  return true;
+  tNFA_STATUS nfaStat = NFA_STATUS_FAILED;
+  bool isSuccess = false;
+  bool waitOk = false;
+  UINT8 newSelectCmd[NCI_MAX_AID_LEN + 10];
+
+  ALOGD("%s: enter; xmitBufferSize=%ld; recvBufferMaxSize=%ld; timeout=%ld", __FUNCTION__, xmitBufferSize, recvBufferMaxSize, timeoutMillisec);
+
+  // Check if we need to replace an "empty" SELECT command.
+  // 1. Has there been a AID configured, and
+  // 2. Is that AID a valid length (i.e 16 bytes max), and
+  // 3. Is the APDU at least 4 bytes (for header), and
+  // 4. Is INS == 0xA4 (SELECT command), and
+  // 5. Is P1 == 0x04 (SELECT by AID), and
+  // 6. Is the APDU len 4 or 5 bytes.
+  //
+  // Note, the length of the configured AID is in the first
+  //   byte, and AID starts from the 2nd byte.
+  if (mAidForEmptySelect[0]                           // 1
+      && (mAidForEmptySelect[0] <= NCI_MAX_AID_LEN)   // 2
+      && (xmitBufferSize >= 4)                        // 3
+      && (xmitBuffer[1] == 0xA4)                      // 4
+      && (xmitBuffer[2] == 0x04)                      // 5
+      && (xmitBufferSize <= 5))                       // 6
+  {
+    UINT8 idx = 0;
+
+    // Copy APDU command header from the input buffer.
+    memcpy(&newSelectCmd[0], &xmitBuffer[0], 4);
+    idx = 4;
+
+    // Set the Lc value to length of the new AID
+    newSelectCmd[idx++] = mAidForEmptySelect[0];
+
+    // Copy the AID
+    memcpy(&newSelectCmd[idx], &mAidForEmptySelect[1], mAidForEmptySelect[0]);
+    idx += mAidForEmptySelect[0];
+
+    // If there is an Le (5th byte of APDU), add it to the end.
+    if (xmitBufferSize == 5)
+      newSelectCmd[idx++] = xmitBuffer[4];
+
+    // Point to the new APDU
+    xmitBuffer = &newSelectCmd[0];
+    xmitBufferSize = idx;
+
+    ALOGD("%s: Empty AID SELECT cmd detected, substituting AID from config file, new length=%d", __FUNCTION__, idx);
+  }
+
+  {
+    SyncEventGuard guard (mTransceiveEvent);
+    mActualResponseSize = 0;
+    memset (mResponseData, 0, sizeof(mResponseData));
+    if ((mNewPipeId == STATIC_PIPE_0x70) || (mNewPipeId == STATIC_PIPE_0x71)) {
+      nfaStat = NFA_HciSendEvent(mNfaHciHandle, mNewPipeId, EVT_SEND_DATA, xmitBufferSize, xmitBuffer, sizeof(mResponseData), mResponseData, 0);
+    } else {
+      nfaStat = NFA_HciSendEvent(mNfaHciHandle, mNewPipeId, NFA_HCI_EVT_POST_DATA, xmitBufferSize, xmitBuffer, sizeof(mResponseData), mResponseData, 0);
+    }
+
+    if (nfaStat == NFA_STATUS_OK) {
+      waitOk = mTransceiveEvent.wait(timeoutMillisec);
+      if (waitOk == false) //timeout occurs
+      {
+        ALOGE ("%s: wait response timeout", __FUNCTION__);
+        goto TheEnd;
+      }
+    } else {
+      ALOGE("%s: fail send data; error=0x%X", __FUNCTION__, nfaStat);
+      goto TheEnd;
+    }
+  }
+
+  if (mActualResponseSize > recvBufferMaxSize) {
+    recvBufferActualSize = recvBufferMaxSize;
+  } else {
+    recvBufferActualSize = mActualResponseSize;
+  }
+
+  memcpy(recvBuffer, mResponseData, recvBufferActualSize);
+  isSuccess = true;
+
+TheEnd:
+  ALOGD("%s: exit; isSuccess: %d; recvBufferActualSize: %ld", __FUNCTION__, isSuccess, recvBufferActualSize);
+  return isSuccess;
+
 }
 
 void SecureElement::notifyListenModeState(bool isActivated)
@@ -1037,7 +1121,7 @@ void SecureElement::adjustTechnologyRoutes(RouteDataSet::Database* db, RouteSele
     {
       ALOGD("%s: route to EE h=0x%X", __FUNCTION__, NFA_EE_HANDLE_DH);
       SyncEventGuard guard(mRoutingEvent);
-      nfaStat = NFA_EeSetDefaultTechRouting (NFA_EE_HANDLE_DH,
+      nfaStat = NFA_EeSetDefaultTechRouting(NFA_EE_HANDLE_DH,
               techsSwitchOn, techsSwitchOff, techsBatteryOff);
       if (nfaStat == NFA_STATUS_OK)
         mRoutingEvent.wait();
