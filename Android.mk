@@ -41,7 +41,10 @@ BROADCOM_SRC_FILES := \
     src/broadcom/NfcTag.cpp \
     src/broadcom/PeerToPeer.cpp \
     src/broadcom/Pn544Interop.cpp \
-    src/broadcom/IntervalTimer.cpp
+    src/broadcom/IntervalTimer.cpp \
+    src/broadcom/SecureElement.cpp \
+    src/broadcom/RouteDataSet.cpp \
+    src/broadcom/HostAidRouter.cpp
 
 INTERFACE_SRC_FILES := \
     src/interface/DeviceHost.cpp \
@@ -58,6 +61,7 @@ LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/src \
     external/stlport/stlport \
     external/openssl/include \
+    external/libxml2/include \
     bionic
 
 ifeq ($(NFC_VENDOR),BROADCOM)
@@ -79,7 +83,9 @@ LOCAL_C_INCLUDES += \
     $(VOB_COMPONENTS)/hal/int \
     $(VOB_COMPONENTS)/include \
     $(VOB_COMPONENTS)/gki/ulinux \
-    $(VOB_COMPONENTS)/gki/common
+    $(VOB_COMPONENTS)/gki/common \
+    external/libxml2/include \
+    external/icu4c/common
 endif
 
 LOCAL_SHARED_LIBRARIES += \
@@ -95,6 +101,8 @@ LOCAL_SHARED_LIBRARIES += \
 ifeq ($(NFC_VENDOR),BROADCOM)
 LOCAL_SHARED_LIBRARIES += \
     libnfc-nci
+
+LOCAL_STATIC_LIBRARIES := libxml2
 endif
 
 LOCAL_MODULE := nfcd

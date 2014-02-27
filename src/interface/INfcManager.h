@@ -5,6 +5,7 @@
 #ifndef mozilla_nfcd_INfcManager_h
 #define mozilla_nfcd_INfcManager_h
 
+#include <vector>
 #include "ILlcpServerSocket.h"
 #include "ILlcpSocket.h"
 
@@ -47,6 +48,12 @@ public:
    * @return None.
    */
   virtual void disableDiscovery() = 0;
+
+  virtual void doGetSecureElementList(std::vector<uint32_t>& seList) = 0;
+
+  virtual void doSelectSecureElement() = 0;
+
+  virtual void doDeselectSecureElement() = 0;
 
   /**
    * Check Llcp connection.

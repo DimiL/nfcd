@@ -60,17 +60,21 @@ public:
   void handleEnterLowPowerResponse(NfcEvent* event);
   bool handleEnableRequest(bool enable);
   void handleEnableResponse(NfcEvent* event);
+  void handleEnableSecureElementRequest(bool enable);
+  void handleEnableSecureElementResponse(NfcEvent* event);
 
   void onConnected();
   void onP2pReceivedNdef(NdefMessage* ndef);
   void enableNfc();
   void disableNfc();
 
+  void enableDiscovery();
+  void disableDiscovery();
+  void selectSE();
+
 private:
   NfcService();
 
-  void enableDiscovery();
-  void disableDiscovery();
 
   uint32_t mState;
   static NfcService* sInstance;

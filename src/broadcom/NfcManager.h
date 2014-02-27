@@ -7,6 +7,7 @@
 
 #include "DeviceHost.h"
 #include "INfcManager.h"
+#include "ISecureElement.h"
 
 class P2pDevice;
 class NfcTagManager;
@@ -16,6 +17,7 @@ class ILlcpSocket;
 class NfcManager
   : public DeviceHost
   , public INfcManager
+  , public ISecureElement
 {
 public:
   static const int DEFAULT_LLCP_MIU = 1980;
@@ -59,6 +61,12 @@ public:
    * @return None.
    */
   void disableDiscovery();
+
+  void doGetSecureElementList(std::vector<uint32_t>& seList);
+
+  void doSelectSecureElement();
+
+  void doDeselectSecureElement();
 
   /**
    * Check Llcp connection.
@@ -130,6 +138,16 @@ public:
   int getDefaultLlcpRwSize() const { return NfcManager::DEFAULT_LLCP_RWSIZE; };
 
   void resetRFField();
+
+  int doOpenSecureElementConnection();
+
+  int doDisconnect(int handle);
+
+  void doTransceive(int handle, std::vector<uint8_t>& input, std::vector<uint8_t>& ouput);
+
+  void doGetTechList(int handle, std::vector<uint32_t>& techlist);
+
+  void doGetUid(int handle, std::vector<uint8_t>& uidlist);
 
 private:
   P2pDevice* mP2pDevice;

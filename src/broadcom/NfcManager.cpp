@@ -9,6 +9,7 @@
 #include "NfcAdaptation.h"
 
 #include "SyncEvent.h"
+#include "SecureElement.h"
 #include "PeerToPeer.h"
 #include "PowerSwitch.h"
 #include "NfcTag.h"
@@ -56,8 +57,10 @@ static bool                 sIsNfaEnabled = false;
 static bool                 sDiscoveryEnabled = false;      // Is polling for tag?
 static bool                 sIsDisabling = false;
 static bool                 sRfEnabled = false;             // Whether RF discovery is enabled.
+static bool                 sSeRfActive = false;            // Whether RF with SE is likely active.
 static bool                 sP2pActive = false;             // Whether p2p was last active.
 static bool                 sAbortConnlessWait = false;
+static bool                 sIsSecElemSelected = false;     // Has NFC service selected a sec elem.
 
 #define CONFIG_UPDATE_TECH_MASK     (1 << 1)
 #define DEFAULT_TECH_MASK           (NFA_TECHNOLOGY_MASK_A \
@@ -102,7 +105,8 @@ void* NfcManager::queryInterface(const char* name)
     return reinterpret_cast<void*>(mP2pDevice);
   else if (0 == strcmp(name, INTERFACE_TAG_MANAGER))
     return reinterpret_cast<void*>(mNfcTagManager);
-
+  else if (0 == strcmp(name, INTERFACE_SECURE_ELEMENT))
+    return reinterpret_cast<void*>(this);
   return NULL;
 }
 
@@ -141,7 +145,7 @@ bool NfcManager::initialize()
 
   if (stat == NFA_STATUS_OK) {
     if (sIsNfaEnabled) {
-      // TODO : Implement SE.
+      SecureElement::getInstance().initialize();
       NfcTagManager::doRegisterNdefTypeHandler();
       NfcTag::getInstance().initialize(this);
 
@@ -187,8 +191,7 @@ bool NfcManager::deinitialize()
 
   sIsDisabling = true;
   pn544InteropAbortNow();
-  // TODO : Implement SE
-  //SecureElement::getInstance().finalize();
+  SecureElement::getInstance().finalize();
 
   if (sIsNfaEnabled) {
     SyncEventGuard guard(sNfaDisableEvent);
@@ -210,8 +213,7 @@ bool NfcManager::deinitialize()
   sIsNfaEnabled = false;
   sDiscoveryEnabled = false;
   sIsDisabling = false;
-  // TODO : Implement SE.
-  // sIsSecElemSelected = false;
+  sIsSecElemSelected = false;
 
   {
     // Unblock NFA_EnablePolling() and NFA_DisablePolling().
@@ -239,6 +241,8 @@ void NfcManager::enableDiscovery()
 
   tNFA_STATUS stat = NFA_STATUS_OK;
 
+  ALOGD("%s: sIsSecElemSelected=%u", __FUNCTION__, sIsSecElemSelected);
+
   PowerSwitch::getInstance().setLevel(PowerSwitch::FULL_POWER);
 
   if (sRfEnabled) {
@@ -264,7 +268,10 @@ void NfcManager::enableDiscovery()
     ALOGD("%s: enable p2pListening", __FUNCTION__);
     PeerToPeer::getInstance().enableP2pListening(true);
 
-    // TODO : Implement SE.
+    //if NFC service has deselected the sec elem, then apply default routes.
+    if (!sIsSecElemSelected) {
+      stat = SecureElement::getInstance().routeToDefault();
+    }
   }
 
   // Actually start discovery.
@@ -312,9 +319,93 @@ void NfcManager::disableDiscovery()
   // field event was indicating a field. To prevent sticking in that
   // state, always reset the rf field status when we disable discovery.
 
-  // TODO : Implement SE
-  // SecureElement::getInstance().resetRfFieldStatus();
+  SecureElement::getInstance().resetRfFieldStatus();
 TheEnd:
+  ALOGD("%s: exit", __FUNCTION__);
+}
+
+void NfcManager::doGetSecureElementList(std::vector<uint32_t>& seList)
+{
+  ALOGD("%s: enter; ", __FUNCTION__);
+
+  SecureElement::getInstance().getListOfEeHandles(seList);
+
+  ALOGD("%s: exit", __FUNCTION__);
+}
+
+void NfcManager::doSelectSecureElement()
+{
+  ALOGD("%s: enter; ", __FUNCTION__);
+
+  bool stat = true;
+  
+  if (sIsSecElemSelected) {
+    ALOGD("%s: already selected", __FUNCTION__);
+    goto TheEnd;
+  }
+
+  PowerSwitch::getInstance().setLevel(PowerSwitch::FULL_POWER);
+
+  if (sRfEnabled) {
+    // Stop RF Discovery if we were polling.
+    startRfDiscovery(false);
+  }
+
+  stat = SecureElement::getInstance().activate(0xABCDEF);
+  if (stat) {
+    SecureElement::getInstance().routeToSecureElement();
+  }
+  sIsSecElemSelected = true;
+
+  startRfDiscovery(true);
+  PowerSwitch::getInstance().setModeOn(PowerSwitch::SE_ROUTING);
+
+TheEnd:
+  ALOGD("%s: exit", __FUNCTION__);
+}
+
+void NfcManager::doDeselectSecureElement()
+{
+  ALOGD("%s: enter; ", __FUNCTION__);
+  bool stat = false;
+  bool bRestartDiscovery = false;
+
+  if (!sIsSecElemSelected) {
+    ALOGE("%s: already deselected", __FUNCTION__);
+    goto TheEnd;
+  }
+
+  if (PowerSwitch::getInstance().getLevel() == PowerSwitch::LOW_POWER) {
+    ALOGD("%s: do not deselect while power is OFF", __FUNCTION__);
+    sIsSecElemSelected = false;
+    goto TheEnd;
+  }
+
+  if (sRfEnabled) {
+    // Stop RF Discovery if we were polling.
+    startRfDiscovery(false);
+    bRestartDiscovery = true;
+  }
+
+  stat = SecureElement::getInstance().routeToDefault();
+  sIsSecElemSelected = false;
+
+  //if controller is not routing to sec elems AND there is no pipe connected,
+  //then turn off the sec elems
+  if (SecureElement::getInstance().isBusy() == false) {
+    SecureElement::getInstance().deactivate (0xABCDEF);
+  }
+
+TheEnd:
+  if (bRestartDiscovery) {
+    startRfDiscovery (true);
+  }
+
+  //if nothing is active after this, then tell the controller to power down
+  if (!PowerSwitch::getInstance().setModeOff(PowerSwitch::SE_ROUTING)) {
+    PowerSwitch::getInstance().setLevel(PowerSwitch::LOW_POWER);
+  }
+
   ALOGD("%s: exit", __FUNCTION__);
 }
 
@@ -396,6 +487,109 @@ void NfcManager::resetRFField()
   startRfDiscovery(true);
 }
 
+// TODO : this code may need to move to other module.
+static const int EE_ERROR_IO = -1;
+static const int EE_ERROR_ALREADY_OPEN = -2;
+static const int EE_ERROR_INIT = -3;
+static const int EE_ERROR_LISTEN_MODE = -4;
+static const int EE_ERROR_EXT_FIELD = -5;
+static const int EE_ERROR_NFC_DISABLED = -6;
+
+int NfcManager::doOpenSecureElementConnection()
+{
+  ALOGD("%s: enter", __FUNCTION__);
+  bool stat = true;
+  int secElemHandle = EE_ERROR_INIT;
+  SecureElement &se = SecureElement::getInstance();
+
+  if (se.isActivatedInListenMode()) {
+    ALOGD("Denying SE open due to SE listen mode active");
+    secElemHandle = EE_ERROR_LISTEN_MODE;
+    goto TheEnd;
+  }
+
+  if (se.isRfFieldOn()) {
+    ALOGD("Denying SE open due to SE in active RF field");
+    secElemHandle = EE_ERROR_EXT_FIELD;
+    goto TheEnd;
+  }
+  //tell the controller to power up to get ready for sec elem operations
+  PowerSwitch::getInstance ().setLevel(PowerSwitch::FULL_POWER);
+  PowerSwitch::getInstance ().setModeOn(PowerSwitch::SE_CONNECTED);
+
+  //if controller is not routing AND there is no pipe connected,
+  //then turn on the sec elem
+  if (!se.isBusy()) {
+    stat = se.activate(0);
+  }
+
+  if (stat) {
+    //establish a pipe to sec elem
+    stat = se.connectEE();
+    if (stat) {
+      secElemHandle = se.mActiveEeHandle;
+    } else {
+      se.deactivate (0);
+    }
+  }
+
+  //if code fails to connect to the secure element, and nothing is active, then
+  //tell the controller to power down
+  if ((!stat) && (! PowerSwitch::getInstance ().setModeOff (PowerSwitch::SE_CONNECTED))) {
+    PowerSwitch::getInstance ().setLevel (PowerSwitch::LOW_POWER);
+  }
+
+TheEnd:
+  ALOGD("%s: exit; return handle=0x%X", __FUNCTION__, secElemHandle);
+  return secElemHandle;
+}
+
+int NfcManager::doDisconnect(int handle)
+{
+  ALOGD("%s: enter; handle=0x%04x", __FUNCTION__, handle);
+  bool stat = false;
+
+  stat = SecureElement::getInstance().disconnectEE (handle);
+
+  //if controller is not routing AND there is no pipe connected,
+  //then turn off the sec elem
+  if (!SecureElement::getInstance().isBusy()) {
+    SecureElement::getInstance().deactivate(handle);
+  }
+
+  //if nothing is active after this, then tell the controller to power down
+  if (!PowerSwitch::getInstance().setModeOff(PowerSwitch::SE_CONNECTED)) {
+    PowerSwitch::getInstance().setLevel(PowerSwitch::LOW_POWER);
+  }
+
+  ALOGD("%s: exit", __FUNCTION__);
+  return stat ? true : false;
+}
+
+void NfcManager::doTransceive(int handle, std::vector<uint8_t>& input, std::vector<uint8_t>& ouput)
+{
+  // TODO : Implement.
+}
+
+void NfcManager::doGetUid(int handle, std::vector<uint8_t>& uidlist)
+{
+  ALOGD("%s: enter; handle=0x%X", __FUNCTION__, handle);
+
+  SecureElement::getInstance().getUiccId(handle, uidlist);
+
+  ALOGD("%s: exit", __FUNCTION__);
+  return;
+}
+
+void NfcManager::doGetTechList(int handle, std::vector<uint32_t>& techlist)
+{
+  ALOGD("%s: enter; handle=0x%X", __FUNCTION__, handle);
+
+  SecureElement::getInstance().getTechnologyList(handle, techlist);
+
+  ALOGD("%s: exit", __FUNCTION__);
+}
+
 /**
  * Private functions.
  */
@@ -474,7 +668,8 @@ void nfaDeviceManagementCallback(UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
       }
 
       if (!sP2pActive && eventData->rf_field.status == NFA_STATUS_OK) {
-        // TODO : Implement SE
+        SecureElement::getInstance().notifyRfFieldEvent(
+                    eventData->rf_field.rf_field_status == NFA_DM_RF_FIELD_ON);
       }
       break;
 
@@ -611,7 +806,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
           ALOGE("%s: NFA_SetConfig fail, error = 0x%X", __FUNCTION__, status);
         }
         // For the SE, consider the field to be on while p2p is active.
-        // TODO : Implement SE
+        SecureElement::getInstance().notifyRfFieldEvent(true);
       } else if (pn544InteropIsBusy() == false) {
         NfcTag::getInstance().connectionEventHandler(connEvent, eventData);
 
@@ -619,7 +814,8 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
         // listen mode then it is likely for an SE transaction.
         // Send the RF Event.
         if (isListenMode(eventData->activated)) {
-          // TODO : Implement SE
+          sSeRfActive = true;
+          SecureElement::getInstance().notifyListenModeState(true);
         }
       }
       break;
@@ -640,26 +836,29 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
       // and it is deactivated to either IDLE or DISCOVERY mode, notify w/event.
       if ((eventData->deactivated.type == NFA_DEACTIVATE_TYPE_IDLE)
        || (eventData->deactivated.type == NFA_DEACTIVATE_TYPE_DISCOVERY)) {
-        // TODO : Implement SE
-        if (sP2pActive) {
+        if (sSeRfActive) {
+          sSeRfActive = false;
+          if (!sIsDisabling && sIsNfaEnabled) {
+            SecureElement::getInstance().notifyListenModeState (false);
+          } 
+        } else if (sP2pActive) {
           sP2pActive = false;
           // Make sure RF field events are re-enabled.
           ALOGD("%s: NFA_DEACTIVATED_EVT; is p2p", __FUNCTION__);
           // Disable RF field events in case of p2p.
-          UINT8 nfa_enable_rf_events[] = { 0x01 };
+          uint8_t nfa_enable_rf_events[] = { 0x01 };
 
           if (!sIsDisabling && sIsNfaEnabled) {
             ALOGD("%s: Enabling RF field events", __FUNCTION__);
             status = NFA_SetConfig(NCI_PARAM_ID_RF_FIELD_INFO, sizeof(nfa_enable_rf_events),
-                                   &nfa_enable_rf_events[0]);
+                     &nfa_enable_rf_events[0]);
             if (status == NFA_STATUS_OK) {
               ALOGD("%s: Enabled RF field events", __FUNCTION__);
             } else {
               ALOGE("%s: Failed to enable RF field events", __FUNCTION__);
             }
-            // TODO : Implement SE
             // Consider the field to be off at this point
-            //SecureElement::getInstance().notifyRfFieldEvent (false);
+            SecureElement::getInstance().notifyRfFieldEvent (false);
           }
         }
       }
@@ -765,10 +964,9 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
       ALOGD("%s: NFA_I93_CMD_CPLT_EVT: status=0x%X", __FUNCTION__, eventData->status);
       break;
 
-    case NFA_CE_UICC_LISTEN_CONFIGURED_EVT :
+    case NFA_CE_UICC_LISTEN_CONFIGURED_EVT:
       ALOGD("%s: NFA_CE_UICC_LISTEN_CONFIGURED_EVT : status=0x%X", __FUNCTION__, eventData->status);
-      // TODO : Implement SE
-      ALOGE("%s: Unimplement function", __FUNCTION__);
+      SecureElement::getInstance().connectionEventHandler(connEvent, eventData);
       break;
 
     case NFA_SET_P2P_LISTEN_TECH_EVT:

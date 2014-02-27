@@ -575,6 +575,29 @@ void NfcService::handleEnableResponse(NfcEvent* event)
   mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
 }
 
+void NfcService::handleEnableSecureElementRequest(bool enable)
+{
+  
+}
+
+void NfcService::handleEnableSecureElementResponse(NfcEvent* event)
+{
+  bool enable = event->arg1;
+  if (enable) {
+    sNfcManager->doSelectSecureElement();
+  } else {
+    sNfcManager->doDeselectSecureElement();
+  }
+
+  // mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
+}
+
+// for testing
+void NfcService::selectSE()
+{
+  sNfcManager->doSelectSecureElement();
+}
+
 void NfcService::enableNfc()
 {
   ALOGD("%s: enter", FUNC);
