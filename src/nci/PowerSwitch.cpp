@@ -10,7 +10,7 @@
 #include "config.h"
 
 #undef LOG_TAG
-#define LOG_TAG "BroadcomNfc"
+#define LOG_TAG "NfcNci"
 #include <cutils/log.h>
 
 // Bug 934835 : B2G NFC: NFC Daemon crash sometimes when enabled

@@ -9,7 +9,7 @@ LOCAL_PATH := $(call my-dir)
 # Build nfcd
 include $(CLEAR_VARS)
 
-NFC_VENDOR := BROADCOM
+NFC_PROTOCOL := nci
 
 LOCAL_SRC_FILES := \
     src/nfcd.cpp \
@@ -27,29 +27,29 @@ LOCAL_SRC_FILES := \
     src/handover/HandoverClient.cpp \
     src/handover/HandoverServer.cpp \
 
-BROADCOM_SRC_FILES := \
-    src/broadcom/NfcManager.cpp \
-    src/broadcom/LlcpConnectionlessSocket.cpp \
-    src/broadcom/LlcpSocket.cpp \
-    src/broadcom/LlcpServiceSocket.cpp \
-    src/broadcom/NfcSecureElement.cpp \
-    src/broadcom/P2pDevice.cpp \
-    src/broadcom/NfcTagManager.cpp \
-    src/broadcom/Mutex.cpp \
-    src/broadcom/CondVar.cpp \
-    src/broadcom/PowerSwitch.cpp \
-    src/broadcom/NfcTag.cpp \
-    src/broadcom/PeerToPeer.cpp \
-    src/broadcom/Pn544Interop.cpp \
-    src/broadcom/IntervalTimer.cpp
+NCI_SRC_FILES := \
+    src/nci/NfcManager.cpp \
+    src/nci/LlcpConnectionlessSocket.cpp \
+    src/nci/LlcpSocket.cpp \
+    src/nci/LlcpServiceSocket.cpp \
+    src/nci/NfcSecureElement.cpp \
+    src/nci/P2pDevice.cpp \
+    src/nci/NfcTagManager.cpp \
+    src/nci/Mutex.cpp \
+    src/nci/CondVar.cpp \
+    src/nci/PowerSwitch.cpp \
+    src/nci/NfcTag.cpp \
+    src/nci/PeerToPeer.cpp \
+    src/nci/Pn544Interop.cpp \
+    src/nci/IntervalTimer.cpp
 
 INTERFACE_SRC_FILES := \
     src/interface/DeviceHost.cpp \
     src/interface/NdefMessage.cpp \
     src/interface/NdefRecord.cpp
 
-ifeq ($(NFC_VENDOR),BROADCOM)
-LOCAL_SRC_FILES += $(BROADCOM_SRC_FILES)
+ifeq ($(NFC_PROTOCOL),nci)
+LOCAL_SRC_FILES += $(NCI_SRC_FILES)
 endif
 
 LOCAL_SRC_FILES += $(INTERFACE_SRC_FILES)
@@ -60,13 +60,13 @@ LOCAL_C_INCLUDES += \
     external/openssl/include \
     bionic
 
-ifeq ($(NFC_VENDOR),BROADCOM)
+ifeq ($(NFC_PROTOCOL),nci)
 VOB_COMPONENTS := external/libnfc-nci/src
 NFA := $(VOB_COMPONENTS)/nfa
 NFC := $(VOB_COMPONENTS)/nfc
 
 LOCAL_C_INCLUDES += \
-    $(LOCAL_PATH)/src/broadcom \
+    $(LOCAL_PATH)/src/nci \
     $(LOCAL_PATH)/src/interface \
     $(LOCAL_PATH)/src/snep \
     $(LOCAL_PATH)/src/handover \
@@ -92,7 +92,7 @@ LOCAL_SHARED_LIBRARIES += \
     libcrypto \
     libbinder
 
-ifeq ($(NFC_VENDOR),BROADCOM)
+ifeq ($(NFC_PROTOCOL),nci)
 LOCAL_SHARED_LIBRARIES += \
     libnfc-nci
 endif

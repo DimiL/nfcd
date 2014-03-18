@@ -15,7 +15,7 @@
 #include "NfcTag.h"
 
 #undef LOG_TAG
-#define LOG_TAG "BroadcomNfc"
+#define LOG_TAG "NfcNci"
 #include <cutils/log.h>
 
 extern void startStopPolling(bool isStartPolling);
