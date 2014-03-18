@@ -8,7 +8,7 @@
 #include "ILlcpSocket.h"
 #include "PeerToPeer.h"
 
-#define LOG_TAG "BroadcomNfc"
+#define LOG_TAG "NfcNci"
 #include <cutils/log.h>
 
 LlcpServiceSocket::LlcpServiceSocket(uint32_t handle, int localLinearBufferLength, int localMiu, int localRw)

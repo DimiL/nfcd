@@ -6,7 +6,7 @@
 
 #include "PeerToPeer.h"
 
-#define LOG_TAG "BroadcomNfc"
+#define LOG_TAG "NfcNci"
 #include <cutils/log.h>
 
 LlcpSocket::LlcpSocket(unsigned int handle, int sap, int miu, int rw)
