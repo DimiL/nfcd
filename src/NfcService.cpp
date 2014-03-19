@@ -535,9 +535,9 @@ void NfcService::handleEnterLowPowerResponse(NfcEvent* event)
 {
   bool low = event->arg1;
   if (low) {
-    disableDiscovery();
+    //disableDiscovery();
   } else {
-    enableDiscovery();
+    //enableDiscovery();
   }
 
   mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
@@ -557,20 +557,18 @@ bool NfcService::handleEnableRequest(bool enable)
  * 1. NFC is off -> enable NFC and then enable discovery.
  * 2. NFC is already on but discovery mode is off -> enable discovery.
  */
+static int seHandle = -1;
+
 void NfcService::handleEnableResponse(NfcEvent* event)
 {
   bool enable = event->arg1;
   if (enable) {
-    // Do different action depends on current state.
-    if (mState == STATE_NFC_ON_DISCOVERY_OFF) {
-      enableDiscovery();
-    } else if (mState == STATE_NFC_OFF) {
-      enableNfc();
-      enableDiscovery();
-    }
+    seHandle = sNfcManager->doOpenSecureElementConnection();
   } else {
-    disableNfc();
-    disableDiscovery();
+    if (seHandle != -1) {
+      sNfcManager->doDisconnect(seHandle);
+      seHandle = -1;
+    }
   }
   mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
 }
