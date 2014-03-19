@@ -245,6 +245,8 @@ private:
   static const uint8_t EVT_SEND_DATA = 0x10;    //see specification ETSI TS 102 622 v9.0.0 (Host Controller Interface); section 9.3.3.3
   static const tNFA_HANDLE EE_HANDLE_0xF3 = 0x4F3; //handle to secure element in slot 0
   static const tNFA_HANDLE EE_HANDLE_0xF4 = 0x4F4; //handle to secure element in slot 1
+  static const tNFA_HANDLE EE_HANDLE_0x01 = 0x401; //handle to secure element in slot 0 // TODO: Tmp added by Dimi for Flame testing.
+  static const tNFA_HANDLE EE_HANDLE_0x02 = 0x402; //handle to secure element in slot 1 // TODO: Tmp added by Dimi for Flame testing.
   static SecureElement sSecElem; 
   static const char* APP_NAME;
 

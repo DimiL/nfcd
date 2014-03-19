@@ -43,7 +43,7 @@ nfc_data                gNat;
 int                     gGeneralTransceiveTimeout = 1000;
 void                    doStartupConfig();
 void                    startRfDiscovery(bool isStart);
-
+void                    setUiccIdleTimeout(bool enable);
 /**
  * private variables and functions
  */
@@ -514,8 +514,8 @@ int NfcManager::doOpenSecureElementConnection()
     goto TheEnd;
   }
   //tell the controller to power up to get ready for sec elem operations
-  PowerSwitch::getInstance ().setLevel(PowerSwitch::FULL_POWER);
-  PowerSwitch::getInstance ().setModeOn(PowerSwitch::SE_CONNECTED);
+  PowerSwitch::getInstance().setLevel(PowerSwitch::FULL_POWER);
+  PowerSwitch::getInstance().setModeOn(PowerSwitch::SE_CONNECTED);
 
   //if controller is not routing AND there is no pipe connected,
   //then turn on the sec elem
@@ -993,6 +993,43 @@ void startRfDiscovery(bool isStart)
   } else {
     ALOGE("%s: NFA_StartRfDiscovery/NFA_StopRfDiscovery fail; error=0x%X", __FUNCTION__, status);
   }
+}
+
+void setUiccIdleTimeout(bool enable)
+{
+  // This method is *NOT* thread-safe. Right now
+  // it is only called from the same thread so it's
+  // not an issue.
+  tNFA_STATUS stat = NFA_STATUS_OK;
+  UINT8 swp_cfg_byte0 = 0x00;
+  {
+    SyncEventGuard guard (sNfaGetConfigEvent);
+    stat = NFA_GetConfig(1, new tNFA_PMID[1] {0xC2});
+    if (stat != NFA_STATUS_OK) {
+      ALOGE("%s: NFA_GetConfig failed", __FUNCTION__);
+      return;
+    }
+    sNfaGetConfigEvent.wait();
+    if (sCurrentConfigLen < 4 || sConfig[1] != 0xC2) {
+      ALOGE("%s: Config TLV length %d returned is too short", __FUNCTION__, sCurrentConfigLen);
+      return;
+    }
+    swp_cfg_byte0 = sConfig[3];
+  }
+  SyncEventGuard guard(sNfaSetConfigEvent);
+  if (enable) {
+    swp_cfg_byte0 |= 0x01;
+  } else {
+    swp_cfg_byte0 &= ~0x01;
+  }
+
+  stat = NFA_SetConfig(0xC2, 1, &swp_cfg_byte0);
+  if (stat == NFA_STATUS_OK) {
+    sNfaSetConfigEvent.wait();
+  } else {
+    ALOGE("%s: Could not configure UICC idle timeout feature", __FUNCTION__);
+  }
+  return;
 }
 
 void doStartupConfig()

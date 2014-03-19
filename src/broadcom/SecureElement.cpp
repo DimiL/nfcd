@@ -20,6 +20,7 @@ SecureElement SecureElement::sSecElem;
 const char* SecureElement::APP_NAME = "nfc";
 
 extern void startRfDiscovery(bool isStart);
+extern void setUiccIdleTimeout(bool enable);
 
 SecureElement::SecureElement()
  : mActiveEeHandle(NFA_HANDLE_INVALID)
@@ -331,8 +332,8 @@ bool SecureElement::activate(uint32_t seID)
   //activate every discovered secure element
   for (int index = 0; index < mActualNumEe; index++) {
     tNFA_EE_INFO& eeItem = mEeInfo[index];
-
-    if ((eeItem.ee_handle == EE_HANDLE_0xF3) || (eeItem.ee_handle == EE_HANDLE_0xF4)) {
+    if ((eeItem.ee_handle == EE_HANDLE_0xF3) || (eeItem.ee_handle == EE_HANDLE_0xF4) ||
+        (eeItem.ee_handle == EE_HANDLE_0x01) || (eeItem.ee_handle == EE_HANDLE_0x02)) {
       if (overrideEeHandle && (overrideEeHandle != eeItem.ee_handle)) {
         continue;   // do not enable all SEs; only the override one
       }
@@ -344,7 +345,7 @@ bool SecureElement::activate(uint32_t seID)
       }
 
       {
-        SyncEventGuard guard (mEeSetModeEvent);
+        SyncEventGuard guard(mEeSetModeEvent);
         ALOGD("%s: set EE mode activate; h=0x%X", __FUNCTION__, eeItem.ee_handle);
         if ((nfaStat = NFA_EeModeSet(eeItem.ee_handle, NFA_EE_MD_ACTIVATE)) == NFA_STATUS_OK) {
           mEeSetModeEvent.wait(); //wait for NFA_EE_MODE_SET_EVT
@@ -460,9 +461,8 @@ bool SecureElement::connectEE()
   // Disable RF discovery completely while the DH is connected
   startRfDiscovery(false);
 
-  // TODO:
-    // Disable UICC idle timeout while the DH is connected
-  //setUiccIdleTimeout (false);
+  // Disable UICC idle timeout while the DH is connected
+  setUiccIdleTimeout(false);
 
   mNewSourceGate = 0;
 
@@ -611,15 +611,15 @@ bool SecureElement::disconnectEE(uint32_t seID)
   }
 
   mIsPiping = false;
-    /*
-    // Re-enable UICC low-power mode
-    android::setUiccIdleTimeout (true);
-    // Re-enable RF discovery
-    // Note that it only effactuates the current configuration,
-    // so if polling/listening were configured OFF (forex because
-    // the screen was off), they will stay OFF with this call.
-    android::startRfDiscovery(true);
-    */
+
+  // Re-enable UICC low-power mode
+  setUiccIdleTimeout (true);
+  // Re-enable RF discovery
+  // Note that it only effactuates the current configuration,
+  // so if polling/listening were configured OFF (forex because
+  // the screen was off), they will stay OFF with this call.
+  startRfDiscovery(true);
+
   return true;
 }
 

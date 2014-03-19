@@ -596,7 +596,6 @@ void NfcService::handleEnableSecureElementResponse(NfcEvent* event)
 void NfcService::selectSE()
 {
   sNfcManager->doSelectSecureElement();
-  sNfcManager->doOpenSecureElementConnection();
 }
 
 void NfcService::enableNfc()
