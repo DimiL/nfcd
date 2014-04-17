@@ -216,8 +216,8 @@ NdefMessage* NfcTagManager::doReadNdef()
     }
 
     if (generateEmptyNdef == true) {
-      ALOGI("Couldn't read NDEF!");
-      // TODO : Implement generate empty Ndef
+      delete ndefMsg;
+      ndefMsg = NULL;
       addTechnology(NDEF, getConnectedHandle(), getConnectedLibNfcType());
       //reconnect();
     }
