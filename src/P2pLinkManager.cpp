@@ -150,8 +150,10 @@ void P2pLinkManager::push(NdefMessage& ndef)
     if (pClient) {
       ALOGD("%s: send Handover Request by handover client", FUNC);
       NdefMessage* selectMsg = pClient->processHandoverRequest(ndef);
-      notifyNdefReceived(selectMsg);
-      delete selectMsg;
+      if (selectMsg) {
+        notifyNdefReceived(selectMsg);
+        delete selectMsg;
+      }
     } else {
       ALOGE("%s: handover client not connected", FUNC);
     }

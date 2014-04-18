@@ -652,7 +652,7 @@ void NfcService::onP2pReceivedNdef(NdefMessage* ndef)
   data->techCount = 2;
   uint8_t techs[] = { NFC_TECH_P2P, NFC_TECH_NDEF };
   data->techList = &techs;
-  data->ndefMsgCount = 1;
+  data->ndefMsgCount = ndef ? 1 : 0;
   data->ndefMsg = ndef;
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
   delete data;
