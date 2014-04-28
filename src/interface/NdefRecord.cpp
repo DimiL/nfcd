@@ -92,6 +92,12 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
     }
 
     uint32_t typeLength = buf[index++] & 0xFF;
+
+    if (!tnf && typeLength != 0) {
+      ALOGE("expected zero-length type in empty NDEF message");
+      return false;
+    }
+   
     uint32_t payloadLength;
     if (sr) {
       payloadLength = buf[index++] & 0xFF;
@@ -102,7 +108,18 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
                       ((uint32_t)buf[index + 3]);
       index += 4;
     }
+
+    if (!tnf && payloadLength != 0) {
+      ALOGE("expected zero-length payload in empty NDEF message");
+      return false;
+    }
+
     uint32_t idLength = il ? (buf[index++] & 0xFF) : 0;
+
+    if (!tnf && idLength != 0) {
+      ALOGE("expected zero-length id in empty NDEF message");
+      return false;
+    }
 
     if (inChunk && typeLength != 0) {
       ALOGE("expected zero-length type in non-leading chunk");
