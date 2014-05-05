@@ -39,14 +39,14 @@ public:
    *
    * @return None.
    */
-  virtual void enableDiscovery() = 0;
+  virtual bool enableDiscovery() = 0;
 
   /**
    * Stop polling and listening for devices.
    *
    * @return None.
    */
-  virtual void disableDiscovery() = 0;
+  virtual bool disableDiscovery() = 0;
 
   /**
    * Check Llcp connection.

@@ -226,7 +226,7 @@ bool NfcManager::deinitialize()
   return true;
 }
 
-void NfcManager::enableDiscovery()
+bool NfcManager::enableDiscovery()
 {
   tNFA_TECHNOLOGY_MASK tech_mask = DEFAULT_TECH_MASK;
 
@@ -234,7 +234,7 @@ void NfcManager::enableDiscovery()
 
   if (sDiscoveryEnabled) {
     ALOGW("%s: already polling", __FUNCTION__);
-    return;
+    return true;
   }
 
   tNFA_STATUS stat = NFA_STATUS_OK;
@@ -273,9 +273,10 @@ void NfcManager::enableDiscovery()
   PowerSwitch::getInstance().setModeOn(PowerSwitch::DISCOVERY);
 
   ALOGD("%s: exit", __FUNCTION__);
+  return stat == NFA_STATUS_OK;
 }
 
-void NfcManager::disableDiscovery()
+bool NfcManager::disableDiscovery()
 {
   tNFA_STATUS status = NFA_STATUS_OK;
   ALOGD("%s: enter;", __FUNCTION__);
@@ -316,6 +317,7 @@ void NfcManager::disableDiscovery()
   // SecureElement::getInstance().resetRfFieldStatus();
 TheEnd:
   ALOGD("%s: exit", __FUNCTION__);
+  return status == NFA_STATUS_OK;
 }
 
 bool NfcManager::checkLlcp()

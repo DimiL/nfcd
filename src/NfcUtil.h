@@ -10,6 +10,8 @@
 #include "NfcGonkMessage.h"
 #include "TagTechnology.h"
 
+#define SUCCESSED(result)  ((result) == NFC_SUCCESS)
+
 class NfcUtil{
 
 public:

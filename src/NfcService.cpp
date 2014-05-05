@@ -5,13 +5,13 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdlib.h>
+#include <memory>
 
 #include "MessageHandler.h"
 #include "INfcManager.h"
 #include "INfcTag.h"
 #include "IP2pDevice.h"
 #include "DeviceHost.h"
-#include "NfcGonkMessage.h"
 #include "NfcService.h"
 #include "NfcUtil.h"
 #include "NfcDebug.h"
@@ -63,6 +63,14 @@ private:
 
 static pthread_t thread_id;
 static sem_t thread_sem;
+
+#define ENSURE_TRUE(result, response, error)                \
+  do {                                                      \
+    if (!(result)) {                                        \
+      mMsgHandler->processResponse(response, error, NULL);  \
+      return;                                               \
+    }                                                       \
+  } while(0);                                               \
 
 NfcService* NfcService::sInstance = NULL;
 NfcManager* NfcService::sNfcManager = NULL;
@@ -366,17 +374,24 @@ INfcManager* NfcService::getNfcManager()
 
 bool NfcService::handleDisconnect()
 {
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>
+                      (sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
   bool result = pINfcTag->disconnect();
   return result;
 }
 
-int NfcService::handleConnect(int technology)
+void NfcService::handleConnect(int technology)
 {
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
-  int status = pINfcTag->connect(technology);
-  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS,  NULL);
-  return status;
+  NfcResponseType res = NFC_RESPONSE_GENERAL;
+
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>
+                      (sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
+  ENSURE_TRUE(pINfcTag, res, NFC_ERROR_NOT_SUPPORTED)
+
+  bool status = pINfcTag->connect(technology);
+  ENSURE_TRUE(status, res, NFC_ERROR_DISCONNECT)
+
+  mMsgHandler->processResponse(res, NFC_SUCCESS, NULL);
 }
 
 bool NfcService::handleConfigRequest(int powerLevel)
@@ -397,21 +412,23 @@ bool NfcService::handleReadNdefDetailRequest()
 
 void NfcService::handleConfigResponse(NfcEvent* event)
 {
-  mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
+  NfcResponseType resType = NFC_RESPONSE_CONFIG;
+
+  mMsgHandler->processResponse(resType, NFC_SUCCESS, NULL);
 }
 
 void NfcService::handleReadNdefDetailResponse(NfcEvent* event)
 {
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
-  NdefDetail* pNdefDetail = pINfcTag->readNdefDetail();
+  NfcResponseType resType = NFC_RESPONSE_READ_NDEF_DETAILS;
 
-  if (pNdefDetail != NULL) {
-    mMsgHandler->processResponse(NFC_RESPONSE_READ_NDEF_DETAILS, NFC_ERROR_SUCCESS, pNdefDetail);
-  } else {
-    //TODO can we notify null ndef detail?
-  }
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>
+                      (sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
+  ENSURE_TRUE(pINfcTag, resType, NFC_ERROR_NOT_SUPPORTED)
 
-  delete pNdefDetail;
+  std::auto_ptr<NdefDetail> pNdefDetail(pINfcTag->readNdefDetail());
+  ENSURE_TRUE(pNdefDetail.get(), resType, NFC_ERROR_READ)
+
+  mMsgHandler->processResponse(resType, NFC_SUCCESS, pNdefDetail.get());
 }
 
 bool NfcService::handleReadNdefRequest()
@@ -424,17 +441,15 @@ bool NfcService::handleReadNdefRequest()
 
 void NfcService::handleReadNdefResponse(NfcEvent* event)
 {
+  NfcResponseType resType = NFC_RESPONSE_READ_NDEF;
+
   INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
-  NdefMessage* pNdefMessage = pINfcTag->readNdef();
+  ENSURE_TRUE(pINfcTag, resType, NFC_ERROR_NOT_SUPPORTED)
 
-  ALOGD("pNdefMessage=%p",pNdefMessage);
-  if (pNdefMessage != NULL) {
-    mMsgHandler->processResponse(NFC_RESPONSE_READ_NDEF, NFC_ERROR_SUCCESS, pNdefMessage);
-  } else {
-    //TODO can we notify null ndef?
-  }
+  std::auto_ptr<NdefMessage> pNdefMessage(pINfcTag->readNdef());
+  ENSURE_TRUE(pNdefMessage.get(), resType, NFC_ERROR_READ)
 
-  delete pNdefMessage;
+  mMsgHandler->processResponse(resType, NFC_SUCCESS, pNdefMessage.get());
 }
 
 bool NfcService::handleWriteNdefRequest(NdefMessage* ndef)
@@ -448,23 +463,25 @@ bool NfcService::handleWriteNdefRequest(NdefMessage* ndef)
 
 void NfcService::handleWriteNdefResponse(NfcEvent* event)
 {
-  NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->obj);
+  NfcResponseType resType = NFC_RESPONSE_GENERAL;
+
+  std::auto_ptr<NdefMessage> pNdef(reinterpret_cast<NdefMessage*>(event->obj));
+  ENSURE_TRUE(pNdef.get(), resType, NFC_ERROR_INVALID_PARAM)
 
   // Use single API wirte to send data.
   // nfcd check current connection is p2p or tag.
-  if (ndef) {
-    if (mP2pLinkManager->isLlcpActive()) {
-      mP2pLinkManager->push(*ndef);
-    } else {
-      INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
-      pINfcTag->writeNdef(*ndef);
-    }
+  if (mP2pLinkManager->isLlcpActive()) {
+    mP2pLinkManager->push(*pNdef.get());
   } else {
-    ALOGE("%s: empty NDEF message", FUNC);
+    INfcTag* pINfcTag = reinterpret_cast<INfcTag*>
+                        (sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
+    ENSURE_TRUE(pINfcTag, resType, NFC_ERROR_NOT_SUPPORTED)
+
+    bool status = pINfcTag->writeNdef(*pNdef.get());
+    ENSURE_TRUE(status, resType, NFC_ERROR_IO)
   }
 
-  delete ndef;
-  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
+  mMsgHandler->processResponse(resType, NFC_SUCCESS, NULL);
 }
 
 void NfcService::handleCloseRequest()
@@ -476,10 +493,11 @@ void NfcService::handleCloseRequest()
 
 void NfcService::handleCloseResponse(NfcEvent* event)
 {
+  NfcResponseType resType = NFC_RESPONSE_GENERAL;
   // TODO : If we call tag disconnect here, will keep trggering tag discover notification
   //        Need to check with DT what should we do here
 
-  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
+  mMsgHandler->processResponse(resType, NFC_SUCCESS, NULL);
 }
 
 void NfcService::onConnected()
@@ -500,12 +518,14 @@ bool NfcService::handlePushNdefRequest(NdefMessage* ndef)
 
 void NfcService::handlePushNdefResponse(NfcEvent* event)
 {
-  NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->obj);
+  NfcResponseType resType = NFC_RESPONSE_GENERAL;
 
-  mP2pLinkManager->push(*ndef);
+  std::auto_ptr<NdefMessage> pNdef(reinterpret_cast<NdefMessage*>(event->obj));
+  ENSURE_TRUE(pNdef.get(), resType, NFC_ERROR_INVALID_PARAM)
 
-  delete ndef;
-  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
+  mP2pLinkManager->push(*pNdef.get());
+
+  mMsgHandler->processResponse(resType, NFC_SUCCESS, NULL);
 }
 
 bool NfcService::handleMakeNdefReadonlyRequest()
@@ -518,10 +538,16 @@ bool NfcService::handleMakeNdefReadonlyRequest()
 
 void NfcService::handleMakeNdefReadonlyResponse(NfcEvent* event)
 {
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
-  bool result = pINfcTag->makeReadOnly();
+  NfcResponseType resType = NFC_RESPONSE_GENERAL;
 
-  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_ERROR_SUCCESS, NULL);
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>
+                      (sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
+  ENSURE_TRUE(pINfcTag, resType, NFC_ERROR_INVALID_PARAM)
+
+  bool status = pINfcTag->makeReadOnly();
+  ENSURE_TRUE(status, resType, NFC_ERROR_IO)
+
+  mMsgHandler->processResponse(resType, NFC_SUCCESS, NULL);
 }
 
 bool NfcService::handleEnterLowPowerRequest(bool enter)
@@ -535,14 +561,19 @@ bool NfcService::handleEnterLowPowerRequest(bool enter)
 
 void NfcService::handleEnterLowPowerResponse(NfcEvent* event)
 {
+  NfcResponseType resType = NFC_RESPONSE_CONFIG;
+  NfcErrorCode code = NFC_SUCCESS;
+
   bool low = event->arg1;
   if (low) {
-    disableDiscovery();
+    code = disableDiscovery();
+    ENSURE_TRUE(SUCCESSED(code), resType, code)
   } else {
-    enableDiscovery();
+    code = enableDiscovery();
+    ENSURE_TRUE(SUCCESSED(code), resType, code)
   }
 
-  mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
+  mMsgHandler->processResponse(resType, code, NULL);
 }
 
 bool NfcService::handleEnableRequest(bool enable)
@@ -561,31 +592,43 @@ bool NfcService::handleEnableRequest(bool enable)
  */
 void NfcService::handleEnableResponse(NfcEvent* event)
 {
+  NfcResponseType resType = NFC_RESPONSE_CONFIG;
+  NfcErrorCode code = NFC_SUCCESS;
+
   bool enable = event->arg1;
   if (enable) {
     // Do different action depends on current state.
     if (mState == STATE_NFC_ON_DISCOVERY_OFF) {
-      enableDiscovery();
+      code = enableDiscovery();
+      ENSURE_TRUE(SUCCESSED(code), resType, code)
     } else if (mState == STATE_NFC_OFF) {
-      enableNfc();
-      enableDiscovery();
+      code = enableNfc();
+      ENSURE_TRUE(SUCCESSED(code), resType, code)
+
+      code = enableDiscovery();
+      ENSURE_TRUE(SUCCESSED(code), resType, code)
     }
   } else {
-    disableNfc();
-    disableDiscovery();
+    code = disableNfc();
+    ENSURE_TRUE(SUCCESSED(code), resType, code)
+
+    code = disableDiscovery();
+    ENSURE_TRUE(SUCCESSED(code), resType, code)
   }
-  mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
+  mMsgHandler->processResponse(resType, NFC_SUCCESS, NULL);
 }
 
-void NfcService::enableNfc()
+NfcErrorCode NfcService::enableNfc()
 {
   ALOGD("%s: enter", FUNC);
 
   if (mState != STATE_NFC_OFF) {
-    return;
+    return NFC_ERROR_NFC_ON;
   }
 
-  sNfcManager->initialize();
+  if (!sNfcManager->initialize()) {
+    return NFC_ERROR_NOT_INITIALIZED;
+  }
 
   if (mP2pLinkManager) {
     mP2pLinkManager->enableDisable(true);
@@ -594,55 +637,65 @@ void NfcService::enableNfc()
   mState = STATE_NFC_ON_DISCOVERY_OFF;
 
   ALOGD("%s: exit", FUNC);
+  return NFC_SUCCESS;
 }
 
-void NfcService::disableNfc()
+NfcErrorCode NfcService::disableNfc()
 {
   ALOGD("%s: enter", FUNC);
 
   if (mState == STATE_NFC_OFF) {
     ALOGW("%s: NFC is already disabled", FUNC);
-    return;
+    return NFC_ERROR_NFC_OFF;
   }
 
   if (mP2pLinkManager)
     mP2pLinkManager->enableDisable(false);
 
-  sNfcManager->deinitialize();
+  if (!sNfcManager->deinitialize()) {
+    return NFC_ERROR_NOT_INITIALIZED;
+  }
 
   mState = STATE_NFC_OFF;
 
   ALOGD("%s: exit", FUNC);
+  return NFC_SUCCESS;
 }
 
-void NfcService::enableDiscovery()
+NfcErrorCode NfcService::enableDiscovery()
 {
   ALOGD("%s: enter", FUNC);
 
   if (mState != STATE_NFC_ON_DISCOVERY_OFF) {
-    return;
+    return NFC_ERROR_NFC_DISCOVERY_ON;
   }
 
-  sNfcManager->enableDiscovery();
+  if (!sNfcManager->enableDiscovery()) {
+    return NFC_ERROR_NFC_ENABLE_DISCOVERY;
+  }
 
   mState = STATE_NFC_ON_DISCOVERY_ON;
 
   ALOGD("%s: exit", FUNC);
+  return NFC_SUCCESS;
 }
 
-void NfcService::disableDiscovery()
+NfcErrorCode NfcService::disableDiscovery()
 {
   ALOGD("%s: enter", FUNC);
 
   if (mState != STATE_NFC_ON_DISCOVERY_ON) {
-    return;
+    return NFC_ERROR_NFC_DISCOVERY_OFF;
   }
 
-  sNfcManager->disableDiscovery();
+  if (!sNfcManager->disableDiscovery()) {
+    return NFC_ERROR_NFC_DISABLE_DISCOVERY;
+  }
 
   mState = STATE_NFC_ON_DISCOVERY_OFF;
 
   ALOGD("%s: exit", FUNC);
+  return NFC_SUCCESS;
 }
 
 void NfcService::onP2pReceivedNdef(NdefMessage* ndef)
@@ -657,3 +710,5 @@ void NfcService::onP2pReceivedNdef(NdefMessage* ndef)
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
   delete data;
 }
+
+#undef ENSURE_TRUE

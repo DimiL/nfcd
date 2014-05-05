@@ -8,6 +8,7 @@
 #include "utils/List.h"
 #include "IpcSocketListener.h"
 #include "NfcManager.h"
+#include "NfcGonkMessage.h"
 
 class NdefMessage;
 class MessageHandler;
@@ -41,7 +42,7 @@ public:
   void handleTagLost(NfcEvent* event);
   void handleLlcpLinkActivation(NfcEvent* event);
   void handleLlcpLinkDeactivation(NfcEvent* event);
-  int handleConnect(int technology);
+  void handleConnect(int technology);
   bool handleConfigRequest(int powerLevel);
   void handleConfigResponse(NfcEvent* event);
   bool handleReadNdefDetailRequest();
@@ -63,14 +64,14 @@ public:
 
   void onConnected();
   void onP2pReceivedNdef(NdefMessage* ndef);
-  void enableNfc();
-  void disableNfc();
+  NfcErrorCode enableNfc();
+  NfcErrorCode disableNfc();
 
 private:
   NfcService();
 
-  void enableDiscovery();
-  void disableDiscovery();
+  NfcErrorCode enableDiscovery();
+  NfcErrorCode disableDiscovery();
 
   uint32_t mState;
   static NfcService* sInstance;

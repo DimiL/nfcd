@@ -51,14 +51,14 @@ public:
    *
    * @return None.
    */
-  void enableDiscovery();
+  bool enableDiscovery();
 
   /**
    * Stop polling and listening for devices.
    *
    * @return None.
    */
-  void disableDiscovery();
+  bool disableDiscovery();
 
   /**
    * Check Llcp connection.
