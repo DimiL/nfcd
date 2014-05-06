@@ -49,16 +49,16 @@ public:
   /**
    * Start polling and listening for devices.
    *
-   * @return None.
+   * @return True if ok.
    */
-  void enableDiscovery();
+  bool enableDiscovery();
 
   /**
    * Stop polling and listening for devices.
    *
-   * @return None.
+   * @return True if ok.
    */
-  void disableDiscovery();
+  bool disableDiscovery();
 
   /**
    * Check Llcp connection.

@@ -37,16 +37,16 @@ public:
   /**
    * Start polling and listening for devices.
    *
-   * @return None.
+   * @return True if ok.
    */
-  virtual void enableDiscovery() = 0;
+  virtual bool enableDiscovery() = 0;
 
   /**
    * Stop polling and listening for devices.
    *
-   * @return None.
+   * @return True if ok.
    */
-  virtual void disableDiscovery() = 0;
+  virtual bool disableDiscovery() = 0;
 
   /**
    * Check Llcp connection.
