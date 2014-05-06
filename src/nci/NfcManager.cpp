@@ -9,6 +9,7 @@
 #include "NfcAdaptation.h"
 
 #include "SyncEvent.h"
+#include "SecureElement.h"
 #include "PeerToPeer.h"
 #include "PowerSwitch.h"
 #include "NfcTag.h"
@@ -102,6 +103,8 @@ void* NfcManager::queryInterface(const char* name)
     return reinterpret_cast<void*>(mP2pDevice);
   else if (0 == strcmp(name, INTERFACE_TAG_MANAGER))
     return reinterpret_cast<void*>(mNfcTagManager);
+  else if (0 == strcmp(name, INTERFACE_SECURE_ELEMENT))
+    return reinterpret_cast<void*>(this);
 
   return NULL;
 }
@@ -396,6 +399,25 @@ void NfcManager::resetRFField()
 {
   startRfDiscovery(false);
   startRfDiscovery(true);
+}
+
+int NfcManager::doOpenSecureElementConnection()
+{
+  ALOGE("%s: not implemented", __FUNCTION__);
+  return -1;
+}
+
+int NfcManager::doDisconnect(int handle)
+{
+  ALOGE("%s: not implemented", __FUNCTION__);
+  return -1;
+}
+
+bool NfcManager::doTransceive(int handle, std::vector<uint8_t>& input,
+                              std::vector<uint8_t>& ouput)
+{
+  ALOGE("%s: not implemented", __FUNCTION__);
+  return false;
 }
 
 /**
