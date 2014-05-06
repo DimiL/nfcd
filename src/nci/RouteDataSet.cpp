@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 
 #undef LOG_TAG
-#define LOG_TAG "BroadcomNfc"
+#define LOG_TAG "NfcNci"
 #include <cutils/log.h>
 
 extern char bcm_nfc_location[];
@@ -83,14 +83,14 @@ void RouteDataSet::deleteDatabase()
 
 bool RouteDataSet::import()
 {
-  ALOGD ("%s: enter", __FUNCTION__);
+  ALOGD("%s: enter", __FUNCTION__);
   bool retval = false;
   xmlDocPtr doc;
   xmlNodePtr node1;
   std::string strFilename(bcm_nfc_location);
   strFilename += sConfigFile;
 
-  deleteDatabase ();
+  deleteDatabase();
 
   doc = xmlParseFile(strFilename.c_str());
   if (doc == NULL) {
@@ -109,13 +109,13 @@ bool RouteDataSet::import()
 
   while (node1) { //loop through all elements in <Routes ...
     if (xmlStrcmp(node1->name, (const xmlChar*) "Route") == 0) {
-      xmlChar* value = xmlGetProp (node1, (const xmlChar*) "Type");
-      if (value && (xmlStrcmp (value, (const xmlChar*) "SecElemSelectedRoutes") == 0)) {
+      xmlChar* value = xmlGetProp(node1, (const xmlChar*) "Type");
+      if (value && (xmlStrcmp(value, (const xmlChar*) "SecElemSelectedRoutes") == 0)) {
         ALOGD("%s: found SecElemSelectedRoutes", __FUNCTION__);
         xmlNodePtr node2 = node1->xmlChildrenNode;
         while (node2) {//loop all elements in <Route Type="SecElemSelectedRoutes" ...
           if (xmlStrcmp(node2->name, (const xmlChar*) "Proto")==0) {
-            importProtocolRoute (node2, mSecElemRouteDatabase);
+            importProtocolRoute(node2, mSecElemRouteDatabase);
           } else if (xmlStrcmp(node2->name, (const xmlChar*) "Tech")==0) {
             importTechnologyRoute (node2, mSecElemRouteDatabase);
           }
@@ -126,9 +126,9 @@ bool RouteDataSet::import()
         xmlNodePtr node2 = node1->xmlChildrenNode;
         while (node2) { //loop all elements in <Route Type="DefaultRoutes" ...
           if (xmlStrcmp(node2->name, (const xmlChar*) "Proto") == 0) {
-            importProtocolRoute (node2, mDefaultRouteDatabase);
+            importProtocolRoute(node2, mDefaultRouteDatabase);
           } else if (xmlStrcmp(node2->name, (const xmlChar*) "Tech") == 0) {
-            importTechnologyRoute (node2, mDefaultRouteDatabase);
+            importTechnologyRoute(node2, mDefaultRouteDatabase);
           }
           node2 = node2->next;
         } //loop all elements in <Route Type="DefaultRoutes" ...
@@ -156,15 +156,15 @@ bool RouteDataSet::saveToFile(const char* routesXml)
   std::string filename(bcm_nfc_location);
 
   filename.append(sConfigFile);
-  fh = fopen(filename.c_str (), "w");
+  fh = fopen(filename.c_str(), "w");
   if (fh == NULL) {
     ALOGE("%s: fail to open file", __FUNCTION__);
     return false;
   }
 
-  actualWritten = fwrite (routesXml, sizeof(char), strlen(routesXml), fh);
+  actualWritten = fwrite(routesXml, sizeof(char), strlen(routesXml), fh);
   retval = actualWritten == strlen(routesXml);
-  fclose (fh);
+  fclose(fh);
   ALOGD("%s: wrote %u bytes", __FUNCTION__, actualWritten);
   if (retval == false) {
     ALOGE("%s: error during write", __FUNCTION__);
@@ -172,7 +172,7 @@ bool RouteDataSet::saveToFile(const char* routesXml)
 
   //set file permission to
   //owner read, write; group read; other read
-  chmod(filename.c_str (), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  chmod(filename.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
   return retval;
 }
 
@@ -184,7 +184,7 @@ bool RouteDataSet::loadFromFile(std::string& routesXml)
   std::string filename(bcm_nfc_location);
 
   filename.append(sConfigFile);
-  fh = fopen(filename.c_str (), "r");
+  fh = fopen(filename.c_str(), "r");
   if (fh == NULL) {
     ALOGD("%s: fail to open file", __FUNCTION__);
     return false;
@@ -195,7 +195,7 @@ bool RouteDataSet::loadFromFile(std::string& routesXml)
     if (actual == 0) {
       break;
     }
-    routesXml.append (buffer, actual);
+    routesXml.append(buffer, actual);
   }
   fclose(fh);
   ALOGD("%s: read %u bytes", __FUNCTION__, routesXml.length());
@@ -217,16 +217,16 @@ void RouteDataSet::importProtocolRoute(xmlNodePtr& element, Database& database)
   //ALOGD_IF (sDebug, "%s: element=%s", fn, element->name);
   value = xmlGetProp(element, id);
   if (value) {
-    if (xmlStrcmp (value, (const xmlChar*) "T1T") == 0) {
+    if (xmlStrcmp(value, (const xmlChar*) "T1T") == 0) {
       data->mProtocol = NFA_PROTOCOL_MASK_T1T;
-    } else if (xmlStrcmp (value, (const xmlChar*) "T2T") == 0) {
+    } else if (xmlStrcmp(value, (const xmlChar*) "T2T") == 0) {
       data->mProtocol = NFA_PROTOCOL_MASK_T2T;
-    } else if (xmlStrcmp (value, (const xmlChar*) "T3T") == 0) {
+    } else if (xmlStrcmp(value, (const xmlChar*) "T3T") == 0) {
       data->mProtocol = NFA_PROTOCOL_MASK_T3T;
-    } else if (xmlStrcmp (value, (const xmlChar*) "IsoDep") == 0) {
+    } else if (xmlStrcmp(value, (const xmlChar*) "IsoDep") == 0) {
       data->mProtocol = NFA_PROTOCOL_MASK_ISO_DEP;
     }
-    xmlFree (value);
+    xmlFree(value);
     //ALOGD_IF (sDebug, "%s: %s=0x%X", fn, id, data->mProtocol);
   }
 
@@ -235,13 +235,13 @@ void RouteDataSet::importProtocolRoute(xmlNodePtr& element, Database& database)
     data->mNfaEeHandle = strtol((char*) value, NULL, 16);
     xmlFree(value);
     data->mNfaEeHandle = data->mNfaEeHandle | NFA_HANDLE_GROUP_EE;
-    //ALOGD_IF (sDebug, "%s: %s=0x%X", fn, secElem, data->mNfaEeHandle);
+    //ALOGD_IF(sDebug, "%s: %s=0x%X", fn, secElem, data->mNfaEeHandle);
   }
 
   value = xmlGetProp(element, switchOn);
   if (value) {
     data->mSwitchOn = (xmlStrcmp(value, trueString) == 0);
-    xmlFree (value);
+    xmlFree(value);
   }
 
   value = xmlGetProp(element, switchOff);
@@ -255,7 +255,7 @@ void RouteDataSet::importProtocolRoute(xmlNodePtr& element, Database& database)
     data->mBatteryOff = (xmlStrcmp(value, trueString) == 0);
     xmlFree(value);
   }
-  database.push_back (data);
+  database.push_back(data);
 }
 
 void RouteDataSet::importTechnologyRoute(xmlNodePtr& element, Database& database)
@@ -279,7 +279,7 @@ void RouteDataSet::importTechnologyRoute(xmlNodePtr& element, Database& database
     } else if (xmlStrcmp (value, (const xmlChar*) "NfcF") == 0) {
       data->mTechnology = NFA_TECHNOLOGY_MASK_F;
     }
-    xmlFree (value);
+    xmlFree(value);
     //ALOGD_IF (sDebug, "%s: %s=0x%X", fn, id, data->mTechnology);
   }
 

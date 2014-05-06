@@ -85,8 +85,9 @@ public:
    *
    * @return True if ok.
    */
-  bool transceive(uint8_t* xmitBuffer, int xmitBufferSize, uint8_t* recvBuffer,
-                  int recvBufferMaxSize, int& recvBufferActualSize, int timeoutMillisec);
+  bool transceive(uint8_t* xmitBuffer, uint32_t xmitBufferSize,
+                  uint8_t* recvBuffer, uint32_t recvBufferMaxSize,
+                  uint32_t& recvBufferActualSize, uint32_t timeoutMillisec);
 
   /**
    * Notify the NFC service about whether the SE was activated
@@ -254,23 +255,23 @@ private:
   static SecureElement sSecElem;
   static const char* APP_NAME;
 
-  uint8_t mDestinationGate;       //destination gate of the UICC
-  tNFA_HANDLE mNfaHciHandle;          //NFA handle to NFA's HCI component
-  bool mIsInit;                // whether EE is initialized
-  uint8_t mActualNumEe;           // actual number of EE's reported by the stack
-  uint8_t mNumEePresent;          // actual number of usable EE's
+  uint8_t mDestinationGate;           //destination gate of the UICC.
+  tNFA_HANDLE mNfaHciHandle;          //NFA handle to NFA's HCI component.
+  bool mIsInit;                       // whether EE is initialized.
+  uint8_t mActualNumEe;               // actual number of EE's reported by the stack.
+  uint8_t mNumEePresent;              // actual number of usable EE's.
   bool mbNewEE;
   uint8_t mNewPipeId;
   uint8_t mNewSourceGate;
-  uint16_t mActiveSeOverride;      // active "enable" seid, 0 means activate all SEs
-  tNFA_STATUS mCommandStatus;     //completion status of the last command
-  bool mIsPiping;              //is a pipe connected to the controller?
+  uint16_t mActiveSeOverride;         // active "enable" seid, 0 means activate all SEs.
+  tNFA_STATUS mCommandStatus;         // completion status of the last command.
+  bool mIsPiping;                     // is a pipe connected to the controller?
   RouteSelection mCurrentRouteSelection;
-  int mActualResponseSize;         //number of bytes in the response received from secure element
-  bool mUseOberthurWarmReset;  //whether to use warm-reset command
-  bool mActivatedInListenMode; // whether we're activated in listen mode
-  uint8_t mOberthurWarmResetCommand; //warm-reset command byte
-  tNFA_EE_INFO mEeInfo [MAX_NUM_EE];  //actual size stored in mActualNumEe
+  uint32_t mActualResponseSize;       // number of bytes in the response received from se.
+  bool mUseOberthurWarmReset;         // whether to use warm-reset command.
+  bool mActivatedInListenMode;        // whether we're activated in listen mode.
+  uint8_t mOberthurWarmResetCommand;  // warm-reset command byte.
+  tNFA_EE_INFO mEeInfo [MAX_NUM_EE];  // actual size stored in mActualNumEe.
   tNFA_EE_DISCOVER_REQ mUiccInfo;
   tNFA_HCI_GET_GATE_PIPE_LIST mHciCfg;
   SyncEvent mEeRegisterEvent;
@@ -290,12 +291,12 @@ private:
   SyncEvent mRegistryEvent;
   uint8_t mVerInfo [3];
   uint8_t mResponseData [MAX_RESPONSE_SIZE];
-  RouteDataSet mRouteDataSet; //routing data
-  std::vector<std::string> mUsedAids; //AID's that are used in current routes
+  RouteDataSet mRouteDataSet;                //routing data.
+  std::vector<std::string> mUsedAids;        //AID's that are used in current routes.
   uint8_t mAidForEmptySelect[NCI_MAX_AID_LEN+1];
-  Mutex mMutex; // protects fields below
-  bool mRfFieldIsOn; // last known RF field state
-  struct timespec mLastRfFieldToggle; // last time RF field went off
+  Mutex mMutex;                              // protects fields below.
+  bool mRfFieldIsOn;                         // last known RF field state.
+  struct timespec mLastRfFieldToggle;        // last time RF field went off.
 
   SecureElement();
   ~SecureElement();

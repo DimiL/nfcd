@@ -635,16 +635,16 @@ bool SecureElement::disconnectEE(uint32_t seID)
   return true;
 }
 
-bool SecureElement::transceive(uint8_t* xmitBuffer, int xmitBufferSize,
-                               uint8_t* recvBuffer, int recvBufferMaxSize,
-                               int& recvBufferActualSize, int timeoutMillisec)
+bool SecureElement::transceive(uint8_t* xmitBuffer, uint32_t xmitBufferSize,
+                               uint8_t* recvBuffer, uint32_t recvBufferMaxSize,
+                               uint32_t& recvBufferActualSize, uint32_t timeoutMillisec)
 {
   tNFA_STATUS nfaStat = NFA_STATUS_FAILED;
   bool isSuccess = false;
   bool waitOk = false;
   uint8_t newSelectCmd[NCI_MAX_AID_LEN + 10];
 
-  ALOGD("%s: enter; xmitBufferSize=%ld; recvBufferMaxSize=%ld; timeout=%ld"
+  ALOGD("%s: enter; xmitBufferSize=%u; recvBufferMaxSize=%u; timeout=%u"
         , __FUNCTION__, xmitBufferSize, recvBufferMaxSize, timeoutMillisec);
 
   // Check if we need to replace an "empty" SELECT command.
@@ -795,8 +795,7 @@ void SecureElement::storeUiccInfo(tNFA_EE_DISCOVER_REQ& info)
   for (uint8_t xx = 0; xx < info.num_ee; xx++) {
     //for each technology (A, B, F, B'), print the bit field that shows
     //what protocol(s) is support by that technology
-    ALOGD("%s   EE[%u] Handle: 0x%04x  techA: 0x%02x  techB: 0x%02x
-             techF: 0x%02x  techBprime: 0x%02x",
+    ALOGD("%s   EE[%u] Handle: 0x%04x  techA: 0x%02x  techB: 0x%02x techF: 0x%02x  techBprime: 0x%02x",
           __FUNCTION__, xx, info.ee_disc_info[xx].ee_handle,
           info.ee_disc_info[xx].la_protocol,
           info.ee_disc_info[xx].lb_protocol,
