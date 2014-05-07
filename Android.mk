@@ -41,7 +41,10 @@ NCI_SRC_FILES := \
     src/nci/NfcTag.cpp \
     src/nci/PeerToPeer.cpp \
     src/nci/Pn544Interop.cpp \
-    src/nci/IntervalTimer.cpp
+    src/nci/IntervalTimer.cpp \
+    src/nci/SecureElement.cpp \
+    src/nci/RouteDataSet.cpp \
+    src/nci/HostAidRouter.cpp
 
 INTERFACE_SRC_FILES := \
     src/interface/DeviceHost.cpp \
