@@ -602,11 +602,11 @@ void NfcService::handleEnableResponse(NfcEvent* event)
       code = enableDiscovery();
     }
   } else {
-    code = disableNfc();
+    code = disableDiscovery();
     if (code != NFC_SUCCESS) {
       goto TheEnd;
     }
-    code = disableDiscovery();
+    code = disableNfc();
   }
 TheEnd:
   mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, code, NULL);
