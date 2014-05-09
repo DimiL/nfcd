@@ -563,14 +563,21 @@ void NfcService::handleEnableResponse(NfcEvent* event)
 {
   bool enable = event->arg1;
   if (enable) {
-    seHandle = sNfcManager->doOpenSecureElementConnection();
-  } else {
-    if (seHandle != -1) {
-      sNfcManager->doDisconnect(seHandle);
-      seHandle = -1;
+    // Do different action depends on current state.
+    if (mState == STATE_NFC_ON_DISCOVERY_OFF) {
+      enableDiscovery();
+    } else if (mState == STATE_NFC_OFF) {
+      enableNfc();
+      enableDiscovery();
     }
+    selectSE();
+  } else {
+    disableNfc();
+    disableDiscovery();
   }
+  
   mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_ERROR_SUCCESS, NULL);
+
 }
 
 void NfcService::handleEnableSecureElementRequest(bool enable)
