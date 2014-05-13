@@ -614,10 +614,10 @@ TheEnd:
 
 NfcErrorCode NfcService::enableNfc()
 {
-  ALOGD("%s: enter", FUNC);
+  ALOGD("Enable NFC");
 
   if (mState != STATE_NFC_OFF) {
-    return NFC_ERROR_NFC_ALREADY_ON;
+    return NFC_SUCCESS;
   }
 
   if (!sNfcManager->initialize()) {
@@ -630,17 +630,15 @@ NfcErrorCode NfcService::enableNfc()
 
   mState = STATE_NFC_ON_DISCOVERY_OFF;
 
-  ALOGD("%s: exit", FUNC);
   return NFC_SUCCESS;
 }
 
 NfcErrorCode NfcService::disableNfc()
 {
-  ALOGD("%s: enter", FUNC);
+  ALOGD("Disable NFC");
 
   if (mState == STATE_NFC_OFF) {
-    ALOGW("%s: NFC is already disabled", FUNC);
-    return NFC_ERROR_NFC_ALREADY_OFF;
+    return NFC_SUCCESS;
   }
 
   if (mP2pLinkManager) {
@@ -659,10 +657,10 @@ NfcErrorCode NfcService::disableNfc()
 
 NfcErrorCode NfcService::enableDiscovery()
 {
-  ALOGD("%s: enter", FUNC);
+  ALOGD("Enable discovery");
 
-  if (mState != STATE_NFC_ON_DISCOVERY_OFF) {
-    return NFC_ERROR_ALREADY_DISCOVERY_ON;
+  if (mState == STATE_NFC_ON_DISCOVERY_ON) {
+    return NFC_SUCCESS;
   }
 
   if (!sNfcManager->enableDiscovery()) {
@@ -671,16 +669,15 @@ NfcErrorCode NfcService::enableDiscovery()
 
   mState = STATE_NFC_ON_DISCOVERY_ON;
 
-  ALOGD("%s: exit", FUNC);
   return NFC_SUCCESS;
 }
 
 NfcErrorCode NfcService::disableDiscovery()
 {
-  ALOGD("%s: enter", FUNC);
+  ALOGD("Disable discovery");
 
   if (mState != STATE_NFC_ON_DISCOVERY_ON) {
-    return NFC_ERROR_ALREADY_DISCOVERY_OFF;
+    return NFC_SUCCESS;
   }
 
   if (!sNfcManager->disableDiscovery()) {
@@ -689,7 +686,6 @@ NfcErrorCode NfcService::disableDiscovery()
 
   mState = STATE_NFC_ON_DISCOVERY_OFF;
 
-  ALOGD("%s: exit", FUNC);
   return NFC_SUCCESS;
 }
 

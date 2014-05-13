@@ -92,7 +92,7 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
 
 void MessageHandler::processResponse(NfcResponseType response, NfcErrorCode error, void* data)
 {
-  ALOGD("%s enter response=%d", FUNC, response);
+  ALOGD("%s enter response=%d, error=%d", FUNC, response, error);
   Parcel parcel;
   parcel.writeInt32(0); // Parcel Size.
   parcel.writeInt32(response);
