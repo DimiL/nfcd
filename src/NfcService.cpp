@@ -380,7 +380,7 @@ void NfcService::handleConnect(int tech)
                       (sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
 
   NfcErrorCode code = !!pINfcTag ?
-                      (pINfcTag->connect(tech) ? NFC_SUCCESS : NFC_ERROR_DISCONNECT) :
+                      (pINfcTag->connect(tech) ? NFC_SUCCESS : NFC_ERROR_CONNECT) :
                       NFC_ERROR_NOT_SUPPORTED;
 
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, code, NULL);
