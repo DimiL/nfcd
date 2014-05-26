@@ -131,6 +131,20 @@ public:
 
   void resetRFField();
 
+  /**
+   * NFC controller starts routing data in listen mode.
+   *
+   * @return True if ok.
+   */
+  bool doSelectSecureElement();
+
+  /**
+   * NFC controller stops routing data in listen mode.
+   *
+   * @return True if ok.
+   */
+  bool doDeselectSecureElement();
+
 private:
   P2pDevice* mP2pDevice;
   NfcTagManager* mNfcTagManager;

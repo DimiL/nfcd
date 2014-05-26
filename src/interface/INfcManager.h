@@ -120,6 +120,20 @@ public:
   virtual int getDefaultLlcpRwSize() const = 0;
 
   virtual void resetRFField() = 0;
+
+  /**
+   * NFC controller starts routing data in listen mode.
+   *
+   * @return True if ok.
+   */
+  virtual bool doSelectSecureElement() = 0;
+
+  /**
+   * NFC controller stops routing data in listen mode.
+   *
+   * @return True if ok.
+   */
+  virtual bool doDeselectSecureElement() = 0;
 };
 
 #endif
