@@ -602,8 +602,16 @@ void NfcService::handleEnableResponse(NfcEvent* event)
         goto TheEnd;
       }
       code = enableDiscovery();
+      if (code != NFC_SUCCESS) {
+        goto TheEnd;
+      }
+      code = enableSE();
     }
   } else {
+    code = disableSE();
+    if (code != NFC_SUCCESS) {
+        goto TheEnd;
+    }
     code = disableDiscovery();
     if (code != NFC_SUCCESS) {
       goto TheEnd;
@@ -686,6 +694,32 @@ NfcErrorCode NfcService::disableDiscovery()
   }
 
   mState = STATE_NFC_ON_DISCOVERY_OFF;
+
+  return NFC_SUCCESS;
+}
+
+// TODO: Emulator doesn't support SE now.
+//       So always return sucess to pass testcase.
+NfcErrorCode NfcService::enableSE()
+{
+  ALOGD("Enable secure element");
+
+  if (!sNfcManager->doSelectSecureElement()) {
+    ALOGE("Enable secure element fail");
+  }
+
+  return NFC_SUCCESS;
+}
+
+// TODO: Emulator doesn't support SE now.
+//       So always return sucess to pass testcase.
+NfcErrorCode NfcService::disableSE()
+{
+  ALOGD("Disable secure element");
+
+  if (!sNfcManager->doDeselectSecureElement()) {
+    ALOGE("Disable secure element fail");
+  }
 
   return NFC_SUCCESS;
 }

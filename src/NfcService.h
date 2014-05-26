@@ -72,6 +72,8 @@ private:
 
   NfcErrorCode enableDiscovery();
   NfcErrorCode disableDiscovery();
+  NfcErrorCode enableSE();
+  NfcErrorCode disableSE();
 
   uint32_t mState;
   static NfcService* sInstance;
