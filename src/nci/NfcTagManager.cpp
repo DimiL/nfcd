@@ -223,12 +223,12 @@ NdefMessage* NfcTagManager::doReadNdef()
     }
     break;
   }
-  
+
   if (!ndefMsg && foundFormattable) {
     // Tag is not NDEF yet, and found a formattable target,
     // so add formattable tech to tech list.
     addTechnology(NDEF_FORMATABLE, formattableHandle, formattableLibNfcType);
-  } 
+  }
 
   return ndefMsg;
 }
