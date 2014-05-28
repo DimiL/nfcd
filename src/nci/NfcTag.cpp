@@ -374,7 +374,7 @@ void NfcTag::fillNfcTagMembers1(INfcTag* pINfcTag)
     techList.push_back(toGenericTagTechnology(mTechList[i]));
     techHandles.push_back(mTechHandles[i]);
     techLibNfcTypes.push_back(mTechLibNfcTypes[i]);
-  }   
+  }
 }
 
 // Fill NfcTag's members: mHandle, mConnectedTechnology.
@@ -889,7 +889,7 @@ TagTechnology NfcTag::toGenericTagTechnology(unsigned int tagTech)
     case TARGET_TYPE_ISO14443_3A:     return NFC_A;
     case TARGET_TYPE_ISO14443_3B:     return NFC_B;
     case TARGET_TYPE_ISO14443_4:      return NFC_ISO_DEP;
-    case TARGET_TYPE_FELICA:          return NDEF;
+    case TARGET_TYPE_FELICA:          return NFC_F;
     case TARGET_TYPE_ISO15693:        return NFC_V;
     case TARGET_TYPE_NDEF:            return NDEF;
     case TARGET_TYPE_NDEF_FORMATABLE: return NDEF_FORMATABLE;
