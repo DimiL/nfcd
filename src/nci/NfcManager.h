@@ -61,6 +61,20 @@ public:
   bool disableDiscovery();
 
   /**
+   * Start polling for devices.
+   *
+   * @return True if ok.
+   */
+  bool enablePolling();
+
+  /**
+   * Stop polling for devices.
+   *
+   * @return True if ok.
+   */
+  bool disablePolling();
+
+  /**
    * Check Llcp connection.
    * Not used in NCI case.
    *

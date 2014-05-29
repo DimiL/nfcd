@@ -49,6 +49,20 @@ public:
   virtual bool disableDiscovery() = 0;
 
   /**
+   * Start polling for devices.
+   *
+   * @return True if ok.
+   */
+  virtual bool enablePolling() = 0;
+
+  /**
+   * Stop polling for devices.
+   *
+   * @return True if ok.
+   */
+  virtual bool disablePolling() = 0;
+
+  /**
    * Check Llcp connection.
    *
    * @return True if ok.

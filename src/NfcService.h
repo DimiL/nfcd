@@ -70,8 +70,8 @@ public:
 private:
   NfcService();
 
-  NfcErrorCode enableDiscovery();
-  NfcErrorCode disableDiscovery();
+  NfcErrorCode enablePolling();
+  NfcErrorCode disablePolling();
   NfcErrorCode enableSE();
   NfcErrorCode disableSE();
 

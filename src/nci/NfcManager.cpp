@@ -43,6 +43,7 @@ nfc_data                gNat;
 int                     gGeneralTransceiveTimeout = 1000;
 void                    doStartupConfig();
 void                    startRfDiscovery(bool isStart);
+bool                    startStopPolling(bool isStartPolling);
 
 /**
  * private variables and functions
@@ -325,6 +326,16 @@ bool NfcManager::disableDiscovery()
 TheEnd:
   ALOGD("%s: exit", __FUNCTION__);
   return status == NFA_STATUS_OK;
+}
+
+bool NfcManager::enablePolling()
+{
+  return startStopPolling(true);
+}
+
+bool NfcManager::disablePolling()
+{
+  return startStopPolling(false);
 }
 
 bool NfcManager::checkLlcp()
@@ -897,7 +908,7 @@ bool nfcManager_isNfcActive()
   return sIsNfaEnabled;
 }
 
-void startStopPolling(bool isStartPolling)
+bool startStopPolling(bool isStartPolling)
 {
   ALOGD("%s: enter; isStart=%u", __FUNCTION__, isStartPolling);
   tNFA_STATUS stat = NFA_STATUS_FAILED;
@@ -930,6 +941,7 @@ void startStopPolling(bool isStartPolling)
   }
   startRfDiscovery(true);
   ALOGD("%s: exit", __FUNCTION__);
+  return stat == NFA_STATUS_OK;
 }
 
 static bool isPeerToPeer(tNFA_ACTIVATED& activated)
