@@ -43,8 +43,8 @@ typedef enum {
 
 typedef enum {
   STATE_NFC_OFF = 0,
-  STATE_NFC_ON_DISCOVERY_OFF,
-  STATE_NFC_ON_DISCOVERY_ON,
+  STATE_NFC_ON_POLLING_OFF,
+  STATE_NFC_ON_POLLING_ON,
 } NfcState;
 
 class NfcEvent {
@@ -568,7 +568,7 @@ bool NfcService::handleEnterLowPowerRequest(bool enter)
 void NfcService::handleEnterLowPowerResponse(NfcEvent* event)
 {
   bool low = event->arg1;
-  NfcErrorCode code = low ? disableDiscovery() : enableDiscovery();
+  NfcErrorCode code = low ? disablePolling() : enablePolling();
 
   mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, code, NULL);
 }
@@ -594,14 +594,10 @@ void NfcService::handleEnableResponse(NfcEvent* event)
   bool enable = event->arg1;
   if (enable) {
     // Do different action depends on current state.
-    if (mState == STATE_NFC_ON_DISCOVERY_OFF) {
-      code = enableDiscovery();
+    if (mState == STATE_NFC_ON_POLLING_OFF) {
+      code = enablePolling();
     } else if (mState == STATE_NFC_OFF) {
       code = enableNfc();
-      if (code != NFC_SUCCESS) {
-        goto TheEnd;
-      }
-      code = enableDiscovery();
       if (code != NFC_SUCCESS) {
         goto TheEnd;
       }
@@ -611,10 +607,6 @@ void NfcService::handleEnableResponse(NfcEvent* event)
     code = disableSE();
     if (code != NFC_SUCCESS) {
         goto TheEnd;
-    }
-    code = disableDiscovery();
-    if (code != NFC_SUCCESS) {
-      goto TheEnd;
     }
     code = disableNfc();
   }
@@ -638,7 +630,11 @@ NfcErrorCode NfcService::enableNfc()
     mP2pLinkManager->enableDisable(true);
   }
 
-  mState = STATE_NFC_ON_DISCOVERY_OFF;
+  if (!sNfcManager->enableDiscovery()) {
+    return NFC_ERROR_FAIL_ENABLE_DISCOVERY;
+  }
+
+  mState = STATE_NFC_ON_POLLING_ON;
 
   return NFC_SUCCESS;
 }
@@ -659,41 +655,45 @@ NfcErrorCode NfcService::disableNfc()
     return NFC_ERROR_DEINITIALIZE_FAIL;
   }
 
+  if (!sNfcManager->disableDiscovery()) {
+    return NFC_ERROR_FAIL_DISABLE_DISCOVERY;
+  }
+
   mState = STATE_NFC_OFF;
 
   return NFC_SUCCESS;
 }
 
-NfcErrorCode NfcService::enableDiscovery()
+NfcErrorCode NfcService::enablePolling()
 {
-  ALOGD("Enable discovery");
+  ALOGD("Enable polling");
 
-  if (mState == STATE_NFC_ON_DISCOVERY_ON) {
+  if (mState == STATE_NFC_ON_POLLING_ON) {
     return NFC_SUCCESS;
   }
 
-  if (!sNfcManager->enableDiscovery()) {
-    return NFC_ERROR_FAIL_ENABLE_DISCOVERY;
+  if (!sNfcManager->enablePolling()) {
+    return NFC_ERROR_FAIL_ENABLE_POLLING;
   }
 
-  mState = STATE_NFC_ON_DISCOVERY_ON;
+  mState = STATE_NFC_ON_POLLING_ON;
 
   return NFC_SUCCESS;
 }
 
-NfcErrorCode NfcService::disableDiscovery()
+NfcErrorCode NfcService::disablePolling()
 {
-  ALOGD("Disable discovery");
+  ALOGD("Disable polling");
 
-  if (mState != STATE_NFC_ON_DISCOVERY_ON) {
+  if (mState != STATE_NFC_ON_POLLING_ON) {
     return NFC_SUCCESS;
   }
 
-  if (!sNfcManager->disableDiscovery()) {
-    return NFC_ERROR_FAIL_DISABLE_DISCOVERY;
+  if (!sNfcManager->disablePolling()) {
+    return NFC_ERROR_FAIL_DISABLE_POLLING;
   }
 
-  mState = STATE_NFC_ON_DISCOVERY_OFF;
+  mState = STATE_NFC_ON_POLLING_OFF;
 
   return NFC_SUCCESS;
 }
