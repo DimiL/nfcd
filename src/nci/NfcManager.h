@@ -75,6 +75,20 @@ public:
   bool disablePolling();
 
   /**
+   * Start peer-to-peer listening for devices.
+   *
+   * @return True if ok.
+   */
+  bool enableP2pListening();
+
+  /**
+   * Stop peer-to-peer listening for devices.
+   *
+   * @return True if ok.
+   */
+  bool disableP2pListening();
+
+  /**
    * Check Llcp connection.
    * Not used in NCI case.
    *
