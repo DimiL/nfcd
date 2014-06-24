@@ -70,8 +70,7 @@ public:
 private:
   NfcService();
 
-  NfcErrorCode enablePolling();
-  NfcErrorCode disablePolling();
+  NfcErrorCode setLowPowerMode(bool low);
   NfcErrorCode enableSE();
   NfcErrorCode disableSE();
 

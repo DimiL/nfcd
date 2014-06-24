@@ -43,8 +43,8 @@ typedef enum {
 
 typedef enum {
   STATE_NFC_OFF = 0,
-  STATE_NFC_ON_POLLING_OFF,
-  STATE_NFC_ON_POLLING_ON,
+  STATE_NFC_ON,
+  STATE_NFC_ON_LOW_POWER,
 } NfcState;
 
 class NfcEvent {
@@ -568,7 +568,8 @@ bool NfcService::handleEnterLowPowerRequest(bool enter)
 void NfcService::handleEnterLowPowerResponse(NfcEvent* event)
 {
   bool low = event->arg1;
-  NfcErrorCode code = low ? disablePolling() : enablePolling();
+
+  NfcErrorCode code = setLowPowerMode(low);
 
   mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, code, NULL);
 }
@@ -593,9 +594,9 @@ void NfcService::handleEnableResponse(NfcEvent* event)
 
   bool enable = event->arg1;
   if (enable) {
-    // Do different action depends on current state.
-    if (mState == STATE_NFC_ON_POLLING_OFF) {
-      code = enablePolling();
+    // Disable low power mode if already in low power mode
+    if (mState == STATE_NFC_ON_LOW_POWER) {
+      code = setLowPowerMode(false);
     } else if (mState == STATE_NFC_OFF) {
       code = enableNfc();
       if (code != NFC_SUCCESS) {
@@ -634,7 +635,7 @@ NfcErrorCode NfcService::enableNfc()
     return NFC_ERROR_FAIL_ENABLE_DISCOVERY;
   }
 
-  mState = STATE_NFC_ON_POLLING_ON;
+  mState = STATE_NFC_ON;
 
   return NFC_SUCCESS;
 }
@@ -664,36 +665,28 @@ NfcErrorCode NfcService::disableNfc()
   return NFC_SUCCESS;
 }
 
-NfcErrorCode NfcService::enablePolling()
+NfcErrorCode NfcService::setLowPowerMode(bool low)
 {
-  ALOGD("Enable polling");
-
-  if (mState == STATE_NFC_ON_POLLING_ON) {
+  if ((low && mState != STATE_NFC_ON) ||
+      (!low && mState == STATE_NFC_ON)) {
     return NFC_SUCCESS;
   }
 
-  if (!sNfcManager->enablePolling()) {
-    return NFC_ERROR_FAIL_ENABLE_POLLING;
+  if (low) {
+    if (!sNfcManager->disableP2pListening() ||
+        !sNfcManager->disablePolling()) {
+      return NFC_ERROR_FAIL_ENABLE_LOW_POWER_MODE;
+    }
+
+    mState = STATE_NFC_ON_LOW_POWER;
+  } else {
+    if (!sNfcManager->enableP2pListening() ||
+        !sNfcManager->enablePolling()) {
+      return NFC_ERROR_FAIL_DISABLE_LOW_POWER_MODE;
+    }
+
+    mState = STATE_NFC_ON;
   }
-
-  mState = STATE_NFC_ON_POLLING_ON;
-
-  return NFC_SUCCESS;
-}
-
-NfcErrorCode NfcService::disablePolling()
-{
-  ALOGD("Disable polling");
-
-  if (mState != STATE_NFC_ON_POLLING_ON) {
-    return NFC_SUCCESS;
-  }
-
-  if (!sNfcManager->disablePolling()) {
-    return NFC_ERROR_FAIL_DISABLE_POLLING;
-  }
-
-  mState = STATE_NFC_ON_POLLING_OFF;
 
   return NFC_SUCCESS;
 }

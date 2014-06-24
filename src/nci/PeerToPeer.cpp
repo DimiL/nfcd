@@ -640,7 +640,7 @@ void PeerToPeer::setP2pListenMask(tNFA_TECHNOLOGY_MASK p2pListenMask)
   mP2pListenTechMask = p2pListenMask;
 }
 
-void PeerToPeer::enableP2pListening(bool isEnable)
+bool PeerToPeer::enableP2pListening(bool isEnable)
 {
   static const char    fn []   = "PeerToPeer::enableP2pListening";
   tNFA_STATUS          nfaStat = NFA_STATUS_FAILED;
@@ -654,8 +654,10 @@ void PeerToPeer::enableP2pListening(bool isEnable)
       mSetTechEvent.wait();
       mIsP2pListening = true;
     }
-    else
+    else {
       ALOGE("%s: fail enable listen; error=0x%X", fn, nfaStat);
+      return false;
+    }
   } else if ((isEnable == false) && (mIsP2pListening == true) ) {
     SyncEventGuard guard(mSetTechEvent);
     // Request to disable P2P listening, check if it was enabled.
@@ -664,9 +666,11 @@ void PeerToPeer::enableP2pListening(bool isEnable)
       mIsP2pListening = false;
     } else {
       ALOGE("%s: fail disable listen; error=0x%X", fn, nfaStat);
+      return false;
     }
   }
   ALOGD("%s: exit; mIsP2pListening: %u", fn, mIsP2pListening);
+  return true;
 }
 
 void PeerToPeer::handleNfcOnOff(bool isOn)
