@@ -63,6 +63,20 @@ public:
   virtual bool disablePolling() = 0;
 
   /**
+   * Start peer-to-peer listening for devices.
+   *
+   * @return True if ok.
+   */
+  virtual bool enableP2pListening() = 0;
+
+  /**
+   * Stop peer-to-peer listening for devices.
+   *
+   * @return True if ok.
+   */
+  virtual bool disableP2pListening() = 0;
+
+  /**
    * Check Llcp connection.
    *
    * @return True if ok.

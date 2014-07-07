@@ -338,6 +338,16 @@ bool NfcManager::disablePolling()
   return startStopPolling(false);
 }
 
+bool NfcManager::enableP2pListening()
+{
+  return PeerToPeer::getInstance().enableP2pListening(true);
+}
+
+bool NfcManager::disableP2pListening()
+{
+  return PeerToPeer::getInstance().enableP2pListening(false);
+}
+
 bool NfcManager::checkLlcp()
 {
   // Not used in NCI case.

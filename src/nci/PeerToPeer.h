@@ -185,9 +185,9 @@ public:
    * Start/stop polling/listening to peer that supports P2P.
    *
    * @param  isEnable Is enable polling/listening?
-   * @return          None.
+   * @return          True if ok.
    */
-  void enableP2pListening(bool isEnable);
+  bool enableP2pListening(bool isEnable);
 
   /**
    * Handle events related to turning NFC on/off by the user.
