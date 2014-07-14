@@ -27,7 +27,7 @@ typedef enum {
   MSG_TAG_LOST,
   MSG_SE_FIELD_ACTIVATED,
   MSG_SE_FIELD_DEACTIVATED,
-  MSG_SE_NOTIFY_TRANSACTION_LISTENERS,
+  MSG_SE_NOTIFY_TRANSACTION_EVENT,
   MSG_READ_NDEF_DETAIL,
   MSG_READ_NDEF,
   MSG_WRITE_NDEF,
@@ -153,10 +153,11 @@ void NfcService::notifySEFieldDeactivated()
   sem_post(&thread_sem);
 }
 
-void NfcService::notifySETransactionListeners()
+void NfcService::notifySETransactionEvent(TransactionEvent* pEvent)
 {
   ALOGD("%s: enter", FUNC);
-  NfcEvent *event = new NfcEvent(MSG_SE_NOTIFY_TRANSACTION_LISTENERS);
+  NfcEvent *event = new NfcEvent(MSG_SE_NOTIFY_TRANSACTION_EVENT);
+  event->obj = reinterpret_cast<void*>(pEvent);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
 }
@@ -286,6 +287,11 @@ void NfcService::handleTagLost(NfcEvent* event)
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_LOST, NULL);
 }
 
+void NfcService::handleTransactionEvent(NfcEvent* event)
+{
+  mMsgHandler->processNotification(NFC_NOTIFICATION_TRANSACTION_EVENT, event->obj);
+}
+
 void* NfcService::eventLoop()
 {
   ALOGD("%s: NFCService started", FUNC);
@@ -313,6 +319,9 @@ void* NfcService::eventLoop()
           break;
         case MSG_TAG_LOST:
           handleTagLost(event);
+          break;
+        case MSG_SE_NOTIFY_TRANSACTION_EVENT:
+          handleTransactionEvent(event);
           break;
         case MSG_CONFIG:
           handleConfigResponse(event);

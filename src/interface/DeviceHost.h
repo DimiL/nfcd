@@ -9,6 +9,7 @@
 
 class INfcTag;
 class IP2pDevice;
+class TransactionEvent;
 
 class DeviceHost {
 public:
@@ -39,9 +40,16 @@ public:
    */
   void notifyLlcpLinkDeactivated(IP2pDevice* pDevice);
 
+  /**
+   * Notifies HCI TRANSACTION event received.
+   *
+   * @param pEvent Contain transaction aid and payload
+   * @return       None.
+   */
+  void notifyTransactionEvent(TransactionEvent* pEvent);
+
   // Interfaces are not yet used.
   void notifyTargetDeselected();
-  void notifyTransactionListeners();
   void notifyLlcpLinkFirstPacketReceived();
   void notifySeFieldActivated();
   void notifySeFieldDeactivated();
@@ -60,5 +68,17 @@ public:
 
 private:
   virtual ~NfcDepEndpoint();
+};
+
+class TransactionEvent {
+public:
+  TransactionEvent();
+  ~TransactionEvent();
+
+  uint32_t aidLen;
+  uint8_t* aid;
+
+  uint32_t payloadLen;
+  uint8_t* payload;
 };
 #endif

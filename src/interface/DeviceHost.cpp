@@ -14,9 +14,9 @@ void DeviceHost::notifyTargetDeselected()
   ALOGE("%s: not implement", __FUNCTION__);
 }
 
-void DeviceHost::notifyTransactionListeners()
+void DeviceHost::notifyTransactionEvent(TransactionEvent* pEvent)
 {
-  ALOGE("%s: not implement", __FUNCTION__);
+  NfcService::notifySETransactionEvent(pEvent);
 }
 
 void DeviceHost::notifyLlcpLinkActivated(IP2pDevice* pDevice)
@@ -42,4 +42,18 @@ void DeviceHost::notifySeFieldActivated()
 void DeviceHost::notifySeFieldDeactivated()
 {
   ALOGE("%s: not implement", __FUNCTION__);
+}
+
+TransactionEvent::TransactionEvent()
+ : aidLen(0)
+ , aid(NULL)
+ , payloadLen(0)
+ , payload(NULL)
+{
+}
+
+TransactionEvent::~TransactionEvent()
+{
+  delete aid;
+  delete payload;
 }

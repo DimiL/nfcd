@@ -356,6 +356,15 @@ typedef enum {
    * previously discovered with NFC_NOTIFICATION_TECH_DISCOVERED.
    */
   NFC_NOTIFICATION_TECH_LOST = 2002,
+
+  /**
+   * NFC_NOTIFICATION_TRANSACTION_EVENT
+   *
+   * To notify a transaction event from secure element.
+   *
+   * data is char* [aid length][aid][payload length][payload]
+   */
+  NFC_NOTIFICATION_TRANSACTION_EVENT = 2003,
 } NfcNotificationType;
 
 #ifdef __cplusplus
