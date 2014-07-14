@@ -11,8 +11,12 @@
 extern "C"
 {
   #include "nfa_ee_api.h"
+  #include "nfa_hci_api.h"
+  #include "nfa_hci_defs.h"
   #include "nfa_ce_api.h"
 }
+
+class NfcManager;
 
 class SecureElement
 {
@@ -29,9 +33,10 @@ public:
   /**
    * Initialize all member variables.
    *
+   * @param pNfcManager NFC manager class instance.
    * @return True if ok.
    */
-  bool initialize();
+  bool initialize(NfcManager* pNfcManager);
 
   /**
    * Release all resources.
@@ -94,11 +99,14 @@ public:
   /**
    * Notify the NFC service about a transaction event from secure element.
    *
-   * @param  aid Buffer contains application ID.
-   * @param  aidLen Length of application ID.
+   * @param  aid Buffer contains AID.
+   * @param  aidLen Length of AID.
+   * @param  payload Buffer contains payload.
+   * @param  payloadLen Length of payload.
    * @return None.
    */
-  void notifyTransactionListenersOfAid(const uint8_t* aid, uint8_t aidLen);
+  void notifyTransactionEvent(const uint8_t* aid, uint32_t aidLen,
+                              const uint8_t* payload, uint32_t payloadLen);
 
   /**
    * Receive card-emulation related events from stack.
@@ -170,6 +178,8 @@ private:
   static SecureElement sSecElem;
   static const char* APP_NAME;
 
+  NfcManager* mNfcManager;
+  tNFA_HANDLE mNfaHciHandle;  //NFA handle to NFA's HCI component
   bool mIsInit;  // whether EE is initialized
   uint8_t mActualNumEe;  // actual number of EE's reported by the stack
   uint8_t mNumEePresent;  // actual number of usable EE's
@@ -182,6 +192,7 @@ private:
   tNFA_EE_INFO mEeInfo[MAX_NUM_EE];  //actual size stored in mActualNumEe
   tNFA_EE_DISCOVER_REQ mUiccInfo;
   SyncEvent mEeRegisterEvent;
+  SyncEvent mHciRegisterEvent;
   SyncEvent mEeSetModeEvent;
   SyncEvent mRoutingEvent;
   SyncEvent mUiccInfoEvent;
@@ -202,6 +213,15 @@ private:
    * return None.
    */
   static void nfaEeCallback(tNFA_EE_EVT event, tNFA_EE_CBACK_DATA* eventData);
+
+  /**
+   * Receive Host Controller Interface-related events from stack.
+   *
+   * @param event Event code.
+   * @param eventData Event data.
+   * return None.
+   */
+  static void nfaHciCallback(tNFA_HCI_EVT event, tNFA_HCI_EVT_DATA* eventData);
 
   /**
    * Find information about an execution environment.

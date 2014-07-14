@@ -48,6 +48,23 @@ void MessageHandler::notifyTechLost(Parcel& parcel)
   sendResponse(parcel);
 }
 
+void MessageHandler::notifyTransactionEvent(Parcel& parcel, void* data)
+{
+  TransactionEvent *event = reinterpret_cast<TransactionEvent*>(data);
+
+  parcel.writeInt32(event->aidLen);
+  void* aid = parcel.writeInplace(event->aidLen);
+  memcpy(aid, event->aid, event->aidLen);
+
+  parcel.writeInt32(event->payloadLen);
+  void* payload = parcel.writeInplace(event->payloadLen);
+  memcpy(payload, event->payload, event->payloadLen);
+
+  sendResponse(parcel);
+
+  delete event;
+}
+
 void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
 {
   Parcel parcel;
@@ -134,6 +151,8 @@ void MessageHandler::processNotification(NfcNotificationType notification, void*
     case NFC_NOTIFICATION_TECH_LOST:
       notifyTechLost(parcel);
       break;
+    case NFC_NOTIFICATION_TRANSACTION_EVENT:
+      notifyTransactionEvent(parcel, data);
     default:
       ALOGE("Not implement");
       break;

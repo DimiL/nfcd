@@ -32,7 +32,7 @@ public:
   static void notifyTagLost();
   static void notifySEFieldActivated();
   static void notifySEFieldDeactivated();
-  static void notifySETransactionListeners();
+  static void notifySETransactionEvent(TransactionEvent* pEvent);
 
   static bool handleDisconnect();
 
@@ -40,6 +40,7 @@ public:
 
   void handleTagDiscovered(NfcEvent* event);
   void handleTagLost(NfcEvent* event);
+  void handleTransactionEvent(NfcEvent* event);
   void handleLlcpLinkActivation(NfcEvent* event);
   void handleLlcpLinkDeactivation(NfcEvent* event);
   void handleConnect(int technology);

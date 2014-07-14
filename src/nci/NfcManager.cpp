@@ -145,7 +145,7 @@ bool NfcManager::initialize()
 
   if (stat == NFA_STATUS_OK) {
     if (sIsNfaEnabled) {
-      SecureElement::getInstance().initialize();
+      SecureElement::getInstance().initialize(this);
       NfcTagManager::doRegisterNdefTypeHandler();
       NfcTag::getInstance().initialize(this);
 
