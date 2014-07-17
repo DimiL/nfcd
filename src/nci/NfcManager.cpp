@@ -1,6 +1,18 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/*
+ * Copyright (C) 2014  Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "NfcManager.h"
 
@@ -136,7 +148,7 @@ bool NfcManager::initialize()
       RW_SetTraceLevel(num);
       NFA_SetTraceLevel(num);
       NFA_P2pSetTraceLevel(num);
-            
+
       sNfaEnableEvent.wait(); // Wait for NFA command to finish.
     } else {
       ALOGE("%s: NFA_Enable fail, error = 0x%X", __FUNCTION__, stat);
@@ -369,8 +381,8 @@ ILlcpSocket* NfcManager::createLlcpSocket(int sap, int miu, int rw, int linearBu
     ALOGE("%s: fail create p2p client", __FUNCTION__);
 
   LlcpSocket* pLlcpSocket = new LlcpSocket(handle, sap, miu, rw);
-    
-  ALOGD("%s: exit", __FUNCTION__); 
+
+  ALOGD("%s: exit", __FUNCTION__);
   return static_cast<ILlcpSocket*>(pLlcpSocket);
 }
 
@@ -384,7 +396,7 @@ ILlcpServerSocket* NfcManager::createLlcpServerSocket(int sap, const char* sn, i
     ALOGE("%s: register server fail", __FUNCTION__);
     return NULL;
   }
-    
+
   ALOGD("%s: exit", __FUNCTION__);
   return static_cast<ILlcpServerSocket*>(pLlcpServiceSocket);
 }
@@ -415,7 +427,7 @@ void NfcManager::setP2pTargetModes(int modes)
   if (modes & 0x04) mask |= NFA_TECHNOLOGY_MASK_F;
   if (modes & 0x08) mask |= NFA_TECHNOLOGY_MASK_A_ACTIVE | NFA_TECHNOLOGY_MASK_F_ACTIVE;
 
-  PeerToPeer::getInstance().setP2pListenMask(mask); 
+  PeerToPeer::getInstance().setP2pListenMask(mask);
   // This function is not called by the NFC service nor exposed by public API.
 }
 
@@ -664,7 +676,7 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
     // RF Discovery stopped event.
     case NFA_RF_DISCOVERY_STOPPED_EVT: {
       ALOGD("%s: NFA_RF_DISCOVERY_STOPPED_EVT: status = 0x%X", __FUNCTION__, eventData->status);
- 
+
       SyncEventGuard guard(sNfaEnableDisablePollingEvent);
       sNfaEnableDisablePollingEvent.notifyOne();
       break;

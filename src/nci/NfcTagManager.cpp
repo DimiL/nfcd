@@ -1,6 +1,18 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/*
+ * Copyright (C) 2014  Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "NfcTagManager.h"
 
@@ -328,7 +340,7 @@ void NfcTagManager::doRead(std::vector<uint8_t>& buf)
 {
   ALOGD("%s: enter", __FUNCTION__);
   tNFA_STATUS status = NFA_STATUS_FAILED;
-    
+
   sReadDataLen = 0;
   if (sReadData != NULL) {
     free(sReadData);
@@ -343,7 +355,7 @@ void NfcTagManager::doRead(std::vector<uint8_t>& buf)
       sReadEvent.wait(); // Wait for NFA_READ_CPLT_EVT.
     }
     sIsReadingNdefMessage = false;
-   
+
     if (sReadDataLen > 0) { // If stack actually read data from the tag.
       ALOGD("%s: read %u bytes", __FUNCTION__, sReadDataLen);
       for(uint32_t idx = 0; idx < sReadDataLen; idx++) {
@@ -963,7 +975,7 @@ bool NfcTagManager::doWrite(std::vector<uint8_t>& buf)
   const int maxBufferSize = 1024;
   UINT8 buffer[maxBufferSize] = { 0 };
   UINT32 curDataSize = 0;
- 
+
   uint8_t* p_data = reinterpret_cast<uint8_t*>(malloc(buf.size()));
   for (uint8_t idx = 0; idx < buf.size(); idx++)
     p_data[idx] = buf[idx];
@@ -1043,7 +1055,7 @@ bool NfcTagManager::doIsNdefFormatable()
         isFormattable = NfcTag::getInstance().isMifareUltralight() ? true : false;
   }
   ALOGD("%s: is formattable=%u", __FUNCTION__, isFormattable);
-  return isFormattable; 
+  return isFormattable;
 }
 
 bool NfcTagManager::connect(int technology)
@@ -1110,7 +1122,7 @@ NdefDetail* NfcTagManager::readNdefDetail()
   return ndefDetail;
 }
 
-bool NfcTagManager::writeNdef(NdefMessage& ndef) 
+bool NfcTagManager::writeNdef(NdefMessage& ndef)
 {
   bool result;
   std::vector<uint8_t> buf;
@@ -1121,7 +1133,7 @@ bool NfcTagManager::writeNdef(NdefMessage& ndef)
   return result;
 }
 
-bool NfcTagManager::makeReadOnly() 
+bool NfcTagManager::makeReadOnly()
 {
   bool result;
   pthread_mutex_lock(&mMutex);
