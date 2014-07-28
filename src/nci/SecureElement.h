@@ -19,6 +19,7 @@
 #include <vector>
 #include <string>
 #include "SyncEvent.h"
+#include "RouteDataSet.h"
 
 extern "C"
 {
@@ -210,6 +211,7 @@ private:
   SyncEvent mUiccInfoEvent;
   SyncEvent mUiccListenEvent;
   SyncEvent mAidAddRemoveEvent;
+  RouteDataSet mRouteDataSet; //routing data
   Mutex mMutex;  // protects fields below
   bool mRfFieldIsOn;  // last known RF field state
   struct timespec mLastRfFieldToggle;  // last time RF field went off

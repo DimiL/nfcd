@@ -122,6 +122,9 @@ bool SecureElement::initialize(NfcManager* pNfcManager)
     break;
   }
 
+  mRouteDataSet.initialize();
+  mRouteDataSet.import();  //read XML file.
+
   mIsInit = true;
 
   return true;
