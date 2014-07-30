@@ -54,7 +54,8 @@ NCI_SRC_FILES := \
     src/nci/PeerToPeer.cpp \
     src/nci/Pn544Interop.cpp \
     src/nci/IntervalTimer.cpp \
-    src/nci/SecureElement.cpp
+    src/nci/SecureElement.cpp \
+    src/nci/RouteDataSet.cpp
 
 INTERFACE_SRC_FILES := \
     src/interface/DeviceHost.cpp \
@@ -71,6 +72,7 @@ LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/src \
     external/stlport/stlport \
     external/openssl/include \
+    external/expat/lib \
     bionic
 
 ifeq ($(NFC_PROTOCOL),nci)
@@ -107,7 +109,8 @@ LOCAL_SHARED_LIBRARIES += \
 
 ifeq ($(NFC_PROTOCOL),nci)
 LOCAL_SHARED_LIBRARIES += \
-    libnfc-nci
+    libnfc-nci \
+    libexpat
 endif
 
 LOCAL_MODULE := nfcd
