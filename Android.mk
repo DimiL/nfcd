@@ -44,7 +44,6 @@ NCI_SRC_FILES := \
     src/nci/LlcpConnectionlessSocket.cpp \
     src/nci/LlcpSocket.cpp \
     src/nci/LlcpServiceSocket.cpp \
-    src/nci/NfcSecureElement.cpp \
     src/nci/P2pDevice.cpp \
     src/nci/NfcTagManager.cpp \
     src/nci/Mutex.cpp \
