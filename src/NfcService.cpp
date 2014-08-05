@@ -51,6 +51,7 @@ typedef enum {
   MSG_MAKE_NDEF_READONLY,
   MSG_LOW_POWER,
   MSG_ENABLE,
+  MSG_RECEIVE_NDEF_EVENT
 } NfcEventType;
 
 typedef enum {
@@ -365,6 +366,9 @@ void* NfcService::eventLoop()
         case MSG_ENABLE:
           handleEnableResponse(event);
           break;
+        case MSG_RECEIVE_NDEF_EVENT:
+          handleReceiveNdefEvent(event);
+          break;
         default:
           ALOGE("%s: NFCService bad message", FUNC);
           abort();
@@ -473,6 +477,23 @@ void NfcService::handleReadNdefResponse(NfcEvent* event)
   }
 
   mMsgHandler->processResponse(resType, NFC_SUCCESS, pNdefMessage.get());
+}
+
+void NfcService::handleReceiveNdefEvent(NfcEvent* event)
+{
+  NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->obj);
+
+  TechDiscoveredEvent* data = new TechDiscoveredEvent();
+  data->isNewSession = false;
+  data->techCount = 2;
+  uint8_t techs[] = { NFC_TECH_P2P, NFC_TECH_NDEF };
+  data->techList = &techs;
+  data->ndefMsgCount = ndef ? 1 : 0;
+  data->ndefMsg = ndef;
+  mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
+
+  delete data;
+  delete ndef;
 }
 
 bool NfcService::handleWriteNdefRequest(NdefMessage* ndef)
@@ -740,13 +761,10 @@ NfcErrorCode NfcService::disableSE()
 
 void NfcService::onP2pReceivedNdef(NdefMessage* ndef)
 {
-  TechDiscoveredEvent* data = new TechDiscoveredEvent();
-  data->isNewSession = false;
-  data->techCount = 2;
-  uint8_t techs[] = { NFC_TECH_P2P, NFC_TECH_NDEF };
-  data->techList = &techs;
-  data->ndefMsgCount = ndef ? 1 : 0;
-  data->ndefMsg = ndef;
-  mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
-  delete data;
+  NfcEvent *event = new NfcEvent(MSG_RECEIVE_NDEF_EVENT);
+
+  event->obj = ndef ? new NdefMessage(ndef) : NULL;
+
+  mQueue.push_back(event);
+  sem_post(&thread_sem);
 }
