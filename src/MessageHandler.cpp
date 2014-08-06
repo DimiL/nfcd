@@ -300,6 +300,11 @@ bool MessageHandler::handleReadNdefDetailResponse(Parcel& parcel, void* data)
 
   parcel.writeInt32(SessionId::getCurrentId());
 
+  if (!ndefDetail) {
+    sendResponse(parcel);
+    return true;
+  }
+
   bool isReadOnly = ndefDetail->isReadOnly;
   bool canBeMadeReadOnly = ndefDetail->canBeMadeReadOnly;
 
