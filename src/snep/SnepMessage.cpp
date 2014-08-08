@@ -77,6 +77,23 @@ SnepMessage::SnepMessage(uint8_t version, uint8_t field, int length,
   mNdefMessage = new NdefMessage(ndefMessage);
 }
 
+bool SnepMessage::isValidFormat(std::vector<uint8_t>& buf)
+{
+  int size = buf.size();
+  // version(1), field(1), length(4)
+  if (size < SnepMessage::HEADER_LENGTH) {
+    return false;
+  }
+
+  // acceptable length(0 or 4)
+  if (buf[1] == SnepMessage::REQUEST_GET &&
+      size < SnepMessage::HEADER_LENGTH + 4) {
+    return false;
+  }
+
+  return true;
+}
+
 SnepMessage* SnepMessage::getGetRequest(int acceptableLength, NdefMessage& ndef)
 {
   std::vector<uint8_t> buf;
@@ -96,7 +113,7 @@ SnepMessage* SnepMessage::getMessage(uint8_t field)
   return new SnepMessage(SnepMessage::VERSION, field, 0, 0, NULL);
 }
 
-SnepMessage* getSuccessResponse(NdefMessage* ndef)
+SnepMessage* SnepMessage::getSuccessResponse(NdefMessage* ndef)
 {
   if (!ndef) {
     return new SnepMessage(SnepMessage::VERSION, SnepMessage::RESPONSE_SUCCESS, 0, 0, NULL);
@@ -109,16 +126,17 @@ SnepMessage* getSuccessResponse(NdefMessage* ndef)
 
 SnepMessage* SnepMessage::fromByteArray(std::vector<uint8_t>& buf)
 {
-  return new SnepMessage(buf);
+  return SnepMessage::isValidFormat(buf) ? new SnepMessage(buf) : NULL;
 }
 
 SnepMessage* SnepMessage::fromByteArray(uint8_t* pBuf, int size)
 {
   std::vector<uint8_t> buf;
-  for (int i = 0; i < size; i++)
+  for (int i = 0; i < size; i++) {
     buf[i] = pBuf[i];
+  }
 
-  return new SnepMessage(buf);
+  return fromByteArray(buf);
 }
 
 void SnepMessage::toByteArray(std::vector<uint8_t>& buf)

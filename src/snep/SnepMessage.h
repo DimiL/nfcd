@@ -23,8 +23,6 @@ class NdefMessage;
 
 class SnepMessage{
 public:
-  SnepMessage();
-  SnepMessage(std::vector<uint8_t>& buf);
   SnepMessage(uint8_t version,uint8_t field,int length,int acceptableLength, NdefMessage* ndefMessage);
   ~SnepMessage();
 
@@ -60,7 +58,12 @@ public:
   static SnepMessage* getSuccessResponse(NdefMessage* ndef);
   static SnepMessage* fromByteArray(std::vector<uint8_t>& buf);
   static SnepMessage* fromByteArray(uint8_t* pBuf, int size);
+
 private:
+  SnepMessage();
+  SnepMessage(std::vector<uint8_t>& buf);
+
+  static bool isValidFormat(std::vector<uint8_t>& buf);
 
   static const int HEADER_LENGTH = 6;
 
