@@ -159,8 +159,6 @@ public:
    */
   virtual int getDefaultLlcpRwSize() const = 0;
 
-  virtual void resetRFField() = 0;
-
   /**
    * NFC controller starts routing data in listen mode.
    *
