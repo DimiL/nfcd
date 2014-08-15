@@ -169,8 +169,6 @@ public:
    */
   int getDefaultLlcpRwSize() const { return NfcManager::DEFAULT_LLCP_RWSIZE; };
 
-  void resetRFField();
-
   /**
    * NFC controller starts routing data in listen mode.
    *

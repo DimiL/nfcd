@@ -431,13 +431,6 @@ void NfcManager::setP2pTargetModes(int modes)
   // This function is not called by the NFC service nor exposed by public API.
 }
 
-// TODO : Handle in SE
-void NfcManager::resetRFField()
-{
-  startRfDiscovery(false);
-  startRfDiscovery(true);
-}
-
 bool NfcManager::doSelectSecureElement()
 {
   bool result = true;
