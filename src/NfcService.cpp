@@ -28,6 +28,7 @@
 #include "NfcUtil.h"
 #include "NfcDebug.h"
 #include "P2pLinkManager.h"
+#include "SessionId.h"
 
 using namespace android;
 
@@ -72,6 +73,12 @@ public:
 
 private:
   NfcEventType mType;
+};
+
+class PollingThreadParam {
+public:
+  INfcTag* pINfcTag;
+  int sessionId;
 };
 
 static pthread_t thread_id;
@@ -141,11 +148,11 @@ void NfcService::notifyTagDiscovered(INfcTag* pTag)
   sem_post(&thread_sem);
 }
 
-void NfcService::notifyTagLost()
+void NfcService::notifyTagLost(int sessionId)
 {
   ALOGD("%s: enter", FUNC);
   NfcEvent *event = new NfcEvent(MSG_TAG_LOST);
-  event->obj = NULL;
+  event->obj = reinterpret_cast<void*>(sessionId);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
 }
@@ -235,7 +242,8 @@ void NfcService::handleLlcpLinkActivation(NfcEvent* event)
   mP2pLinkManager->onLlcpActivated();
 
   TechDiscoveredEvent* data = new TechDiscoveredEvent();
-  data->isNewSession = true;
+
+  data->sessionId = SessionId::generateNewId();
   data->techCount = 1;
   uint8_t techs[] = { NFC_TECH_P2P };
   data->techList = &techs;
@@ -248,7 +256,9 @@ void NfcService::handleLlcpLinkActivation(NfcEvent* event)
 
 static void *pollingThreadFunc(void *arg)
 {
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(arg);
+  PollingThreadParam* param = reinterpret_cast<PollingThreadParam*>(arg);
+  INfcTag* pINfcTag = param->pINfcTag;
+  int sessionId = param->sessionId;
 
   // TODO : check if check tag presence here is correct
   // For android. it use startPresenceChecking API in INfcTag.java
@@ -258,7 +268,10 @@ static void *pollingThreadFunc(void *arg)
 
   pINfcTag->disconnect();
 
-  NfcService::Instance()->notifyTagLost();
+  NfcService::Instance()->notifyTagLost(sessionId);
+
+  delete param;
+
   return NULL;
 }
 
@@ -281,23 +294,27 @@ void NfcService::handleTagDiscovered(NfcEvent* event)
   }
 
   TechDiscoveredEvent* data = new TechDiscoveredEvent();
-  data->isNewSession = true;
+  data->sessionId = SessionId::generateNewId();
   data->techCount = techCount;
   data->techList = gonkTechList;
   data->ndefMsgCount = pNdefMessage ? 1 : 0;
   data->ndefMsg = pNdefMessage;
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
 
+  PollingThreadParam* param = new PollingThreadParam();
+  param->sessionId = data->sessionId;
+  param->pINfcTag = pINfcTag;
+
   delete gonkTechList;
   delete data;
 
   pthread_t tid;
-  pthread_create(&tid, NULL, pollingThreadFunc, pINfcTag);
+  pthread_create(&tid, NULL, pollingThreadFunc, param);
 }
 
 void NfcService::handleTagLost(NfcEvent* event)
 {
-  mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_LOST, NULL);
+  mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_LOST, event->obj);
 }
 
 void NfcService::handleTransactionEvent(NfcEvent* event)
@@ -484,7 +501,7 @@ void NfcService::handleReceiveNdefEvent(NfcEvent* event)
   NdefMessage* ndef = reinterpret_cast<NdefMessage*>(event->obj);
 
   TechDiscoveredEvent* data = new TechDiscoveredEvent();
-  data->isNewSession = false;
+  data->sessionId = SessionId::getCurrentId();
   data->techCount = 2;
   uint8_t techs[] = { NFC_TECH_P2P, NFC_TECH_NDEF };
   data->techList = &techs;
