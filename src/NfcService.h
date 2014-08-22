@@ -61,6 +61,7 @@ public:
   void handleEnterLowPowerResponse(NfcEvent* event);
   bool handleEnableRequest(bool enable);
   void handleEnableResponse(NfcEvent* event);
+  void handleReceiveNdefEvent(NfcEvent* event);
 
   void onConnected();
   void onP2pReceivedNdef(NdefMessage* ndef);
