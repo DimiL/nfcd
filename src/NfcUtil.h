@@ -18,7 +18,6 @@
 #define mozilla_nfcd_NfcUtil_h
 
 #include <stdio.h>
-#include "DeviceHost.h"
 #include "NdefMessage.h"
 #include "NfcGonkMessage.h"
 #include "TagTechnology.h"
@@ -28,8 +27,6 @@ class NfcUtil{
 public:
   static void convertNdefPduToNdefMessage(NdefMessagePdu& ndefPdu, NdefMessage* ndefMessage);
   static NfcTechnology convertTagTechToGonkFormat(TagTechnology tagTech);
-  static NfcEvtTransactionOrigin convertOriginType(TransactionEvent::OriginType type);
-
 private:
   NfcUtil();
 };

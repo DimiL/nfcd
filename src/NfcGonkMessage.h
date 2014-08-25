@@ -374,23 +374,10 @@ typedef enum {
    *
    * To notify a transaction event from secure element.
    *
-   * data is [origin type][origin index][aid length][aid][payload length][payload]
+   * data is char* [aid length][aid][payload length][payload]
    */
   NFC_NOTIFICATION_TRANSACTION_EVENT = 2003,
 } NfcNotificationType;
-
-/**
- * The origin of the transaction event.
- */
-typedef enum {
-  NFC_EVT_TRANSACTION_SIM = 0,
-
-  NFC_EVT_TRANSACTION_ESE = 1,
-
-  NFC_EVT_TRANSACTION_ASSD = 2,
-
-  NFC_EVT_TRANSACTION_UNKNOWN = 99,
-} NfcEvtTransactionOrigin;
 
 #ifdef __cplusplus
 }

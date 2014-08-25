@@ -84,15 +84,8 @@ private:
 
 class TransactionEvent {
 public:
-  enum OriginType {
-    SIM, ESE, ASSD, UNKNOWN
-  };
-
   TransactionEvent();
   ~TransactionEvent();
-
-  OriginType originType;
-  uint32_t originIndex;
 
   uint32_t aidLen;
   uint8_t* aid;
