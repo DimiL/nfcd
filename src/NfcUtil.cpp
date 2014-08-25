@@ -45,17 +45,3 @@ NfcTechnology NfcUtil::convertTagTechToGonkFormat(TagTechnology tagTech) {
   }
   return NFC_TECH_NFCA;
 }
-
-NfcEvtTransactionOrigin NfcUtil::convertOriginType(TransactionEvent::OriginType type)
-{
-  switch (type) {
-    case TransactionEvent::SIM:
-      return NFC_EVT_TRANSACTION_SIM;
-    case TransactionEvent::ESE:
-      return NFC_EVT_TRANSACTION_ESE;
-    case TransactionEvent::ASSD:
-      return NFC_EVT_TRANSACTION_ASSD;
-    default:
-      return NFC_EVT_TRANSACTION_UNKNOWN;
-  }
-}

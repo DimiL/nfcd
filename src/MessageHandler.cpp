@@ -25,7 +25,7 @@
 #include "NfcDebug.h"
 
 #define MAJOR_VERSION (1)
-#define MINOR_VERSION (8)
+#define MINOR_VERSION (7)
 
 using android::Parcel;
 
@@ -63,9 +63,6 @@ void MessageHandler::notifyTechLost(Parcel& parcel)
 void MessageHandler::notifyTransactionEvent(Parcel& parcel, void* data)
 {
   TransactionEvent *event = reinterpret_cast<TransactionEvent*>(data);
-
-  parcel.writeInt32(NfcUtil::convertOriginType(event->originType));
-  parcel.writeInt32(event->originIndex);
 
   parcel.writeInt32(event->aidLen);
   void* aid = parcel.writeInplace(event->aidLen);

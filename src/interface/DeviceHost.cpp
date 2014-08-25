@@ -61,9 +61,7 @@ void DeviceHost::notifySeFieldDeactivated()
 }
 
 TransactionEvent::TransactionEvent()
- : originType(TransactionEvent::UNKNOWN)
- , originIndex(-1)
- , aidLen(0)
+ : aidLen(0)
  , aid(NULL)
  , payloadLen(0)
  , payload(NULL)

@@ -365,11 +365,6 @@ void SecureElement::notifyTransactionEvent(const uint8_t* aid, uint32_t aidLen,
 
   TransactionEvent* pTransaction = new TransactionEvent();
 
-  // TODO: For now, we dodn't have a solution to get aid origin from nfcd.
-  //       So use SIM1 as dfault value.
-  pTransaction->originType = TransactionEvent::SIM;
-  pTransaction->originIndex = 1;
-
   pTransaction->aidLen = aidLen;
   pTransaction->aid = new uint8_t[aidLen];
   memcpy(pTransaction->aid, aid, aidLen);
