@@ -168,6 +168,7 @@ void MessageHandler::processNotification(NfcNotificationType notification, void*
       break;
     case NFC_NOTIFICATION_TRANSACTION_EVENT:
       notifyTransactionEvent(parcel, data);
+      break;
     default:
       ALOGE("Not implement");
       break;
