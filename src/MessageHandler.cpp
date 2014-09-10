@@ -41,11 +41,7 @@ void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
 {
   TechDiscoveredEvent *event = reinterpret_cast<TechDiscoveredEvent*>(data);
 
-  if (event->isNewSession) {
-    parcel.writeInt32(SessionId::generateNewId());
-  } else {
-    parcel.writeInt32(SessionId::getCurrentId());
-  }
+  parcel.writeInt32(event->sessionId);
   parcel.writeInt32(event->techCount);
   void* dest = parcel.writeInplace(event->techCount);
   memcpy(dest, event->techList, event->techCount);
@@ -54,9 +50,9 @@ void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
   sendResponse(parcel);
 }
 
-void MessageHandler::notifyTechLost(Parcel& parcel)
+void MessageHandler::notifyTechLost(Parcel& parcel, void* data)
 {
-  parcel.writeInt32(SessionId::getCurrentId());
+  parcel.writeInt32(reinterpret_cast<int>(data));
   sendResponse(parcel);
 }
 
@@ -164,7 +160,7 @@ void MessageHandler::processNotification(NfcNotificationType notification, void*
       notifyTechDiscovered(parcel, data);
       break;
     case NFC_NOTIFICATION_TECH_LOST:
-      notifyTechLost(parcel);
+      notifyTechLost(parcel, data);
       break;
     case NFC_NOTIFICATION_TRANSACTION_EVENT:
       notifyTransactionEvent(parcel, data);

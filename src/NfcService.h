@@ -41,7 +41,7 @@ public:
   static void notifyLlcpLinkActivated(IP2pDevice* pDevice);
   static void notifyLlcpLinkDeactivated(IP2pDevice* pDevice);
   static void notifyTagDiscovered(INfcTag* pTag);
-  static void notifyTagLost();
+  static void notifyTagLost(int sessionId);
   static void notifySEFieldActivated();
   static void notifySEFieldDeactivated();
   static void notifySETransactionEvent(TransactionEvent* pEvent);
