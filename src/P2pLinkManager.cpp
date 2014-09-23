@@ -94,6 +94,7 @@ void HandoverCallback::onMessageReceived(NdefMessage* ndef)
 
 P2pLinkManager::P2pLinkManager(NfcService* service)
  : mLinkState(LINK_STATE_DOWN)
+ , mSessionId(-1)
  , mSnepClient(NULL)
  , mHandoverClient(NULL)
 {
