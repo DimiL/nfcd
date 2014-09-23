@@ -25,7 +25,7 @@
 #include "NfcDebug.h"
 
 #define MAJOR_VERSION (1)
-#define MINOR_VERSION (8)
+#define MINOR_VERSION (9)
 
 using android::Parcel;
 
@@ -47,6 +47,7 @@ void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
   memcpy(dest, event->techList, event->techCount);
   parcel.writeInt32(event->ndefMsgCount);
   sendNdefMsg(parcel, event->ndefMsg);
+  sendNdefInfo(parcel, event->ndefInfo);
   sendResponse(parcel);
 }
 
@@ -94,9 +95,6 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
     case NFC_REQUEST_CONFIG:
       handleConfigRequest(parcel);
       break;
-    case NFC_REQUEST_GET_DETAILS:
-      handleReadNdefDetailRequest(parcel);
-      break;
     case NFC_REQUEST_READ_NDEF:
       handleReadNdefRequest(parcel);
       break;
@@ -129,9 +127,6 @@ void MessageHandler::processResponse(NfcResponseType response, NfcErrorCode erro
   switch (response) {
     case NFC_RESPONSE_CONFIG:
       handleConfigResponse(parcel, data);
-      break;
-    case NFC_RESPONSE_READ_NDEF_DETAILS:
-      handleReadNdefDetailResponse(parcel, data);
       break;
     case NFC_RESPONSE_READ_NDEF:
       handleReadNdefResponse(parcel, data);
@@ -202,13 +197,6 @@ bool MessageHandler::handleConfigRequest(Parcel& parcel)
   }
   return false;
 
-}
-
-bool MessageHandler::handleReadNdefDetailRequest(Parcel& parcel)
-{
-  int sessionId = parcel.readInt32();
-  //TODO check SessionId
-  return mService->handleReadNdefDetailRequest();
 }
 
 bool MessageHandler::handleReadNdefRequest(Parcel& parcel)
@@ -294,30 +282,6 @@ bool MessageHandler::handleConfigResponse(Parcel& parcel, void* data)
   return true;
 }
 
-bool MessageHandler::handleReadNdefDetailResponse(Parcel& parcel, void* data)
-{
-  NdefDetail* ndefDetail = reinterpret_cast<NdefDetail*>(data);
-
-  parcel.writeInt32(SessionId::getCurrentId());
-
-  if (!ndefDetail) {
-    sendResponse(parcel);
-    return true;
-  }
-
-  bool isReadOnly = ndefDetail->isReadOnly;
-  bool canBeMadeReadOnly = ndefDetail->canBeMadeReadOnly;
-
-  bool params[] = {isReadOnly, canBeMadeReadOnly};
-  void* dest = parcel.writeInplace(sizeof(params));
-  memcpy(dest, params, sizeof(params));
-
-  parcel.writeInt32(ndefDetail->maxSupportedLength);
-
-  sendResponse(parcel);
-  return true;
-}
-
 bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
 {
   NdefMessage* ndef = reinterpret_cast<NdefMessage*>(data);
@@ -377,6 +341,31 @@ bool MessageHandler::sendNdefMsg(Parcel& parcel, NdefMessage* ndef)
       ALOGD("mPayload %d = %u", j, record.mPayload[j]);
     }
   }
+
+  return true;
+}
+
+bool MessageHandler::sendNdefInfo(Parcel& parcel, NdefInfo* info)
+{
+  // if contain ndef information
+  parcel.writeInt32(info ? true : false);
+
+  if (!info) {
+    return false;
+  }
+
+  // ndef tyoe
+  NfcNdefType type = (NfcUtil::convertNdefType(info->ndefType));
+  parcel.writeInt32(static_cast<int>(type));
+
+  // max support length
+  parcel.writeInt32(info->maxSupportedLength);
+
+  // is ready only
+  parcel.writeInt32(info->isReadOnly);
+
+  // ndef formatable
+  parcel.writeInt32(info->isFormatable);
 
   return true;
 }

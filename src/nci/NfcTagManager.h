@@ -38,7 +38,7 @@ public:
   bool disconnect();
   bool reconnect();
   NdefMessage* readNdef();
-  NdefDetail* readNdefDetail();
+  NdefInfo* readNdefInfo();
   bool writeNdef(NdefMessage& ndef);
   bool presenceCheck();
   bool makeReadOnly();
@@ -217,7 +217,7 @@ public:
   int reconnectWithStatus(int technology);
   int reconnectWithStatus();
   NdefMessage* doReadNdef();
-  NdefDetail* doReadNdefDetail();
+  NdefInfo* doReadNdefInfo();
   bool isNdefFormatable();
 
 private:
@@ -264,7 +264,7 @@ private:
    */
   static bool switchRfInterface(tNFA_INTF_TYPE rfInterface);
 
-  int getNdefType(int libnfcType);
+  NdefType getNdefType(int libnfcType);
 
   void addTechnology(TagTechnology tech, int handle, int libnfctype);
 

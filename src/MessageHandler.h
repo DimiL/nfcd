@@ -25,6 +25,7 @@
 class NfcIpcSocket;
 class NfcService;
 class NdefMessage;
+class NdefInfo;
 
 class MessageHandler {
 public:
@@ -42,7 +43,6 @@ private:
   void notifyTransactionEvent(android::Parcel& parcel, void* data);
 
   bool handleConfigRequest(android::Parcel& parcel);
-  bool handleReadNdefDetailRequest(android::Parcel& parcel);
   bool handleReadNdefRequest(android::Parcel& parcel);
   bool handleWriteNdefRequest(android::Parcel& parcel);
   bool handleConnectRequest(android::Parcel& parcel);
@@ -50,13 +50,13 @@ private:
   bool handleMakeNdefReadonlyRequest(android::Parcel& parcel);
 
   bool handleConfigResponse(android::Parcel& parcel, void* data);
-  bool handleReadNdefDetailResponse(android::Parcel& parcel, void* data);
   bool handleReadNdefResponse(android::Parcel& parcel, void* data);
   bool handleResponse(android::Parcel& parcel);
 
   void sendResponse(android::Parcel& parcel);
 
   bool sendNdefMsg(android::Parcel& parcel, NdefMessage* ndef);
+  bool sendNdefInfo(android::Parcel& parcel, NdefInfo* info);
 
   NfcIpcSocket* mSocket;
   NfcService* mService;
@@ -68,6 +68,7 @@ struct TechDiscoveredEvent {
   void* techList;
   uint32_t ndefMsgCount;
   NdefMessage* ndefMsg;
+  NdefInfo* ndefInfo;
 };
 
 #endif // mozilla_nfcd_MessageHandler_h

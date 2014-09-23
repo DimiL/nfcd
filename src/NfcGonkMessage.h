@@ -136,6 +136,18 @@ typedef enum {
 } NfcTechnology;
 
 /**
+ * NDEF type
+ */
+typedef enum {
+  NFC_NDEF_UNKNOWN_TAG = -1,
+  NFC_NDEF_TYPE_1_TAG = 0,
+  NFC_NDEF_TYPE_2_TAG = 1,
+  NFC_NDEF_TYPE_3_TAG = 2,
+  NFC_NDEF_TYPE_4_TAG = 3,
+  NFC_NDEF_MIFARE_CLASSIC_TAG = 4,
+} NfcNdefType;
+
+/**
  * NDEF Record
  * @see NFCForum-TS-NDEF, clause 3.2
  */
