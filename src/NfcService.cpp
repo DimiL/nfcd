@@ -194,7 +194,9 @@ void NfcService::handleLlcpLinkDeactivation(NfcEvent* event)
   }
 
   mP2pLinkManager->onLlcpDeactivated();
-  mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_LOST, NULL);
+  mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_LOST, 
+                                   reinterpret_cast<void*>(mP2pLinkManager->getSessionId()));
+  mP2pLinkManager->setSessionId(-1);
 }
 
 void NfcService::handleLlcpLinkActivation(NfcEvent* event)
@@ -235,7 +237,8 @@ void NfcService::handleLlcpLinkActivation(NfcEvent* event)
 
   TechDiscoveredEvent* data = new TechDiscoveredEvent();
 
-  data->sessionId = SessionId::generateNewId();
+  mP2pLinkManager->setSessionId(SessionId::generateNewId());
+  data->sessionId = mP2pLinkManager->getSessionId();
   data->techCount = 1;
   uint8_t techs[] = { NFC_TECH_P2P };
   data->techList = &techs;

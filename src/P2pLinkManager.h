@@ -60,6 +60,9 @@ public:
   void onLlcpDeactivated();
   bool isLlcpActive();
 
+  void setSessionId(int sessionId) { mSessionId = sessionId; }
+  int getSessionId() { return mSessionId; }
+
 private:
   static const int LINK_STATE_DOWN = 1;
   static const int LINK_STATE_UP = 2;
@@ -69,6 +72,7 @@ private:
   void disconnectClients();
 
   int mLinkState;
+  int mSessionId;
 
   NfcService* mNfcService;
 
