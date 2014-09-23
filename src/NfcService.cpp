@@ -41,7 +41,6 @@ typedef enum {
   MSG_SE_FIELD_ACTIVATED,
   MSG_SE_FIELD_DEACTIVATED,
   MSG_SE_NOTIFY_TRANSACTION_EVENT,
-  MSG_READ_NDEF_DETAIL,
   MSG_READ_NDEF,
   MSG_WRITE_NDEF,
   MSG_CLOSE,
@@ -244,6 +243,7 @@ void NfcService::handleLlcpLinkActivation(NfcEvent* event)
   data->techList = &techs;
   data->ndefMsgCount = 0;
   data->ndefMsg = NULL;
+  data->ndefInfo = NULL;
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
   delete data;
   ALOGD("%s: exit", FUNC);
@@ -272,12 +272,12 @@ static void *pollingThreadFunc(void *arg)
 
 void NfcService::handleTagDiscovered(NfcEvent* event)
 {
-  void* pTag = event->obj;
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(pTag);
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(event->obj);
 
   // To get complete tag information, need to call read ndef first.
   // In readNdef function, it will add NDEF related info in NfcTagManager.
-  NdefMessage* pNdefMessage = pINfcTag->readNdef();
+  std::auto_ptr<NdefMessage> pNdefMessage(pINfcTag->readNdef());
+  std::auto_ptr<NdefInfo> pNdefInfo(pINfcTag->readNdefInfo());
 
   // Do the following after read ndef.
   std::vector<TagTechnology>& techList = pINfcTag->getTechList();
@@ -292,8 +292,9 @@ void NfcService::handleTagDiscovered(NfcEvent* event)
   data->sessionId = SessionId::generateNewId();
   data->techCount = techCount;
   data->techList = gonkTechList;
-  data->ndefMsgCount = pNdefMessage ? 1 : 0;
-  data->ndefMsg = pNdefMessage;
+  data->ndefMsgCount = pNdefMessage.get() ? 1 : 0;
+  data->ndefMsg = pNdefMessage.get();
+  data->ndefInfo = pNdefInfo.get();
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
 
   PollingThreadParam* param = new PollingThreadParam();
@@ -350,9 +351,6 @@ void* NfcService::eventLoop()
           break;
         case MSG_CONFIG:
           handleConfigResponse(event);
-          break;
-        case MSG_READ_NDEF_DETAIL:
-          handleReadNdefDetailResponse(event);
           break;
         case MSG_READ_NDEF:
           handleReadNdefResponse(event);
@@ -431,37 +429,9 @@ bool NfcService::handleConfigRequest(int powerLevel)
   return true;
 }
 
-bool NfcService::handleReadNdefDetailRequest()
-{
-  NfcEvent *event = new NfcEvent(MSG_READ_NDEF_DETAIL);
-  mQueue.push_back(event);
-  sem_post(&thread_sem);
-  return true;
-}
-
 void NfcService::handleConfigResponse(NfcEvent* event)
 {
   mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_SUCCESS, NULL);
-}
-
-void NfcService::handleReadNdefDetailResponse(NfcEvent* event)
-{
-  NfcResponseType resType = NFC_RESPONSE_READ_NDEF_DETAILS;
-
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>
-                      (sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
-  if (!pINfcTag) {
-    mMsgHandler->processResponse(resType, NFC_ERROR_NOT_SUPPORTED, NULL);
-    return;
-  }
-
-  std::auto_ptr<NdefDetail> pNdefDetail(pINfcTag->readNdefDetail());
-  if (!pNdefDetail.get()) {
-    mMsgHandler->processResponse(resType, NFC_ERROR_READ, NULL);
-    return;
-  }
-
-  mMsgHandler->processResponse(resType, NFC_SUCCESS, pNdefDetail.get());
 }
 
 bool NfcService::handleReadNdefRequest()

@@ -50,15 +50,6 @@ bool    gIsTagDeactivating = false;
 // Flag for nfa callback indicating we are selecting for RF interface switch.
 bool    gIsSelectingRfInterface = false;
 
-// Pre-defined tag type values. These must match the values in
-// framework Ndef.java for Google public NFC API.
-#define NDEF_UNKNOWN_TYPE          -1
-#define NDEF_TYPE1_TAG             1
-#define NDEF_TYPE2_TAG             2
-#define NDEF_TYPE3_TAG             3
-#define NDEF_TYPE4_TAG             4
-#define NDEF_MIFARE_CLASSIC_TAG    101
-
 #define STATUS_CODE_TARGET_LOST    146  // This error code comes from the service.
 
 static uint32_t     sCheckNdefCurrentSize = 0;
@@ -131,24 +122,25 @@ NfcTagManager::~NfcTagManager()
 {
 }
 
-NdefDetail* NfcTagManager::doReadNdefDetail()
+NdefInfo* NfcTagManager::doReadNdefInfo()
 {
   int ndefinfo[2];
   int status;
-  NdefDetail* pNdefDetail = NULL;
+  NdefInfo* pNdefInfo = NULL;
   status = doCheckNdef(ndefinfo);
   if (status != 0) {
     ALOGE("%s: Check NDEF Failed - status = %d", __FUNCTION__, status);
   } else {
-    int ndefType = getNdefType(getConnectedLibNfcType());
+    NdefType ndefType = getNdefType(getConnectedLibNfcType());
 
-    pNdefDetail = new NdefDetail();
-    pNdefDetail->maxSupportedLength = ndefinfo[0];
-    pNdefDetail->isReadOnly = (ndefinfo[1] == NDEF_MODE_READ_ONLY);
-    pNdefDetail->canBeMadeReadOnly = (ndefType == NDEF_TYPE1_TAG || ndefType == NDEF_TYPE2_TAG);
+    pNdefInfo = new NdefInfo();
+    pNdefInfo->ndefType = ndefType;
+    pNdefInfo->maxSupportedLength = ndefinfo[0];
+    pNdefInfo->isReadOnly = (ndefinfo[1] == NDEF_MODE_READ_ONLY);
+    pNdefInfo->isFormatable = doIsNdefFormatable();
   }
 
-  return pNdefDetail;
+  return pNdefInfo;
 }
 
 NdefMessage* NfcTagManager::doReadNdef()
@@ -892,9 +884,9 @@ bool NfcTagManager::switchRfInterface(tNFA_INTF_TYPE rfInterface)
   return rVal;
 }
 
-int NfcTagManager::getNdefType(int libnfcType)
+NdefType NfcTagManager::getNdefType(int libnfcType)
 {
-  int ndefType = NDEF_UNKNOWN_TYPE;
+  NdefType ndefType = NDEF_UNKNOWN_TYPE;
 
   // For NFA, libnfcType is mapped to the protocol value received
   // in the NFA_ACTIVATED_EVT and NFA_DISC_RESULT_EVT event.
@@ -1114,12 +1106,12 @@ NdefMessage* NfcTagManager::readNdef()
   return ndef;
 }
 
-NdefDetail* NfcTagManager::readNdefDetail()
+NdefInfo* NfcTagManager::readNdefInfo()
 {
   pthread_mutex_lock(&mMutex);
-  NdefDetail* ndefDetail = doReadNdefDetail();
+  NdefInfo* ndefInfo = doReadNdefInfo();
   pthread_mutex_unlock(&mMutex);
-  return ndefDetail;
+  return ndefInfo;
 }
 
 bool NfcTagManager::writeNdef(NdefMessage& ndef)

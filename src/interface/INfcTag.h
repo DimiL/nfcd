@@ -23,7 +23,7 @@
 #define INTERFACE_TAG_MANAGER "NfcTagManager"
 
 class NdefMessage;
-class NdefDetail;
+class NdefInfo;
 
 class INfcTag {
 public:
@@ -59,11 +59,11 @@ public:
   virtual NdefMessage* readNdef() = 0;
 
   /**
-   * Read tag information and fill the NdefDetail structure.
+   * Read tag information and fill the NdefInfo structure.
    *
-   * @return NDEF detail structure.
+   * @return NDEF Info structure.
    */
-  virtual NdefDetail* readNdefDetail() = 0;
+  virtual NdefInfo* readNdefInfo() = 0;
 
   /**
    * Write a NDEF message to the tag.

@@ -59,3 +59,15 @@ NfcEvtTransactionOrigin NfcUtil::convertOriginType(TransactionEvent::OriginType 
       return NFC_EVT_TRANSACTION_SIM;
   }
 }
+
+NfcNdefType NfcUtil::convertNdefType(NdefType type)
+{
+  switch(type) {
+    case NDEF_TYPE1_TAG:           return NFC_NDEF_TYPE_1_TAG;
+    case NDEF_TYPE2_TAG:           return NFC_NDEF_TYPE_2_TAG;
+    case NDEF_TYPE3_TAG:           return NFC_NDEF_TYPE_3_TAG;
+    case NDEF_TYPE4_TAG:           return NFC_NDEF_TYPE_4_TAG;
+    case NDEF_MIFARE_CLASSIC_TAG:  return NFC_NDEF_MIFARE_CLASSIC_TAG;
+    default:                       return NFC_NDEF_UNKNOWN_TAG;
+  }
+}

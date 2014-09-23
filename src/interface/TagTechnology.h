@@ -34,4 +34,15 @@ typedef enum {
   UNKNOWN_TECH = 11
 } TagTechnology;
 
+
+// Pre-defined tag type values.
+typedef enum {
+  NDEF_UNKNOWN_TYPE = -1,
+  NDEF_TYPE1_TAG = 1,
+  NDEF_TYPE2_TAG = 2,
+  NDEF_TYPE3_TAG = 3,
+  NDEF_TYPE4_TAG = 4,
+  NDEF_MIFARE_CLASSIC_TAG = 101
+} NdefType;
+
 #endif

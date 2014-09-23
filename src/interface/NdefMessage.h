@@ -18,6 +18,7 @@
 #define mozilla_nfcd_NdefMessage_h
 
 #include "NdefRecord.h"
+#include "TagTechnology.h"
 #include <vector>
 
 class NdefMessage{
@@ -56,13 +57,14 @@ public:
 };
 
 /**
- * NdefDetail structure contains the information should be returned by readNdefDetail of INfcTag.
+ * NdefInfo structure contains the information returned by readNdefInfo of INfcTag.
  */
-class NdefDetail {
+class NdefInfo {
 public:
+  NdefType ndefType;
   int maxSupportedLength;
   bool isReadOnly;
-  bool canBeMadeReadOnly;
+  bool isFormatable;
 };
 
 #endif

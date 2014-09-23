@@ -58,8 +58,6 @@ public:
   void handleConnect(int technology);
   bool handleConfigRequest(int powerLevel);
   void handleConfigResponse(NfcEvent* event);
-  bool handleReadNdefDetailRequest();
-  void handleReadNdefDetailResponse(NfcEvent* event);
   bool handleReadNdefRequest();
   void handleReadNdefResponse(NfcEvent* event);
   bool handleWriteNdefRequest(NdefMessage* ndef);
