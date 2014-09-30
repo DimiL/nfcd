@@ -205,30 +205,6 @@ typedef struct {
    */
   NfcSessionId sessionId;
 
-  //TODO Parcel doesn't have API for boolean, should we use bit-wise for this?
-  /**
-   * The NDEF is read-only or not.
-   */
-  uint8_t isReadOnly;
-
-  /**
-   * The NDEF can be configured to read-only or not.
-   */
-  uint8_t canBeMadeReadonly;
-
-  /**
-   * Maximum length of the NDEF.
-   */
-  uint32_t maxNdefLength;
-} NfcGetDetailsResponse;
-
-typedef struct {
-  /**
-   * The sessionId must correspond to that of a prior
-   * NfcNotificationTechDiscovered.
-   */
-  NfcSessionId sessionId;
-
   /**
    * NDEF Message to be transmitted.
    */
@@ -272,19 +248,6 @@ typedef enum {
   NFC_REQUEST_CLOSE = 2,
 
   /**
-   * NFC_REQUEST_GET_DETAILS
-   *
-   * Request the NDEF meta-data. The 'technology' field in
-   * NfcNotificationTechDiscovered must include NFC_TECH_NDEF.
-   *
-   * data is NfcSessionId, which is correlates to a technology that was
-   * previously discovered with NFC_NOTIFICATION_TECH_DISCOVERED.
-   *
-   * respose is NfcGetDetailsResponse.
-   */
-  NFC_REQUEST_GET_DETAILS = 3,
-
-  /**
    * NFC_REQUEST_READ_NDEF
    *
    * Request the scanned NDEF message. The 'technology' field in
@@ -295,7 +258,7 @@ typedef enum {
    *
    * response is NfcNdefReadWritePdu.
    */
-  NFC_REQUEST_READ_NDEF = 4,
+  NFC_REQUEST_READ_NDEF = 3,
 
   /**
    * NFC_REQUEST_WRITE_NDEF
@@ -308,7 +271,7 @@ typedef enum {
    *
    * response is NULL.
    */
-  NFC_REQUEST_WRITE_NDEF = 5,
+  NFC_REQUEST_WRITE_NDEF = 4,
 
   /**
    * NFC_REQUEST_MAKE_NDEF_READ_ONLY
@@ -321,7 +284,7 @@ typedef enum {
    *
    * response is NULL.
    */
-  NFC_REQUEST_MAKE_NDEF_READ_ONLY = 6,
+  NFC_REQUEST_MAKE_NDEF_READ_ONLY = 5,
 } NfcRequestType;
 
 typedef enum {
@@ -329,9 +292,7 @@ typedef enum {
 
   NFC_RESPONSE_CONFIG = 1001,
 
-  NFC_RESPONSE_READ_NDEF_DETAILS = 1002,
-
-  NFC_RESPONSE_READ_NDEF = 1003,
+  NFC_RESPONSE_READ_NDEF = 1002,
 } NfcResponseType;
 
 typedef struct {
