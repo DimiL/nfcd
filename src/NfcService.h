@@ -60,7 +60,7 @@ public:
   void handleConfigResponse(NfcEvent* event);
   bool handleReadNdefRequest();
   void handleReadNdefResponse(NfcEvent* event);
-  bool handleWriteNdefRequest(NdefMessage* ndef);
+  bool handleWriteNdefRequest(NdefMessage* ndef, bool isP2P);
   void handleWriteNdefResponse(NfcEvent* event);
   void handleCloseRequest();
   void handleCloseResponse(NfcEvent* event);

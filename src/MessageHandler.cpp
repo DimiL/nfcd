@@ -25,7 +25,7 @@
 #include "NfcDebug.h"
 
 #define MAJOR_VERSION (1)
-#define MINOR_VERSION (10)
+#define MINOR_VERSION (11)
 
 using android::Parcel;
 
@@ -213,6 +213,7 @@ bool MessageHandler::handleWriteNdefRequest(Parcel& parcel)
 
   int sessionId = parcel.readInt32();
   //TODO check SessionId
+  bool isP2P = parcel.readInt32() != 0;
 
   uint32_t numRecords = parcel.readInt32();
   ndefMessagePdu.numRecords = numRecords;
@@ -249,7 +250,7 @@ bool MessageHandler::handleWriteNdefRequest(Parcel& parcel)
   }
   delete[] ndefMessagePdu.records;
 
-  return mService->handleWriteNdefRequest(ndefMessage);
+  return mService->handleWriteNdefRequest(ndefMessage, isP2P);
 }
 
 bool MessageHandler::handleConnectRequest(Parcel& parcel)

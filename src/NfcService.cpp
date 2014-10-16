@@ -483,9 +483,10 @@ void NfcService::handleReceiveNdefEvent(NfcEvent* event)
   delete ndef;
 }
 
-bool NfcService::handleWriteNdefRequest(NdefMessage* ndef)
+bool NfcService::handleWriteNdefRequest(NdefMessage* ndef, bool isP2P)
 {
   NfcEvent *event = new NfcEvent(MSG_WRITE_NDEF);
+  event->arg1 = isP2P;
   event->obj = ndef;
   mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -503,11 +504,10 @@ void NfcService::handleWriteNdefResponse(NfcEvent* event)
     return;
   }
 
-  // Use single API wirte to send data.
-  // nfcd check current connection is p2p or tag.
-  if (mP2pLinkManager->isLlcpActive()) {
+  bool isP2P = event->arg1;
+  if (isP2P && mP2pLinkManager->isLlcpActive()) {
     mP2pLinkManager->push(*pNdef.get());
-  } else if (isTagConnected()) {
+  } else if (!isP2P && isTagConnected()) {
     INfcTag* pINfcTag = reinterpret_cast<INfcTag*>
                         (sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
 
