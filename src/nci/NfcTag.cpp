@@ -904,7 +904,6 @@ TagTechnology NfcTag::toGenericTagTechnology(unsigned int tagTech)
     case TARGET_TYPE_FELICA:          return NFC_F;
     case TARGET_TYPE_ISO15693:        return NFC_V;
     case TARGET_TYPE_NDEF:            return NDEF;
-    case TARGET_TYPE_NDEF_FORMATABLE: return NDEF_FORMATABLE;
     case TARGET_TYPE_MIFARE_CLASSIC:  return MIFARE_CLASSIC;
     case TARGET_TYPE_MIFARE_UL:       return MIFARE_ULTRALIGHT;
     case TARGET_TYPE_KOVIO_BARCODE:   return NFC_BARCODE;

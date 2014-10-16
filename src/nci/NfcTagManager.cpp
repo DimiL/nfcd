@@ -215,10 +215,6 @@ NdefMessage* NfcTagManager::doReadNdef()
         generateEmptyNdef = true;
     }
 
-    if (cardState == NDEF_MODE_READ_WRITE) {
-      addTechnology(NDEF_WRITABLE, getConnectedHandle(), getConnectedLibNfcType());
-    }
-
     if (generateEmptyNdef == true) {
       delete ndefMsg;
       ndefMsg = NULL;
@@ -226,12 +222,6 @@ NdefMessage* NfcTagManager::doReadNdef()
       //reconnect();
     }
     break;
-  }
-
-  if (!ndefMsg && foundFormattable) {
-    // Tag is not NDEF yet, and found a formattable target,
-    // so add formattable tech to tech list.
-    addTechnology(NDEF_FORMATABLE, formattableHandle, formattableLibNfcType);
   }
 
   return ndefMsg;
@@ -311,8 +301,7 @@ int NfcTagManager::connectWithStatus(int technology)
         //    any handle).
         // 2) We are connecting to the ndef technology - always
         //    allowed.
-        if ((technology == NDEF) ||
-            (technology == NDEF_FORMATABLE)) {
+        if (technology == NDEF) {
           i = 0;
         }
 
