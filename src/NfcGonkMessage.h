@@ -122,17 +122,15 @@ typedef enum {
 typedef enum {
   NFC_TECH_UNKNOWN = -1,
   NFC_TECH_NDEF = 0,
-  NFC_TECH_NDEF_WRITABLE = 1,
-  NFC_TECH_NDEF_FORMATABLE = 2,
-  NFC_TECH_P2P = 3,
-  NFC_TECH_NFCA = 4,
-  NFC_TECH_NFCB = 5,
-  NFC_TECH_NFCF = 6,
-  NFC_TECH_NFCV = 7,
-  NFC_TECH_ISO_DEP = 8,
-  NFC_TECH_MIFARE_CLASSIC = 9,
-  NFC_TECH_MIFARE_ULTRALIGHT = 10,
-  NFC_TECH_BARCODE = 11
+  NFC_TECH_P2P = 1,
+  NFC_TECH_NFCA = 2,
+  NFC_TECH_NFCB = 3,
+  NFC_TECH_NFCF = 4,
+  NFC_TECH_NFCV = 5,
+  NFC_TECH_ISO_DEP = 6,
+  NFC_TECH_MIFARE_CLASSIC = 7,
+  NFC_TECH_MIFARE_ULTRALIGHT = 8,
+  NFC_TECH_BARCODE = 9
 } NfcTechnology;
 
 /**
@@ -264,8 +262,8 @@ typedef enum {
    * NFC_REQUEST_WRITE_NDEF
    *
    * Write a NDEF message. The 'technology' field in
-   * NfcNotificationTechDiscovered must include NFC_TECH_NDEF_WRITABLE or
-   * NFC_TECH_P2P.
+   * NfcNotificationTechDiscovered must include NFC_TECH_P2P or
+   * it is a writable tag.
    *
    * data is NfcNdefReadWritePdu.
    *
@@ -276,8 +274,7 @@ typedef enum {
   /**
    * NFC_REQUEST_MAKE_NDEF_READ_ONLY
    *
-   * Make the NDEF message is read-only. The 'technology' field in
-   * NfcNotificationTechDiscovered must include NFC_TECH_NDEF_WRITABLE.
+   * Make the NDEF message is read-only. The tag must be writable.
    *
    * data is NfcSessionId, which is correlates to a technology that was
    * previously discovered with NFC_NOTIFICATION_TECH_DISCOVERED.
