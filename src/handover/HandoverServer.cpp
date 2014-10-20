@@ -122,6 +122,11 @@ void* handoverServerThreadFunc(void* arg)
     }
   }
 
+  if (serverSocket) {
+    serverSocket->close();
+    delete serverSocket;
+  }
+
   return NULL;
 }
 
@@ -163,12 +168,7 @@ void HandoverServer::start()
 
 void HandoverServer::stop()
 {
-  // TODO : need to kill thread here
-  if (mServerSocket) {
-    mServerSocket->close();
-    delete mServerSocket;
-    mServerSocket = NULL;
-  }
+  mServerSocket = NULL;
   mServerRunning = false;
 
   // use pthread_join here to make sure all thread is finished ?
