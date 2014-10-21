@@ -25,7 +25,7 @@
 #include "NfcDebug.h"
 
 #define MAJOR_VERSION (1)
-#define MINOR_VERSION (12)
+#define MINOR_VERSION (13)
 
 using android::Parcel;
 
