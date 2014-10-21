@@ -125,6 +125,11 @@ void* snepServerThreadFunc(void* arg)
     }
   }
 
+  if (serverSocket) {
+    serverSocket->close();
+    delete serverSocket;
+  }
+
   return NULL;
 }
 
@@ -206,12 +211,7 @@ void SnepServer::start()
 
 void SnepServer::stop()
 {
-  // TODO : need to kill thread here
-  if (mServerSocket) {
-    mServerSocket->close();
-    delete mServerSocket;
-    mServerSocket = NULL;
-  }
+  mServerSocket = NULL;
   mServerRunning = false;
 
   // Use pthread_join here to make sure all thread is finished ?
