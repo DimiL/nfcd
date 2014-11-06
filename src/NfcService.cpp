@@ -47,7 +47,6 @@ typedef enum {
   MSG_SOCKET_CONNECTED,
   MSG_PUSH_NDEF,
   MSG_NDEF_TAG_LIST,
-  MSG_CONFIG,
   MSG_MAKE_NDEF_READONLY,
   MSG_LOW_POWER,
   MSG_ENABLE,
@@ -357,9 +356,6 @@ void* NfcService::eventLoop()
         case MSG_SE_NOTIFY_TRANSACTION_EVENT:
           handleTransactionEvent(event);
           break;
-        case MSG_CONFIG:
-          handleConfigResponse(event);
-          break;
         case MSG_READ_NDEF:
           handleReadNdefResponse(event);
           break;
@@ -427,19 +423,6 @@ void NfcService::handleConnect(int tech)
                       NFC_ERROR_NOT_SUPPORTED;
 
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, code, NULL);
-}
-
-bool NfcService::handleConfigRequest(int powerLevel)
-{
-  NfcEvent *event = new NfcEvent(MSG_CONFIG);
-  mQueue.push_back(event);
-  sem_post(&thread_sem);
-  return true;
-}
-
-void NfcService::handleConfigResponse(NfcEvent* event)
-{
-  mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, NFC_SUCCESS, NULL);
 }
 
 bool NfcService::handleReadNdefRequest()

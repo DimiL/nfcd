@@ -25,7 +25,7 @@
 #include "NfcDebug.h"
 
 #define MAJOR_VERSION (1)
-#define MINOR_VERSION (14)
+#define MINOR_VERSION (15)
 
 using android::Parcel;
 
@@ -93,7 +93,7 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
 
   switch (request) {
     case NFC_REQUEST_CONFIG:
-      handleConfigRequest(parcel);
+      handlePowerRequest(parcel);
       break;
     case NFC_REQUEST_READ_NDEF:
       handleReadNdefRequest(parcel);
@@ -126,7 +126,7 @@ void MessageHandler::processResponse(NfcResponseType response, NfcErrorCode erro
 
   switch (response) {
     case NFC_RESPONSE_CONFIG:
-      handleConfigResponse(parcel, data);
+      handlePowerResponse(parcel, data);
       break;
     case NFC_RESPONSE_READ_NDEF:
       handleReadNdefResponse(parcel, data);
@@ -179,11 +179,8 @@ void MessageHandler::sendResponse(Parcel& parcel)
   mSocket->writeToOutgoingQueue(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
 }
 
-bool MessageHandler::handleConfigRequest(Parcel& parcel)
+bool MessageHandler::handlePowerRequest(Parcel& parcel)
 {
-  // TODO, what does NFC_POWER_FULL mean
-  // - OFF -> ON?
-  // - Low Power -> Full Power?
   int powerLevel = parcel.readInt32();
   bool value;
   switch (powerLevel) {
@@ -277,7 +274,7 @@ bool MessageHandler::handleMakeNdefReadonlyRequest(Parcel& parcel)
   return true;
 }
 
-bool MessageHandler::handleConfigResponse(Parcel& parcel, void* data)
+bool MessageHandler::handlePowerResponse(Parcel& parcel, void* data)
 {
   sendResponse(parcel);
   return true;
