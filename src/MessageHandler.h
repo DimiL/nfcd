@@ -42,14 +42,14 @@ private:
   void notifyTechLost(android::Parcel& parcel, void* data);
   void notifyTransactionEvent(android::Parcel& parcel, void* data);
 
-  bool handleConfigRequest(android::Parcel& parcel);
+  bool handlePowerRequest(android::Parcel& parcel);
   bool handleReadNdefRequest(android::Parcel& parcel);
   bool handleWriteNdefRequest(android::Parcel& parcel);
   bool handleConnectRequest(android::Parcel& parcel);
   bool handleCloseRequest(android::Parcel& parcel);
   bool handleMakeNdefReadonlyRequest(android::Parcel& parcel);
 
-  bool handleConfigResponse(android::Parcel& parcel, void* data);
+  bool handlePowerResponse(android::Parcel& parcel, void* data);
   bool handleReadNdefResponse(android::Parcel& parcel, void* data);
   bool handleResponse(android::Parcel& parcel);
 

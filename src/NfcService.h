@@ -56,8 +56,6 @@ public:
   void handleLlcpLinkActivation(NfcEvent* event);
   void handleLlcpLinkDeactivation(NfcEvent* event);
   void handleConnect(int technology);
-  bool handleConfigRequest(int powerLevel);
-  void handleConfigResponse(NfcEvent* event);
   bool handleReadNdefRequest();
   void handleReadNdefResponse(NfcEvent* event);
   bool handleWriteNdefRequest(NdefMessage* ndef, bool isP2P);
