@@ -92,8 +92,8 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
   }
 
   switch (request) {
-    case NFC_REQUEST_CONFIG:
-      handlePowerRequest(parcel);
+    case NFC_REQUEST_CHANGE_RF_STATE:
+      handleChangeRFStateRequest(parcel);
       break;
     case NFC_REQUEST_READ_NDEF:
       handleReadNdefRequest(parcel);
@@ -125,8 +125,8 @@ void MessageHandler::processResponse(NfcResponseType response, NfcErrorCode erro
   parcel.writeInt32(error);
 
   switch (response) {
-    case NFC_RESPONSE_CONFIG:
-      handlePowerResponse(parcel, data);
+    case NFC_RESPONSE_CHANGE_RF_STATE:
+      handleChangeRFStateResponse(parcel, data);
       break;
     case NFC_RESPONSE_READ_NDEF:
       handleReadNdefResponse(parcel, data);
@@ -179,17 +179,17 @@ void MessageHandler::sendResponse(Parcel& parcel)
   mSocket->writeToOutgoingQueue(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
 }
 
-bool MessageHandler::handlePowerRequest(Parcel& parcel)
+bool MessageHandler::handleChangeRFStateRequest(Parcel& parcel)
 {
-  int powerLevel = parcel.readInt32();
+  int rfState = parcel.readInt32();
   bool value;
-  switch (powerLevel) {
-    case NFC_POWER_OFF: // Fall through.
-    case NFC_POWER_FULL:
-      value = powerLevel == NFC_POWER_FULL;
+  switch (rfState) {
+    case NFC_RF_STATE_IDLE: // Fall through.
+    case NFC_RF_STATE_DISCOVERY:
+      value = rfState == NFC_RF_STATE_DISCOVERY;
       return mService->handleEnableRequest(value);
-    case NFC_POWER_LOW:
-      value = powerLevel == NFC_POWER_LOW;
+    case NFC_RF_STATE_LISTEN:
+      value = rfState == NFC_RF_STATE_LISTEN;
       return mService->handleEnterLowPowerRequest(value);
   }
   return false;
@@ -274,7 +274,7 @@ bool MessageHandler::handleMakeNdefReadonlyRequest(Parcel& parcel)
   return true;
 }
 
-bool MessageHandler::handlePowerResponse(Parcel& parcel, void* data)
+bool MessageHandler::handleChangeRFStateResponse(Parcel& parcel, void* data)
 {
   sendResponse(parcel);
   return true;

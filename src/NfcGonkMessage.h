@@ -85,23 +85,23 @@ typedef enum {
    * No action, a no-op to be able to mimic optional parameters once
    * additional config parameters will be introduced.
    */
-  NFC_POWER_NO_OP = -1,
+  NFC_RF_STATE_NO_OP = -1,
 
   /**
-   * Turn off NFC chip
+   * Enter IDLE mode.
    */
-  NFC_POWER_OFF = 0,
+  NFC_RF_STATE_IDLE = 0,
 
   /**
-   * Request NFC chip to goto low-power mode.
+   * Enter Listen mode.
    */
-  NFC_POWER_LOW = 1,
+  NFC_RF_STATE_LISTEN = 1,
 
   /**
-   * Request NFC chip to goto full-power mode.
+   * Enter Discovery mode.
    */
-  NFC_POWER_FULL = 2,
-} NfcPowerLevel;
+  NFC_RF_STATE_DISCOVERY = 2,
+} NfcRFState;
 
 /**
  * NFC technologies.
@@ -163,15 +163,15 @@ typedef struct {
 typedef uint32_t NfcSessionId;
 
 typedef struct {
-  NfcPowerLevel powerLevel;
-} NfcConfigRequest;
+  NfcRFState rfState;
+} NfcChangeRFStateRequest;
 
 typedef struct {
   /**
    * possible values are : TODO
    */
   uint32_t status;
-} NfcConfigResponse;
+} NfcChangeRFStateResponse;
 
 typedef struct {
   /**
@@ -198,15 +198,15 @@ typedef struct {
 
 typedef enum {
   /**
-   * NFC_REQUEST_CONFIG
+   * NFC_REQUEST_CHANGE_RF_STATE
    *
-   * Config NFCD options.
+   * Change RF State.
    *
-   * data is NfcConfigRequest.
+   * data is NfcChangeRFStateRequest.
    *
-   * response is NfcConfigResponse.
+   * response is NfcChangeRFStateResponse.
    */
-  NFC_REQUEST_CONFIG = 0,
+  NFC_REQUEST_CHANGE_RF_STATE = 0,
 
   /**
    * NFC_REQUEST_CONNECT
@@ -274,7 +274,7 @@ typedef enum {
 typedef enum {
   NFC_RESPONSE_GENERAL = 1000,
 
-  NFC_RESPONSE_CONFIG = 1001,
+  NFC_RESPONSE_CHANGE_RF_STATE = 1001,
 
   NFC_RESPONSE_READ_NDEF = 1002,
 } NfcResponseType;
