@@ -25,7 +25,7 @@
 #include "NfcDebug.h"
 
 #define MAJOR_VERSION (1)
-#define MINOR_VERSION (15)
+#define MINOR_VERSION (16)
 
 using android::Parcel;
 
@@ -276,6 +276,7 @@ bool MessageHandler::handleMakeNdefReadonlyRequest(Parcel& parcel)
 
 bool MessageHandler::handleChangeRFStateResponse(Parcel& parcel, void* data)
 {
+  parcel.writeInt32(*reinterpret_cast<int*>(data));
   sendResponse(parcel);
   return true;
 }
