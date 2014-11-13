@@ -588,7 +588,7 @@ void NfcService::handleEnterLowPowerResponse(NfcEvent* event)
 
   NfcErrorCode code = setLowPowerMode(low);
 
-  mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, code, NULL);
+  mMsgHandler->processResponse(NFC_RESPONSE_CHANGE_RF_STATE, code, NULL);
 }
 
 bool NfcService::handleEnableRequest(bool enable)
@@ -629,7 +629,7 @@ void NfcService::handleEnableResponse(NfcEvent* event)
     code = disableNfc();
   }
 TheEnd:
-  mMsgHandler->processResponse(NFC_RESPONSE_CONFIG, code, NULL);
+  mMsgHandler->processResponse(NFC_RESPONSE_CHANGE_RF_STATE, code, NULL);
 }
 
 NfcErrorCode NfcService::enableNfc()
