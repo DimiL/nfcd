@@ -55,8 +55,8 @@ typedef enum {
 
 typedef enum {
   STATE_NFC_OFF = 0,
-  STATE_NFC_ON,
   STATE_NFC_ON_LOW_POWER,
+  STATE_NFC_ON,
 } NfcState;
 
 class NfcEvent {
@@ -588,7 +588,8 @@ void NfcService::handleEnterLowPowerResponse(NfcEvent* event)
 
   NfcErrorCode code = setLowPowerMode(low);
 
-  mMsgHandler->processResponse(NFC_RESPONSE_CHANGE_RF_STATE, code, NULL);
+  ALOGD("XXX %s mState=%d", __func__, mState);
+  mMsgHandler->processResponse(NFC_RESPONSE_CHANGE_RF_STATE, code, &mState);
 }
 
 bool NfcService::handleEnableRequest(bool enable)
@@ -629,7 +630,8 @@ void NfcService::handleEnableResponse(NfcEvent* event)
     code = disableNfc();
   }
 TheEnd:
-  mMsgHandler->processResponse(NFC_RESPONSE_CHANGE_RF_STATE, code, NULL);
+  ALOGD("XXX %s mState=%d", __func__, mState);
+  mMsgHandler->processResponse(NFC_RESPONSE_CHANGE_RF_STATE, code, &mState);
 }
 
 NfcErrorCode NfcService::enableNfc()
