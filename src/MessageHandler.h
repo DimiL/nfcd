@@ -48,6 +48,8 @@ private:
   bool handleConnectRequest(android::Parcel& parcel);
   bool handleCloseRequest(android::Parcel& parcel);
   bool handleMakeNdefReadonlyRequest(android::Parcel& parcel);
+  bool handleNdefFormatRequest(android::Parcel& parcel);
+
 
   bool handleChangeRFStateResponse(android::Parcel& parcel, void* data);
   bool handleReadNdefResponse(android::Parcel& parcel, void* data);

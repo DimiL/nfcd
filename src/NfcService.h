@@ -66,6 +66,8 @@ public:
   void handlePushNdefResponse(NfcEvent* event);
   bool handleMakeNdefReadonlyRequest();
   void handleMakeNdefReadonlyResponse(NfcEvent* event);
+  bool handleNdefFormatRequest();
+  void handleNdefFormatResponse(NfcEvent* event);
   bool handleEnterLowPowerRequest(bool enter);
   void handleEnterLowPowerResponse(NfcEvent* event);
   bool handleEnableRequest(bool enable);

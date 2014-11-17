@@ -269,6 +269,18 @@ typedef enum {
    * response is NULL.
    */
   NFC_REQUEST_MAKE_NDEF_READ_ONLY = 5,
+
+  /**
+   * NFC_REQUEST_FORMAT
+   *
+   * Format a tag as NDEF
+   *
+   * data is NfcSessionId, which is correlates to a technology that was
+   * previously discovered with NFC_NOTIFICATION_TECH_DISCOVERED.
+   *
+   * response is NULL.
+   */
+  NFC_REQUEST_FORMAT = 6,
 } NfcRequestType;
 
 typedef enum {

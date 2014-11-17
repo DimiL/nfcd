@@ -25,7 +25,7 @@
 #include "NfcDebug.h"
 
 #define MAJOR_VERSION (1)
-#define MINOR_VERSION (16)
+#define MINOR_VERSION (17)
 
 using android::Parcel;
 
@@ -109,6 +109,9 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
       break;
     case NFC_REQUEST_MAKE_NDEF_READ_ONLY:
       handleMakeNdefReadonlyRequest(parcel);
+      break;
+    case NFC_REQUEST_FORMAT:
+      handleNdefFormatRequest(parcel);
       break;
     default:
       ALOGE("Unhandled Request %d", request);
@@ -271,6 +274,12 @@ bool MessageHandler::handleCloseRequest(Parcel& parcel)
 bool MessageHandler::handleMakeNdefReadonlyRequest(Parcel& parcel)
 {
   mService->handleMakeNdefReadonlyRequest();
+  return true;
+}
+
+bool MessageHandler::handleNdefFormatRequest(Parcel& parcel)
+{
+  mService->handleNdefFormatRequest();
   return true;
 }
 
