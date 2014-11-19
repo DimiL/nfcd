@@ -50,7 +50,8 @@ typedef enum {
   MSG_MAKE_NDEF_READONLY,
   MSG_LOW_POWER,
   MSG_ENABLE,
-  MSG_RECEIVE_NDEF_EVENT
+  MSG_RECEIVE_NDEF_EVENT,
+  MSG_NDEF_FORMAT
 } NfcEventType;
 
 typedef enum {
@@ -383,6 +384,9 @@ void* NfcService::eventLoop()
         case MSG_RECEIVE_NDEF_EVENT:
           handleReceiveNdefEvent(event);
           break;
+        case MSG_NDEF_FORMAT:
+          handleNdefFormatResponse(event);
+          break;
         default:
           ALOGE("%s: NFCService bad message", FUNC);
           abort();
@@ -568,6 +572,26 @@ void NfcService::handleMakeNdefReadonlyResponse(NfcEvent* event)
 
   NfcErrorCode code = !!pINfcTag ?
                       (pINfcTag->makeReadOnly() ? NFC_SUCCESS : NFC_ERROR_IO) :
+                      NFC_ERROR_NOT_SUPPORTED;
+
+  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, code, NULL);
+}
+
+bool NfcService::handleNdefFormatRequest()
+{
+  NfcEvent *event = new NfcEvent(MSG_NDEF_FORMAT);
+  mQueue.push_back(event);
+  sem_post(&thread_sem);
+  return true;
+}
+
+void NfcService::handleNdefFormatResponse(NfcEvent* event)
+{
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>
+                      (sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
+
+  NfcErrorCode code = !!pINfcTag ?
+                      (pINfcTag->formatNdef() ? NFC_SUCCESS : NFC_ERROR_IO) :
                       NFC_ERROR_NOT_SUPPORTED;
 
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, code, NULL);
