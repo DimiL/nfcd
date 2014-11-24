@@ -756,7 +756,12 @@ bool NfcTagManager::doPresenceCheck()
     return false;
   }
 
+#ifdef NFA_DM_PRESENCE_CHECK_OPTION
+  status = NFA_RwPresenceCheck(NFA_RW_PRES_CHK_DEFAULT);
+#else
   status = NFA_RwPresenceCheck();
+#endif
+
   if (status == NFA_STATUS_OK) {
     if (sem_wait(&sPresenceCheckSem)) {
       ALOGE("%s: failed to wait (errno=0x%08x)", __FUNCTION__, errno);
