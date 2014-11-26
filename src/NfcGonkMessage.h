@@ -108,16 +108,14 @@ typedef enum {
  */
 typedef enum {
   NFC_TECH_UNKNOWN = -1,
-  NFC_TECH_NDEF = 0,
-  NFC_TECH_P2P = 1,
-  NFC_TECH_NFCA = 2,
-  NFC_TECH_NFCB = 3,
-  NFC_TECH_NFCF = 4,
-  NFC_TECH_NFCV = 5,
-  NFC_TECH_ISO_DEP = 6,
-  NFC_TECH_MIFARE_CLASSIC = 7,
-  NFC_TECH_MIFARE_ULTRALIGHT = 8,
-  NFC_TECH_BARCODE = 9
+  NFC_TECH_NFCA = 0,
+  NFC_TECH_NFCB = 1,
+  NFC_TECH_NFCF = 2,
+  NFC_TECH_NFCV = 3,
+  NFC_TECH_ISO_DEP = 4,
+  NFC_TECH_MIFARE_CLASSIC = 5,
+  NFC_TECH_MIFARE_ULTRALIGHT = 6,
+  NFC_TECH_BARCODE = 7
 } NfcTechnology;
 
 /**
@@ -249,7 +247,7 @@ typedef enum {
    * NFC_REQUEST_WRITE_NDEF
    *
    * Write a NDEF message. The 'technology' field in
-   * NfcNotificationTechDiscovered must include NFC_TECH_P2P or
+   * NfcNotificationTechDiscovered must be a p2p connection or
    * it is a writable tag.
    *
    * data is NfcNdefReadWritePdu.

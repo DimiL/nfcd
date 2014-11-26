@@ -66,6 +66,7 @@ private:
 
 struct TechDiscoveredEvent {
   int sessionId;
+  bool isP2P;
   uint32_t techCount;
   void* techList;
   uint32_t ndefMsgCount;

@@ -61,7 +61,7 @@
 
 
 /**
- * Name strings for target types. These *must* match the values in TagTechnology.java.
+ * Name strings for target types.
  */
 #define TARGET_TYPE_UNKNOWN               -1
 #define TARGET_TYPE_ISO14443_3A           1
@@ -69,11 +69,9 @@
 #define TARGET_TYPE_ISO14443_4            3
 #define TARGET_TYPE_FELICA                4
 #define TARGET_TYPE_ISO15693              5
-#define TARGET_TYPE_NDEF                  6
-#define TARGET_TYPE_NDEF_FORMATABLE       7
-#define TARGET_TYPE_MIFARE_CLASSIC        8
-#define TARGET_TYPE_MIFARE_UL             9
-#define TARGET_TYPE_KOVIO_BARCODE         10
+#define TARGET_TYPE_MIFARE_CLASSIC        6
+#define TARGET_TYPE_MIFARE_UL             7
+#define TARGET_TYPE_KOVIO_BARCODE         8
 
 
 // Define a few NXP error codes that NFC service expects.

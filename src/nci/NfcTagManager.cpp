@@ -205,7 +205,6 @@ NdefMessage* NfcTagManager::doReadNdef()
     if (buf.size() != 0) {
       ndefMsg = new NdefMessage();
       if (ndefMsg->init(buf)) {
-        addTechnology(NDEF, getConnectedHandle(), getConnectedLibNfcType());
         // TODO : check why android call reconnect here
         //reconnect();
       } else {
@@ -218,7 +217,6 @@ NdefMessage* NfcTagManager::doReadNdef()
     if (generateEmptyNdef == true) {
       delete ndefMsg;
       ndefMsg = NULL;
-      addTechnology(NDEF, getConnectedHandle(), getConnectedLibNfcType());
       //reconnect();
     }
     break;
