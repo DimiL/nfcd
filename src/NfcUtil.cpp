@@ -34,7 +34,6 @@ NfcTechnology NfcUtil::convertTagTechToGonkFormat(TagTechnology tagTech) {
     case NFC_ISO_DEP:        return  NFC_TECH_ISO_DEP;
     case NFC_F:              return  NFC_TECH_NFCF;
     case NFC_V:              return  NFC_TECH_NFCV;
-    case NDEF:               return  NFC_TECH_NDEF;
     case MIFARE_CLASSIC:     return  NFC_TECH_MIFARE_CLASSIC;
     case MIFARE_ULTRALIGHT:  return  NFC_TECH_MIFARE_ULTRALIGHT;
     case NFC_BARCODE:        return  NFC_TECH_MIFARE_ULTRALIGHT;

@@ -239,9 +239,9 @@ void NfcService::handleLlcpLinkActivation(NfcEvent* event)
 
   mP2pLinkManager->setSessionId(SessionId::generateNewId());
   data->sessionId = mP2pLinkManager->getSessionId();
-  data->techCount = 1;
-  uint8_t techs[] = { NFC_TECH_P2P };
-  data->techList = &techs;
+  data->isP2P = true;
+  data->techCount = 0;
+  data->techList = NULL;
   data->ndefMsgCount = 0;
   data->ndefMsg = NULL;
   data->ndefInfo = NULL;
@@ -298,6 +298,7 @@ void NfcService::handleTagDiscovered(NfcEvent* event)
 
   TechDiscoveredEvent* data = new TechDiscoveredEvent();
   data->sessionId = SessionId::generateNewId();
+  data->isP2P = false;
   data->techCount = techCount;
   data->techList = gonkTechList;
   data->ndefMsgCount = pNdefMessage.get() ? 1 : 0;
@@ -462,9 +463,9 @@ void NfcService::handleReceiveNdefEvent(NfcEvent* event)
 
   TechDiscoveredEvent* data = new TechDiscoveredEvent();
   data->sessionId = SessionId::getCurrentId();
-  data->techCount = 2;
-  uint8_t techs[] = { NFC_TECH_P2P, NFC_TECH_NDEF };
-  data->techList = &techs;
+  data->isP2P = false;
+  data->techCount = 0;
+  data->techList = NULL;
   data->ndefMsgCount = ndef ? 1 : 0;
   data->ndefMsg = ndef;
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);

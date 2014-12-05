@@ -25,7 +25,7 @@
 #include "NfcDebug.h"
 
 #define MAJOR_VERSION (1)
-#define MINOR_VERSION (17)
+#define MINOR_VERSION (18)
 
 using android::Parcel;
 
@@ -42,6 +42,7 @@ void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
   TechDiscoveredEvent *event = reinterpret_cast<TechDiscoveredEvent*>(data);
 
   parcel.writeInt32(event->sessionId);
+  parcel.writeInt32(event->isP2P);
   parcel.writeInt32(event->techCount);
   void* dest = parcel.writeInplace(event->techCount);
   memcpy(dest, event->techList, event->techCount);
