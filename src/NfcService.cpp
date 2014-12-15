@@ -463,7 +463,7 @@ void NfcService::handleReceiveNdefEvent(NfcEvent* event)
 
   TechDiscoveredEvent* data = new TechDiscoveredEvent();
   data->sessionId = SessionId::getCurrentId();
-  data->isP2P = false;
+  data->isP2P = true;
   data->techCount = 0;
   data->techList = NULL;
   data->ndefMsgCount = ndef ? 1 : 0;
