@@ -117,6 +117,9 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
     case NFC_REQUEST_FORMAT:
       handleNdefFormatRequest(parcel);
       break;
+    case NFC_REQUEST_TRANSCEIVE:
+      handleTagTransceiveRequest(parcel);
+      break;
     default:
       ALOGE("Unhandled Request %d", request);
       break;
@@ -137,6 +140,9 @@ void MessageHandler::processResponse(NfcResponseType response, NfcErrorCode erro
       break;
     case NFC_RESPONSE_READ_NDEF:
       handleReadNdefResponse(parcel, data);
+      break;
+    case NFC_RESPONSE_TAG_TRANSCEIVE:
+      handleTagTransceiveResponse(parcel, data);
       break;
     case NFC_RESPONSE_GENERAL:
       handleResponse(parcel);
@@ -287,6 +293,17 @@ bool MessageHandler::handleNdefFormatRequest(Parcel& parcel)
   return true;
 }
 
+bool MessageHandler::handleTagTransceiveRequest(Parcel& parcel)
+{
+  int sessionId = parcel.readInt32();
+  int tech = parcel.readInt32();
+  int bufLen = parcel.readInt32();
+
+  const void* buf = parcel.readInplace(bufLen);
+  mService->handleTagTransceiveRequest(tech, static_cast<const uint8_t*>(buf), bufLen);
+  return true;
+}
+
 bool MessageHandler::handleChangeRFStateResponse(Parcel& parcel, void* data)
 {
   parcel.writeInt32(*reinterpret_cast<int*>(data));
@@ -301,6 +318,22 @@ bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
   parcel.writeInt32(SessionId::getCurrentId());
 
   sendNdefMsg(parcel, ndef);
+  sendResponse(parcel);
+
+  return true;
+}
+
+bool MessageHandler::handleTagTransceiveResponse(Parcel& parcel, void* data)
+{
+  std::vector<uint8_t>* response = reinterpret_cast<std::vector<uint8_t>*>(data);
+  uint32_t length = response->size();
+
+  parcel.writeInt32(SessionId::getCurrentId());
+  parcel.writeInt32(length);
+
+  uint8_t* buf = static_cast<uint8_t*>(parcel.writeInplace(length));
+  std::copy(response->begin(), response->end(), buf);
+
   sendResponse(parcel);
 
   return true;

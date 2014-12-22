@@ -16,8 +16,9 @@
 
 #pragma once
 
+#include <vector>
 #include "SyncEvent.h"
-#include "NfcUtil.h"
+#include "NfcNciUtil.h"
 #include "TagTechnology.h"
 
 extern "C"
@@ -36,19 +37,19 @@ class NfcTag
 public:
   enum ActivationState {Idle, Sleep, Active};
   static const int MAX_NUM_TECHNOLOGY = 10;  // Max number of technologies supported by one or more tags.
-  int mTechList [MAX_NUM_TECHNOLOGY]; 		 // Array of NFC technologies according to NFC service.
-  int mTechHandles [MAX_NUM_TECHNOLOGY]; 	 // Array of tag handles according to NFC service.
+  int mTechList [MAX_NUM_TECHNOLOGY];        // Array of NFC technologies according to NFC service.
+  int mTechHandles [MAX_NUM_TECHNOLOGY];     // Array of tag handles according to NFC service.
   int mTechLibNfcTypes [MAX_NUM_TECHNOLOGY]; // Array of detailed tag types according to NFC service.
-  int mNumTechList; 						 // Current number of NFC technologies in the list.
+  int mNumTechList;                          // Current number of NFC technologies in the list.
 
-  NfcTag ();
+  NfcTag();
 
   /**
    * Get a reference to the singleton NfcTag object.
    *
    * @return Reference to NfcTag object.
    */
-  static NfcTag& getInstance ();
+  static NfcTag& getInstance();
 
   /**
    * Reset member variables.
@@ -56,30 +57,45 @@ public:
    * @param pNfcManager NFC manager class instance.
    * @return            None.
    */
-  void initialize (NfcManager* pNfcManager);
+  void initialize(NfcManager* pNfcManager);
 
   /**
    * Unblock all operations.
    *
    * @return None
    */
-  void abort ();
+  void abort();
 
   /**
    * Handle connection-related events.
    *
    * @param  event Event code.
    * @param  data  Pointer to event data.
-   * @return       Mpme
+   * @return       None
    */
-  void connectionEventHandler (UINT8 event, tNFA_CONN_EVT_DATA* data);
+  void connectionEventHandler(UINT8 event, tNFA_CONN_EVT_DATA* data);
+
+  /**
+   * Reset all timeouts for all technologies to default values.
+   *
+   * @return None
+   */
+  void resetAllTransceiveTimeouts();
+
+  /**
+   * Get the timeout value for one technology.
+   *
+   * @param  techId One of the values in TARGET_TYPE_* defined in NfcNciUtil.h.
+   * @return        Timeout value in millisecond.
+   */
+  int getTransceiveTimeout(int techId);
 
   /**
    * What is the current state: Idle, Sleep, or Activated.
    *
    * @return Idle, Sleep, or Activated.
    */
-  ActivationState getActivationState ();
+  ActivationState getActivationState();
 
   /**
    * Set the current state: Idle or Sleep.
@@ -87,14 +103,14 @@ public:
    * @param  deactivated state of deactivation.
    * @return             None.
    */
-  void setDeactivationState (tNFA_DEACTIVATED& deactivated);
+  void setDeactivationState(tNFA_DEACTIVATED& deactivated);
 
   /**
    * Set the current state to Active.
    *
    * @return None
    */
-  void setActivationState ();
+  void setActivationState();
 
   /**
    * Get the protocol of the current tag.
@@ -157,15 +173,16 @@ public:
   bool isNdefDetectionTimedOut();
 
 private:
+  std::vector<int> mTimeoutTable;
   ActivationState mActivationState;
   tNFC_PROTOCOL mProtocol;
-  int mtT1tMaxMessageSize; 					// T1T max NDEF message size.
+  int mtT1tMaxMessageSize;                  // T1T max NDEF message size.
   tNFA_STATUS mReadCompletedStatus;
-  int mLastKovioUidLen;   					// Len of uid of last Kovio tag activated.
-  bool mNdefDetectionTimedOut; 				// Whether NDEF detection algorithm timed out.
+  int mLastKovioUidLen;                     // Len of uid of last Kovio tag activated.
+  bool mNdefDetectionTimedOut;              // Whether NDEF detection algorithm timed out.
   SyncEvent mReadCompleteEvent;
-  struct timespec mLastKovioTime; 			// Time of last Kovio tag activation.
-  UINT8 mLastKovioUid[NFC_KOVIO_MAX_LEN]; 	// uid of last Kovio tag activated.
+  struct timespec mLastKovioTime;           // Time of last Kovio tag activation.
+  UINT8 mLastKovioUid[NFC_KOVIO_MAX_LEN];   // uid of last Kovio tag activated.
   tNFC_RF_TECH_PARAMS mTechParams [MAX_NUM_TECHNOLOGY]; // Array of technology parameters.
 
   NfcManager*     mNfcManager;
@@ -266,12 +283,4 @@ private:
    * @return          None.
    */
   void calculateT1tMaxMessageSize(tNFA_ACTIVATED& activate);
-
-  /**
-   * Convert vendor specefic tag technology define value to mozilla define value
-   *
-   * @param  tech Vendor specefic tag technology.
-   * @return      Mozilla defined tag technology.
-   */
-  TagTechnology toGenericTagTechnology(uint32_t tech);
 };

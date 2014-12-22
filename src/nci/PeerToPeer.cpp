@@ -20,7 +20,7 @@
 #include "PeerToPeer.h"
 
 #include "NfcManager.h"
-#include "NfcUtil.h"
+#include "NfcNciUtil.h"
 #include "llcp_defs.h"
 #include "config.h"
 #include "IP2pDevice.h"
