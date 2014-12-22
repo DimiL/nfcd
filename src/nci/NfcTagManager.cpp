@@ -23,7 +23,7 @@
 
 #include "NdefMessage.h"
 #include "TagTechnology.h"
-#include "NfcUtil.h"
+#include "NfcNciUtil.h"
 #include "NfcTag.h"
 #include "config.h"
 #include "Mutex.h"
@@ -60,6 +60,7 @@ static tNFA_INTF_TYPE   sCurrentRfInterface = NFA_INTERFACE_ISO_DEP;
 static uint8_t*     sTransceiveData = NULL;
 static uint32_t     sTransceiveDataLen = 0;
 static bool         sWaitingForTransceive = false;
+static bool         sTransceiveRfTimeout = false;
 static bool         sNeedToSwitchRf = false;
 static Mutex        sRfInterfaceMutex;
 static uint32_t     sReadDataLen = 0;
@@ -74,18 +75,19 @@ static sem_t        sCheckNdefSem;
 static sem_t        sPresenceCheckSem;
 static sem_t        sMakeReadonlySem;
 static IntervalTimer sSwitchBackTimer; // Timer used to tell us to switch back to ISO_DEP frame interface.
-static bool     	sWriteOk = false;
-static bool     	sWriteWaitingForComplete = false;
+static bool         sWriteOk = false;
+static bool         sWriteWaitingForComplete = false;
 static bool         sFormatOk = false;
-static bool     	sConnectOk = false;
-static bool     	sConnectWaitingForComplete = false;
+static bool         sConnectOk = false;
+static bool         sConnectWaitingForComplete = false;
 static bool         sGotDeactivate = false;
 static uint32_t     sCheckNdefMaxSize = 0;
 static bool         sCheckNdefCardReadOnly = false;
-static bool     	sCheckNdefWaitingForComplete = false;
+static bool         sCheckNdefWaitingForComplete = false;
 static int          sCountTagAway = 0;  // Count the consecutive number of presence-check failures.
 static tNFA_STATUS  sMakeReadonlyStatus = NFA_STATUS_FAILED;
-static bool     	sMakeReadonlyWaitingForComplete = false;
+static bool         sMakeReadonlyWaitingForComplete = false;
+static int          sCurrentConnectedTargetType = TARGET_TYPE_UNKNOWN;
 
 static void ndefHandlerCallback(tNFA_NDEF_EVT event, tNFA_NDEF_EVT_DATA *eventData)
 {
@@ -150,16 +152,17 @@ NdefMessage* NfcTagManager::doReadNdef()
   int formattableHandle = 0;
   int formattableLibNfcType = 0;
   int status;
+  NfcTag& tag = NfcTag::getInstance();
 
   for(uint32_t techIndex = 0; techIndex < mTechList.size(); techIndex++) {
     // Have we seen this handle before?
     for (uint32_t i = 0; i < techIndex; i++) {
-      if (mTechHandles[i] == mTechHandles[techIndex]) {
+      if (tag.mTechHandles[i] == tag.mTechHandles[techIndex]) {
         continue;  // Don't check duplicate handles.
       }
     }
 
-    status = connectWithStatus(mTechList[techIndex]);
+    status = connectWithStatus(tag.mTechList[techIndex]);
     if (status != 0) {
       ALOGE("%s: Connect Failed - status = %d", __FUNCTION__, status);
       if (status == STATUS_CODE_TARGET_LOST) {
@@ -229,25 +232,26 @@ int NfcTagManager::reconnectWithStatus()
 {
   ALOGD("%s: enter", __FUNCTION__);
   int retCode = NFCSTATUS_SUCCESS;
-  NfcTag& natTag = NfcTag::getInstance();
+  NfcTag& tag = NfcTag::getInstance();
 
-  if (natTag.getActivationState() != NfcTag::Active) {
+  if (tag.getActivationState() != NfcTag::Active) {
     ALOGD("%s: tag already deactivated", __FUNCTION__);
     retCode = NFCSTATUS_FAILED;
     goto TheEnd;
   }
 
   // Special case for Kovio.
-  if (NfcTag::getInstance().mTechList [0] == TARGET_TYPE_KOVIO_BARCODE) {
+  if (tag.mTechList[0] == TARGET_TYPE_KOVIO_BARCODE) {
     ALOGD("%s: fake out reconnect for Kovio", __FUNCTION__);
     goto TheEnd;
   }
 
   // This is only supported for type 2 or 4 (ISO_DEP) tags.
-  if (natTag.mTechLibNfcTypes[0] == NFA_PROTOCOL_ISO_DEP)
+  if (tag.mTechLibNfcTypes[0] == NFA_PROTOCOL_ISO_DEP) {
     retCode = reSelect(NFA_INTERFACE_ISO_DEP);
-  else if (natTag.mTechLibNfcTypes[0] == NFA_PROTOCOL_T2T)
+  } else if (tag.mTechLibNfcTypes[0] == NFA_PROTOCOL_T2T) {
     retCode = reSelect(NFA_INTERFACE_FRAME);
+  }
 
 TheEnd:
   ALOGD("%s: exit 0x%X", __FUNCTION__, retCode);
@@ -264,10 +268,12 @@ int NfcTagManager::reconnectWithStatus(int technology)
 int NfcTagManager::connectWithStatus(int technology)
 {
   int status = -1;
+  NfcTag& tag = NfcTag::getInstance();
+
   for (uint32_t i = 0; i < mTechList.size(); i++) {
-    if (mTechList[i] == technology) {
+    if (tag.mTechList[i] == technology) {
       // Get the handle and connect, if not already connected.
-      if (mConnectedHandle != mTechHandles[i]) {
+      if (mConnectedHandle != tag.mTechHandles[i]) {
         // We're not yet connected, there are a few scenario's
         // here:
         // 1) We are not connected to anything yet - allow
@@ -289,7 +295,7 @@ int NfcTagManager::connectWithStatus(int technology)
           status = reconnectWithStatus(i);
         }
         if (status == 0) {
-          mConnectedHandle = mTechHandles[i];
+          mConnectedHandle = tag.mTechHandles[i];
           mConnectedTechIndex = i;
         }
       } else {
@@ -314,6 +320,110 @@ int NfcTagManager::connectWithStatus(int technology)
 
   return status;
 }
+
+void NfcTagManager::notifyRfTimeout()
+{
+  SyncEventGuard g(sTransceiveEvent);
+  ALOGD("%s: waiting for transceive: %d", __FUNCTION__, sWaitingForTransceive);
+  if (!sWaitingForTransceive) {
+    return;
+  }
+
+  sTransceiveRfTimeout = true;
+  sTransceiveEvent.notifyOne();
+}
+
+void NfcTagManager::doTransceiveComplete(uint8_t* buf, uint32_t bufLen)
+{
+  ALOGD("%s: data len=%d, waiting for transceive: %d", __FUNCTION__, bufLen, sWaitingForTransceive);
+  if (!sWaitingForTransceive) {
+    return;
+  }
+
+  sTransceiveDataLen = 0;
+  if (bufLen) {
+    sTransceiveData = new uint8_t[bufLen];
+    if (!sTransceiveData) {
+      ALOGE("%s: memory allocation error", __FUNCTION__);
+    } else {
+      sTransceiveDataLen = bufLen;
+      memcpy(sTransceiveData, buf, bufLen);
+    }
+  }
+
+  {
+    SyncEventGuard g(sTransceiveEvent);
+    sTransceiveEvent.notifyOne();
+  }
+}
+
+bool NfcTagManager::doTransceive(const std::vector<uint8_t>& command,
+                                 std::vector<uint8_t>& outResponse)
+{
+  bool waitOk = false;
+  bool isNack = false;
+  bool targetLost = false;
+  NfcTag& tag = NfcTag::getInstance();
+
+  if (tag.getActivationState() != NfcTag::Active) {
+    return false;
+  }
+
+  do {
+    {
+      SyncEventGuard g(sTransceiveEvent);
+      sTransceiveRfTimeout = false;
+      sWaitingForTransceive = true;
+      delete sTransceiveData;
+
+      uint32_t size = command.size();
+      uint8_t* cmd = new uint8_t[size];
+      std::copy(command.begin(), command.end(), cmd);
+
+      tNFA_STATUS status = NFA_SendRawFrame(cmd, size,
+                             NFA_DM_DEFAULT_PRESENCE_CHECK_START_DELAY);
+      delete cmd;
+
+      if (status != NFA_STATUS_OK) {
+        ALOGE("%s: fail send; error=%d", __FUNCTION__, status);
+        break;
+      }
+      waitOk = sTransceiveEvent.wait(
+                 tag.getTransceiveTimeout(sCurrentConnectedTargetType));
+    }
+
+    if (!waitOk ||
+        sTransceiveRfTimeout ||
+        (tag.getActivationState() != NfcTag::Active)) {
+      targetLost = true;
+      break;
+    }
+
+    if (!sTransceiveDataLen) {
+      break;
+    }
+
+    if ((tag.getProtocol() == NFA_PROTOCOL_T2T) &&
+        tag.isT2tNackResponse(sTransceiveData, sTransceiveDataLen)) {
+      isNack = true;
+    }
+
+    if (!isNack) {
+      for (size_t i = 0; i < sTransceiveDataLen; i++) {
+        outResponse.push_back(sTransceiveData[i]);
+      }
+    }
+
+    delete sTransceiveData;
+    sTransceiveData = NULL;
+    sTransceiveDataLen = 0;
+  } while(0);
+
+  sWaitingForTransceive = false;
+
+  return !targetLost;
+}
+
 
 void NfcTagManager::doRead(std::vector<uint8_t>& buf)
 {
@@ -369,12 +479,12 @@ void NfcTagManager::doWriteStatus(bool isWriteOk)
 
 int NfcTagManager::doCheckNdef(int ndefInfo[])
 {
-  tNFA_STATUS status = NFA_STATUS_FAILED;
-
   ALOGD("%s: enter", __FUNCTION__);
+  tNFA_STATUS status = NFA_STATUS_FAILED;
+  NfcTag& tag = NfcTag::getInstance();
 
   // Special case for Kovio.
-  if (NfcTag::getInstance().mTechList [0] == TARGET_TYPE_KOVIO_BARCODE) {
+  if (tag.mTechList[0] == TARGET_TYPE_KOVIO_BARCODE) {
     ALOGD("%s: Kovio tag, no NDEF", __FUNCTION__);
     ndefInfo[0] = 0;
     ndefInfo[1] = NDEF_MODE_READ_ONLY;
@@ -382,7 +492,7 @@ int NfcTagManager::doCheckNdef(int ndefInfo[])
   }
 
   // Special case for Kovio.
-  if (NfcTag::getInstance().mTechList [0] == TARGET_TYPE_KOVIO_BARCODE) {
+  if (tag.mTechList[0] == TARGET_TYPE_KOVIO_BARCODE) {
     ALOGD("%s: Kovio tag, no NDEF", __FUNCTION__);
     ndefInfo[0] = 0;
     ndefInfo[1] = NDEF_MODE_READ_ONLY;
@@ -395,7 +505,7 @@ int NfcTagManager::doCheckNdef(int ndefInfo[])
     return false;
   }
 
-  if (NfcTag::getInstance().getActivationState() != NfcTag::Active) {
+  if (tag.getActivationState() != NfcTag::Active) {
     ALOGE("%s: tag already deactivated", __FUNCTION__);
     goto TheEnd;
   }
@@ -417,8 +527,8 @@ int NfcTagManager::doCheckNdef(int ndefInfo[])
 
   if (sCheckNdefStatus == NFA_STATUS_OK) {
     // Stack found a NDEF message on the tag.
-    if (NfcTag::getInstance().getProtocol() == NFA_PROTOCOL_T1T)
-      ndefInfo[0] = NfcTag::getInstance().getT1tMaxMessageSize();
+    if (tag.getProtocol() == NFA_PROTOCOL_T1T)
+      ndefInfo[0] = tag.getT1tMaxMessageSize();
     else
       ndefInfo[0] = sCheckNdefMaxSize;
     if (sCheckNdefCardReadOnly)
@@ -428,8 +538,8 @@ int NfcTagManager::doCheckNdef(int ndefInfo[])
     status = NFA_STATUS_OK;
   } else if (sCheckNdefStatus == NFA_STATUS_FAILED) {
     // Stack did not find a NDEF message on the tag.
-    if (NfcTag::getInstance().getProtocol() == NFA_PROTOCOL_T1T)
-      ndefInfo[0] = NfcTag::getInstance().getT1tMaxMessageSize();
+    if (tag.getProtocol() == NFA_PROTOCOL_T1T)
+      ndefInfo[0] = tag.getT1tMaxMessageSize();
     else
       ndefInfo[0] = sCheckNdefMaxSize;
     if (sCheckNdefCardReadOnly)
@@ -476,6 +586,8 @@ void NfcTagManager::doAbortWaits()
   sem_post(&sCheckNdefSem);
   sem_post(&sPresenceCheckSem);
   sem_post(&sMakeReadonlySem);
+
+  sCurrentConnectedTargetType = TARGET_TYPE_UNKNOWN;
 }
 
 void NfcTagManager::doReadCompleted(tNFA_STATUS status)
@@ -681,8 +793,8 @@ int NfcTagManager::doConnect(int targetHandle)
 {
   ALOGD("%s: targetHandle = %d", __FUNCTION__, targetHandle);
   int i = targetHandle;
-  NfcTag& natTag = NfcTag::getInstance();
   int retCode = NFCSTATUS_SUCCESS;
+  NfcTag& tag = NfcTag::getInstance();
 
   sNeedToSwitchRf = false;
   if (i >= NfcTag::MAX_NUM_TECHNOLOGY) {
@@ -691,20 +803,21 @@ int NfcTagManager::doConnect(int targetHandle)
     goto TheEnd;
   }
 
-  if (natTag.getActivationState() != NfcTag::Active) {
+  if (tag.getActivationState() != NfcTag::Active) {
     ALOGE("%s: tag already deactivated", __FUNCTION__);
     retCode = NFCSTATUS_FAILED;
     goto TheEnd;
   }
 
-  if (natTag.mTechLibNfcTypes[i] != NFC_PROTOCOL_ISO_DEP) {
-    ALOGD("%s() Nfc type = %d, do nothing for non ISO_DEP", __FUNCTION__, natTag.mTechLibNfcTypes[i]);
+  sCurrentConnectedTargetType = tag.mTechList[i];
+  if (tag.mTechLibNfcTypes[i] != NFC_PROTOCOL_ISO_DEP) {
+    ALOGD("%s() Nfc type = %d, do nothing for non ISO_DEP", __FUNCTION__, tag.mTechLibNfcTypes[i]);
     retCode = NFCSTATUS_SUCCESS;
     goto TheEnd;
   }
 
-  if (natTag.mTechList[i] == TARGET_TYPE_ISO14443_3A || natTag.mTechList[i] == TARGET_TYPE_ISO14443_3B) {
-    ALOGD("%s: switching to tech: %d need to switch rf intf to frame", __FUNCTION__, natTag.mTechList[i]);
+  if (tag.mTechList[i] == TARGET_TYPE_ISO14443_3A || tag.mTechList[i] == TARGET_TYPE_ISO14443_3B) {
+    ALOGD("%s: switching to tech: %d need to switch rf intf to frame", __FUNCTION__, tag.mTechList[i]);
     // Connecting to NfcA or NfcB don't actually switch until/unless we get a transceive.
     sNeedToSwitchRf = true;
   } else {
@@ -722,19 +835,20 @@ bool NfcTagManager::doPresenceCheck()
   ALOGD("%s", __FUNCTION__);
   tNFA_STATUS status = NFA_STATUS_OK;
   bool isPresent = false;
+  NfcTag& tag = NfcTag::getInstance();
 
   // Special case for Kovio. The deactivation would have already occurred
   // but was ignored so that normal tag opertions could complete.  Now we
   // want to process as if the deactivate just happened.
-  if (NfcTag::getInstance().mTechList [0] == TARGET_TYPE_KOVIO_BARCODE) {
+  if (tag.mTechList[0] == TARGET_TYPE_KOVIO_BARCODE) {
     ALOGD("%s: Kovio, force deactivate handling", __FUNCTION__);
     tNFA_DEACTIVATED deactivated = {NFA_DEACTIVATE_TYPE_IDLE};
 
-    NfcTag::getInstance().setDeactivationState(deactivated);
+    tag.setDeactivationState(deactivated);
     doResetPresenceCheck();
-    NfcTag::getInstance().connectionEventHandler(NFA_DEACTIVATED_EVT, NULL);
+    tag.connectionEventHandler(NFA_DEACTIVATED_EVT, NULL);
     doAbortWaits();
-    NfcTag::getInstance().abort();
+    tag.abort();
 
     return false;
   }
@@ -744,7 +858,7 @@ bool NfcTagManager::doPresenceCheck()
     return false;
   }
 
-  if (NfcTag::getInstance().getActivationState() != NfcTag::Active) {
+  if (tag.getActivationState() != NfcTag::Active) {
     ALOGD("%s: tag already deactivated", __FUNCTION__);
     return false;
   }
@@ -781,7 +895,7 @@ bool NfcTagManager::doPresenceCheck()
 int NfcTagManager::reSelect(tNFA_INTF_TYPE rfInterface)
 {
   ALOGD("%s: enter; rf intf = %d", __FUNCTION__, rfInterface);
-  NfcTag& natTag = NfcTag::getInstance();
+  NfcTag& tag = NfcTag::getInstance();
 
   tNFA_STATUS status;
   int rVal = 1;
@@ -789,7 +903,7 @@ int NfcTagManager::reSelect(tNFA_INTF_TYPE rfInterface)
   do
   {
     // If tag has shutdown, abort this method.
-    if (NfcTag::getInstance().isNdefDetectionTimedOut()) {
+    if (tag.isNdefDetectionTimedOut()) {
       ALOGD("%s: ndef detection timeout; break", __FUNCTION__);
       rVal = STATUS_CODE_TARGET_LOST;
       break;
@@ -810,7 +924,7 @@ int NfcTagManager::reSelect(tNFA_INTF_TYPE rfInterface)
       }
     }
 
-    if (NfcTag::getInstance().getActivationState() != NfcTag::Sleep) {
+    if (tag.getActivationState() != NfcTag::Sleep) {
       ALOGD("%s: tag is not in sleep", __FUNCTION__);
       rVal = STATUS_CODE_TARGET_LOST;
       break;
@@ -824,7 +938,9 @@ int NfcTagManager::reSelect(tNFA_INTF_TYPE rfInterface)
       sConnectWaitingForComplete = true;
       ALOGD("%s: select interface %u", __FUNCTION__, rfInterface);
       gIsSelectingRfInterface = true;
-      if (NFA_STATUS_OK != (status = NFA_Select(natTag.mTechHandles[0], natTag.mTechLibNfcTypes[0], rfInterface))) {
+      status = NFA_Select(
+                 tag.mTechHandles[0], tag.mTechLibNfcTypes[0], rfInterface);
+      if (NFA_STATUS_OK != status) {
         ALOGE("%s: NFA_Select failed, status = %d", __FUNCTION__, status);
         break;
       }
@@ -837,7 +953,7 @@ int NfcTagManager::reSelect(tNFA_INTF_TYPE rfInterface)
     }
 
     ALOGD("%s: select completed; sConnectOk=%d", __FUNCTION__, sConnectOk);
-    if (NfcTag::getInstance().getActivationState() != NfcTag::Active) {
+    if (tag.getActivationState() != NfcTag::Active) {
       ALOGD("%s: tag is not active", __FUNCTION__);
       rVal = STATUS_CODE_TARGET_LOST;
       break;
@@ -855,10 +971,10 @@ int NfcTagManager::reSelect(tNFA_INTF_TYPE rfInterface)
 bool NfcTagManager::switchRfInterface(tNFA_INTF_TYPE rfInterface)
 {
   ALOGD("%s: rf intf = %d", __FUNCTION__, rfInterface);
-  NfcTag& natTag = NfcTag::getInstance();
+  NfcTag& tag = NfcTag::getInstance();
 
-  if (natTag.mTechLibNfcTypes[0] != NFC_PROTOCOL_ISO_DEP) {
-    ALOGD("%s: protocol: %d not ISO_DEP, do nothing", __FUNCTION__, natTag.mTechLibNfcTypes[0]);
+  if (tag.mTechLibNfcTypes[0] != NFC_PROTOCOL_ISO_DEP) {
+    ALOGD("%s: protocol: %d not ISO_DEP, do nothing", __FUNCTION__, tag.mTechLibNfcTypes[0]);
     return true;
   }
 
@@ -909,17 +1025,12 @@ NdefType NfcTagManager::getNdefType(int libnfcType)
   return ndefType;
 }
 
-void NfcTagManager::addTechnology(TagTechnology tech, int handle, int libnfctype)
-{
-  mTechList.push_back(tech);
-  mTechHandles.push_back(handle);
-  mTechLibNfcTypes.push_back(libnfctype);
-}
-
 int NfcTagManager::getConnectedLibNfcType()
 {
+  NfcTag& tag = NfcTag::getInstance();
+
   if (mConnectedTechIndex != -1 && mConnectedTechIndex < (int)mTechLibNfcTypes.size()) {
-    return mTechLibNfcTypes[mConnectedTechIndex];
+    return tag.mTechLibNfcTypes[mConnectedTechIndex];
   } else {
     return 0;
   }
@@ -929,10 +1040,11 @@ bool NfcTagManager::doDisconnect()
 {
   ALOGD("%s: enter", __FUNCTION__);
   tNFA_STATUS nfaStat = NFA_STATUS_OK;
+  NfcTag& tag = NfcTag::getInstance();
 
   gGeneralTransceiveTimeout = DEFAULT_GENERAL_TRANS_TIMEOUT;
 
-  if (NfcTag::getInstance().getActivationState() != NfcTag::Active) {
+  if (tag.getActivationState() != NfcTag::Active) {
     ALOGD("%s: tag already deactivated", __FUNCTION__);
     goto TheEnd;
   }
@@ -1028,24 +1140,25 @@ TheEnd:
 bool NfcTagManager::doIsNdefFormatable()
 {
   bool isFormattable = false;
+  NfcTag& tag = NfcTag::getInstance();
 
-  switch (NfcTag::getInstance().getProtocol())
+  switch (tag.getProtocol())
   {
     case NFA_PROTOCOL_T1T:
     case NFA_PROTOCOL_ISO15693:
       isFormattable = true;
       break;
     case NFA_PROTOCOL_T2T:
-        isFormattable = NfcTag::getInstance().isMifareUltralight() ? true : false;
+        isFormattable = tag.isMifareUltralight() ? true : false;
   }
   ALOGD("%s: is formattable=%u", __FUNCTION__, isFormattable);
   return isFormattable;
 }
 
-bool NfcTagManager::connect(int technology)
+bool NfcTagManager::connect(TagTechnology technology)
 {
   pthread_mutex_lock(&mMutex);
-  int status = connectWithStatus(technology);
+  int status = connectWithStatus(NfcNciUtil::toNciTagTechnology(technology));
   pthread_mutex_unlock(&mMutex);
   return NFCSTATUS_SUCCESS == status;
 }
@@ -1136,6 +1249,16 @@ bool NfcTagManager::formatNdef()
   bool result;
   pthread_mutex_lock(&mMutex);
   result = doNdefFormat();
+  pthread_mutex_unlock(&mMutex);
+  return result;
+}
+
+bool NfcTagManager::transceive(const std::vector<uint8_t>& command,
+                               std::vector<uint8_t>& outResponse)
+{
+  bool result;
+  pthread_mutex_lock(&mMutex);
+  result = doTransceive(command, outResponse);
   pthread_mutex_unlock(&mMutex);
   return result;
 }

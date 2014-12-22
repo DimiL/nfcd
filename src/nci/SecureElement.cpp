@@ -17,7 +17,7 @@
 #include "SecureElement.h"
 #include "PowerSwitch.h"
 #include "config.h"
-#include "NfcUtil.h"
+#include "NfcNciUtil.h"
 #include "DeviceHost.h"
 #include "NfcManager.h"
 

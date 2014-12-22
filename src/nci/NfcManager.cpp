@@ -797,6 +797,12 @@ static void nfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
     // Data message received (for non-NDEF reads).
     case NFA_DATA_EVT:
       ALOGD("%s: NFA_DATA_EVT:  len = %d", __FUNCTION__, eventData->data.len);
+      NfcTagManager::doTransceiveComplete(eventData->data.p_data,
+                                          eventData->data.len);
+      break;
+    case NFA_RW_INTF_ERROR_EVT:
+        ALOGD("%s: NFC_RW_INTF_ERROR_EVT", __FUNCTION__);
+      NfcTagManager::notifyRfTimeout();
       break;
     // Select completed.
     case NFA_SELECT_CPLT_EVT:

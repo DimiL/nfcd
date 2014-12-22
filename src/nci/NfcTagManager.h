@@ -34,7 +34,7 @@ public:
   virtual ~NfcTagManager();
 
   // INfcTag interface.
-  bool connect(int technology);
+  bool connect(TagTechnology technology);
   bool disconnect();
   bool reconnect();
   NdefMessage* readNdef();
@@ -43,6 +43,8 @@ public:
   bool presenceCheck();
   bool makeReadOnly();
   bool formatNdef();
+  bool transceive(const std::vector<uint8_t>& command,
+                  std::vector<uint8_t>& outResponse);
 
   std::vector<TagTechnology>& getTechList() { return mTechList; };
   std::vector<int>& getTechHandles() { return mTechHandles; };
@@ -59,6 +61,32 @@ public:
    * @return          Status code; 0 is success.
    */
   static int doCheckNdef(int ndefInfo[]);
+
+  /**
+   * Notify tag I/O operation is timeout.
+   *
+   * @return None
+   */
+  static void notifyRfTimeout();
+
+   /**
+   * Receive the completion status of transceive operation.
+   *
+   * @param  buf    Contains tag's response.
+   * @param  bufLen Length of buffer.
+   * @return None
+   */
+  static void doTransceiveComplete(uint8_t* buf, uint32_t bufLen);
+
+  /**
+   * Send raw data to the tag; receive tag's response.
+   *
+   * @param  command     Contains command to send.
+   * @param  outResponse Contains tag's response.
+   * @return True if ok.
+   */
+  static bool doTransceive(const std::vector<uint8_t>& command,
+                           std::vector<uint8_t>& outResponse);
 
   /**
    * Read the NDEF message on the tag.
@@ -265,8 +293,6 @@ private:
   static bool switchRfInterface(tNFA_INTF_TYPE rfInterface);
 
   NdefType getNdefType(int libnfcType);
-
-  void addTechnology(TagTechnology tech, int handle, int libnfctype);
 
   int getConnectedLibNfcType();
 };

@@ -51,7 +51,8 @@ typedef enum {
   MSG_LOW_POWER,
   MSG_ENABLE,
   MSG_RECEIVE_NDEF_EVENT,
-  MSG_NDEF_FORMAT
+  MSG_NDEF_FORMAT,
+  MSG_TAG_TRANSCEIVE
 } NfcEventType;
 
 typedef enum {
@@ -388,6 +389,9 @@ void* NfcService::eventLoop()
         case MSG_NDEF_FORMAT:
           handleNdefFormatResponse(event);
           break;
+        case MSG_TAG_TRANSCEIVE:
+          handleTagTransceiveResponse(event);
+          break;
         default:
           ALOGE("%s: NFCService bad message", FUNC);
           abort();
@@ -424,7 +428,8 @@ void NfcService::handleConnect(int tech)
                       (sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
 
   NfcErrorCode code = !!pINfcTag ?
-                      (pINfcTag->connect(tech) ? NFC_SUCCESS : NFC_ERROR_CONNECT) :
+                      (pINfcTag->connect(static_cast<TagTechnology>(tech)) ?
+                      NFC_SUCCESS : NFC_ERROR_CONNECT) :
                       NFC_ERROR_NOT_SUPPORTED;
 
   mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, code, NULL);
@@ -584,6 +589,41 @@ bool NfcService::handleNdefFormatRequest()
   mQueue.push_back(event);
   sem_post(&thread_sem);
   return true;
+}
+
+bool NfcService::handleTagTransceiveRequest(int tech, const uint8_t* buf, uint32_t bufLen)
+{
+  std::vector<uint8_t>* cmd = new std::vector<uint8_t>(buf, buf + bufLen);
+
+  NfcEvent *event = new NfcEvent(MSG_TAG_TRANSCEIVE);
+  event->arg1 = tech;
+  event->obj = reinterpret_cast<void*>(cmd);
+  mQueue.push_back(event);
+  sem_post(&thread_sem);
+  return true;
+}
+
+void NfcService::handleTagTransceiveResponse(NfcEvent* event)
+{
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>
+                      (sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
+
+  int tech = event->arg1;
+  std::vector<uint8_t>* command = reinterpret_cast<std::vector<uint8_t>*>(event->obj);
+  std::vector<uint8_t> response;
+
+  NfcErrorCode code = pINfcTag->connect(static_cast<TagTechnology>(tech)) ?
+                      NFC_SUCCESS : NFC_ERROR_IO;
+
+  if (NFC_SUCCESS != code) {
+    code = !!pINfcTag ? (pINfcTag->transceive(*command, response) ?
+           NFC_SUCCESS : NFC_ERROR_IO) : NFC_ERROR_NOT_SUPPORTED;
+  }
+
+  delete command;
+
+  mMsgHandler->processResponse(NFC_RESPONSE_TAG_TRANSCEIVE, code,
+                               reinterpret_cast<void*>(&response));
 }
 
 void NfcService::handleNdefFormatResponse(NfcEvent* event)
