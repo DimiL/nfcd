@@ -49,7 +49,7 @@ public:
   std::vector<int>& getTechLibNfcTypes() { return mTechLibNfcTypes; };
   std::vector<std::vector<uint8_t> >& getTechPollBytes() { return mTechPollBytes; };
   std::vector<std::vector<uint8_t> >& getTechActBytes() { return mTechActBytes; };
-  std::vector<std::vector<uint8_t> >& getUid() { return mUid; };
+  std::vector<uint8_t>& getUid() { return mUid; };
   int& getConnectedHandle() { return mConnectedHandle; };
 
   /**
@@ -228,7 +228,7 @@ private:
   std::vector<int> mTechLibNfcTypes;
   std::vector<std::vector<uint8_t> > mTechPollBytes;
   std::vector<std::vector<uint8_t> > mTechActBytes;
-  std::vector<std::vector<uint8_t> > mUid;
+  std::vector<uint8_t> mUid;
 
   // mConnectedHandle stores the *real* libnfc handle
   // that we're connected to.

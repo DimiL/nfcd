@@ -242,6 +242,8 @@ void NfcService::handleLlcpLinkActivation(NfcEvent* event)
   data->isP2P = true;
   data->techCount = 0;
   data->techList = NULL;
+  data->tagIdCount = 0;
+  data->tagId = NULL;
   data->ndefMsgCount = 0;
   data->ndefMsg = NULL;
   data->ndefInfo = NULL;
@@ -301,6 +303,10 @@ void NfcService::handleTagDiscovered(NfcEvent* event)
   data->isP2P = false;
   data->techCount = techCount;
   data->techList = gonkTechList;
+  data->tagIdCount = pINfcTag->getUid().size();
+  uint8_t* tagId = new uint8_t[data->tagIdCount];
+  memcpy(tagId, &pINfcTag->getUid()[0], data->tagIdCount);
+  data->tagId = tagId;
   data->ndefMsgCount = pNdefMessage.get() ? 1 : 0;
   data->ndefMsg = pNdefMessage.get();
   data->ndefInfo = pNdefInfo.get();
@@ -310,6 +316,7 @@ void NfcService::handleTagDiscovered(NfcEvent* event)
   param->sessionId = data->sessionId;
   param->pINfcTag = pINfcTag;
 
+  delete tagId;
   delete gonkTechList;
   delete data;
 
@@ -466,6 +473,8 @@ void NfcService::handleReceiveNdefEvent(NfcEvent* event)
   data->isP2P = true;
   data->techCount = 0;
   data->techList = NULL;
+  data->tagIdCount = 0;
+  data->tagId = NULL;
   data->ndefMsgCount = ndef ? 1 : 0;
   data->ndefMsg = ndef;
   mMsgHandler->processNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
@@ -613,7 +622,7 @@ void NfcService::handleEnterLowPowerResponse(NfcEvent* event)
 
   NfcErrorCode code = setLowPowerMode(low);
 
-  ALOGD("XXX %s mState=%d", __func__, mState);
+  ALOGD("%s mState=%d", __func__, mState);
   mMsgHandler->processResponse(NFC_RESPONSE_CHANGE_RF_STATE, code, &mState);
 }
 
@@ -655,7 +664,7 @@ void NfcService::handleEnableResponse(NfcEvent* event)
     code = disableNfc();
   }
 TheEnd:
-  ALOGD("XXX %s mState=%d", __func__, mState);
+  ALOGD("%s mState=%d", __func__, mState);
   mMsgHandler->processResponse(NFC_RESPONSE_CHANGE_RF_STATE, code, &mState);
 }
 

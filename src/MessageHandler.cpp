@@ -25,7 +25,7 @@
 #include "NfcDebug.h"
 
 #define MAJOR_VERSION (1)
-#define MINOR_VERSION (18)
+#define MINOR_VERSION (19)
 
 using android::Parcel;
 
@@ -46,6 +46,9 @@ void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
   parcel.writeInt32(event->techCount);
   void* dest = parcel.writeInplace(event->techCount);
   memcpy(dest, event->techList, event->techCount);
+  parcel.writeInt32(event->tagIdCount);
+  void* idPtr = parcel.writeInplace(event->tagIdCount);
+  memcpy(idPtr, event->tagId, event->tagIdCount);
   parcel.writeInt32(event->ndefMsgCount);
   sendNdefMsg(parcel, event->ndefMsg);
   sendNdefInfo(parcel, event->ndefInfo);
