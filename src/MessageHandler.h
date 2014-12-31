@@ -69,6 +69,8 @@ struct TechDiscoveredEvent {
   bool isP2P;
   uint32_t techCount;
   void* techList;
+  uint32_t tagIdCount;
+  uint8_t* tagId;
   uint32_t ndefMsgCount;
   NdefMessage* ndefMsg;
   NdefInfo* ndefInfo;

@@ -605,8 +605,7 @@ void NfcTag::fillNfcTagMembers5(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
 {
   static const char fn [] = "NfcTag::fillNfcTagMembers5";
   int len = 0;
-  std::vector<unsigned char> uid;
-  std::vector<std::vector<uint8_t> >& nfcTagUid = pINfcTag->getUid();
+  std::vector<unsigned char>& uid = pINfcTag->getUid();
 
   switch (mTechParams [0].mode) {
     case NFC_DISCOVERY_TYPE_POLL_KOVIO:
@@ -670,7 +669,6 @@ void NfcTag::fillNfcTagMembers5(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
       uid.clear();
       break;
   }
-  nfcTagUid.push_back(uid);
 }
 
 bool NfcTag::isP2pDiscovered()

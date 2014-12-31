@@ -105,7 +105,7 @@ public:
   virtual std::vector<int>& getTechLibNfcTypes() = 0;
   virtual std::vector<std::vector<uint8_t> >& getTechPollBytes() = 0;
   virtual std::vector<std::vector<uint8_t> >& getTechActBytes() = 0;
-  virtual std::vector<std::vector<uint8_t> >& getUid() = 0;
+  virtual std::vector<uint8_t>& getUid() = 0;
   virtual int& getConnectedHandle() = 0;
 };
 
