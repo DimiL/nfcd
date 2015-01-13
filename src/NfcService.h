@@ -68,6 +68,8 @@ public:
   void handleMakeNdefReadonlyResponse(NfcEvent* event);
   bool handleNdefFormatRequest();
   void handleNdefFormatResponse(NfcEvent* event);
+  bool handleTagTransceiveRequest(int tech, const uint8_t* buf, uint32_t bufLen);
+  void handleTagTransceiveResponse(NfcEvent* event);
   bool handleEnterLowPowerRequest(bool enter);
   void handleEnterLowPowerResponse(NfcEvent* event);
   bool handleEnableRequest(bool enable);

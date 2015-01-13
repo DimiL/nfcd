@@ -19,8 +19,6 @@
  */
 #include "NfcTag.h"
 
-#include <vector>
-
 #include "NfcManager.h"
 #include "INfcTag.h"
 
@@ -37,6 +35,7 @@ extern nfc_data gNat;
 
 NfcTag::NfcTag()
  : mNumTechList(0)
+ , mTimeoutTable(MAX_NUM_TECHNOLOGY)
  , mActivationState(Idle)
  , mProtocol(NFC_PROTOCOL_UNKNOWN)
  , mtT1tMaxMessageSize(0)
@@ -383,7 +382,7 @@ void NfcTag::fillNfcTagMembers1(INfcTag* pINfcTag)
     gNat.handles[i] = mTechHandles[i];
 
     // Convert from vendor specific technology definition to common tag technology definition.
-    techList.push_back(toGenericTagTechnology(mTechList[i]));
+    techList.push_back(NfcNciUtil::toGenericTagTechnology(mTechList[i]));
     techHandles.push_back(mTechHandles[i]);
     techLibNfcTypes.push_back(mTechLibNfcTypes[i]);
   }
@@ -731,6 +730,8 @@ void NfcTag::resetTechnologies()
   memset(mTechHandles, 0, sizeof(mTechHandles));
   memset(mTechLibNfcTypes, 0, sizeof(mTechLibNfcTypes));
   memset(mTechParams, 0, sizeof(mTechParams));
+
+  resetAllTransceiveTimeouts();
 }
 
 void NfcTag::selectFirstTag()
@@ -893,18 +894,26 @@ void NfcTag::connectionEventHandler(UINT8 event, tNFA_CONN_EVT_DATA* data)
   }
 }
 
-TagTechnology NfcTag::toGenericTagTechnology(unsigned int tagTech)
+void NfcTag::resetAllTransceiveTimeouts()
 {
-  switch(tagTech) {
-    case TARGET_TYPE_ISO14443_3A:     return NFC_A;
-    case TARGET_TYPE_ISO14443_3B:     return NFC_B;
-    case TARGET_TYPE_ISO14443_4:      return NFC_ISO_DEP;
-    case TARGET_TYPE_FELICA:          return NFC_F;
-    case TARGET_TYPE_ISO15693:        return NFC_V;
-    case TARGET_TYPE_MIFARE_CLASSIC:  return MIFARE_CLASSIC;
-    case TARGET_TYPE_MIFARE_UL:       return MIFARE_ULTRALIGHT;
-    case TARGET_TYPE_KOVIO_BARCODE:   return NFC_BARCODE;
-    case TARGET_TYPE_UNKNOWN:
-    default:                          return UNKNOWN_TECH;
+  mTimeoutTable[TARGET_TYPE_ISO14443_3A] = 618;     // NfcA
+  mTimeoutTable[TARGET_TYPE_ISO14443_3B] = 1000;    // NfcB
+  mTimeoutTable[TARGET_TYPE_ISO14443_4] = 309;      // ISO-DEP
+  mTimeoutTable[TARGET_TYPE_FELICA] = 255;          // Felica
+  mTimeoutTable[TARGET_TYPE_ISO15693] = 1000;       // NfcV
+  mTimeoutTable[TARGET_TYPE_MIFARE_CLASSIC] = 618;  // MifareClassic
+  mTimeoutTable[TARGET_TYPE_MIFARE_UL] = 618;       // MifareUltralight
+  mTimeoutTable[TARGET_TYPE_KOVIO_BARCODE] = 1000;  // NfcBarcode
+}
+
+int NfcTag::getTransceiveTimeout(int techId)
+{
+  int retval = 1000;
+  if ((techId > 0) && (techId < (int)mTimeoutTable.size())) {
+    retval = mTimeoutTable[techId];
+  } else {
+    ALOGE("%s: invalid tech=%d", __FUNCTION__, techId);
   }
+
+  return retval;
 }

@@ -17,6 +17,7 @@
 #pragma once
 
 #include <pthread.h>
+#include "TagTechnology.h"
 
 /**
  * Discovery modes -- keep in sync with NFCManager.DISCOVERY_MODE_*
@@ -109,4 +110,12 @@ struct nfc_data
   int tHandle;
   int tProtocols[16];
   int handles[16];
+};
+
+class NfcNciUtil {
+public:
+  static TagTechnology toGenericTagTechnology(unsigned int tagTech);
+  static unsigned int toNciTagTechnology(TagTechnology tagTech);
+private:
+  NfcNciUtil();
 };

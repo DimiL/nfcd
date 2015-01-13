@@ -21,7 +21,7 @@
  */
 #include "Pn544Interop.h"
 
-#include "NfcUtil.h"
+#include "NfcNciUtil.h"
 #include "IntervalTimer.h"
 #include "Mutex.h"
 #include "NfcTag.h"
