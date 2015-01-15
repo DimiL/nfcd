@@ -204,31 +204,7 @@ typedef enum {
    *
    * response is NfcChangeRFStateResponse.
    */
-  NFC_REQUEST_CHANGE_RF_STATE = 0,
-
-  /**
-   * NFC_REQUEST_CONNECT
-   *
-   * Connect to a specific NFC-compatible technology.
-   *
-   * data is NfcConnectRequest.
-   *
-   * response is NULL.
-   */
-  NFC_REQUEST_CONNECT = 1,
-
-  /**
-   * NFC_REQUEST_CLOSE
-   *
-   * Close an open connection that must have been opened with a prior
-   * NfcConnectRequest.
-   *
-   * data is NfcSessionId, which is correlates to a technology that was
-   * previously discovered with NFC_NOTIFICATION_TECH_DISCOVERED.
-   *
-   * response is NULL.
-   */
-  NFC_REQUEST_CLOSE = 2,
+  NFC_REQUEST_CHANGE_RF_STATE,
 
   /**
    * NFC_REQUEST_READ_NDEF
@@ -241,7 +217,7 @@ typedef enum {
    *
    * response is NfcNdefReadWritePdu.
    */
-  NFC_REQUEST_READ_NDEF = 3,
+  NFC_REQUEST_READ_NDEF,
 
   /**
    * NFC_REQUEST_WRITE_NDEF
@@ -254,7 +230,7 @@ typedef enum {
    *
    * response is NULL.
    */
-  NFC_REQUEST_WRITE_NDEF = 4,
+  NFC_REQUEST_WRITE_NDEF,
 
   /**
    * NFC_REQUEST_MAKE_NDEF_READ_ONLY
@@ -266,7 +242,7 @@ typedef enum {
    *
    * response is NULL.
    */
-  NFC_REQUEST_MAKE_NDEF_READ_ONLY = 5,
+  NFC_REQUEST_MAKE_NDEF_READ_ONLY,
 
   /**
    * NFC_REQUEST_FORMAT
@@ -278,7 +254,7 @@ typedef enum {
    *
    * response is NULL.
    */
-  NFC_REQUEST_FORMAT = 6,
+  NFC_REQUEST_FORMAT,
 
   /**
    * NFC_RRQUEST_TRANSCEIVE
@@ -287,7 +263,7 @@ typedef enum {
    *
    * response is tag response data.
    */
-  NFC_REQUEST_TRANSCEIVE = 7,
+  NFC_REQUEST_TRANSCEIVE,
 } NfcRequestType;
 
 typedef enum {
