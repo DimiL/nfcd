@@ -55,12 +55,10 @@ public:
   void handleTransactionEvent(NfcEvent* event);
   void handleLlcpLinkActivation(NfcEvent* event);
   void handleLlcpLinkDeactivation(NfcEvent* event);
-  void handleConnect(int technology);
   bool handleReadNdefRequest();
   void handleReadNdefResponse(NfcEvent* event);
   bool handleWriteNdefRequest(NdefMessage* ndef, bool isP2P);
   void handleWriteNdefResponse(NfcEvent* event);
-  void handleCloseRequest();
   void handleCloseResponse(NfcEvent* event);
   bool handlePushNdefRequest(NdefMessage* ndef);
   void handlePushNdefResponse(NfcEvent* event);

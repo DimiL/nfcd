@@ -25,7 +25,7 @@
 #include "NfcDebug.h"
 
 #define MAJOR_VERSION (1)
-#define MINOR_VERSION (19)
+#define MINOR_VERSION (20)
 
 using android::Parcel;
 
@@ -104,12 +104,6 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
       break;
     case NFC_REQUEST_WRITE_NDEF:
       handleWriteNdefRequest(parcel);
-      break;
-    case NFC_REQUEST_CONNECT:
-      handleConnectRequest(parcel);
-      break;
-    case NFC_REQUEST_CLOSE:
-      handleCloseRequest(parcel);
       break;
     case NFC_REQUEST_MAKE_NDEF_READ_ONLY:
       handleMakeNdefReadonlyRequest(parcel);
@@ -261,24 +255,6 @@ bool MessageHandler::handleWriteNdefRequest(Parcel& parcel)
   delete[] ndefMessagePdu.records;
 
   return mService->handleWriteNdefRequest(ndefMessage, isP2P);
-}
-
-bool MessageHandler::handleConnectRequest(Parcel& parcel)
-{
-  int sessionId = parcel.readInt32();
-  //TODO check SessionId
-
-  //TODO should only read 1 octet here.
-  int32_t techType = parcel.readInt32();
-  ALOGD("%s techType=%d", FUNC, techType);
-  mService->handleConnect(techType);
-  return true;
-}
-
-bool MessageHandler::handleCloseRequest(Parcel& parcel)
-{
-  mService->handleCloseRequest();
-  return true;
 }
 
 bool MessageHandler::handleMakeNdefReadonlyRequest(Parcel& parcel)

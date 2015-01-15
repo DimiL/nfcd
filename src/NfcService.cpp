@@ -43,7 +43,6 @@ typedef enum {
   MSG_SE_NOTIFY_TRANSACTION_EVENT,
   MSG_READ_NDEF,
   MSG_WRITE_NDEF,
-  MSG_CLOSE,
   MSG_SOCKET_CONNECTED,
   MSG_PUSH_NDEF,
   MSG_NDEF_TAG_LIST,
@@ -372,9 +371,6 @@ void* NfcService::eventLoop()
         case MSG_WRITE_NDEF:
           handleWriteNdefResponse(event);
           break;
-        case MSG_CLOSE:
-          handleCloseResponse(event);
-          break;
         case MSG_SOCKET_CONNECTED:
           mMsgHandler->processNotification(NFC_NOTIFICATION_INITIALIZED , NULL);
           break;
@@ -427,19 +423,6 @@ bool NfcService::handleDisconnect()
                       (sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
   bool result = pINfcTag->disconnect();
   return result;
-}
-
-void NfcService::handleConnect(int tech)
-{
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>
-                      (sNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
-
-  NfcErrorCode code = !!pINfcTag ?
-                      (pINfcTag->connect(static_cast<TagTechnology>(tech)) ?
-                      NFC_SUCCESS : NFC_ERROR_CONNECT) :
-                      NFC_ERROR_NOT_SUPPORTED;
-
-  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, code, NULL);
 }
 
 bool NfcService::handleReadNdefRequest()
@@ -524,21 +507,6 @@ void NfcService::handleWriteNdefResponse(NfcEvent* event)
   }
 
   mMsgHandler->processResponse(resType, code, NULL);
-}
-
-void NfcService::handleCloseRequest()
-{
-  NfcEvent *event = new NfcEvent(MSG_CLOSE);
-  mQueue.push_back(event);
-  sem_post(&thread_sem);
-}
-
-void NfcService::handleCloseResponse(NfcEvent* event)
-{
-  // TODO : If we call tag disconnect here, will keep trggering tag discover notification
-  //        Need to check with DT what should we do here
-
-  mMsgHandler->processResponse(NFC_RESPONSE_GENERAL, NFC_SUCCESS, NULL);
 }
 
 void NfcService::onConnected()
