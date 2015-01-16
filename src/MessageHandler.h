@@ -45,8 +45,6 @@ private:
   bool handleChangeRFStateRequest(android::Parcel& parcel);
   bool handleReadNdefRequest(android::Parcel& parcel);
   bool handleWriteNdefRequest(android::Parcel& parcel);
-  bool handleConnectRequest(android::Parcel& parcel);
-  bool handleCloseRequest(android::Parcel& parcel);
   bool handleMakeNdefReadonlyRequest(android::Parcel& parcel);
   bool handleNdefFormatRequest(android::Parcel& parcel);
   bool handleTagTransceiveRequest(android::Parcel& parcel);
