@@ -279,6 +279,15 @@ typedef enum {
    * response is NULL.
    */
   NFC_REQUEST_FORMAT = 6,
+
+  /**
+   * NFC_RRQUEST_TRANSCEIVE
+   *
+   * Send raw data to the tag;
+   *
+   * response is tag response data.
+   */
+  NFC_REQUEST_TRANSCEIVE = 7,
 } NfcRequestType;
 
 typedef enum {
@@ -287,6 +296,8 @@ typedef enum {
   NFC_RESPONSE_CHANGE_RF_STATE = 1001,
 
   NFC_RESPONSE_READ_NDEF = 1002,
+
+  NFC_RESPONSE_TAG_TRANSCEIVE = 1003
 } NfcResponseType;
 
 typedef struct {

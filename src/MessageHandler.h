@@ -49,10 +49,11 @@ private:
   bool handleCloseRequest(android::Parcel& parcel);
   bool handleMakeNdefReadonlyRequest(android::Parcel& parcel);
   bool handleNdefFormatRequest(android::Parcel& parcel);
-
+  bool handleTagTransceiveRequest(android::Parcel& parcel);
 
   bool handleChangeRFStateResponse(android::Parcel& parcel, void* data);
   bool handleReadNdefResponse(android::Parcel& parcel, void* data);
+  bool handleTagTransceiveResponse(android::Parcel& parcel, void* data);
   bool handleResponse(android::Parcel& parcel);
 
   void sendResponse(android::Parcel& parcel);

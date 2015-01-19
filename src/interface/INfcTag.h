@@ -35,7 +35,7 @@ public:
    * @param  technology Specify the tag technology to be connected.
    * @return            True if ok.
    */
-  virtual bool connect(int technology) = 0;
+  virtual bool connect(TagTechnology technology) = 0;
 
   /**
    * Deactivate the RF field.
@@ -93,6 +93,16 @@ public:
    * @return True if ok.
    */
   virtual bool formatNdef() = 0;
+
+  /**
+   * Send raw data to the tag.
+   *
+   * @param  command     Contains command to send.
+   * @param  outResponse Contains tag's response.
+   * @return True if ok.
+   */
+  virtual bool transceive(const std::vector<uint8_t>& command,
+                          std::vector<uint8_t>& outResponse) = 0;
 
   /**
    * Get detected tag supported technologies.
