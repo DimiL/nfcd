@@ -38,7 +38,7 @@ int main() {
   socket->Initialize(msgHandler);
   socket->SetSocketListener(service);
   msgHandler->SetOutgoingSocket(socket);
-  socket->Loop();
+  socket->Loop(NULL);
 
   //TODO delete NfcIpcSocket, NfcService
   delete msgHandler;
