@@ -27,22 +27,6 @@ void NfcUtil::convertNdefPduToNdefMessage(NdefMessagePdu& ndefPdu, NdefMessage* 
   }
 }
 
-NfcTechnology NfcUtil::convertTagTechToGonkFormat(TagTechnology tagTech) {
-  switch(tagTech) {
-    case NFC_A:              return  NFC_TECH_NFCA;
-    case NFC_B:              return  NFC_TECH_NFCB;
-    case NFC_ISO_DEP:        return  NFC_TECH_ISO_DEP;
-    case NFC_F:              return  NFC_TECH_NFCF;
-    case NFC_V:              return  NFC_TECH_NFCV;
-    case MIFARE_CLASSIC:     return  NFC_TECH_MIFARE_CLASSIC;
-    case MIFARE_ULTRALIGHT:  return  NFC_TECH_MIFARE_ULTRALIGHT;
-    case NFC_BARCODE:        return  NFC_TECH_MIFARE_ULTRALIGHT;
-    case UNKNOWN_TECH:
-    default:                 return  NFC_TECH_UNKNOWN;
-  }
-  return NFC_TECH_NFCA;
-}
-
 NfcEvtTransactionOrigin NfcUtil::convertOriginType(TransactionEvent::OriginType type)
 {
   switch (type) {

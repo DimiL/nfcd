@@ -21,6 +21,8 @@
 #include <vector>
 
 #include "INfcTag.h"
+#include "NfcNciUtil.h"
+
 extern "C"
 {
   #include "nfa_rw_api.h"
@@ -241,8 +243,8 @@ public:
 
   static bool doIsNdefFormatable();
 
-  int connectWithStatus(int technology);
-  int reconnectWithStatus(int technology);
+  int connectWithStatus(TechnologyType technology);
+  int reconnectWithStatus(int targetHandle);
   int reconnectWithStatus();
   NdefMessage* doReadNdef();
   NdefInfo* doReadNdefInfo();

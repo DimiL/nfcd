@@ -294,9 +294,7 @@ void NfcService::handleTagDiscovered(NfcEvent* event)
   int techCount = techList.size();
 
   uint8_t* gonkTechList = new uint8_t[techCount];
-  for(int i = 0; i < techCount; i++) {
-    gonkTechList[i] = (uint8_t)NfcUtil::convertTagTechToGonkFormat(techList[i]);
-  }
+  std::copy(techList.begin(), techList.end(), gonkTechList);
 
   TechDiscoveredEvent* data = new TechDiscoveredEvent();
   data->sessionId = SessionId::generateNewId();
@@ -592,7 +590,7 @@ void NfcService::handleTagTransceiveResponse(NfcEvent* event)
   NfcErrorCode code = pINfcTag->connect(static_cast<TagTechnology>(tech)) ?
                       NFC_SUCCESS : NFC_ERROR_IO;
 
-  if (NFC_SUCCESS != code) {
+  if (NFC_SUCCESS == code) {
     code = !!pINfcTag ? (pINfcTag->transceive(*command, response) ?
            NFC_SUCCESS : NFC_ERROR_IO) : NFC_ERROR_NOT_SUPPORTED;
   }
