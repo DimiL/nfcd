@@ -35,14 +35,17 @@ class INfcTag;
 class NfcTag
 {
 public:
-  enum ActivationState {Idle, Sleep, Active};
-  static const int MAX_NUM_TECHNOLOGY = 10;  // Max number of technologies supported by one or more tags.
-  int mTechList [MAX_NUM_TECHNOLOGY];        // Array of NFC technologies according to NFC service.
-  int mTechHandles [MAX_NUM_TECHNOLOGY];     // Array of tag handles according to NFC service.
-  int mTechLibNfcTypes [MAX_NUM_TECHNOLOGY]; // Array of detailed tag types according to NFC service.
-  int mNumTechList;                          // Current number of NFC technologies in the list.
-
   NfcTag();
+
+  enum ActivationState {Idle, Sleep, Active};
+
+  // Max number of technologies supported by one or more tags.
+  static const int MAX_NUM_TECHNOLOGY = 10;
+
+  TechnologyType mTechList [MAX_NUM_TECHNOLOGY];  // Array of NFC technologies.
+  int mTechHandles [MAX_NUM_TECHNOLOGY];          // Array of tag handles.
+  int mTechLibNfcTypes [MAX_NUM_TECHNOLOGY];      // Array of detailed tag types.
+  int mNumTechList;                               // Number of NFC technologies in the list.
 
   /**
    * Get a reference to the singleton NfcTag object.
@@ -85,7 +88,7 @@ public:
   /**
    * Get the timeout value for one technology.
    *
-   * @param  techId One of the values in TARGET_TYPE_* defined in NfcNciUtil.h.
+   * @param  techId One of the values in TECHNOLOGY_TYPE_* defined in NfcNciUtil.h.
    * @return        Timeout value in millisecond.
    */
   int getTransceiveTimeout(int techId);

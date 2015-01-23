@@ -23,7 +23,6 @@
 
 #include "NdefMessage.h"
 #include "TagTechnology.h"
-#include "NfcNciUtil.h"
 #include "NfcTag.h"
 #include "config.h"
 #include "Mutex.h"
@@ -52,42 +51,42 @@ bool    gIsSelectingRfInterface = false;
 
 #define STATUS_CODE_TARGET_LOST    146  // This error code comes from the service.
 
-static uint32_t     sCheckNdefCurrentSize = 0;
-static tNFA_STATUS  sCheckNdefStatus = 0;      // Whether tag already contains a NDEF message.
-static bool         sCheckNdefCapable = false; // Whether tag has NDEF capability.
-static tNFA_HANDLE  sNdefTypeHandlerHandle = NFA_HANDLE_INVALID;
-static tNFA_INTF_TYPE   sCurrentRfInterface = NFA_INTERFACE_ISO_DEP;
-static uint8_t*     sTransceiveData = NULL;
-static uint32_t     sTransceiveDataLen = 0;
-static bool         sWaitingForTransceive = false;
-static bool         sTransceiveRfTimeout = false;
-static bool         sNeedToSwitchRf = false;
-static Mutex        sRfInterfaceMutex;
-static uint32_t     sReadDataLen = 0;
-static uint8_t*     sReadData = NULL;
-static bool         sIsReadingNdefMessage = false;
-static SyncEvent    sReadEvent;
-static sem_t        sWriteSem;
-static sem_t        sFormatSem;
-static SyncEvent    sTransceiveEvent;
-static SyncEvent    sReconnectEvent;
-static sem_t        sCheckNdefSem;
-static sem_t        sPresenceCheckSem;
-static sem_t        sMakeReadonlySem;
-static IntervalTimer sSwitchBackTimer; // Timer used to tell us to switch back to ISO_DEP frame interface.
-static bool         sWriteOk = false;
-static bool         sWriteWaitingForComplete = false;
-static bool         sFormatOk = false;
-static bool         sConnectOk = false;
-static bool         sConnectWaitingForComplete = false;
-static bool         sGotDeactivate = false;
-static uint32_t     sCheckNdefMaxSize = 0;
-static bool         sCheckNdefCardReadOnly = false;
-static bool         sCheckNdefWaitingForComplete = false;
-static int          sCountTagAway = 0;  // Count the consecutive number of presence-check failures.
-static tNFA_STATUS  sMakeReadonlyStatus = NFA_STATUS_FAILED;
-static bool         sMakeReadonlyWaitingForComplete = false;
-static int          sCurrentConnectedTargetType = TARGET_TYPE_UNKNOWN;
+static uint32_t        sCheckNdefCurrentSize = 0;
+static tNFA_STATUS     sCheckNdefStatus = 0;      // Whether tag already contains a NDEF message.
+static bool            sCheckNdefCapable = false; // Whether tag has NDEF capability.
+static tNFA_HANDLE     sNdefTypeHandlerHandle = NFA_HANDLE_INVALID;
+static tNFA_INTF_TYPE  sCurrentRfInterface = NFA_INTERFACE_ISO_DEP;
+static uint8_t*        sTransceiveData = NULL;
+static uint32_t        sTransceiveDataLen = 0;
+static bool            sWaitingForTransceive = false;
+static bool            sTransceiveRfTimeout = false;
+static bool            sNeedToSwitchRf = false;
+static Mutex           sRfInterfaceMutex;
+static uint32_t        sReadDataLen = 0;
+static uint8_t*        sReadData = NULL;
+static bool            sIsReadingNdefMessage = false;
+static SyncEvent       sReadEvent;
+static sem_t           sWriteSem;
+static sem_t           sFormatSem;
+static SyncEvent       sTransceiveEvent;
+static SyncEvent       sReconnectEvent;
+static sem_t           sCheckNdefSem;
+static sem_t           sPresenceCheckSem;
+static sem_t           sMakeReadonlySem;
+static IntervalTimer   sSwitchBackTimer; // Timer used to tell us to switch back to ISO_DEP frame interface.
+static bool            sWriteOk = false;
+static bool            sWriteWaitingForComplete = false;
+static bool            sFormatOk = false;
+static bool            sConnectOk = false;
+static bool            sConnectWaitingForComplete = false;
+static bool            sGotDeactivate = false;
+static uint32_t        sCheckNdefMaxSize = 0;
+static bool            sCheckNdefCardReadOnly = false;
+static bool            sCheckNdefWaitingForComplete = false;
+static int             sCountTagAway = 0;  // Count the consecutive number of presence-check failures.
+static tNFA_STATUS     sMakeReadonlyStatus = NFA_STATUS_FAILED;
+static bool            sMakeReadonlyWaitingForComplete = false;
+static TechnologyType  sCurrentConnectedTargetType = TECHNOLOGY_TYPE_UNKNOWN;
 
 static void ndefHandlerCallback(tNFA_NDEF_EVT event, tNFA_NDEF_EVT_DATA *eventData)
 {
@@ -241,7 +240,7 @@ int NfcTagManager::reconnectWithStatus()
   }
 
   // Special case for Kovio.
-  if (tag.mTechList[0] == TARGET_TYPE_KOVIO_BARCODE) {
+  if (tag.mTechList[0] == TECHNOLOGY_TYPE_KOVIO_BARCODE) {
     ALOGD("%s: fake out reconnect for Kovio", __FUNCTION__);
     goto TheEnd;
   }
@@ -258,14 +257,14 @@ TheEnd:
   return retCode;
 }
 
-int NfcTagManager::reconnectWithStatus(int technology)
+int NfcTagManager::reconnectWithStatus(int targetHandle)
 {
   int status = -1;
-  status = doConnect(technology);
+  status = doConnect(targetHandle);
   return status;
 }
 
-int NfcTagManager::connectWithStatus(int technology)
+int NfcTagManager::connectWithStatus(TechnologyType technology)
 {
   int status = -1;
   NfcTag& tag = NfcTag::getInstance();
@@ -305,7 +304,7 @@ int NfcTagManager::connectWithStatus(int technology)
         //    any handle).
         // 2) We are connecting to the ndef technology - always
         //    allowed.
-        if (technology == NDEF) {
+        if (technology == TECHNOLOGY_TYPE_NDEF) {
           i = 0;
         }
 
@@ -484,7 +483,7 @@ int NfcTagManager::doCheckNdef(int ndefInfo[])
   NfcTag& tag = NfcTag::getInstance();
 
   // Special case for Kovio.
-  if (tag.mTechList[0] == TARGET_TYPE_KOVIO_BARCODE) {
+  if (tag.mTechList[0] == TECHNOLOGY_TYPE_KOVIO_BARCODE) {
     ALOGD("%s: Kovio tag, no NDEF", __FUNCTION__);
     ndefInfo[0] = 0;
     ndefInfo[1] = NDEF_MODE_READ_ONLY;
@@ -492,7 +491,7 @@ int NfcTagManager::doCheckNdef(int ndefInfo[])
   }
 
   // Special case for Kovio.
-  if (tag.mTechList[0] == TARGET_TYPE_KOVIO_BARCODE) {
+  if (tag.mTechList[0] == TECHNOLOGY_TYPE_KOVIO_BARCODE) {
     ALOGD("%s: Kovio tag, no NDEF", __FUNCTION__);
     ndefInfo[0] = 0;
     ndefInfo[1] = NDEF_MODE_READ_ONLY;
@@ -587,7 +586,7 @@ void NfcTagManager::doAbortWaits()
   sem_post(&sPresenceCheckSem);
   sem_post(&sMakeReadonlySem);
 
-  sCurrentConnectedTargetType = TARGET_TYPE_UNKNOWN;
+  sCurrentConnectedTargetType = TECHNOLOGY_TYPE_UNKNOWN;
 }
 
 void NfcTagManager::doReadCompleted(tNFA_STATUS status)
@@ -816,7 +815,7 @@ int NfcTagManager::doConnect(int targetHandle)
     goto TheEnd;
   }
 
-  if (tag.mTechList[i] == TARGET_TYPE_ISO14443_3A || tag.mTechList[i] == TARGET_TYPE_ISO14443_3B) {
+  if (tag.mTechList[i] == TECHNOLOGY_TYPE_ISO14443_3A || tag.mTechList[i] == TECHNOLOGY_TYPE_ISO14443_3B) {
     ALOGD("%s: switching to tech: %d need to switch rf intf to frame", __FUNCTION__, tag.mTechList[i]);
     // Connecting to NfcA or NfcB don't actually switch until/unless we get a transceive.
     sNeedToSwitchRf = true;
@@ -840,7 +839,7 @@ bool NfcTagManager::doPresenceCheck()
   // Special case for Kovio. The deactivation would have already occurred
   // but was ignored so that normal tag opertions could complete.  Now we
   // want to process as if the deactivate just happened.
-  if (tag.mTechList[0] == TARGET_TYPE_KOVIO_BARCODE) {
+  if (tag.mTechList[0] == TECHNOLOGY_TYPE_KOVIO_BARCODE) {
     ALOGD("%s: Kovio, force deactivate handling", __FUNCTION__);
     tNFA_DEACTIVATED deactivated = {NFA_DEACTIVATE_TYPE_IDLE};
 
@@ -1158,7 +1157,7 @@ bool NfcTagManager::doIsNdefFormatable()
 bool NfcTagManager::connect(TagTechnology technology)
 {
   pthread_mutex_lock(&mMutex);
-  int status = connectWithStatus(NfcNciUtil::toNciTagTechnology(technology));
+  int status = connectWithStatus(NfcNciUtil::toTechnologyType(technology));
   pthread_mutex_unlock(&mMutex);
   return NFCSTATUS_SUCCESS == status;
 }
