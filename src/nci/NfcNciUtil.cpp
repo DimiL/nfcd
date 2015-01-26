@@ -16,34 +16,36 @@
 
 #include "NfcNciUtil.h"
 
-TagTechnology NfcNciUtil::toGenericTagTechnology(unsigned int tagTech)
+TagTechnology NfcNciUtil::toTagTechnology(TechnologyType techType)
 {
-  switch(tagTech) {
-    case TARGET_TYPE_ISO14443_3A:     return NFC_A;
-    case TARGET_TYPE_ISO14443_3B:     return NFC_B;
-    case TARGET_TYPE_ISO14443_4:      return NFC_ISO_DEP;
-    case TARGET_TYPE_FELICA:          return NFC_F;
-    case TARGET_TYPE_ISO15693:        return NFC_V;
-    case TARGET_TYPE_MIFARE_CLASSIC:  return MIFARE_CLASSIC;
-    case TARGET_TYPE_MIFARE_UL:       return MIFARE_ULTRALIGHT;
-    case TARGET_TYPE_KOVIO_BARCODE:   return NFC_BARCODE;
-    case TARGET_TYPE_UNKNOWN:
-    default:                          return UNKNOWN_TECH;
+  switch(techType) {
+    case TECHNOLOGY_TYPE_ISO14443_3A:     return NFC_A;
+    case TECHNOLOGY_TYPE_ISO14443_3B:     return NFC_B;
+    case TECHNOLOGY_TYPE_ISO14443_4:      return NFC_ISO_DEP;
+    case TECHNOLOGY_TYPE_FELICA:          return NFC_F;
+    case TECHNOLOGY_TYPE_ISO15693:        return NFC_V;
+    case TECHNOLOGY_TYPE_MIFARE_CLASSIC:  return MIFARE_CLASSIC;
+    case TECHNOLOGY_TYPE_MIFARE_UL:       return MIFARE_ULTRALIGHT;
+    case TECHNOLOGY_TYPE_KOVIO_BARCODE:   return NFC_BARCODE;
+    case TECHNOLOGY_TYPE_NDEF:            return NDEF;
+    case TECHNOLOGY_TYPE_UNKNOWN:
+    default:                              return UNKNOWN_TECH;
   }
 }
 
-unsigned int NfcNciUtil::toNciTagTechnology(TagTechnology tagTech)
+TechnologyType NfcNciUtil::toTechnologyType(TagTechnology tagTech)
 {
   switch(tagTech) {
-    case NFC_A:                return TARGET_TYPE_ISO14443_3A;
-    case NFC_B:                return TARGET_TYPE_ISO14443_3B;
-    case NFC_ISO_DEP:          return TARGET_TYPE_ISO14443_4;
-    case NFC_F:                return TARGET_TYPE_FELICA;
-    case NFC_V:                return TARGET_TYPE_ISO15693;
-    case MIFARE_CLASSIC:       return TARGET_TYPE_MIFARE_CLASSIC;
-    case MIFARE_ULTRALIGHT:    return TARGET_TYPE_MIFARE_UL;
-    case NFC_BARCODE:          return TARGET_TYPE_KOVIO_BARCODE;
+    case NFC_A:                return TECHNOLOGY_TYPE_ISO14443_3A;
+    case NFC_B:                return TECHNOLOGY_TYPE_ISO14443_3B;
+    case NFC_ISO_DEP:          return TECHNOLOGY_TYPE_ISO14443_4;
+    case NFC_F:                return TECHNOLOGY_TYPE_FELICA;
+    case NFC_V:                return TECHNOLOGY_TYPE_ISO15693;
+    case MIFARE_CLASSIC:       return TECHNOLOGY_TYPE_MIFARE_CLASSIC;
+    case MIFARE_ULTRALIGHT:    return TECHNOLOGY_TYPE_MIFARE_UL;
+    case NFC_BARCODE:          return TECHNOLOGY_TYPE_KOVIO_BARCODE;
+    case NDEF:                 return TECHNOLOGY_TYPE_NDEF;
     case UNKNOWN_TECH:
-    default:                   return TARGET_TYPE_UNKNOWN;
+    default:                   return TECHNOLOGY_TYPE_UNKNOWN;
   }
 }

@@ -169,11 +169,11 @@ void NfcTag::discoverTechnologies(tNFA_ACTIVATED& activationData)
 
   switch (rfDetail.protocol) {
     case NFC_PROTOCOL_T1T:
-      mTechList[mNumTechList] = TARGET_TYPE_ISO14443_3A;  // Is TagTechnology.NFC_A by Java API.
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO14443_3A;  // Is TagTechnology.NFC_A by Java API.
       break;
 
     case NFC_PROTOCOL_T2T:
-      mTechList[mNumTechList] = TARGET_TYPE_ISO14443_3A;  // Is TagTechnology.NFC_A by Java API.
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO14443_3A;  // Is TagTechnology.NFC_A by Java API.
       // Could be MifFare UL or Classic or Kovio.
       {
         // Need to look at first byte of uid to find manuf.
@@ -189,18 +189,18 @@ void NfcTag::discoverTechnologies(tNFA_ACTIVATED& activationData)
             mTechLibNfcTypes[mNumTechList] = rfDetail.protocol;
             // Save the stack's data structure for interpretation later
             memcpy(&(mTechParams[mNumTechList]), &(rfDetail.rf_tech_param), sizeof(rfDetail.rf_tech_param));
-            mTechList[mNumTechList] = TARGET_TYPE_MIFARE_UL; // Is TagTechnology.MIFARE_ULTRALIGHT by Java API.
+            mTechList[mNumTechList] = TECHNOLOGY_TYPE_MIFARE_UL; // Is TagTechnology.MIFARE_ULTRALIGHT by Java API.
           }
         }
       }
       break;
 
     case NFC_PROTOCOL_T3T:
-      mTechList[mNumTechList] = TARGET_TYPE_FELICA;
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_FELICA;
       break;
 
     case NFC_PROTOCOL_ISO_DEP: // Type-4 tag uses technology ISO-DEP and technology A or B.
-      mTechList[mNumTechList] = TARGET_TYPE_ISO14443_4; // Is TagTechnology.ISO_DEP by Java API.
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO14443_4; // Is TagTechnology.ISO_DEP by Java API.
       if ( (rfDetail.rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_A) ||
              (rfDetail.rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_A_ACTIVE) ||
              (rfDetail.rf_tech_param.mode == NFC_DISCOVERY_TYPE_LISTEN_A) ||
@@ -208,7 +208,7 @@ void NfcTag::discoverTechnologies(tNFA_ACTIVATED& activationData)
         mNumTechList++;
         mTechHandles[mNumTechList] = rfDetail.rf_disc_id;
         mTechLibNfcTypes[mNumTechList] = rfDetail.protocol;
-        mTechList[mNumTechList] = TARGET_TYPE_ISO14443_3A; //is TagTechnology.NFC_A by Java API.
+        mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO14443_3A; //is TagTechnology.NFC_A by Java API.
         // Save the stack's data structure for interpretation later
         memcpy(&(mTechParams[mNumTechList]), &(rfDetail.rf_tech_param), sizeof(rfDetail.rf_tech_param));
       } else if ( (rfDetail.rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_B) ||
@@ -218,24 +218,24 @@ void NfcTag::discoverTechnologies(tNFA_ACTIVATED& activationData)
         mNumTechList++;
         mTechHandles[mNumTechList] = rfDetail.rf_disc_id;
         mTechLibNfcTypes[mNumTechList] = rfDetail.protocol;
-        mTechList[mNumTechList] = TARGET_TYPE_ISO14443_3B; // Is TagTechnology.NFC_B by Java API.
+        mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO14443_3B; // Is TagTechnology.NFC_B by Java API.
         // Save the stack's data structure for interpretation later.
         memcpy(&(mTechParams[mNumTechList]), &(rfDetail.rf_tech_param), sizeof(rfDetail.rf_tech_param));
       }
       break;
 
     case NFC_PROTOCOL_15693: // Is TagTechnology.NFC_V by Java API.
-      mTechList[mNumTechList] = TARGET_TYPE_ISO15693;
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO15693;
       break;
 
     case NFC_PROTOCOL_KOVIO:
       ALOGD("%s: Kovio", fn);
-      mTechList[mNumTechList] = TARGET_TYPE_KOVIO_BARCODE;
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_KOVIO_BARCODE;
       break;
 
     default:
       ALOGE("%s: unknown protocol ????", fn);
-      mTechList[mNumTechList] = TARGET_TYPE_UNKNOWN;
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_UNKNOWN;
       break;
   }
 
@@ -265,18 +265,18 @@ void NfcTag::discoverTechnologies(tNFA_DISC_RESULT& discoveryData)
 
   switch (discovery_ntf.protocol) {
     case NFC_PROTOCOL_T1T:
-      mTechList[mNumTechList] = TARGET_TYPE_ISO14443_3A; // Is TagTechnology.NFC_A by Java API.
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO14443_3A; // Is TagTechnology.NFC_A by Java API.
       break;
 
     case NFC_PROTOCOL_T2T:
-      mTechList[mNumTechList] = TARGET_TYPE_ISO14443_3A;  // Is TagTechnology.NFC_A by Java API.
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO14443_3A;  // Is TagTechnology.NFC_A by Java API.
       // Type-2 tags are identitical to Mifare Ultralight, so Ultralight is also discovered.
       if (discovery_ntf.rf_tech_param.param.pa.sel_rsp == 0) {
         // Mifare Ultralight.
         mNumTechList++;
         mTechHandles[mNumTechList] = discovery_ntf.rf_disc_id;
         mTechLibNfcTypes[mNumTechList] = discovery_ntf.protocol;
-        mTechList[mNumTechList] = TARGET_TYPE_MIFARE_UL; // Is TagTechnology.MIFARE_ULTRALIGHT by Java API.
+        mTechList[mNumTechList] = TECHNOLOGY_TYPE_MIFARE_UL; // Is TagTechnology.MIFARE_ULTRALIGHT by Java API.
       }
 
       // Save the stack's data structure for interpretation later.
@@ -284,11 +284,11 @@ void NfcTag::discoverTechnologies(tNFA_DISC_RESULT& discoveryData)
       break;
 
     case NFC_PROTOCOL_T3T:
-      mTechList[mNumTechList] = TARGET_TYPE_FELICA;
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_FELICA;
       break;
 
     case NFC_PROTOCOL_ISO_DEP: // Type-4 tag uses technology ISO-DEP and technology A or B.
-      mTechList[mNumTechList] = TARGET_TYPE_ISO14443_4; // Is TagTechnology.ISO_DEP by Java API.
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO14443_4; // Is TagTechnology.ISO_DEP by Java API.
       if ( (discovery_ntf.rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_A) ||
            (discovery_ntf.rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_A_ACTIVE) ||
            (discovery_ntf.rf_tech_param.mode == NFC_DISCOVERY_TYPE_LISTEN_A) ||
@@ -296,7 +296,7 @@ void NfcTag::discoverTechnologies(tNFA_DISC_RESULT& discoveryData)
         mNumTechList++;
         mTechHandles[mNumTechList] = discovery_ntf.rf_disc_id;
         mTechLibNfcTypes[mNumTechList] = discovery_ntf.protocol;
-        mTechList[mNumTechList] = TARGET_TYPE_ISO14443_3A; // Is TagTechnology.NFC_A by Java API.
+        mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO14443_3A; // Is TagTechnology.NFC_A by Java API.
         // Save the stack's data structure for interpretation later.
         memcpy(&(mTechParams[mNumTechList]), &(discovery_ntf.rf_tech_param), sizeof(discovery_ntf.rf_tech_param));
       } else if ( (discovery_ntf.rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_B) ||
@@ -306,19 +306,19 @@ void NfcTag::discoverTechnologies(tNFA_DISC_RESULT& discoveryData)
         mNumTechList++;
         mTechHandles[mNumTechList] = discovery_ntf.rf_disc_id;
         mTechLibNfcTypes[mNumTechList] = discovery_ntf.protocol;
-        mTechList[mNumTechList] = TARGET_TYPE_ISO14443_3B; // Is TagTechnology.NFC_B by Java API
+        mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO14443_3B; // Is TagTechnology.NFC_B by Java API
         // Save the stack's data structure for interpretation later
         memcpy(&(mTechParams[mNumTechList]), &(discovery_ntf.rf_tech_param), sizeof(discovery_ntf.rf_tech_param));
       }
       break;
 
     case NFC_PROTOCOL_15693: // Is TagTechnology.NFC_V by Java API.
-      mTechList[mNumTechList] = TARGET_TYPE_ISO15693;
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO15693;
       break;
 
     default:
       ALOGE("%s: unknown protocol ????", fn);
-      mTechList[mNumTechList] = TARGET_TYPE_UNKNOWN;
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_UNKNOWN;
       break;
   }
 
@@ -382,7 +382,7 @@ void NfcTag::fillNfcTagMembers1(INfcTag* pINfcTag)
     gNat.handles[i] = mTechHandles[i];
 
     // Convert from vendor specific technology definition to common tag technology definition.
-    techList.push_back(NfcNciUtil::toGenericTagTechnology(mTechList[i]));
+    techList.push_back(NfcNciUtil::toTagTechnology(mTechList[i]));
     techHandles.push_back(mTechHandles[i]);
     techLibNfcTypes.push_back(mTechLibNfcTypes[i]);
   }
@@ -423,11 +423,11 @@ void NfcTag::fillNfcTagMembers3(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
       case NFC_DISCOVERY_TYPE_POLL_B_PRIME:
       case NFC_DISCOVERY_TYPE_LISTEN_B:
       case NFC_DISCOVERY_TYPE_LISTEN_B_PRIME:
-        if (mTechList [i] == TARGET_TYPE_ISO14443_3B) { // Is TagTechnology.NFC_B by Java API.
+        if (mTechList [i] == TECHNOLOGY_TYPE_ISO14443_3B) { // Is TagTechnology.NFC_B by Java API.
            // See NFC Forum Digital Protocol specification; section 5.6.2.
            // In SENSB_RES response, byte 6 through 9 is Application Data, byte 10-12 or 13 is Protocol Info.
            // Used by public API: NfcB.getApplicationData(), NfcB.getProtocolInfo().
-          ALOGD("%s: tech B; TARGET_TYPE_ISO14443_3B", fn);
+          ALOGD("%s: tech B; TECHNOLOGY_TYPE_ISO14443_3B", fn);
           len = mTechParams[i].param.pb.sensb_res_len;
           len = len - 4; // Subtract 4 bytes for NFCID0 at byte 2 through 5.
           pollBytes.clear();
@@ -526,7 +526,7 @@ void NfcTag::fillNfcTagMembers4(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
       }
 
       case NFC_PROTOCOL_ISO_DEP: { // t4t.
-        if (mTechList [i] == TARGET_TYPE_ISO14443_4) { // Is TagTechnology.ISO_DEP by Java API.
+        if (mTechList [i] == TECHNOLOGY_TYPE_ISO14443_4) { // Is TagTechnology.ISO_DEP by Java API.
           if ( (mTechParams[i].mode == NFC_DISCOVERY_TYPE_POLL_A) ||
                (mTechParams[i].mode == NFC_DISCOVERY_TYPE_POLL_A_ACTIVE) ||
                (mTechParams[i].mode == NFC_DISCOVERY_TYPE_LISTEN_A) ||
@@ -568,7 +568,7 @@ void NfcTag::fillNfcTagMembers4(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
               actBytes.clear();
             }
           }
-        } else if (mTechList [i] == TARGET_TYPE_ISO14443_3A) { // Is TagTechnology.NFC_A by Java API.
+        } else if (mTechList [i] == TECHNOLOGY_TYPE_ISO14443_3A) { // Is TagTechnology.NFC_A by Java API.
           ALOGD("%s: T4T; tech A", fn);
           actBytes.clear();
           actBytes.push_back(mTechParams [i].param.pa.sel_rsp);
@@ -896,14 +896,14 @@ void NfcTag::connectionEventHandler(UINT8 event, tNFA_CONN_EVT_DATA* data)
 
 void NfcTag::resetAllTransceiveTimeouts()
 {
-  mTimeoutTable[TARGET_TYPE_ISO14443_3A] = 618;     // NfcA
-  mTimeoutTable[TARGET_TYPE_ISO14443_3B] = 1000;    // NfcB
-  mTimeoutTable[TARGET_TYPE_ISO14443_4] = 309;      // ISO-DEP
-  mTimeoutTable[TARGET_TYPE_FELICA] = 255;          // Felica
-  mTimeoutTable[TARGET_TYPE_ISO15693] = 1000;       // NfcV
-  mTimeoutTable[TARGET_TYPE_MIFARE_CLASSIC] = 618;  // MifareClassic
-  mTimeoutTable[TARGET_TYPE_MIFARE_UL] = 618;       // MifareUltralight
-  mTimeoutTable[TARGET_TYPE_KOVIO_BARCODE] = 1000;  // NfcBarcode
+  mTimeoutTable[TECHNOLOGY_TYPE_ISO14443_3A] = 618;     // NfcA
+  mTimeoutTable[TECHNOLOGY_TYPE_ISO14443_3B] = 1000;    // NfcB
+  mTimeoutTable[TECHNOLOGY_TYPE_ISO14443_4] = 309;      // ISO-DEP
+  mTimeoutTable[TECHNOLOGY_TYPE_FELICA] = 255;          // Felica
+  mTimeoutTable[TECHNOLOGY_TYPE_ISO15693] = 1000;       // NfcV
+  mTimeoutTable[TECHNOLOGY_TYPE_MIFARE_CLASSIC] = 618;  // MifareClassic
+  mTimeoutTable[TECHNOLOGY_TYPE_MIFARE_UL] = 618;       // MifareUltralight
+  mTimeoutTable[TECHNOLOGY_TYPE_KOVIO_BARCODE] = 1000;  // NfcBarcode
 }
 
 int NfcTag::getTransceiveTimeout(int techId)
