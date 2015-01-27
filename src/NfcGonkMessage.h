@@ -104,19 +104,18 @@ typedef enum {
 } NfcRFState;
 
 /**
- * NFC technologies.
+ * NFC technologies, this is defined in interface/TagTechnology.cpp
+ *
+ * UNKNOWN = -1
+ * NFC_A = 0
+ * NFC_B = 1
+ * NFC_F = 2
+ * NFC_V = 3
+ * NFC_ISO_DEP = 4
+ * MIFARE_CLASSIC = 5
+ * MIFARE_ULTRALIGHT = 6
+ * NFC_BARCODE = 7
  */
-typedef enum {
-  NFC_TECH_UNKNOWN = -1,
-  NFC_TECH_NFCA = 0,
-  NFC_TECH_NFCB = 1,
-  NFC_TECH_NFCF = 2,
-  NFC_TECH_NFCV = 3,
-  NFC_TECH_ISO_DEP = 4,
-  NFC_TECH_MIFARE_CLASSIC = 5,
-  NFC_TECH_MIFARE_ULTRALIGHT = 6,
-  NFC_TECH_BARCODE = 7
-} NfcTechnology;
 
 /**
  * NDEF type

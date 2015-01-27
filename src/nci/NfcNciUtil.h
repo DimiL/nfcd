@@ -62,17 +62,20 @@
 
 
 /**
- * Name strings for target types.
+ * Name strings for technology types.
  */
-#define TARGET_TYPE_UNKNOWN               -1
-#define TARGET_TYPE_ISO14443_3A           1
-#define TARGET_TYPE_ISO14443_3B           2
-#define TARGET_TYPE_ISO14443_4            3
-#define TARGET_TYPE_FELICA                4
-#define TARGET_TYPE_ISO15693              5
-#define TARGET_TYPE_MIFARE_CLASSIC        6
-#define TARGET_TYPE_MIFARE_UL             7
-#define TARGET_TYPE_KOVIO_BARCODE         8
+enum TechnologyType{
+  TECHNOLOGY_TYPE_UNKNOWN = -1,
+  TECHNOLOGY_TYPE_ISO14443_3A = 1,
+  TECHNOLOGY_TYPE_ISO14443_3B = 2,
+  TECHNOLOGY_TYPE_ISO14443_4 = 3,
+  TECHNOLOGY_TYPE_FELICA = 4,
+  TECHNOLOGY_TYPE_ISO15693 = 5,
+  TECHNOLOGY_TYPE_NDEF = 6,
+  TECHNOLOGY_TYPE_MIFARE_CLASSIC = 7,
+  TECHNOLOGY_TYPE_MIFARE_UL = 8,
+  TECHNOLOGY_TYPE_KOVIO_BARCODE = 9,
+};
 
 
 // Define a few NXP error codes that NFC service expects.
@@ -114,8 +117,8 @@ struct nfc_data
 
 class NfcNciUtil {
 public:
-  static TagTechnology toGenericTagTechnology(unsigned int tagTech);
-  static unsigned int toNciTagTechnology(TagTechnology tagTech);
+  static TagTechnology toTagTechnology(TechnologyType techType);
+  static TechnologyType toTechnologyType(TagTechnology tagTech);
 private:
   NfcNciUtil();
 };

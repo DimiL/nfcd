@@ -27,7 +27,6 @@ class NfcUtil{
 
 public:
   static void convertNdefPduToNdefMessage(NdefMessagePdu& ndefPdu, NdefMessage* ndefMessage);
-  static NfcTechnology convertTagTechToGonkFormat(TagTechnology tagTech);
   static NfcEvtTransactionOrigin convertOriginType(TransactionEvent::OriginType type);
   static NfcNdefType convertNdefType(NdefType type);
 private:
