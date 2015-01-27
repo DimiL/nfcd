@@ -20,7 +20,6 @@
 // Used by getTechList() of INfcTag.
 // Define the tag technology.
 typedef enum {
-  UNKNOWN_TECH = -1,
   NFC_A = 0,
   NFC_B = 1,
   NFC_F = 2,
@@ -29,7 +28,7 @@ typedef enum {
   MIFARE_CLASSIC = 5,
   MIFARE_ULTRALIGHT = 6,
   NFC_BARCODE = 7,
-  NDEF = 8,
+  UNKNOWN = 8,
 } TagTechnology;
 
 // Pre-defined tag type values.
