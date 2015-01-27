@@ -106,7 +106,6 @@ typedef enum {
 /**
  * NFC technologies, this is defined in interface/TagTechnology.cpp
  *
- * UNKNOWN = -1
  * NFC_A = 0
  * NFC_B = 1
  * NFC_F = 2
@@ -115,6 +114,7 @@ typedef enum {
  * MIFARE_CLASSIC = 5
  * MIFARE_ULTRALIGHT = 6
  * NFC_BARCODE = 7
+ * UNKNOWN = 8
  */
 
 /**
