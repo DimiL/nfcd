@@ -15,9 +15,16 @@
  */
 
 #include "NfcNciUtil.h"
+#include "NfcDebug.h"
 
 TagTechnology NfcNciUtil::toTagTechnology(TechnologyType techType)
 {
+  // Now we don't expose NDEF as a technology to gecko.
+  // It should be only used inside NCI stack.
+  if (techType == TECHNOLOGY_TYPE_NDEF) {
+    ALOGE("NDEF technology should only be used internally in NCI");
+  }
+
   switch(techType) {
     case TECHNOLOGY_TYPE_ISO14443_3A:     return NFC_A;
     case TECHNOLOGY_TYPE_ISO14443_3B:     return NFC_B;
@@ -27,9 +34,8 @@ TagTechnology NfcNciUtil::toTagTechnology(TechnologyType techType)
     case TECHNOLOGY_TYPE_MIFARE_CLASSIC:  return MIFARE_CLASSIC;
     case TECHNOLOGY_TYPE_MIFARE_UL:       return MIFARE_ULTRALIGHT;
     case TECHNOLOGY_TYPE_KOVIO_BARCODE:   return NFC_BARCODE;
-    case TECHNOLOGY_TYPE_NDEF:            return NDEF;
     case TECHNOLOGY_TYPE_UNKNOWN:
-    default:                              return UNKNOWN_TECH;
+    default:                              return UNKNOWN;
   }
 }
 
@@ -44,8 +50,7 @@ TechnologyType NfcNciUtil::toTechnologyType(TagTechnology tagTech)
     case MIFARE_CLASSIC:       return TECHNOLOGY_TYPE_MIFARE_CLASSIC;
     case MIFARE_ULTRALIGHT:    return TECHNOLOGY_TYPE_MIFARE_UL;
     case NFC_BARCODE:          return TECHNOLOGY_TYPE_KOVIO_BARCODE;
-    case NDEF:                 return TECHNOLOGY_TYPE_NDEF;
-    case UNKNOWN_TECH:
+    case UNKNOWN:
     default:                   return TECHNOLOGY_TYPE_UNKNOWN;
   }
 }
