@@ -60,8 +60,6 @@ public:
   bool HandleWriteNdefRequest(NdefMessage* aNdef, bool aIsP2P);
   void HandleWriteNdefResponse(NfcEvent* aEvent);
   void HandleCloseResponse(NfcEvent* aEvent);
-  bool HandlePushNdefRequest(NdefMessage* aNdef);
-  void HandlePushNdefResponse(NfcEvent* aEvent);
   bool HandleMakeNdefReadonlyRequest();
   void HandleMakeNdefReadonlyResponse(NfcEvent* aEvent);
   bool HandleNdefFormatRequest();

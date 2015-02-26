@@ -266,13 +266,17 @@ typedef enum {
 } NfcRequestType;
 
 typedef enum {
-  NFC_RESPONSE_GENERAL = 1000,
+  NFC_RESPONSE_CHANGE_RF_STATE,
 
-  NFC_RESPONSE_CHANGE_RF_STATE = 1001,
+  NFC_RESPONSE_READ_NDEF,
 
-  NFC_RESPONSE_READ_NDEF = 1002,
+  NFC_RESPONSE_WRITE_NDEF,
 
-  NFC_RESPONSE_TAG_TRANSCEIVE = 1003
+  NFC_RESPONSE_MAKE_READ_ONLY,
+
+  NFC_RESPONSE_FORMAT,
+
+  NFC_RESPONSE_TAG_TRANSCEIVE
 } NfcResponseType;
 
 typedef struct {
@@ -291,8 +295,6 @@ typedef struct {
 } NfcNotificationTechDiscovered;
 
 typedef enum {
-  NFC_NOTIFICATION_BASE = 1999,
-
   /**
    * NFC_NOTIFICATION_INITIALIZED
    *
@@ -300,7 +302,7 @@ typedef enum {
    *
    * data is NfcNotificationInitialized.
    */
-  NFC_NOTIFICATION_INITIALIZED = 2000,
+  NFC_NOTIFICATION_INITIALIZED,
 
   /**
    * NFC_NOTIFICATION_TECH_DISCOVERED
@@ -309,7 +311,7 @@ typedef enum {
    *
    * data is NfcNotificationTechDiscovered.
    */
-  NFC_NOTIFICATION_TECH_DISCOVERED = 2001,
+  NFC_NOTIFICATION_TECH_DISCOVERED,
 
   /**
    * NFC_NOTIFICATION_TECH_LOST
@@ -320,7 +322,7 @@ typedef enum {
    * data is char* sessionId, which is correlates to a technology that was
    * previously discovered with NFC_NOTIFICATION_TECH_DISCOVERED.
    */
-  NFC_NOTIFICATION_TECH_LOST = 2002,
+  NFC_NOTIFICATION_TECH_LOST,
 
   /**
    * NFC_NOTIFICATION_TRANSACTION_EVENT
@@ -329,7 +331,7 @@ typedef enum {
    *
    * data is [origin type][origin index][aid length][aid][payload length][payload]
    */
-  NFC_NOTIFICATION_TRANSACTION_EVENT = 2003,
+  NFC_NOTIFICATION_TRANSACTION_EVENT,
 } NfcNotificationType;
 
 /**

@@ -44,7 +44,6 @@ typedef enum {
   MSG_READ_NDEF,
   MSG_WRITE_NDEF,
   MSG_SOCKET_CONNECTED,
-  MSG_PUSH_NDEF,
   MSG_NDEF_TAG_LIST,
   MSG_MAKE_NDEF_READONLY,
   MSG_LOW_POWER,
@@ -374,9 +373,6 @@ void* NfcService::EventLoop()
         case MSG_SOCKET_CONNECTED:
           mMsgHandler->ProcessNotification(NFC_NOTIFICATION_INITIALIZED , NULL);
           break;
-        case MSG_PUSH_NDEF:
-          HandlePushNdefResponse(event);
-          break;
         case MSG_MAKE_NDEF_READONLY:
           HandleMakeNdefReadonlyResponse(event);
           break;
@@ -485,7 +481,7 @@ bool NfcService::HandleWriteNdefRequest(NdefMessage* aNdef, bool aIsP2P)
 
 void NfcService::HandleWriteNdefResponse(NfcEvent* aEvent)
 {
-  NfcResponseType resType = NFC_RESPONSE_GENERAL;
+  NfcResponseType resType = NFC_RESPONSE_WRITE_NDEF;
   NfcErrorCode code = NFC_SUCCESS;
 
   std::auto_ptr<NdefMessage> pNdef(reinterpret_cast<NdefMessage*>(aEvent->obj));
@@ -518,30 +514,6 @@ void NfcService::OnConnected()
   sem_post(&thread_sem);
 }
 
-bool NfcService::HandlePushNdefRequest(NdefMessage* aNdef)
-{
-  NfcEvent *event = new NfcEvent(MSG_PUSH_NDEF);
-  event->obj = aNdef;
-  mQueue.push_back(event);
-  sem_post(&thread_sem);
-  return true;
-}
-
-void NfcService::HandlePushNdefResponse(NfcEvent* aEvent)
-{
-  NfcResponseType resType = NFC_RESPONSE_GENERAL;
-
-  std::auto_ptr<NdefMessage> pNdef(reinterpret_cast<NdefMessage*>(aEvent->obj));
-  if (!pNdef.get()) {
-    mMsgHandler->ProcessResponse(resType, NFC_ERROR_INVALID_PARAM, NULL);
-    return;
-  }
-
-  mP2pLinkManager->Push(*pNdef.get());
-
-  mMsgHandler->ProcessResponse(resType, NFC_SUCCESS, NULL);
-}
-
 bool NfcService::HandleMakeNdefReadonlyRequest()
 {
   NfcEvent *event = new NfcEvent(MSG_MAKE_NDEF_READONLY);
@@ -559,7 +531,7 @@ void NfcService::HandleMakeNdefReadonlyResponse(NfcEvent* aEvent)
                       (pINfcTag->MakeReadOnly() ? NFC_SUCCESS : NFC_ERROR_IO) :
                       NFC_ERROR_NOT_SUPPORTED;
 
-  mMsgHandler->ProcessResponse(NFC_RESPONSE_GENERAL, code, NULL);
+  mMsgHandler->ProcessResponse(NFC_RESPONSE_MAKE_READ_ONLY, code, NULL);
 }
 
 bool NfcService::HandleNdefFormatRequest()
@@ -614,7 +586,7 @@ void NfcService::HandleNdefFormatResponse(NfcEvent* aEvent)
                       (pINfcTag->FormatNdef() ? NFC_SUCCESS : NFC_ERROR_IO) :
                       NFC_ERROR_NOT_SUPPORTED;
 
-  mMsgHandler->ProcessResponse(NFC_RESPONSE_GENERAL, code, NULL);
+  mMsgHandler->ProcessResponse(NFC_RESPONSE_FORMAT, code, NULL);
 }
 
 bool NfcService::HandleEnterLowPowerRequest(bool aEnter)
