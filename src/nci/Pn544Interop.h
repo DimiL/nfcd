@@ -22,18 +22,18 @@
  *
  * @return None.
  */
-void pn544InteropStopPolling();
+void Pn544InteropStopPolling();
 
 /**
  * Is the code performing operations?
  *
  * @return True if the code is busy.
  */
-bool pn544InteropIsBusy();
+bool Pn544InteropIsBusy();
 
 /**
  * Request to abort all operations.
  *
  * @return None.
  */
-void pn544InteropAbortNow();
+void Pn544InteropAbortNow();

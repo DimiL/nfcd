@@ -16,10 +16,11 @@
 
 #include "NfcUtil.h"
 
-void NfcUtil::convertNdefPduToNdefMessage(NdefMessagePdu& ndefPdu, NdefMessage* ndefMessage) {
-  for (uint32_t i = 0; i < ndefPdu.numRecords; i++) {
-    NdefRecordPdu& record = ndefPdu.records[i];
-    ndefMessage->mRecords.push_back(NdefRecord(
+void NfcUtil::ConvertNdefPduToNdefMessage(NdefMessagePdu& aNdefPdu,
+                                          NdefMessage* aNdefMessage) {
+  for (uint32_t i = 0; i < aNdefPdu.numRecords; i++) {
+    NdefRecordPdu& record = aNdefPdu.records[i];
+    aNdefMessage->mRecords.push_back(NdefRecord(
       record.tnf,
       record.typeLength, record.type,
       record.idLength, record.id,
@@ -27,9 +28,9 @@ void NfcUtil::convertNdefPduToNdefMessage(NdefMessagePdu& ndefPdu, NdefMessage* 
   }
 }
 
-NfcEvtTransactionOrigin NfcUtil::convertOriginType(TransactionEvent::OriginType type)
+NfcEvtTransactionOrigin NfcUtil::ConvertOriginType(TransactionEvent::OriginType aType)
 {
-  switch (type) {
+  switch (aType) {
     case TransactionEvent::SIM:
       return NFC_EVT_TRANSACTION_SIM;
     case TransactionEvent::ESE:
@@ -41,9 +42,9 @@ NfcEvtTransactionOrigin NfcUtil::convertOriginType(TransactionEvent::OriginType 
   }
 }
 
-NfcNdefType NfcUtil::convertNdefType(NdefType type)
+NfcNdefType NfcUtil::ConvertNdefType(NdefType aType)
 {
-  switch(type) {
+  switch(aType) {
     case NDEF_TYPE1_TAG:           return NFC_NDEF_TYPE_1_TAG;
     case NDEF_TYPE2_TAG:           return NFC_NDEF_TYPE_2_TAG;
     case NDEF_TYPE3_TAG:           return NFC_NDEF_TYPE_3_TAG;

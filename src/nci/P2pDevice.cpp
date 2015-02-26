@@ -27,35 +27,35 @@ P2pDevice::~P2pDevice()
 {
 }
 
-bool P2pDevice::connect()
+bool P2pDevice::Connect()
 {
   return true;
 }
 
-bool P2pDevice::disconnect()
+bool P2pDevice::Disconnect()
 {
   return true;
 }
 
-void P2pDevice::transceive()
+void P2pDevice::Transceive()
 {
 }
 
-void P2pDevice::receive()
+void P2pDevice::Receive()
 {
 }
 
-bool P2pDevice::send()
+bool P2pDevice::Send()
 {
   return true;
 }
 
-int& P2pDevice::getHandle()
+int& P2pDevice::GetHandle()
 {
   return mHandle;
 }
 
-int& P2pDevice::getMode()
+int& P2pDevice::GetMode()
 {
   return mMode;
 }

@@ -40,13 +40,21 @@ public:
   /**
    * Constructor with type, id, payload as input parameter.
    */
-  NdefRecord(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload);
+  NdefRecord(uint8_t aTnf,
+             std::vector<uint8_t>& aType,
+             std::vector<uint8_t>& aId,
+             std::vector<uint8_t>& aPayload);
 
   /**
    * Constructor with type, id, payload as input parameter.
    */
-  NdefRecord(uint8_t tnf, uint32_t typeLength, uint8_t* type, uint32_t idLength,
-             uint8_t* id, uint32_t payloadLength, uint8_t* payload);
+  NdefRecord(uint8_t aTnf,
+             uint32_t aTypeLength,
+             uint8_t* aType,
+             uint32_t aIdLength,
+             uint8_t* aId,
+             uint32_t aPayloadLength,
+             uint8_t* aPayload);
 
   /**
    * Destructor.
@@ -56,33 +64,40 @@ public:
   /**
    * Utility function to fill NdefRecord.
    *
-   * @param  buf        Input buffer contains raw NDEF data.
-   * @param  ignoreMbMe Set if only want to parse single NdefRecord and do not care about Mb,Me field.
-   * @param  records    Output formatted NdefRecord parsed from buf.
-   * @return            True if the buffer can be correctly parsed.
+   * @param  aBuf        Input buffer contains raw NDEF data.
+   * @param  aIgnoreMbMe Set if only want to parse single NdefRecord and do not care about Mb,Me field.
+   * @param  aRecords    Output formatted NdefRecord parsed from buf.
+   * @return             True if the buffer can be correctly parsed.
    */
-  static bool parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<NdefRecord>& records);
+  static bool Parse(std::vector<uint8_t>& aBuf,
+                    bool aIgnoreMbMe,
+                    std::vector<NdefRecord>& aRecords);
 
   /**
    * Utility function to fill NdefRecord.
    *
-   * @param  buf        Input buffer contains raw NDEF data.
-   * @param  ignoreMbMe Set if only want to parse single NdefRecord and do not care about Mb,Me field.
-   * @param  records    Output formatted NdefRecord parsed from buf.
-   * @param  offset     Indicate the start position of buffer to be parsed.
-   * @return            True if the buffer can be correctly parsed.
+   * @param  aBuf        Input buffer contains raw NDEF data.
+   * @param  aIgnoreMbMe Set if only want to parse single NdefRecord and do not care about Mb,Me field.
+   * @param  aRecords    Output formatted NdefRecord parsed from buf.
+   * @param  aOffset     Indicate the start position of buffer to be parsed.
+   * @return             True if the buffer can be correctly parsed.
    */
-  static bool parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<NdefRecord>& records, int offset);
+  static bool Parse(std::vector<uint8_t>& aBuf,
+                    bool aIgnoreMbMe,
+                    std::vector<NdefRecord>& aRecords,
+                    int aOffset);
 
   /**
    * Write current Ndefrecord to byte buffer. MB,ME bit is specified in parameter.
    *
-   * @param  buf Output raw buffer.
-   * @param  mb  Message begine bit of NDEF record.
-   * @param  me  Message end bit of NDEF record.
-   * @return     None.
+   * @param  aBuf Output raw buffer.
+   * @param  aMb  Message begine bit of NDEF record.
+   * @param  aMe  Message end bit of NDEF record.
+   * @return      None.
    */
-  void writeToByteBuffer(std::vector<uint8_t>& buf, bool mb, bool me);
+  void WriteToByteBuffer(std::vector<uint8_t>& aBuf,
+                         bool aMb,
+                         bool aMe);
 
   // MB, ME, CF, SR, IL.
   uint8_t mFlags;

@@ -37,10 +37,10 @@ SnepClient::SnepClient()
   mRwSize = SnepClient::DEFAULT_RWSIZE;
 }
 
-SnepClient::SnepClient(const char* serviceName)
+SnepClient::SnepClient(const char* aServiceName)
  : mMessenger(NULL)
 {
-  mServiceName = serviceName;
+  mServiceName = aServiceName;
   mPort = -1;
   mAcceptableLength = SnepClient::DEFAULT_ACCEPTABLE_LENGTH;
   mFragmentLength = -1;
@@ -48,42 +48,46 @@ SnepClient::SnepClient(const char* serviceName)
   mRwSize = SnepClient::DEFAULT_RWSIZE;
 }
 
-SnepClient::SnepClient(int miu, int rwSize)
+SnepClient::SnepClient(int aMiu,
+                       int aRwSize)
  : mMessenger(NULL)
 {
   mServiceName = SnepServer::DEFAULT_SERVICE_NAME;
   mPort = SnepServer::DEFAULT_PORT;
   mAcceptableLength = SnepClient::DEFAULT_ACCEPTABLE_LENGTH;
   mFragmentLength = -1;
-  mMiu = miu;
-  mRwSize = rwSize;
+  mMiu = aMiu;
+  mRwSize = aRwSize;
 }
 
-SnepClient::SnepClient(const char* serviceName, int fragmentLength)
+SnepClient::SnepClient(const char* aServiceName,
+                       int aFragmentLength)
  : mMessenger(NULL)
 {
-  mServiceName = serviceName;
+  mServiceName = aServiceName;
   mPort = -1;
   mAcceptableLength = SnepClient::DEFAULT_ACCEPTABLE_LENGTH;
-  mFragmentLength = fragmentLength;
+  mFragmentLength = aFragmentLength;
   mMiu = SnepClient::DEFAULT_MIU;
   mRwSize = SnepClient::DEFAULT_RWSIZE;
 }
 
-SnepClient::SnepClient(const char* serviceName, int acceptableLength, int fragmentLength)
+SnepClient::SnepClient(const char* aServiceName,
+                       int aAcceptableLength,
+                       int aFragmentLength)
  : mMessenger(NULL)
 {
-  mServiceName = serviceName;
+  mServiceName = aServiceName;
   mPort = -1;
-  mAcceptableLength = acceptableLength;
-  mFragmentLength = fragmentLength;
+  mAcceptableLength = aAcceptableLength;
+  mFragmentLength = aFragmentLength;
   mMiu = SnepClient::DEFAULT_MIU;
   mRwSize = SnepClient::DEFAULT_RWSIZE;
 }
 
 SnepClient::~SnepClient()
 {
-  close();
+  Close();
 }
 
 /**
@@ -91,7 +95,7 @@ SnepClient::~SnepClient()
  * The client requests that the server accept the NDEF message
  * transmitted with the request.
  */
-void SnepClient::put(NdefMessage& msg)
+void SnepClient::Put(NdefMessage& aMsg)
 {
   if (!mMessenger) {
     ALOGE("%s: no messenger", FUNC);
@@ -103,16 +107,16 @@ void SnepClient::put(NdefMessage& msg)
     return;
   }
 
-  SnepMessage* snepRequest = SnepMessage::getPutRequest(msg);
+  SnepMessage* snepRequest = SnepMessage::GetPutRequest(aMsg);
   if (snepRequest) {
     // Send request.
-    mMessenger->sendMessage(*snepRequest);
+    mMessenger->SendMessage(*snepRequest);
   } else {
     ALOGE("%s: get put request fail", FUNC);
   }
 
   // Get response.
-  SnepMessage* snepResponse = mMessenger->getMessage();
+  SnepMessage* snepResponse = mMessenger->GetMessage();
 
   delete snepRequest;
   delete snepResponse;
@@ -123,7 +127,7 @@ void SnepClient::put(NdefMessage& msg)
  * The client requests that the server return an NDEF message
  * designated by the NDEF message transmitted with the request
  */
-SnepMessage* SnepClient::get(NdefMessage& msg)
+SnepMessage* SnepClient::Get(NdefMessage& aMsg)
 {
   if (!mMessenger) {
     ALOGE("%s: no messenger", FUNC);
@@ -135,15 +139,15 @@ SnepMessage* SnepClient::get(NdefMessage& msg)
     return NULL;
   }
 
-  SnepMessage* snepRequest = SnepMessage::getGetRequest(mAcceptableLength, msg);
-  mMessenger->sendMessage(*snepRequest);
+  SnepMessage* snepRequest = SnepMessage::GetGetRequest(mAcceptableLength, aMsg);
+  mMessenger->SendMessage(*snepRequest);
 
   delete snepRequest;
 
-  return mMessenger->getMessage();
+  return mMessenger->GetMessage();
 }
 
-bool SnepClient::connect()
+bool SnepClient::Connect()
 {
   if (mState != SnepClient::DISCONNECTED) {
     ALOGE("%s: snep already connected", FUNC);
@@ -151,13 +155,13 @@ bool SnepClient::connect()
   }
   mState = SnepClient::CONNECTING;
 
-  INfcManager* pINfcManager = NfcService::getNfcManager();
+  INfcManager* pINfcManager = NfcService::GetNfcManager();
 
   /**
    * SNEP messages SHALL be transmitted over LLCP data link connections
    * using LLCP connection-oriented transport service.
    */
-  ILlcpSocket* socket = pINfcManager->createLlcpSocket(0, mMiu, mRwSize, 1024);
+  ILlcpSocket* socket = pINfcManager->CreateLlcpSocket(0, mMiu, mRwSize, 1024);
   if (!socket) {
     ALOGE("%s: could not connect to socket", FUNC);
     mState = SnepClient::DISCONNECTED;
@@ -166,14 +170,14 @@ bool SnepClient::connect()
 
   bool ret = false;
   if (mPort == -1) {
-    if (!socket->connectToService(mServiceName)) {
+    if (!socket->ConnectToService(mServiceName)) {
       ALOGE("%s: could not connect to service (%s)", FUNC, mServiceName);
       mState = SnepClient::DISCONNECTED;
       delete socket;
       return false;
     }
   } else {
-    if (!socket->connectToSap(mPort)) {
+    if (!socket->ConnectToSap(mPort)) {
       ALOGE("%s: could not connect to sap (%d)", FUNC, mPort);
       mState = SnepClient::DISCONNECTED;
       delete socket;
@@ -181,12 +185,12 @@ bool SnepClient::connect()
     }
   }
 
-  const int miu = socket->getRemoteMiu();
+  const int miu = socket->GetRemoteMiu();
   const int fragmentLength = (mFragmentLength == -1) ?  miu : miu < mFragmentLength ? miu : mFragmentLength;
 
   // Remove old messenger.
   if (mMessenger) {
-    mMessenger->close();
+    mMessenger->Close();
     delete mMessenger;
   }
 
@@ -197,10 +201,10 @@ bool SnepClient::connect()
   return true;
 }
 
-void SnepClient::close()
+void SnepClient::Close()
 {
   if (mMessenger) {
-    mMessenger->close();
+    mMessenger->Close();
     delete mMessenger;
     mMessenger = NULL;
   }

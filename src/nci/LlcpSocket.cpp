@@ -21,18 +21,18 @@
 #define LOG_TAG "NfcNci"
 #include <cutils/log.h>
 
-LlcpSocket::LlcpSocket(unsigned int handle, int sap, int miu, int rw)
-  : mHandle(handle)
-  , mSap(sap)
-  , mLocalMiu(miu)
-  , mLocalRw(rw)
+LlcpSocket::LlcpSocket(unsigned int aHandle, int aSap, int aMiu, int aRw)
+  : mHandle(aHandle)
+  , mSap(aSap)
+  , mLocalMiu(aMiu)
+  , mLocalRw(aRw)
 {
 }
 
-LlcpSocket::LlcpSocket(unsigned int handle, int miu, int rw)
-  : mHandle(handle)
-  , mLocalMiu(miu)
-  , mLocalRw(rw)
+LlcpSocket::LlcpSocket(unsigned int aHandle, int aMiu, int aRw)
+  : mHandle(aHandle)
+  , mLocalMiu(aMiu)
+  , mLocalRw(aRw)
 {
 }
 
@@ -41,51 +41,51 @@ LlcpSocket::~LlcpSocket()
 }
 
 /**
- * Interface.
+ * Interfaces.
  */
-bool LlcpSocket::connectToSap(int sap)
+bool LlcpSocket::ConnectToSap(int aSap)
 {
-  return LlcpSocket::doConnect(sap);
+  return LlcpSocket::DoConnect(aSap);
 }
 
-bool LlcpSocket::connectToService(const char* serviceName)
+bool LlcpSocket::ConnectToService(const char* aSn)
 {
-  return LlcpSocket::doConnectBy(serviceName);
+  return LlcpSocket::DoConnectBy(aSn);
 }
 
-void LlcpSocket::close()
+void LlcpSocket::Close()
 {
-  LlcpSocket::doClose();
+  LlcpSocket::DoClose();
 }
 
-bool LlcpSocket::send(std::vector<uint8_t>& data)
+bool LlcpSocket::Send(std::vector<uint8_t>& aData)
 {
-  return LlcpSocket::doSend(data);
+  return LlcpSocket::DoSend(aData);
 }
 
-int LlcpSocket::receive(std::vector<uint8_t>& recvBuff)
+int LlcpSocket::Receive(std::vector<uint8_t>& aRecvBuf)
 {
-  return LlcpSocket::doReceive(recvBuff);;
+  return LlcpSocket::DoReceive(aRecvBuf);;
 }
 
-int LlcpSocket::getRemoteMiu() const
+int LlcpSocket::GetRemoteMiu() const
 {
-  return LlcpSocket::doGetRemoteSocketMIU();
+  return LlcpSocket::DoGetRemoteSocketMIU();
 }
 
-int LlcpSocket::getRemoteRw() const
+int LlcpSocket::GetRemoteRw() const
 {
-  return LlcpSocket::doGetRemoteSocketRW();
+  return LlcpSocket::DoGetRemoteSocketRW();
 }
 
 /**
  * Private function.
  */
-bool LlcpSocket::doConnect(int nSap)
+bool LlcpSocket::DoConnect(int aSap)
 {
-  ALOGD("%s: enter; sap=%d", __FUNCTION__, nSap);
+  ALOGD("%s: enter; sap=%d", __FUNCTION__, aSap);
 
-  bool stat = PeerToPeer::getInstance().connectConnOriented(mHandle, nSap);
+  bool stat = PeerToPeer::GetInstance().ConnectConnOriented(mHandle, aSap);
   if (!stat) {
     ALOGE("%s: fail connect oriented", __FUNCTION__);
   }
@@ -94,14 +94,14 @@ bool LlcpSocket::doConnect(int nSap)
   return stat;
 }
 
-bool LlcpSocket::doConnectBy(const char* sn)
+bool LlcpSocket::DoConnectBy(const char* aSn)
 {
-  ALOGD("%s: enter; sn = %s", __FUNCTION__, sn);
+  ALOGD("%s: enter; sn = %s", __FUNCTION__, aSn);
 
-  if (!sn) {
+  if (!aSn) {
     return false;
   }
-  bool stat = PeerToPeer::getInstance().connectConnOriented(mHandle, sn);
+  bool stat = PeerToPeer::GetInstance().ConnectConnOriented(mHandle, aSn);
   if (!stat) {
     ALOGE("%s: fail connect connection oriented", __FUNCTION__);
   }
@@ -110,11 +110,11 @@ bool LlcpSocket::doConnectBy(const char* sn)
   return stat;
 }
 
-bool LlcpSocket::doClose()
+bool LlcpSocket::DoClose()
 {
   ALOGD("%s: enter", __FUNCTION__);
 
-  bool stat = PeerToPeer::getInstance().disconnectConnOriented(mHandle);
+  bool stat = PeerToPeer::GetInstance().DisconnectConnOriented(mHandle);
   if (!stat) {
     ALOGE("%s: fail disconnect connection oriented", __FUNCTION__);
   }
@@ -123,14 +123,15 @@ bool LlcpSocket::doClose()
   return true;  // TODO: stat?
 }
 
-bool LlcpSocket::doSend(std::vector<uint8_t>& data)
+bool LlcpSocket::DoSend(std::vector<uint8_t>& aData)
 {
-  UINT8* raw_ptr = new UINT8[data.size()];
+  UINT8* raw_ptr = new UINT8[aData.size()];
 
-  for(uint32_t i = 0; i < data.size(); i++)
-    raw_ptr[i] = (UINT8)data[i];
+  for(uint32_t i = 0; i < aData.size(); i++) {
+    raw_ptr[i] = (UINT8)aData[i];
+  }
 
-  bool stat = PeerToPeer::getInstance().send(mHandle, raw_ptr, data.size());
+  bool stat = PeerToPeer::GetInstance().Send(mHandle, raw_ptr, aData.size());
   if (!stat) {
     ALOGE("%s: fail send", __FUNCTION__);
   }
@@ -140,18 +141,19 @@ bool LlcpSocket::doSend(std::vector<uint8_t>& data)
   return stat;
 }
 
-int LlcpSocket::doReceive(std::vector<uint8_t>& recvBuff)
+int LlcpSocket::DoReceive(std::vector<uint8_t>& aRecvBuf)
 {
   const uint16_t MAX_BUF_SIZE = 4096;
   uint16_t actualLen = 0;
 
   UINT8* raw_ptr = new UINT8[MAX_BUF_SIZE];
-  bool stat = PeerToPeer::getInstance().receive(mHandle, raw_ptr, MAX_BUF_SIZE, actualLen);
+  bool stat = PeerToPeer::GetInstance().Receive(mHandle, raw_ptr, MAX_BUF_SIZE, actualLen);
 
   int retval = 0;
   if (stat && (actualLen > 0)) {
-    for (uint16_t i = 0; i < actualLen; i++)
-      recvBuff.push_back(raw_ptr[i]);
+    for (uint16_t i = 0; i < actualLen; i++) {
+      aRecvBuf.push_back(raw_ptr[i]);
+    }
     retval = actualLen;
   } else {
     retval = -1;
@@ -162,21 +164,21 @@ int LlcpSocket::doReceive(std::vector<uint8_t>& recvBuff)
   return retval;
 }
 
-int LlcpSocket::doGetRemoteSocketMIU() const
+int LlcpSocket::DoGetRemoteSocketMIU() const
 {
   ALOGD("%s: enter", __FUNCTION__);
 
-  int miu = PeerToPeer::getInstance().getRemoteMaxInfoUnit(mHandle);
+  int miu = PeerToPeer::GetInstance().GetRemoteMaxInfoUnit(mHandle);
 
   ALOGD("%s: exit", __FUNCTION__);
   return miu;
 }
 
-int LlcpSocket::doGetRemoteSocketRW() const
+int LlcpSocket::DoGetRemoteSocketRW() const
 {
   ALOGD("%s: enter", __FUNCTION__);
 
-  int rw = PeerToPeer::getInstance().getRemoteRecvWindow(mHandle);
+  int rw = PeerToPeer::GetInstance().GetRemoteRecvWindow(mHandle);
 
   ALOGD("%s: exit", __FUNCTION__);
   return rw;

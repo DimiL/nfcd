@@ -31,9 +31,9 @@ public:
    *
    * @return None.
    */
-  void start()
+  void Start()
   {
-    mMutex.lock();
+    mMutex.Lock();
   }
 
   /**
@@ -41,9 +41,9 @@ public:
    *
    * @return None.
    */
-  void wait()
+  void Wait()
   {
-    mCondVar.wait(mMutex);
+    mCondVar.Wait(mMutex);
   }
 
   /**
@@ -52,10 +52,9 @@ public:
    * @param  millisec Timeout in milliseconds.
    * @return          True if wait is successful; false if timeout occurs.
    */
-  bool wait(long millisec)
+  bool Wait(long aMillisec)
   {
-    bool retVal = mCondVar.wait(mMutex, millisec);
-    return retVal;
+    return mCondVar.Wait(mMutex, aMillisec);
   }
 
   /**
@@ -63,9 +62,9 @@ public:
    *
    * @return None.
    */
-  void notifyOne()
+  void NotifyOne()
   {
-    mCondVar.notifyOne();
+    mCondVar.NotifyOne();
   }
 
   /**
@@ -73,9 +72,9 @@ public:
    *
    * @return None.
    */
-  void end()
+  void End()
   {
-    mMutex.unlock();
+    mMutex.Unlock();
   }
 
 private:
@@ -98,7 +97,7 @@ public:
   SyncEventGuard(SyncEvent& event)
     : mEvent(event)
   {
-    event.start(); //automatically start operation
+    event.Start(); //automatically start operation
   };
 
   /**
@@ -108,7 +107,7 @@ public:
    */
   ~SyncEventGuard()
   {
-    mEvent.end(); //automatically end operation
+    mEvent.End(); //automatically end operation
   };
 
 private:

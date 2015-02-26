@@ -50,18 +50,18 @@ SecureElement::~SecureElement()
 {
 }
 
-SecureElement& SecureElement::getInstance()
+SecureElement& SecureElement::GetInstance()
 {
   return sSecElem;
 }
 
-void SecureElement::setActiveSeOverride(uint8_t activeSeOverride)
+void SecureElement::SetActiveSeOverride(uint8_t aActiveSeOverride)
 {
-  ALOGD("%s, seid=0x%X", __FUNCTION__, activeSeOverride);
-  mActiveSeOverride = activeSeOverride;
+  ALOGD("%s, seid=0x%X", __FUNCTION__, aActiveSeOverride);
+  mActiveSeOverride = aActiveSeOverride;
 }
 
-bool SecureElement::initialize(NfcManager* pNfcManager)
+bool SecureElement::Initialize(NfcManager* aNfcManager)
 {
   tNFA_STATUS nfaStat;
   unsigned long num = 0;
@@ -72,7 +72,7 @@ bool SecureElement::initialize(NfcManager* pNfcManager)
   }
   ALOGD("%s: Active SE override: 0x%X", __FUNCTION__, mActiveSeOverride);
 
-  mNfcManager = pNfcManager;
+  mNfcManager = aNfcManager;
 
   mActiveEeHandle = NFA_HANDLE_INVALID;
   mNfaHciHandle   = NFA_HANDLE_INVALID;
@@ -87,19 +87,19 @@ bool SecureElement::initialize(NfcManager* pNfcManager)
   memset(&mUiccInfo, 0, sizeof(mUiccInfo));
 
   // Get Fresh EE info.
-  if (!getEeInfo()) {
+  if (!GetEeInfo()) {
     return false;
   }
 
   {
     SyncEventGuard guard(mEeRegisterEvent);
     ALOGD("%s: try ee register", __FUNCTION__);
-    nfaStat = NFA_EeRegister(nfaEeCallback);
+    nfaStat = NFA_EeRegister(NfaEeCallback);
     if (nfaStat != NFA_STATUS_OK) {
       ALOGE("%s: fail ee register; error=0x%X", __FUNCTION__, nfaStat);
       return false;
     }
-    mEeRegisterEvent.wait();
+    mEeRegisterEvent.Wait();
   }
 
   // If the controller has an HCI Network, register for that.
@@ -113,28 +113,28 @@ bool SecureElement::initialize(NfcManager* pNfcManager)
 
     SyncEventGuard guard(mHciRegisterEvent);
 
-    nfaStat = NFA_HciRegister(const_cast<char*>(APP_NAME), nfaHciCallback, true);
+    nfaStat = NFA_HciRegister(const_cast<char*>(APP_NAME), NfaHciCallback, true);
     if (nfaStat != NFA_STATUS_OK) {
       ALOGE("%s: fail hci register; error=0x%X", __FUNCTION__, nfaStat);
       return false;
     }
-    mHciRegisterEvent.wait();
+    mHciRegisterEvent.Wait();
     break;
   }
 
-  mRouteDataSet.initialize();
-  mRouteDataSet.import();  //read XML file.
+  mRouteDataSet.Initialize();
+  mRouteDataSet.Import();  //read XML file.
 
   mIsInit = true;
 
   return true;
 }
 
-void SecureElement::finalize()
+void SecureElement::Finalize()
 {
   ALOGD("%s: enter", __FUNCTION__);
 
-  NFA_EeDeregister(nfaEeCallback);
+  NFA_EeDeregister(NfaEeCallback);
 
   if (mNfaHciHandle != NFA_HANDLE_INVALID) {
     NFA_HciDeregister(const_cast<char*>(APP_NAME));
@@ -144,7 +144,7 @@ void SecureElement::finalize()
   mActualNumEe  = 0;
 }
 
-bool SecureElement::getEeInfo()
+bool SecureElement::GetEeInfo()
 {
   ALOGD("%s: enter; mbNewEE=%d, mActualNumEe=%d", __FUNCTION__, mbNewEE, mActualNumEe);
   tNFA_STATUS nfaStat = NFA_STATUS_FAILED;
@@ -174,7 +174,7 @@ bool SecureElement::getEeInfo()
     ALOGD("%s: EE[%u] Handle: 0x%04x  Status: %s  Num I/f: %u: (0x%02x, 0x%02x)  Num TLVs: %u",
           __FUNCTION__, i,
           mEeInfo[i].ee_handle,
-          eeStatusToString(mEeInfo[i].ee_status),
+          EeStatusToString(mEeInfo[i].ee_status),
           mEeInfo[i].num_interface,
           mEeInfo[i].ee_interface[0],
           mEeInfo[i].ee_interface[1],
@@ -198,20 +198,20 @@ bool SecureElement::getEeInfo()
 /**
  * Computes time difference in milliseconds.
  */
-static uint32_t TimeDiff(timespec start, timespec end)
+static uint32_t TimeDiff(timespec aStart, timespec aEnd)
 {
-  end.tv_sec -= start.tv_sec;
-  end.tv_nsec -= start.tv_nsec;
+  aEnd.tv_sec -= aStart.tv_sec;
+  aEnd.tv_nsec -= aStart.tv_nsec;
 
-  if (end.tv_nsec < 0) {
-    end.tv_nsec += 10e8;
-    end.tv_sec -=1;
+  if (aEnd.tv_nsec < 0) {
+    aEnd.tv_nsec += 10e8;
+    aEnd.tv_sec -=1;
   }
 
-  return (end.tv_sec * 1000) + (end.tv_nsec / 10e5);
+  return (aEnd.tv_sec * 1000) + (aEnd.tv_nsec / 10e5);
 }
 
-bool SecureElement::isRfFieldOn()
+bool SecureElement::IsRfFieldOn()
 {
   AutoMutex mutex(mMutex);
   if (mRfFieldIsOn) {
@@ -230,15 +230,15 @@ bool SecureElement::isRfFieldOn()
   return (TimeDiff(mLastRfFieldToggle, now) < 50);
 }
 
-bool SecureElement::isActivatedInListenMode()
+bool SecureElement::IsActivatedInListenMode()
 {
   return mActivatedInListenMode;
 }
 
-void SecureElement::getListOfEeHandles(std::vector<uint32_t>& listSe)
+void SecureElement::GetListOfEeHandles(std::vector<uint32_t>& aListSe)
 {
   ALOGD("%s: enter", __FUNCTION__);
-  if (mNumEePresent == 0 || !mIsInit || !getEeInfo()) {
+  if (mNumEePresent == 0 || !mIsInit || !GetEeInfo()) {
     return;
   }
 
@@ -250,12 +250,12 @@ void SecureElement::getListOfEeHandles(std::vector<uint32_t>& listSe)
       continue;
     }
     uint32_t handle = mEeInfo[i].ee_handle & ~NFA_HANDLE_GROUP_EE;
-    listSe.push_back(handle);
+    aListSe.push_back(handle);
     cnt++;
   }
 }
 
-bool SecureElement::activate()
+bool SecureElement::Activate()
 {
   int numActivatedEe = 0;
 
@@ -272,7 +272,7 @@ bool SecureElement::activate()
   }
 
   // Get Fresh EE info if needed.
-  if (!getEeInfo()) {
+  if (!GetEeInfo()) {
     ALOGE("%s: no EE info", __FUNCTION__);
     return false;
   }
@@ -311,7 +311,7 @@ bool SecureElement::activate()
       SyncEventGuard guard(mEeSetModeEvent);
       ALOGD("%s: set EE mode activate; h=0x%X", __FUNCTION__, eeItem.ee_handle);
       if ((nfaStat = NFA_EeModeSet(eeItem.ee_handle, NFA_EE_MD_ACTIVATE)) == NFA_STATUS_OK) {
-        mEeSetModeEvent.wait(); //wait for NFA_EE_MODE_SET_EVT
+        mEeSetModeEvent.Wait(); //wait for NFA_EE_MODE_SET_EVT
         if (eeItem.ee_status == NFC_NFCEE_STATUS_ACTIVE) {
           numActivatedEe++;
         }
@@ -321,14 +321,14 @@ bool SecureElement::activate()
     } //for
   }
 
-  mActiveEeHandle = getDefaultEeHandle();
+  mActiveEeHandle = GetDefaultEeHandle();
 
   ALOGD("%s: exit; active ee h=0x%X", __FUNCTION__, mActiveEeHandle);
 
   return mActiveEeHandle != NFA_HANDLE_INVALID;
 }
 
-bool SecureElement::deactivate()
+bool SecureElement::Deactivate()
 {
   bool retval = false;
 
@@ -341,7 +341,7 @@ bool SecureElement::deactivate()
 
   // if the controller is routing to sec elems or piping,
   // then the secure element cannot be deactivated
-  if (isBusy()) {
+  if (IsBusy()) {
     ALOGE ("%s: still busy", __FUNCTION__);
     return retval;
   } else if (mActiveEeHandle == NFA_HANDLE_INVALID) {
@@ -356,10 +356,12 @@ bool SecureElement::deactivate()
   return retval;
 }
 
-void SecureElement::notifyTransactionEvent(const uint8_t* aid, uint32_t aidLen,
-                                           const uint8_t* payload, uint32_t payloadLen)
+void SecureElement::NotifyTransactionEvent(const uint8_t* aAid,
+                                           uint32_t aAidLen,
+                                           const uint8_t* aPayload,
+                                           uint32_t aPayloadLen)
 {
-  if (aidLen == 0) {
+  if (aAidLen == 0) {
     return;
   }
 
@@ -370,86 +372,86 @@ void SecureElement::notifyTransactionEvent(const uint8_t* aid, uint32_t aidLen,
   pTransaction->originType = TransactionEvent::SIM;
   pTransaction->originIndex = 1;
 
-  pTransaction->aidLen = aidLen;
-  pTransaction->aid = new uint8_t[aidLen];
-  memcpy(pTransaction->aid, aid, aidLen);
+  pTransaction->aidLen = aAidLen;
+  pTransaction->aid = new uint8_t[aAidLen];
+  memcpy(pTransaction->aid, aAid, aAidLen);
 
-  pTransaction->payloadLen = payloadLen;
-  pTransaction->payload = new uint8_t[payloadLen];
-  memcpy(pTransaction->payload, payload, payloadLen);
+  pTransaction->payloadLen = aPayloadLen;
+  pTransaction->payload = new uint8_t[aPayloadLen];
+  memcpy(pTransaction->payload, aPayload, aPayloadLen);
 
-  mNfcManager->notifyTransactionEvent(pTransaction);
+  mNfcManager->NotifyTransactionEvent(pTransaction);
 }
 
-void SecureElement::notifyListenModeState(bool isActivated)
+void SecureElement::NotifyListenModeState(bool aIsActivated)
 {
-  ALOGD("%s: enter; listen mode active=%u", __FUNCTION__, isActivated);
+  ALOGD("%s: enter; listen mode active=%u", __FUNCTION__, aIsActivated);
 
   // TODO Implement notify.
-  mActivatedInListenMode = isActivated;
+  mActivatedInListenMode = aIsActivated;
 }
 
-void SecureElement::notifyRfFieldEvent(bool isActive)
+void SecureElement::NotifyRfFieldEvent(bool aIsActive)
 {
-  ALOGD("%s: enter; is active=%u", __FUNCTION__, isActive);
+  ALOGD("%s: enter; is active=%u", __FUNCTION__, aIsActive);
 
   // TODO Implement
-  mMutex.lock();
+  mMutex.Lock();
   int ret = clock_gettime(CLOCK_MONOTONIC, &mLastRfFieldToggle);
   if (ret == -1) {
     ALOGE("%s: clock_gettime failed", __FUNCTION__);
     // There is no good choice here...
   }
 
-  mRfFieldIsOn = isActive;
-  mMutex.unlock();
+  mRfFieldIsOn = aIsActive;
+  mMutex.Unlock();
 }
 
-void SecureElement::resetRfFieldStatus ()
+void SecureElement::ResetRfFieldStatus()
 {
   ALOGD ("%s: enter;", __FUNCTION__);
 
-  mMutex.lock();
+  mMutex.Lock();
   mRfFieldIsOn = false;
   int ret = clock_gettime(CLOCK_MONOTONIC, &mLastRfFieldToggle);
   if (ret == -1) {
     ALOGE("%s: clock_gettime failed", __FUNCTION__);
     // There is no good choice here...
   }
-  mMutex.unlock();
+  mMutex.Unlock();
 }
 
-void SecureElement::storeUiccInfo (tNFA_EE_DISCOVER_REQ& info)
+void SecureElement::StoreUiccInfo(tNFA_EE_DISCOVER_REQ& aInfo)
 {
-  ALOGD("%s:  Status: %u   Num EE: %u", __FUNCTION__, info.status, info.num_ee);
+  ALOGD("%s:  Status: %u   Num EE: %u", __FUNCTION__, aInfo.status, aInfo.num_ee);
 
   SyncEventGuard guard(mUiccInfoEvent);
-  memcpy(&mUiccInfo, &info, sizeof(mUiccInfo));
-  for (uint8_t i = 0; i < info.num_ee; i++) {
+  memcpy(&mUiccInfo, &aInfo, sizeof(mUiccInfo));
+  for (uint8_t i = 0; i < aInfo.num_ee; i++) {
     //for each technology (A, B, F, B'), print the bit field that shows
     //what protocol(s) is support by that technology
     ALOGD("%s   EE[%u] Handle: 0x%04x  techA: 0x%02x  techB: 0x%02x  techF: 0x%02x  techBprime: 0x%02x",
-          __FUNCTION__, i, info.ee_disc_info[i].ee_handle,
-          info.ee_disc_info[i].la_protocol,
-          info.ee_disc_info[i].lb_protocol,
-          info.ee_disc_info[i].lf_protocol,
-          info.ee_disc_info[i].lbp_protocol);
+          __FUNCTION__, i, aInfo.ee_disc_info[i].ee_handle,
+          aInfo.ee_disc_info[i].la_protocol,
+          aInfo.ee_disc_info[i].lb_protocol,
+          aInfo.ee_disc_info[i].lf_protocol,
+          aInfo.ee_disc_info[i].lbp_protocol);
   }
-  mUiccInfoEvent.notifyOne();
+  mUiccInfoEvent.NotifyOne();
 }
 
-void SecureElement::adjustRoutes(RouteSelection selection)
+void SecureElement::AdjustRoutes(RouteSelection aSelection)
 {
-  ALOGD("%s: enter; selection=%u", __FUNCTION__, selection);
+  ALOGD("%s: enter; selection=%u", __FUNCTION__, aSelection);
 
-  mCurrentRouteSelection = selection;
-  adjustProtocolRoutes(selection);
-  adjustTechnologyRoutes(selection);
+  mCurrentRouteSelection = aSelection;
+  AdjustProtocolRoutes(aSelection);
+  AdjustTechnologyRoutes(aSelection);
 
   NFA_EeUpdateNow(); //apply new routes now.
 }
 
-void SecureElement::adjustProtocolRoutes(RouteSelection routeSelection)
+void SecureElement::AdjustProtocolRoutes(RouteSelection aRouteSelection)
 {
   ALOGD("%s: enter", __FUNCTION__);
 
@@ -463,7 +465,7 @@ void SecureElement::adjustProtocolRoutes(RouteSelection routeSelection)
     ALOGD("%s: delete route to host", __FUNCTION__);
     SyncEventGuard guard(mRoutingEvent);
     if ((nfaStat = NFA_EeSetDefaultProtoRouting(NFA_EE_HANDLE_DH, 0, 0, 0)) == NFA_STATUS_OK) {
-      mRoutingEvent.wait();
+      mRoutingEvent.Wait();
     } else {
       ALOGE("%s: fail delete route to host; error=0x%X", __FUNCTION__, nfaStat);
     }
@@ -479,7 +481,7 @@ void SecureElement::adjustProtocolRoutes(RouteSelection routeSelection)
       ALOGD("%s: delete route to EE h=0x%X", __FUNCTION__, mEeInfo[i].ee_handle);
       SyncEventGuard guard(mRoutingEvent);
       if ((nfaStat = NFA_EeSetDefaultProtoRouting(mEeInfo[i].ee_handle, 0, 0, 0)) == NFA_STATUS_OK) {
-        mRoutingEvent.wait();
+        mRoutingEvent.Wait();
       } else {
         ALOGE("%s: fail delete route to EE; error=0x%X", __FUNCTION__, nfaStat);
       }
@@ -491,13 +493,13 @@ void SecureElement::adjustProtocolRoutes(RouteSelection routeSelection)
    */
   if (true) {
     tNFA_HANDLE eeHandle =
-      (routeSelection == SecElemRoute) ? mActiveEeHandle : NFA_EE_HANDLE_DH;
+      (aRouteSelection == SecElemRoute) ? mActiveEeHandle : NFA_EE_HANDLE_DH;
 
     ALOGD ("%s: route to default EE h=0x%X", __FUNCTION__, eeHandle);
     SyncEventGuard guard(mRoutingEvent);
     nfaStat = NFA_EeSetDefaultProtoRouting(eeHandle, protoMask, 0, 0);
     if (nfaStat == NFA_STATUS_OK) {
-      mRoutingEvent.wait();
+      mRoutingEvent.Wait();
     } else {
       ALOGE ("%s: fail route to EE; error=0x%X", __FUNCTION__, nfaStat);
     }
@@ -505,7 +507,7 @@ void SecureElement::adjustProtocolRoutes(RouteSelection routeSelection)
   ALOGD("%s: exit", __FUNCTION__);
 }
 
-void SecureElement::adjustTechnologyRoutes(RouteSelection routeSelection)
+void SecureElement::AdjustTechnologyRoutes(RouteSelection aRouteSelection)
 {
   ALOGD("%s: enter", __FUNCTION__);
 
@@ -519,7 +521,7 @@ void SecureElement::adjustTechnologyRoutes(RouteSelection routeSelection)
     ALOGD("%s: delete route to host", __FUNCTION__);
     SyncEventGuard guard(mRoutingEvent);
     if ((nfaStat = NFA_EeSetDefaultTechRouting(NFA_EE_HANDLE_DH, 0, 0, 0)) == NFA_STATUS_OK) {
-      mRoutingEvent.wait();
+      mRoutingEvent.Wait();
     } else {
       ALOGE("%s: fail delete route to host; error=0x%X", __FUNCTION__, nfaStat);
     }
@@ -535,7 +537,7 @@ void SecureElement::adjustTechnologyRoutes(RouteSelection routeSelection)
       ALOGD("%s: delete route to EE h=0x%X", __FUNCTION__, mEeInfo[i].ee_handle);
       SyncEventGuard guard(mRoutingEvent);
       if ((nfaStat = NFA_EeSetDefaultTechRouting (mEeInfo[i].ee_handle, 0, 0, 0)) == NFA_STATUS_OK) {
-        mRoutingEvent.wait();
+        mRoutingEvent.Wait();
       } else {
         ALOGE("%s: fail delete route to EE; error=0x%X", __FUNCTION__, nfaStat);
       }
@@ -547,63 +549,64 @@ void SecureElement::adjustTechnologyRoutes(RouteSelection routeSelection)
    */
   if (true) {
     tNFA_HANDLE eeHandle =
-      (routeSelection == SecElemRoute) ? mActiveEeHandle : NFA_EE_HANDLE_DH;
+      (aRouteSelection == SecElemRoute) ? mActiveEeHandle : NFA_EE_HANDLE_DH;
 
     ALOGD("%s: route to default EE h=0x%X", __FUNCTION__, eeHandle);
     SyncEventGuard guard(mRoutingEvent);
     nfaStat = NFA_EeSetDefaultTechRouting(eeHandle, techMask, 0, 0);
     if (nfaStat == NFA_STATUS_OK) {
-      mRoutingEvent.wait();
+      mRoutingEvent.Wait();
     } else {
       ALOGE("%s: fail route to EE; error=0x%X", __FUNCTION__, nfaStat);
     }
   }
 }
 
-void SecureElement::nfaEeCallback(tNFA_EE_EVT event, tNFA_EE_CBACK_DATA* eventData)
+void SecureElement::NfaEeCallback(tNFA_EE_EVT aEvent,
+                                  tNFA_EE_CBACK_DATA* aEventData)
 {
-  ALOGD("%s: event=0x%X", __FUNCTION__, event);
-  switch (event) {
+  ALOGD("%s: event=0x%X", __FUNCTION__, aEvent);
+  switch (aEvent) {
     case NFA_EE_REGISTER_EVT: {
       SyncEventGuard guard (sSecElem.mEeRegisterEvent);
-      ALOGD("%s: NFA_EE_REGISTER_EVT; status=%u", __FUNCTION__, eventData->ee_register);
-      sSecElem.mEeRegisterEvent.notifyOne();
+      ALOGD("%s: NFA_EE_REGISTER_EVT; status=%u", __FUNCTION__, aEventData->ee_register);
+      sSecElem.mEeRegisterEvent.NotifyOne();
       break;
     }
     case NFA_EE_MODE_SET_EVT: {
       ALOGD ("%s: NFA_EE_MODE_SET_EVT; status: 0x%04X  handle: 0x%04X  mActiveEeHandle: 0x%04X",
-             __FUNCTION__, eventData->mode_set.status, eventData->mode_set.ee_handle,
+             __FUNCTION__, aEventData->mode_set.status, aEventData->mode_set.ee_handle,
              sSecElem.mActiveEeHandle);
 
-      if (eventData->mode_set.status == NFA_STATUS_OK) {
-        tNFA_EE_INFO *pEE = sSecElem.findEeByHandle (eventData->mode_set.ee_handle);
+      if (aEventData->mode_set.status == NFA_STATUS_OK) {
+        tNFA_EE_INFO *pEE = sSecElem.FindEeByHandle (aEventData->mode_set.ee_handle);
         if (pEE) {
           pEE->ee_status ^= 1;
           ALOGD("%s: NFA_EE_MODE_SET_EVT; pEE->ee_status: %s (0x%04x)",
-                __FUNCTION__, SecureElement::eeStatusToString(pEE->ee_status), pEE->ee_status);
+                __FUNCTION__, SecureElement::EeStatusToString(pEE->ee_status), pEE->ee_status);
         } else {
           ALOGE("%s: NFA_EE_MODE_SET_EVT; EE: 0x%04x not found.  mActiveEeHandle: 0x%04x",
-                __FUNCTION__, eventData->mode_set.ee_handle, sSecElem.mActiveEeHandle);
+                __FUNCTION__, aEventData->mode_set.ee_handle, sSecElem.mActiveEeHandle);
         }
       }
       SyncEventGuard guard(sSecElem.mEeSetModeEvent);
-      sSecElem.mEeSetModeEvent.notifyOne();
+      sSecElem.mEeSetModeEvent.NotifyOne();
       break;
     }
     case NFA_EE_SET_TECH_CFG_EVT: {
-      ALOGD("%s: NFA_EE_SET_TECH_CFG_EVT; status=0x%X", __FUNCTION__, eventData->status);
+      ALOGD("%s: NFA_EE_SET_TECH_CFG_EVT; status=0x%X", __FUNCTION__, aEventData->status);
       SyncEventGuard guard(sSecElem.mRoutingEvent);
-      sSecElem.mRoutingEvent.notifyOne();
+      sSecElem.mRoutingEvent.NotifyOne();
       break;
     }
     case NFA_EE_SET_PROTO_CFG_EVT: {
-      ALOGD("%s: NFA_EE_SET_PROTO_CFG_EVT; status=0x%X", __FUNCTION__, eventData->status);
+      ALOGD("%s: NFA_EE_SET_PROTO_CFG_EVT; status=0x%X", __FUNCTION__, aEventData->status);
       SyncEventGuard guard(sSecElem.mRoutingEvent);
-      sSecElem.mRoutingEvent.notifyOne();
+      sSecElem.mRoutingEvent.NotifyOne();
       break;
     }
     case NFA_EE_ACTION_EVT: {
-      tNFA_EE_ACTION& action = eventData->action;
+      tNFA_EE_ACTION& action = aEventData->action;
       if (action.trigger == NFC_EE_TRIG_SELECT) {
         ALOGD("%s: NFA_EE_ACTION_EVT; h=0x%X; trigger=select (0x%X)",
               __FUNCTION__, action.ee_handle, action.trigger);
@@ -612,84 +615,85 @@ void SecureElement::nfaEeCallback(tNFA_EE_EVT event, tNFA_EE_CBACK_DATA* eventDa
     }
     case NFA_EE_DISCOVER_REQ_EVT: {
       ALOGD("%s: NFA_EE_DISCOVER_REQ_EVT; status=0x%X; num ee=%u",
-            __FUNCTION__, eventData->discover_req.status, eventData->discover_req.num_ee);
-      sSecElem.storeUiccInfo(eventData->discover_req);
+            __FUNCTION__, aEventData->discover_req.status, aEventData->discover_req.num_ee);
+      sSecElem.StoreUiccInfo(aEventData->discover_req);
       break;
     }
     case NFA_EE_NO_CB_ERR_EVT: {
-      ALOGD("%s: NFA_EE_NO_CB_ERR_EVT  status=%u", __FUNCTION__, eventData->status);
+      ALOGD("%s: NFA_EE_NO_CB_ERR_EVT  status=%u", __FUNCTION__, aEventData->status);
       break;
     }
     case NFA_EE_ADD_AID_EVT: {
-      ALOGD("%s: NFA_EE_ADD_AID_EVT  status=%u", __FUNCTION__, eventData->status);
+      ALOGD("%s: NFA_EE_ADD_AID_EVT  status=%u", __FUNCTION__, aEventData->status);
       SyncEventGuard guard(sSecElem.mAidAddRemoveEvent);
-      sSecElem.mAidAddRemoveEvent.notifyOne();
+      sSecElem.mAidAddRemoveEvent.NotifyOne();
       break;
     }
     case NFA_EE_REMOVE_AID_EVT: {
-      ALOGD("%s: NFA_EE_REMOVE_AID_EVT  status=%u", __FUNCTION__, eventData->status);
+      ALOGD("%s: NFA_EE_REMOVE_AID_EVT  status=%u", __FUNCTION__, aEventData->status);
       SyncEventGuard guard(sSecElem.mAidAddRemoveEvent);
-      sSecElem.mAidAddRemoveEvent.notifyOne();
+      sSecElem.mAidAddRemoveEvent.NotifyOne();
       break;
     }
     case NFA_EE_NEW_EE_EVT: {
       ALOGD ("%s: NFA_EE_NEW_EE_EVT  h=0x%X; status=%u",
-             __FUNCTION__, eventData->new_ee.ee_handle, eventData->new_ee.ee_status);
+             __FUNCTION__, aEventData->new_ee.ee_handle, aEventData->new_ee.ee_status);
       // Indicate there are new EE
       sSecElem.mbNewEE = true;
       break;
     }
     default:
-      ALOGE("%s: unknown event=%u ????", __FUNCTION__, event);
+      ALOGE("%s: unknown event=%u ????", __FUNCTION__, aEvent);
       break;
   }
 }
 
-tNFA_EE_INFO *SecureElement::findEeByHandle(tNFA_HANDLE eeHandle)
+tNFA_EE_INFO *SecureElement::FindEeByHandle(tNFA_HANDLE aEeHandle)
 {
   for (uint8_t i = 0; i < mActualNumEe; i++) {
-    if (mEeInfo[i].ee_handle == eeHandle) {
+    if (mEeInfo[i].ee_handle == aEeHandle) {
       return &mEeInfo[i];
     }
   }
   return (NULL);
 }
 
-void SecureElement::nfaHciCallback(tNFA_HCI_EVT event, tNFA_HCI_EVT_DATA* eventData)
+void SecureElement::NfaHciCallback(tNFA_HCI_EVT aEvent,
+                                   tNFA_HCI_EVT_DATA* aEventData)
 {
-  ALOGD("%s: event=0x%X", __FUNCTION__, event);
+  ALOGD("%s: event=0x%X", __FUNCTION__, aEvent);
 
-  switch (event) {
+  switch (aEvent) {
     case NFA_HCI_REGISTER_EVT: {
       ALOGD("%s: NFA_HCI_REGISTER_EVT; status=0x%X; handle=0x%X",
-            __FUNCTION__, eventData->hci_register.status, eventData->hci_register.hci_handle);
+            __FUNCTION__, aEventData->hci_register.status, aEventData->hci_register.hci_handle);
       SyncEventGuard guard(sSecElem.mHciRegisterEvent);
-      sSecElem.mNfaHciHandle = eventData->hci_register.hci_handle;
-      sSecElem.mHciRegisterEvent.notifyOne();
+      sSecElem.mNfaHciHandle = aEventData->hci_register.hci_handle;
+      sSecElem.mHciRegisterEvent.NotifyOne();
       break;
     }
     case NFA_HCI_EVENT_RCVD_EVT: {
       ALOGD("%s: NFA_HCI_EVENT_RCVD_EVT; code: 0x%X; pipe: 0x%X; data len: %u",
-            __FUNCTION__, eventData->rcvd_evt.evt_code, eventData->rcvd_evt.pipe,
-            eventData->rcvd_evt.evt_len);
-      if (eventData->rcvd_evt.evt_code == NFA_HCI_EVT_TRANSACTION) {
+            __FUNCTION__, aEventData->rcvd_evt.evt_code, aEventData->rcvd_evt.pipe,
+            aEventData->rcvd_evt.evt_len);
+      if (aEventData->rcvd_evt.evt_code == NFA_HCI_EVT_TRANSACTION) {
         uint8_t aidLen = 0;
         uint8_t payloadLen = 0;
         ALOGD ("%s: NFA_HCI_EVENT_RCVD_EVT; NFA_HCI_EVT_TRANSACTION", __FUNCTION__);
         // If we got an AID, notify any listeners.
-        if ((eventData->rcvd_evt.evt_len > 3) &&
-            (eventData->rcvd_evt.p_evt_buf[0] == 0x81)) {
-          aidLen = eventData->rcvd_evt.p_evt_buf[1];
+        if ((aEventData->rcvd_evt.evt_len > 3) &&
+            (aEventData->rcvd_evt.p_evt_buf[0] == 0x81)) {
+          aidLen = aEventData->rcvd_evt.p_evt_buf[1];
         }
-        if ((eventData->rcvd_evt.evt_len > (3 + aidLen)) &&
-            (eventData->rcvd_evt.p_evt_buf[2 + aidLen] == 0x82)) {
-          payloadLen = eventData->rcvd_evt.p_evt_buf[3 + aidLen];
+        if ((aEventData->rcvd_evt.evt_len > (3 + aidLen)) &&
+            (aEventData->rcvd_evt.p_evt_buf[2 + aidLen] == 0x82)) {
+          payloadLen = aEventData->rcvd_evt.p_evt_buf[3 + aidLen];
         }
         if (aidLen) {
-          sSecElem.notifyTransactionEvent(
-            eventData->rcvd_evt.p_evt_buf + 2,
+          sSecElem.NotifyTransactionEvent(
+            aEventData->rcvd_evt.p_evt_buf + 2,
             aidLen,
-            eventData->rcvd_evt.p_evt_buf + 4 + aidLen,
+            aEventData->rcvd_evt.p_evt_buf + 4 + aidLen,
             payloadLen
           );
         }
@@ -697,13 +701,13 @@ void SecureElement::nfaHciCallback(tNFA_HCI_EVT event, tNFA_HCI_EVT_DATA* eventD
       break;
     }
     default:
-      ALOGE("%s: unknown event code=0x%X ????", __FUNCTION__, event);
+      ALOGE("%s: unknown event code=0x%X ????", __FUNCTION__, aEvent);
       break;
   }
 }
 
 
-tNFA_HANDLE SecureElement::getDefaultEeHandle()
+tNFA_HANDLE SecureElement::GetDefaultEeHandle()
 {
   uint16_t overrideEeHandle = NFA_HANDLE_GROUP_EE | mActiveSeOverride;
   // Find the first EE that is not the HCI Access i/f.
@@ -722,9 +726,9 @@ tNFA_HANDLE SecureElement::getDefaultEeHandle()
   return NFA_HANDLE_INVALID;
 }
 
-const char* SecureElement::eeStatusToString(uint8_t status)
+const char* SecureElement::EeStatusToString(uint8_t aStatus)
 {
-  switch (status) {
+  switch (aStatus) {
     case NFC_NFCEE_STATUS_ACTIVE:
       return "Connected/Active";
     case NFC_NFCEE_STATUS_INACTIVE:
@@ -736,18 +740,19 @@ const char* SecureElement::eeStatusToString(uint8_t status)
   }
 }
 
-void SecureElement::connectionEventHandler(uint8_t event, tNFA_CONN_EVT_DATA* /*eventData*/)
+void SecureElement::ConnectionEventHandler(uint8_t aEvent,
+                                           tNFA_CONN_EVT_DATA* /*aEventData*/)
 {
-  switch (event) {
+  switch (aEvent) {
     case NFA_CE_UICC_LISTEN_CONFIGURED_EVT: {
       SyncEventGuard guard(mUiccListenEvent);
-      mUiccListenEvent.notifyOne();
+      mUiccListenEvent.NotifyOne();
       break;
     }
   }
 }
 
-bool SecureElement::routeToSecureElement()
+bool SecureElement::RouteToSecureElement()
 {
   ALOGD("%s: enter", __FUNCTION__);
   tNFA_STATUS nfaStat = NFA_STATUS_FAILED;
@@ -769,7 +774,7 @@ bool SecureElement::routeToSecureElement()
     return false;
   }
 
-  adjustRoutes(SecElemRoute);
+  AdjustRoutes(SecElemRoute);
 
   {
     unsigned long num = 0;
@@ -781,7 +786,7 @@ bool SecureElement::routeToSecureElement()
     SyncEventGuard guard(mUiccListenEvent);
     nfaStat = NFA_CeConfigureUiccListenTech(mActiveEeHandle, tech_mask);
     if (nfaStat == NFA_STATUS_OK) {
-      mUiccListenEvent.wait();
+      mUiccListenEvent.Wait();
       retval = true;
     } else {
       ALOGE("%s: fail to start UICC listen", __FUNCTION__);
@@ -791,7 +796,7 @@ bool SecureElement::routeToSecureElement()
   return retval;
 }
 
-bool SecureElement::routeToDefault()
+bool SecureElement::RouteToDefault()
 {
   tNFA_STATUS nfaStat = NFA_STATUS_FAILED;
   bool retval = false;
@@ -812,7 +817,7 @@ bool SecureElement::routeToDefault()
     SyncEventGuard guard(mUiccListenEvent);
     nfaStat = NFA_CeConfigureUiccListenTech(mActiveEeHandle, 0);
     if (nfaStat == NFA_STATUS_OK) {
-      mUiccListenEvent.wait();
+      mUiccListenEvent.Wait();
       retval = true;
     } else {
       ALOGE("%s: fail to stop UICC listen", __FUNCTION__);
@@ -821,13 +826,13 @@ bool SecureElement::routeToDefault()
     retval = true;
   }
 
-  adjustRoutes(DefaultRoute);
+  AdjustRoutes(DefaultRoute);
 
   ALOGD("%s: exit; ok=%u", __FUNCTION__, retval);
   return retval;
 }
 
-bool SecureElement::isBusy()
+bool SecureElement::IsBusy()
 {
   bool retval = (mCurrentRouteSelection == SecElemRoute) || mIsPiping;
   ALOGD("%s: %u", __FUNCTION__, retval);

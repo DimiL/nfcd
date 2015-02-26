@@ -17,15 +17,15 @@
 #include "NfcNciUtil.h"
 #include "NfcDebug.h"
 
-TagTechnology NfcNciUtil::toTagTechnology(TechnologyType techType)
+TagTechnology NfcNciUtil::ToTagTechnology(TechnologyType aTechType)
 {
   // Now we don't expose NDEF as a technology to gecko.
   // It should be only used inside NCI stack.
-  if (techType == TECHNOLOGY_TYPE_NDEF) {
+  if (aTechType == TECHNOLOGY_TYPE_NDEF) {
     ALOGE("NDEF technology should only be used internally in NCI");
   }
 
-  switch(techType) {
+  switch(aTechType) {
     case TECHNOLOGY_TYPE_ISO14443_3A:     return NFC_A;
     case TECHNOLOGY_TYPE_ISO14443_3B:     return NFC_B;
     case TECHNOLOGY_TYPE_ISO14443_4:      return NFC_ISO_DEP;
@@ -39,9 +39,9 @@ TagTechnology NfcNciUtil::toTagTechnology(TechnologyType techType)
   }
 }
 
-TechnologyType NfcNciUtil::toTechnologyType(TagTechnology tagTech)
+TechnologyType NfcNciUtil::ToTechnologyType(TagTechnology aTagTech)
 {
-  switch(tagTech) {
+  switch(aTagTech) {
     case NFC_A:                return TECHNOLOGY_TYPE_ISO14443_3A;
     case NFC_B:                return TECHNOLOGY_TYPE_ISO14443_3B;
     case NFC_ISO_DEP:          return TECHNOLOGY_TYPE_ISO14443_4;

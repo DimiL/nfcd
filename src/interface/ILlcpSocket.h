@@ -26,76 +26,76 @@ public:
   /**
    * Establish a connection to the peer.
    *
-   * @param nSap Establish a connection to the peer.
+   * @param  aSap Establish a connection to the peer.
    * @return      True if ok.
    */
-  virtual bool connectToSap(int sap) = 0;
+  virtual bool ConnectToSap(int aSap) = 0;
 
   /**
    * Establish a connection to the peer.
    *
-   * @param sn Service name.
-   * @return    True if ok.
+   * @param  aSN Service name.
+   * @return     True if ok.
    */
-  virtual bool connectToService(const char* serviceName) = 0;
+  virtual bool ConnectToService(const char* aSN) = 0;
 
   /**
    * Close socket.
    *
    * @return Close socket.
    */
-  virtual void close() = 0;
+  virtual void Close() = 0;
 
   /**
    * Send data to peer.
    *
-   * @param sendBuff Buffer of data.
-   * @return         True if sent ok.
+   * @param  aSendBuf Buffer of data.
+   * @return          True if sent ok.
    */
-  virtual bool send(std::vector<uint8_t>& sendBuff) = 0;
+  virtual bool Send(std::vector<uint8_t>& aSendBuf) = 0;
 
   /**
    * Receive data from peer.
    *
-   * @param recvBuff  Buffer to put received data.
+   * @param  aRecvBuf Buffer to put received data.
    * @return          Number of bytes received.
    */
-  virtual int receive(std::vector<uint8_t>& recvBuff) = 0;
+  virtual int Receive(std::vector<uint8_t>& aRecvBuf) = 0;
 
   /**
    * Get peer's maximum information unit.
    *
    * @return Peer's maximum information unit.
    */
-  virtual int getRemoteMiu() const = 0;
+  virtual int GetRemoteMiu() const = 0;
 
   /**
    * Get peer's receive window size.
    *
    * @return Peer's receive window size.
    */
-  virtual int getRemoteRw() const = 0;
+  virtual int GetRemoteRw() const = 0;
 
   /**
    * Get local service access point.
    *
    * @return Local service access point.
    */
-  virtual int getLocalSap() const = 0;
+  virtual int GetLocalSap() const = 0;
 
   /**
    * Get local maximum information unit.
    *
    * @return Local receive window size.
    */
-  virtual int getLocalMiu() const = 0;
+  virtual int GetLocalMiu() const = 0;
 
   /**
    * Get local receive window size.
    *
    * @return Local receive window size.
    */
-  virtual int getLocalRw() const = 0;
+  virtual int GetLocalRw() const = 0;
 };
 
 #endif

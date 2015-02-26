@@ -52,128 +52,130 @@ public:
    *
    * @return Reference to NfcTag object.
    */
-  static NfcTag& getInstance();
+  static NfcTag& GetInstance();
 
   /**
    * Reset member variables.
    *
-   * @param pNfcManager NFC manager class instance.
-   * @return            None.
+   * @param  aNfcManager NFC manager class instance.
+   * @return             None.
    */
-  void initialize(NfcManager* pNfcManager);
+  void Initialize(NfcManager* aNfcManager);
 
   /**
    * Unblock all operations.
    *
    * @return None
    */
-  void abort();
+  void Abort();
 
   /**
    * Handle connection-related events.
    *
-   * @param  event Event code.
-   * @param  data  Pointer to event data.
+   * @param  aEvent Event code.
+   * @param  aData  Pointer to event data.
    * @return       None
    */
-  void connectionEventHandler(UINT8 event, tNFA_CONN_EVT_DATA* data);
+  void ConnectionEventHandler(UINT8 aEvent,
+                              tNFA_CONN_EVT_DATA* aData);
 
   /**
    * Reset all timeouts for all technologies to default values.
    *
    * @return None
    */
-  void resetAllTransceiveTimeouts();
+  void ResetAllTransceiveTimeouts();
 
   /**
    * Get the timeout value for one technology.
    *
-   * @param  techId One of the values in TECHNOLOGY_TYPE_* defined in NfcNciUtil.h.
-   * @return        Timeout value in millisecond.
+   * @param  aTechId One of the values in TECHNOLOGY_TYPE_* defined in NfcNciUtil.h.
+   * @return         Timeout value in millisecond.
    */
-  int getTransceiveTimeout(int techId);
+  int GetTransceiveTimeout(int aTechId);
 
   /**
    * What is the current state: Idle, Sleep, or Activated.
    *
    * @return Idle, Sleep, or Activated.
    */
-  ActivationState getActivationState();
+  ActivationState GetActivationState();
 
   /**
    * Set the current state: Idle or Sleep.
    *
-   * @param  deactivated state of deactivation.
-   * @return             None.
+   * @param  aDeactivated state of deactivation.
+   * @return              None.
    */
-  void setDeactivationState(tNFA_DEACTIVATED& deactivated);
+  void SetDeactivationState(tNFA_DEACTIVATED& aDeactivated);
 
   /**
    * Set the current state to Active.
    *
    * @return None
    */
-  void setActivationState();
+  void SetActivationState();
 
   /**
    * Get the protocol of the current tag.
    *
    * @return Protocol number.
    */
-  tNFC_PROTOCOL getProtocol();
+  tNFC_PROTOCOL GetProtocol();
 
   /**
    * Does the peer support P2P?
    *
    * @return True if the peer supports P2P.
    */
-  bool isP2pDiscovered();
+  bool IsP2pDiscovered();
 
   /**
    * Select the preferred P2P technology if there is a choice.
    *
    * @return None.
    */
-  void selectP2p();
+  void SelectP2p();
 
   /**
    * When multiple tags are discovered, just select the first one to activate.
    *
    * @return None.
    */
-  void selectFirstTag();
+  void SelectFirstTag();
 
   /**
    * Get the maximum size (octet) that a T1T can store.
    *
    * @return Maximum size in octets.
    */
-  int getT1tMaxMessageSize();
+  int GetT1tMaxMessageSize();
 
   /**
    * Whether the currently activated tag is Mifare Ultralight.
    *
    * @return True if tag is Mifare Ultralight.
    */
-  bool isMifareUltralight();
+  bool IsMifareUltralight();
 
   /**
    * Whether the response is a T2T NACK response.
    * See NFC Digital Protocol Technical Specification (2010-11-17).
    * Chapter 9 (Type 2 Tag Platform), section 9.6 (READ).
    *
-   * @param  response    Buffer contains T2T response.
-   * @param  responseLen Length of the response.
-   * @return             True if the response is NACK
+   * @param  aResponse    Buffer contains T2T response.
+   * @param  aResponseLen Length of the response.
+   * @return              True if the response is NACK
    */
-  bool isT2tNackResponse(const UINT8* response, UINT32 responseLen);
+  bool IsT2tNackResponse(const UINT8* aResponse,
+                         UINT32 aResponseLen);
 
   /**
    * Whether NDEF-detection algorithm has timed out.
    *
    * @return True if NDEF-detection algorithm timed out.
    */
-  bool isNdefDetectionTimedOut();
+  bool IsNdefDetectionTimedOut();
 
 private:
   std::vector<int> mTimeoutTable;
@@ -195,95 +197,98 @@ private:
    * activated. This is needed due to a problem with some Kovio
    * tags re-activating multiple times.
    *
-   * @param  activationData Data from activation.
-   * @return                True if the activation is from the same tag previously
-   *                        activated, false otherwise.
+   * @param  aActivationData Data from activation.
+   * @return                 True if the activation is from the same tag previously
+   *                         activated, false otherwise.
    */
-  bool IsSameKovio(tNFA_ACTIVATED& activationData);
+  bool IsSameKovio(tNFA_ACTIVATED& aActivationData);
 
   /**
    * Discover the technologies that NFC service needs by interpreting
    * the data strucutures from the stack.
    *
-   * @param  activationData Data from activation.
+   * @param  aActivationData Data from activation.
+   * @return                 None.
+   */
+  void DiscoverTechnologies(tNFA_ACTIVATED& aActivationData);
+
+  /**
+   * Discover the technologies that NFC service needs by interpreting
+   * the data strucutures from the stack.
+   *
+   * @param  aDiscoveryData Data from discovery events(s).
    * @return                None.
    */
-  void discoverTechnologies(tNFA_ACTIVATED& activationData);
-
-  /**
-   * Discover the technologies that NFC service needs by interpreting
-   * the data strucutures from the stack.
-   *
-   * @param  discoveryData Data from discovery events(s).
-   * @return               None.
-   */
-  void discoverTechnologies(tNFA_DISC_RESULT& discoveryData);
+  void DiscoverTechnologies(tNFA_DISC_RESULT& aDiscoveryData);
 
   /**
    * Create a brand new Java NativeNfcTag object;
    * fill the objects's member variables with data;
    * notify NFC service;
    *
-   * @param  activationData Data from activation.
-   * @return                None.
+   * @param  aActivationData Data from activation.
+   * @return                 None.
    */
-  void createNfcTag(tNFA_ACTIVATED& activationData);
+  void CreateNfcTag(tNFA_ACTIVATED& aActivationData);
 
   /**
    * Fill NativeNfcTag's members: mProtocols, mTechList, mTechHandles, mTechLibNfcTypes.
    *
-   * @param  pINfcTag NFC tag interface.
+   * @param  aINfcTag NFC tag interface.
    * @return          None.
    */
-  void fillNfcTagMembers1(INfcTag* pINfcTag);
+  void FillNfcTagMembers1(INfcTag* aINfcTag);
 
   /**
    * Fill NativeNfcTag's members: mConnectedTechIndex or mConnectedTechnology.
    *
-   * @param  pINfcTag NFC tag interface.
+   * @param  aINfcTag NFC tag interface.
    * @return          None.
    */
-  void fillNfcTagMembers2(INfcTag* pINfcTag);
+  void FillNfcTagMembers2(INfcTag* aINfcTag);
 
   /**
    * Fill NativeNfcTag's members: mTechPollBytes.
    *
-   * @param  pINfcTag       NFC tag interface.
-   * @param  activationData Data from activation.
-   * @return                None.
+   * @param  aINfcTag        NFC tag interface.
+   * @param  aActivationData Data from activation.
+   * @return                 None.
    */
-  void fillNfcTagMembers3(INfcTag* pINfcTag, tNFA_ACTIVATED& activationData);
+  void FillNfcTagMembers3(INfcTag* aINfcTag,
+                          tNFA_ACTIVATED& aActivationData);
 
   /**
    * Fill NativeNfcTag's members: mTechActBytes.
    *
-   * @param  pINfcTag       NFC tag interface.
-   * @param  activationData Data from activation.
-   * @return                None.
+   * @param  aINfcTag        NFC tag interface.
+   * @param  aActivationData Data from activation.
+   * @return                 None.
    */
-  void fillNfcTagMembers4(INfcTag* pINfcTag, tNFA_ACTIVATED& activationData);
+  void FillNfcTagMembers4(INfcTag* aINfcTag,
+                          tNFA_ACTIVATED& aActivationData);
 
   /**
    * Fill NativeNfcTag's members: mUid.
    *
-   * @param  pINfcTag       NFC tag interface.
-   * @param  activationData Data from activation.
-   * @return                None.
+   * @param  aINfcTag        NFC tag interface.
+   * @param  aActivationData Data from activation.
+   * @return                 None.
    */
-  void fillNfcTagMembers5(INfcTag* pINfcTag, tNFA_ACTIVATED& activationData);
+  void FillNfcTagMembers5(INfcTag* aINfcTag,
+                          tNFA_ACTIVATED& aActivationData);
 
   /**
    * Clear all data related to the technology, protocol of the tag.
    *
    * @return None.
    */
-  void resetTechnologies();
+  void ResetTechnologies();
 
   /**
    * Calculate type-1 tag's max message size based on header ROM bytes.
    *
-   * @param  activate Reference to activation data.
-   * @return          None.
+   * @param  aActivate Reference to activation data.
+   * @return           None.
    */
-  void calculateT1tMaxMessageSize(tNFA_ACTIVATED& activate);
+  void CalculateT1tMaxMessageSize(tNFA_ACTIVATED& aActivate);
 };

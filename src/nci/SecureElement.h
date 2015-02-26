@@ -41,50 +41,50 @@ public:
    *
    * @return SecureElement object.
    */
-  static SecureElement& getInstance();
+  static SecureElement& GetInstance();
 
   /**
    * Initialize all member variables.
    *
-   * @param pNfcManager NFC manager class instance.
+   * @param  aNfcManager NFC manager class instance.
    * @return True if ok.
    */
-  bool initialize(NfcManager* pNfcManager);
+  bool Initialize(NfcManager* aNfcManager);
 
   /**
    * Release all resources.
    *
    * @return None.
    */
-  void finalize();
+  void Finalize();
 
   /**
    * Get the list of handles of all execution environments.
    *
    * @return List of handles of all execution environments.
    */
-  void getListOfEeHandles(std::vector<uint32_t>& listSe);
+  void GetListOfEeHandles(std::vector<uint32_t>& aListSe);
 
   /**
    * Turn on the secure element.
    *
    * @return True if ok.
    */
-  bool activate();
+  bool Activate();
 
   /**
    * Turn off the secure element.
    *
    * @return True if ok.
    */
-  bool deactivate();
+  bool Deactivate();
 
   /**
    * Resets the RF field status.
    *
    * @return None.
    */
-  void resetRfFieldStatus();
+  void ResetRfFieldStatus();
 
   /**
    * Store a copy of the execution environment information from the stack.
@@ -92,7 +92,7 @@ public:
    * @param  info execution environment information.
    * @return None.
    */
-  void storeUiccInfo(tNFA_EE_DISCOVER_REQ& info);
+  void StoreUiccInfo(tNFA_EE_DISCOVER_REQ& info);
 
   /**
    * Notify the NFC service about whether the SE was activated
@@ -100,43 +100,46 @@ public:
    *
    * @return None.
    */
-  void notifyListenModeState(bool isActivated);
+  void NotifyListenModeState(bool isActivated);
 
   /**
    * Notify the NFC service about RF field events from the stack.
    *
    * @return None.
    */
-  void notifyRfFieldEvent(bool isActive);
+  void NotifyRfFieldEvent(bool isActive);
 
   /**
    * Notify the NFC service about a transaction event from secure element.
    *
-   * @param  aid Buffer contains AID.
-   * @param  aidLen Length of AID.
-   * @param  payload Buffer contains payload.
-   * @param  payloadLen Length of payload.
+   * @param  aAid Buffer contains AID.
+   * @param  aAidLen Length of AID.
+   * @param  aPayload Buffer contains payload.
+   * @param  aPayloadLen Length of payload.
    * @return None.
    */
-  void notifyTransactionEvent(const uint8_t* aid, uint32_t aidLen,
-                              const uint8_t* payload, uint32_t payloadLen);
+  void NotifyTransactionEvent(const uint8_t* aAid,
+                              uint32_t aAidLen,
+                              const uint8_t* aPayload,
+                              uint32_t aPayloadLen);
 
   /**
    * Receive card-emulation related events from stack.
    *
-   * @param  event Event code.
-   * @param  eventData Event data.
+   * @param  aEvent Event code.
+   * @param  aEventData Event data.
    * @return None.
    */
-  void connectionEventHandler(uint8_t event, tNFA_CONN_EVT_DATA* eventData);
+  void ConnectionEventHandler(uint8_t aEvent,
+                              tNFA_CONN_EVT_DATA* aEventData);
 
   /**
    * Specify which secure element to turn on.
    *
-   * @param  activeSeOverride ID of secure element.
+   * @param  aActiveSeOverride ID of secure element.
    * @return None.
    */
-  void setActiveSeOverride(uint8_t activeSeOverride);
+  void SetActiveSeOverride(uint8_t aActiveSeOverride);
 
   /**
    * Adjust controller's listen-mode routing table so transactions
@@ -144,7 +147,7 @@ public:
    *
    * @return True if ok.
    */
-  bool routeToSecureElement();
+  bool RouteToSecureElement();
 
   // TODO : route.xml ???
   /**
@@ -153,28 +156,28 @@ public:
    *
    * @return True if ok.
    */
-  bool routeToDefault();
+  bool RouteToDefault();
 
   /**
    * Whether NFC controller is routing listen-mode events or a pipe is connected.
    *
    * @return True if either case is true.
    */
-  bool isBusy();
+  bool IsBusy();
 
   /**
    * Can be used to determine if the SE is activated in listen mode.
    *
    * @return True if the SE is activated in listen mode.
    */
-  bool isActivatedInListenMode();
+  bool IsActivatedInListenMode();
 
   /**
    * Can be used to determine if the SE is activated in an RF field.
    *
    * @return True if the SE is activated in an RF field.
    */
-  bool isRfFieldOn();
+  bool IsRfFieldOn();
 
 private:
   static const unsigned int MAX_RESPONSE_SIZE = 1024;
@@ -222,43 +225,45 @@ private:
   /**
    * Receive execution environment-related events from stack.
    *
-   * @param event Event code.
-   * @param eventData Event data.
+   * @param aEvent Event code.
+   * @param aEventData Event data.
    * return None.
    */
-  static void nfaEeCallback(tNFA_EE_EVT event, tNFA_EE_CBACK_DATA* eventData);
+  static void NfaEeCallback(tNFA_EE_EVT aEvent,
+                            tNFA_EE_CBACK_DATA* aEventData);
 
   /**
    * Receive Host Controller Interface-related events from stack.
    *
-   * @param event Event code.
-   * @param eventData Event data.
+   * @param aEvent Event code.
+   * @param aEventData Event data.
    * return None.
    */
-  static void nfaHciCallback(tNFA_HCI_EVT event, tNFA_HCI_EVT_DATA* eventData);
+  static void NfaHciCallback(tNFA_HCI_EVT aEvent,
+                             tNFA_HCI_EVT_DATA* aEventData);
 
   /**
    * Find information about an execution environment.
    *
-   * @param  eeHandle Handle to execution environment.
+   * @param  aEeHandle Handle to execution environment.
    * @return Information about an execution environment.
    */
-  tNFA_EE_INFO* findEeByHandle(tNFA_HANDLE eeHandle);
+  tNFA_EE_INFO* FindEeByHandle(tNFA_HANDLE aEeHandle);
 
   /**
    * Get the handle to the execution environment.
    *
    * @return Handle to the execution environment.
    */
-  tNFA_HANDLE getDefaultEeHandle();
+  tNFA_HANDLE GetDefaultEeHandle();
 
   /**
    * Adjust routes in the controller's listen-mode routing table.
    *
-   * @param  selection which set of routes to configure the controller.
+   * @param  aSelection which set of routes to configure the controller.
    * @return None.
    */
-  void adjustRoutes(RouteSelection selection);
+  void AdjustRoutes(RouteSelection aSelection);
 
   /**
    * Adjust default routing based on protocol in NFC listen mode.
@@ -266,7 +271,7 @@ private:
    * @param  isRouteToEe Whether routing to EE (true) or host (false).
    * @return None.
    */
-  void adjustProtocolRoutes(RouteSelection routeSelection);
+  void AdjustProtocolRoutes(RouteSelection aRouteSelection);
 
   /**
    * Adjust default routing based on technology in NFC listen mode.
@@ -274,14 +279,14 @@ private:
    * @param  isRouteToEe Whether routing to EE (true) or host (false).
    * @return None.
    */
-  void adjustTechnologyRoutes(RouteSelection routeSelection);
+  void AdjustTechnologyRoutes(RouteSelection aRouteSelection);
 
   /**
    * Get latest information about execution environments from stack.
    *
    * @return True if at least 1 EE is available.
    */
-  bool getEeInfo();
+  bool GetEeInfo();
 
   /**
    * Convert status code to status text.
@@ -289,5 +294,5 @@ private:
    * @param  status Status code
    * @return None
    */
-  static const char* eeStatusToString(uint8_t status);
+  static const char* EeStatusToString(uint8_t aStatus);
 };

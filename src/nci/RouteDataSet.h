@@ -94,14 +94,14 @@ public:
    *
    * @return True if ok.
    */
-  bool initialize();
+  bool Initialize();
 
   /**
    * Import data from an XML file.  Fill the database.
    *
    * @return True if ok.
    */
-  bool import();
+  bool Import();
 
 private:
   Database mSecElemRouteDatabase; //routes when NFC service selects sec elem.
@@ -114,15 +114,15 @@ private:
    *
    * @return None.
    */
-  void deleteDatabase();
+  void DeleteDatabase();
 
   /**
    * Parse data for protocol routes.
    *
-   * @param  attribute Array of XML property and value pair of a XML node
+   * @param  aAttribute Array of XML property and value pair of a XML node
    * @return None.
    */
-  void importProtocolRoute(const char **attribute);
+  void ImportProtocolRoute(const char **aAttribute);
 
   /**
    * Parse data for technology routes.
@@ -130,23 +130,28 @@ private:
    * @param  attribute Array of XML property and value pair of a XML node
    * @return None.
    */
-  void importTechnologyRoute(const char **attribute);
+  void ImportTechnologyRoute(const char **aAttribute);
 
   /**
    * Callback function when expat-lib process a start tag.
    *
-   * @param data User data set in XML_SetUserData function.
-   * @param element The tag node
-   * @param attribute Array of the attribute name and value of the given tag.
+   * @param  Data      User data set in XML_SetUserData function.
+   * @param  aElement   The tag node
+   * @param  aAttribute Array of the attribute name and value of the given tag.
+   * @return None.
    */
-  static void xmlStartElement(void *data, const char *element, const char **attribute);
+  static void XmlStartElement(void *aData,
+                              const char *aElement,
+                              const char **aAttribute);
 
   /**
    * Callback function when expat-lib process a end tag.
    *
-   * @param data User data set in XML_SetUserData function.
-   * @param element The tag node.
-   * @param attribute Array of the attribute name and value of the given tag.
+   * @param  aData     User data set in XML_SetUserData function.
+   * @param  aelement  The tag node.
+   * @param  attribute Array of the attribute name and value of the given tag.
+   * @return None.
    */
-  static void xmlEndElement(void *data, const char *element);
+  static void XmlEndElement(void *aData,
+                            const char *aElement);
 };

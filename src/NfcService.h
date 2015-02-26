@@ -33,62 +33,62 @@ class P2pLinkManager;
 class NfcService : public IpcSocketListener {
 public:
   ~NfcService();
-  void initialize(NfcManager* pNfcManager, MessageHandler* msgHandler);
+  void Initialize(NfcManager* aNfcManager, MessageHandler* aMsgHandler);
 
   static NfcService* Instance();
-  static INfcManager* getNfcManager();
+  static INfcManager* GetNfcManager();
 
-  static void notifyLlcpLinkActivated(IP2pDevice* pDevice);
-  static void notifyLlcpLinkDeactivated(IP2pDevice* pDevice);
-  static void notifyTagDiscovered(INfcTag* pTag);
-  static void notifyTagLost(int sessionId);
-  static void notifySEFieldActivated();
-  static void notifySEFieldDeactivated();
-  static void notifySETransactionEvent(TransactionEvent* pEvent);
+  static void NotifyLlcpLinkActivated(IP2pDevice* aDevice);
+  static void NotifyLlcpLinkDeactivated(IP2pDevice* aDevice);
+  static void NotifyTagDiscovered(INfcTag* aTag);
+  static void NotifyTagLost(int aSessionId);
+  static void NotifySEFieldActivated();
+  static void NotifySEFieldDeactivated();
+  static void NotifySETransactionEvent(TransactionEvent* aEvent);
 
-  static bool handleDisconnect();
+  static bool HandleDisconnect();
 
-  void* eventLoop();
+  void* EventLoop();
 
-  void handleTagDiscovered(NfcEvent* event);
-  void handleTagLost(NfcEvent* event);
-  void handleTransactionEvent(NfcEvent* event);
-  void handleLlcpLinkActivation(NfcEvent* event);
-  void handleLlcpLinkDeactivation(NfcEvent* event);
-  bool handleReadNdefRequest();
-  void handleReadNdefResponse(NfcEvent* event);
-  bool handleWriteNdefRequest(NdefMessage* ndef, bool isP2P);
-  void handleWriteNdefResponse(NfcEvent* event);
-  void handleCloseResponse(NfcEvent* event);
-  bool handlePushNdefRequest(NdefMessage* ndef);
-  void handlePushNdefResponse(NfcEvent* event);
-  bool handleMakeNdefReadonlyRequest();
-  void handleMakeNdefReadonlyResponse(NfcEvent* event);
-  bool handleNdefFormatRequest();
-  void handleNdefFormatResponse(NfcEvent* event);
-  bool handleTagTransceiveRequest(int tech, const uint8_t* buf, uint32_t bufLen);
-  void handleTagTransceiveResponse(NfcEvent* event);
-  bool handleEnterLowPowerRequest(bool enter);
-  void handleEnterLowPowerResponse(NfcEvent* event);
-  bool handleEnableRequest(bool enable);
-  void handleEnableResponse(NfcEvent* event);
-  void handleReceiveNdefEvent(NfcEvent* event);
+  void HandleTagDiscovered(NfcEvent* aEvent);
+  void HandleTagLost(NfcEvent* aEvent);
+  void HandleTransactionEvent(NfcEvent* aEvent);
+  void HandleLlcpLinkActivation(NfcEvent* aEvent);
+  void HandleLlcpLinkDeactivation(NfcEvent* aEvent);
+  bool HandleReadNdefRequest();
+  void HandleReadNdefResponse(NfcEvent* aEvent);
+  bool HandleWriteNdefRequest(NdefMessage* aNdef, bool aIsP2P);
+  void HandleWriteNdefResponse(NfcEvent* aEvent);
+  void HandleCloseResponse(NfcEvent* aEvent);
+  bool HandlePushNdefRequest(NdefMessage* aNdef);
+  void HandlePushNdefResponse(NfcEvent* aEvent);
+  bool HandleMakeNdefReadonlyRequest();
+  void HandleMakeNdefReadonlyResponse(NfcEvent* aEvent);
+  bool HandleNdefFormatRequest();
+  void HandleNdefFormatResponse(NfcEvent* aEvent);
+  bool HandleTagTransceiveRequest(int aTech, const uint8_t* aBuf, uint32_t aBufLen);
+  void HandleTagTransceiveResponse(NfcEvent* aEvent);
+  bool HandleEnterLowPowerRequest(bool aEnter);
+  void HandleEnterLowPowerResponse(NfcEvent* aEvent);
+  bool HandleEnableRequest(bool aEnable);
+  void HandleEnableResponse(NfcEvent* aEvent);
+  void HandleReceiveNdefEvent(NfcEvent* aEvent);
 
-  void onConnected();
-  void onP2pReceivedNdef(NdefMessage* ndef);
-  NfcErrorCode enableNfc();
-  NfcErrorCode disableNfc();
+  void OnConnected();
+  void OnP2pReceivedNdef(NdefMessage* aNdef);
+  NfcErrorCode EnableNfc();
+  NfcErrorCode DisableNfc();
 
-  void tagDetected()    { mIsTagPresent = true; }
-  void tagRemoved()     { mIsTagPresent = false; }
-  bool isTagPresent()  { return mIsTagPresent; }
+  void TagDetected()    { mIsTagPresent = true; }
+  void TagRemoved()     { mIsTagPresent = false; }
+  bool IsTagPresent()  { return mIsTagPresent; }
 
 private:
   NfcService();
 
-  NfcErrorCode setLowPowerMode(bool low);
-  NfcErrorCode enableSE();
-  NfcErrorCode disableSE();
+  NfcErrorCode SetLowPowerMode(bool aLow);
+  NfcErrorCode EnableSE();
+  NfcErrorCode DisableSE();
 
   uint32_t mState;
   bool mIsTagPresent;

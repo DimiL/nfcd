@@ -50,8 +50,9 @@ MessageHandler* NfcIpcSocket::sMsgHandler = NULL;
 NfcIpcSocket* NfcIpcSocket::sInstance = NULL;
 
 NfcIpcSocket* NfcIpcSocket::Instance() {
-  if (!sInstance)
-      sInstance = new NfcIpcSocket();
+  if (!sInstance) {
+    sInstance = new NfcIpcSocket();
+  }
   return sInstance;
 }
 
@@ -63,13 +64,13 @@ NfcIpcSocket::~NfcIpcSocket()
 {
 }
 
-void NfcIpcSocket::initialize(MessageHandler* msgHandler)
+void NfcIpcSocket::Initialize(MessageHandler* aMsgHandler)
 {
-  initSocket();
-  sMsgHandler = msgHandler;
+  InitSocket();
+  sMsgHandler = aMsgHandler;
 }
 
-void NfcIpcSocket::initSocket()
+void NfcIpcSocket::InitSocket()
 {
   mSleep_spec.tv_sec = 0;
   mSleep_spec.tv_nsec = 500 * 1000;
@@ -77,7 +78,7 @@ void NfcIpcSocket::initSocket()
   mSleep_spec_rem.tv_nsec = 0;
 }
 
-int NfcIpcSocket::getListenSocket() {
+int NfcIpcSocket::GetListenSocket() {
   const int nfcdConn = android_get_control_socket(NFCD_SOCKET_NAME);
   if (nfcdConn < 0) {
     ALOGE("Could not connect to %s socket: %s\n", NFCD_SOCKET_NAME, strerror(errno));
@@ -90,11 +91,11 @@ int NfcIpcSocket::getListenSocket() {
   return nfcdConn;
 }
 
-void NfcIpcSocket::setSocketListener(IpcSocketListener* listener) {
-  mListener = listener;
+void NfcIpcSocket::SetSocketListener(IpcSocketListener* aListener) {
+  mListener = aListener;
 }
 
-void NfcIpcSocket::loop()
+void NfcIpcSocket::Loop()
 {
   bool connected = false;
   int nfcdConn = -1;
@@ -105,7 +106,7 @@ void NfcIpcSocket::loop()
     socklen_t socklen = sizeof (peeraddr);
 
     if (!connected) {
-      nfcdConn = getListenSocket();
+      nfcdConn = GetListenSocket();
       if (nfcdConn < 0) {
         nanosleep(&mSleep_spec, &mSleep_spec_rem);
         continue;
@@ -130,7 +131,7 @@ void NfcIpcSocket::loop()
 
     RecordStream *rs = record_stream_new(nfcdRw, MAX_COMMAND_BYTES);
 
-    mListener->onConnected();
+    mListener->OnConnected();
 
     struct pollfd fds[1];
     fds[0].fd = nfcdRw;
@@ -152,7 +153,7 @@ void NfcIpcSocket::loop()
         } else if (ret < 0) {
           break;
         }
-        writeToIncomingQueue((uint8_t*)data, dataLen);
+        WriteToIncomingQueue((uint8_t*)data, dataLen);
       }
     }
     record_stream_free(rs);
@@ -165,21 +166,21 @@ void NfcIpcSocket::loop()
 // Write NFC data to Gecko
 // Outgoing queue contain the data should be send to gecko
 // TODO check thread, this should run on the NfcService thread.
-void NfcIpcSocket::writeToOutgoingQueue(uint8_t* data, size_t dataLen)
+void NfcIpcSocket::WriteToOutgoingQueue(uint8_t* aData, size_t aDataLen)
 {
-  ALOGD("%s enter, data=%p, dataLen=%d", __func__, data, dataLen);
+  ALOGD("%s enter, data=%p, dataLen=%d", __func__, aData, aDataLen);
 
-  if (data == NULL || dataLen == 0) {
+  if (aData == NULL || aDataLen == 0) {
     return;
   }
 
   size_t writeOffset = 0;
   int written = 0;
 
-  ALOGD("Writing %d bytes to gecko ", dataLen);
-  while (writeOffset < dataLen) {
+  ALOGD("Writing %d bytes to gecko ", aDataLen);
+  while (writeOffset < aDataLen) {
     do {
-      written = write (nfcdRw, data + writeOffset, dataLen - writeOffset);
+      written = write (nfcdRw, aData + writeOffset, aDataLen - writeOffset);
     } while (written < 0 && errno == EINTR);
 
     if (written >= 0) {
@@ -194,11 +195,11 @@ void NfcIpcSocket::writeToOutgoingQueue(uint8_t* data, size_t dataLen)
 // Write Gecko data to NFC
 // Incoming queue contains
 // TODO check thread, this should run on top of main thread of nfcd.
-void NfcIpcSocket::writeToIncomingQueue(uint8_t* data, size_t dataLen)
+void NfcIpcSocket::WriteToIncomingQueue(uint8_t* aData, size_t aDataLen)
 {
-  ALOGD("%s enter, data=%p, dataLen=%d", __func__, data, dataLen);
+  ALOGD("%s enter, data=%p, dataLen=%d", __func__, aData, aDataLen);
 
-  if (data != NULL && dataLen > 0) {
-    sMsgHandler->processRequest(data, dataLen);
+  if (aData != NULL && aDataLen > 0) {
+    sMsgHandler->ProcessRequest(aData, aDataLen);
   }
 }

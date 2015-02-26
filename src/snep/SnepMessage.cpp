@@ -29,26 +29,26 @@ SnepMessage::~SnepMessage()
   delete mNdefMessage;
 }
 
-SnepMessage::SnepMessage(std::vector<uint8_t>& buf)
+SnepMessage::SnepMessage(std::vector<uint8_t>& aBuf)
 {
   int ndefOffset = 0;
   int ndefLength = 0;
   int idx = 0;
 
-  mVersion = buf[idx++];
-  mField = buf[idx++];
+  mVersion = aBuf[idx++];
+  mField = aBuf[idx++];
 
-  mLength = ((uint32_t)buf[idx]     << 24) |
-            ((uint32_t)buf[idx + 1] << 16) |
-            ((uint32_t)buf[idx + 2] <<  8) |
-             (uint32_t)buf[idx + 3];
+  mLength = ((uint32_t)aBuf[idx]     << 24) |
+            ((uint32_t)aBuf[idx + 1] << 16) |
+            ((uint32_t)aBuf[idx + 2] <<  8) |
+             (uint32_t)aBuf[idx + 3];
   idx += 4 ;
 
   if (mField == SnepMessage::REQUEST_GET) {
-    mAcceptableLength = ((uint32_t)buf[idx]     << 24) |
-                        ((uint32_t)buf[idx + 1] << 16) |
-                        ((uint32_t)buf[idx + 2] <<  8) |
-                         (uint32_t)buf[idx + 3];
+    mAcceptableLength = ((uint32_t)aBuf[idx]     << 24) |
+                        ((uint32_t)aBuf[idx + 1] << 16) |
+                        ((uint32_t)aBuf[idx + 2] <<  8) |
+                         (uint32_t)aBuf[idx + 3];
     idx += 4;
     ndefOffset = SnepMessage::HEADER_LENGTH + 4;
     ndefLength = mLength - 4;
@@ -61,32 +61,35 @@ SnepMessage::SnepMessage(std::vector<uint8_t>& buf)
   if (ndefLength > 0) {
     mNdefMessage = new NdefMessage();
     // TODO : Need to check idx is correct.
-    mNdefMessage->init(buf, idx);
+    mNdefMessage->Init(aBuf, idx);
   } else {
     mNdefMessage = NULL;
   }
 }
 
-SnepMessage::SnepMessage(uint8_t version, uint8_t field, int length,
-                 int acceptableLength, NdefMessage* ndefMessage)
+SnepMessage::SnepMessage(uint8_t aVersion,
+                         uint8_t aField,
+                         int aLength,
+                         int aAcceptableLength,
+                         NdefMessage* aNdefMessage)
 {
-  mVersion = version;
-  mField = field;
-  mLength = length;
-  mAcceptableLength = acceptableLength;
-  mNdefMessage = new NdefMessage(ndefMessage);
+  mVersion = aVersion;
+  mField = aField;
+  mLength = aLength;
+  mAcceptableLength = aAcceptableLength;
+  mNdefMessage = new NdefMessage(aNdefMessage);
 }
 
-bool SnepMessage::isValidFormat(std::vector<uint8_t>& buf)
+bool SnepMessage::IsValidFormat(std::vector<uint8_t>& aBuf)
 {
-  int size = buf.size();
+  int size = aBuf.size();
   // version(1), field(1), length(4)
   if (size < SnepMessage::HEADER_LENGTH) {
     return false;
   }
 
   // acceptable length(0 or 4)
-  if (buf[1] == SnepMessage::REQUEST_GET &&
+  if (aBuf[1] == SnepMessage::REQUEST_GET &&
       size < SnepMessage::HEADER_LENGTH + 4) {
     return false;
   }
@@ -94,55 +97,65 @@ bool SnepMessage::isValidFormat(std::vector<uint8_t>& buf)
   return true;
 }
 
-SnepMessage* SnepMessage::getGetRequest(int acceptableLength, NdefMessage& ndef)
+SnepMessage* SnepMessage::GetGetRequest(int aAcceptableLength,
+                                        NdefMessage& aNdef)
 {
   std::vector<uint8_t> buf;
-  ndef.toByteArray(buf);
-  return new SnepMessage(SnepMessage::VERSION, SnepMessage::REQUEST_GET, 4 + buf.size(), acceptableLength, &ndef);
+  aNdef.ToByteArray(buf);
+  return new SnepMessage(SnepMessage::VERSION,
+                         SnepMessage::REQUEST_GET,
+                         4 + buf.size(),
+                         aAcceptableLength,
+                         &aNdef);
 }
 
-SnepMessage* SnepMessage::getPutRequest(NdefMessage& ndef)
+SnepMessage* SnepMessage::GetPutRequest(NdefMessage& aNdef)
 {
   std::vector<uint8_t> buf;
-  ndef.toByteArray(buf);
-  return new SnepMessage(SnepMessage::VERSION, SnepMessage::REQUEST_PUT, buf.size(), 0, &ndef);
+  aNdef.ToByteArray(buf);
+  return new SnepMessage(SnepMessage::VERSION,
+                         SnepMessage::REQUEST_PUT,
+                         buf.size(),
+                         0,
+                         &aNdef);
 }
 
-SnepMessage* SnepMessage::getMessage(uint8_t field)
+SnepMessage* SnepMessage::GetMessage(uint8_t aField)
 {
-  return new SnepMessage(SnepMessage::VERSION, field, 0, 0, NULL);
+  return new SnepMessage(SnepMessage::VERSION, aField, 0, 0, NULL);
 }
 
-SnepMessage* SnepMessage::getSuccessResponse(NdefMessage* ndef)
+SnepMessage* SnepMessage::GetSuccessResponse(NdefMessage* aNdef)
 {
-  if (!ndef) {
+  if (!aNdef) {
     return new SnepMessage(SnepMessage::VERSION, SnepMessage::RESPONSE_SUCCESS, 0, 0, NULL);
   } else {
     std::vector<uint8_t> buf;
-    ndef->toByteArray(buf);
-    return new SnepMessage(SnepMessage::VERSION, SnepMessage::RESPONSE_SUCCESS, buf.size(), 0, ndef);
+    aNdef->ToByteArray(buf);
+    return new SnepMessage(SnepMessage::VERSION, SnepMessage::RESPONSE_SUCCESS, buf.size(), 0, aNdef);
   }
 }
 
-SnepMessage* SnepMessage::fromByteArray(std::vector<uint8_t>& buf)
+SnepMessage* SnepMessage::FromByteArray(std::vector<uint8_t>& aBuf)
 {
-  return SnepMessage::isValidFormat(buf) ? new SnepMessage(buf) : NULL;
+  return SnepMessage::IsValidFormat(aBuf) ? new SnepMessage(aBuf) : NULL;
 }
 
-SnepMessage* SnepMessage::fromByteArray(uint8_t* pBuf, int size)
+SnepMessage* SnepMessage::FromByteArray(uint8_t* aBuf,
+                                        int aSize)
 {
   std::vector<uint8_t> buf;
-  for (int i = 0; i < size; i++) {
-    buf[i] = pBuf[i];
+  for (int i = 0; i < aSize; i++) {
+    buf[i] = aBuf[i];
   }
 
-  return fromByteArray(buf);
+  return FromByteArray(buf);
 }
 
-void SnepMessage::toByteArray(std::vector<uint8_t>& buf)
+void SnepMessage::ToByteArray(std::vector<uint8_t>& aBuf)
 {
   if (mNdefMessage) {
-    mNdefMessage->toByteArray(buf);
+    mNdefMessage->ToByteArray(aBuf);
   }
 
   std::vector<uint8_t> snepHeader;
@@ -150,7 +163,7 @@ void SnepMessage::toByteArray(std::vector<uint8_t>& buf)
   snepHeader.push_back(mVersion);
   snepHeader.push_back(mField);
   if (mField == SnepMessage::REQUEST_GET) {
-    uint32_t len = buf.size() + 4;
+    uint32_t len = aBuf.size() + 4;
     snepHeader.push_back((len >> 24) & 0xFF);
     snepHeader.push_back((len >> 16) & 0xFF);
     snepHeader.push_back((len >>  8) & 0xFF);
@@ -160,12 +173,12 @@ void SnepMessage::toByteArray(std::vector<uint8_t>& buf)
     snepHeader.push_back((mAcceptableLength >>  8) & 0xFF);
     snepHeader.push_back( mAcceptableLength & 0xFF);
   } else {
-    uint32_t len = buf.size();
+    uint32_t len = aBuf.size();
     snepHeader.push_back((len >> 24) & 0xFF);
     snepHeader.push_back((len >> 16) & 0xFF);
     snepHeader.push_back((len >>  8) & 0xFF);
     snepHeader.push_back( len & 0xFF);
   }
 
-  buf.insert(buf.begin(), snepHeader.begin(), snepHeader.end());
+  aBuf.insert(aBuf.begin(), snepHeader.begin(), snepHeader.end());
 }

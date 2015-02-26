@@ -31,40 +31,40 @@ public:
   /**
    * Notifies tag detected.
    *
-   * @param pTag INfcTag interface.
-   * @return     None.
+   * @param  aTag INfcTag interface.
+   * @return      None.
    */
-  void notifyTagDiscovered(INfcTag* pTag);
+  void NotifyTagDiscovered(INfcTag* aTag);
 
   /**
    * Notifies P2P Device detected, to activate LLCP link.
    *
-   * @param pDevice IP2pDevice interface.
-   * @return        None.
+   * @param  aDevice IP2pDevice interface.
+   * @return         None.
    */
-  void notifyLlcpLinkActivated(IP2pDevice* pDevice);
+  void NotifyLlcpLinkActivated(IP2pDevice* aDevice);
 
   /**
    * Notifies P2P Device is out of range, to deactivate LLCP link.
    *
-   * @param pDevice IP2pDevice interface.
-   * @return        None.
+   * @param  aDevice IP2pDevice interface.
+   * @return         None.
    */
-  void notifyLlcpLinkDeactivated(IP2pDevice* pDevice);
+  void NotifyLlcpLinkDeactivated(IP2pDevice* aDevice);
 
   /**
    * Notifies HCI TRANSACTION event received.
    *
-   * @param pEvent Contain transaction aid and payload
-   * @return       None.
+   * @param  aEvent Contain transaction aid and payload
+   * @return        None.
    */
-  void notifyTransactionEvent(TransactionEvent* pEvent);
+  void NotifyTransactionEvent(TransactionEvent* aEvent);
 
   // Interfaces are not yet used.
-  void notifyTargetDeselected();
-  void notifyLlcpLinkFirstPacketReceived();
-  void notifySeFieldActivated();
-  void notifySeFieldDeactivated();
+  void NotifyTargetDeselected();
+  void NotifyLlcpLinkFirstPacketReceived();
+  void NotifySeFieldActivated();
+  void NotifySeFieldDeactivated();
 };
 
 class NfcDepEndpoint {

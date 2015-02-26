@@ -23,7 +23,11 @@ class NdefMessage;
 
 class SnepMessage{
 public:
-  SnepMessage(uint8_t version,uint8_t field,int length,int acceptableLength, NdefMessage* ndefMessage);
+  SnepMessage(uint8_t aVersion,
+              uint8_t aField,
+              int aLength,
+              int aAcceptableLength,
+              NdefMessage* aNdefMessage);
   ~SnepMessage();
 
   static const uint8_t VERSION_MAJOR = 0x1;
@@ -44,26 +48,26 @@ public:
   static const uint8_t RESPONSE_UNSUPPORTED_VERSION = 0xE1;
   static const uint8_t RESPONSE_REJECT = 0xFF;
 
-  NdefMessage* getNdefMessage() { return mNdefMessage; }
-  uint8_t getField() { return mField; }
-  uint8_t getVersion() { return mVersion; }
-  int getLength() { return mLength; }
-  int getAcceptableLength() { return mField != REQUEST_GET ? 0 : mAcceptableLength; }
+  NdefMessage* GetNdefMessage() { return mNdefMessage; }
+  uint8_t GetField() { return mField; }
+  uint8_t GetVersion() { return mVersion; }
+  int GetLength() { return mLength; }
+  int GetAcceptableLength() { return mField != REQUEST_GET ? 0 : mAcceptableLength; }
 
-  void toByteArray(std::vector<uint8_t>& buf);
+  void ToByteArray(std::vector<uint8_t>& buf);
 
-  static SnepMessage* getGetRequest(int acceptableLength, NdefMessage& ndef);
-  static SnepMessage* getPutRequest(NdefMessage& ndef);
-  static SnepMessage* getMessage(uint8_t field);
-  static SnepMessage* getSuccessResponse(NdefMessage* ndef);
-  static SnepMessage* fromByteArray(std::vector<uint8_t>& buf);
-  static SnepMessage* fromByteArray(uint8_t* pBuf, int size);
+  static SnepMessage* GetGetRequest(int aAcceptableLength, NdefMessage& aNdef);
+  static SnepMessage* GetPutRequest(NdefMessage& aNdef);
+  static SnepMessage* GetMessage(uint8_t aField);
+  static SnepMessage* GetSuccessResponse(NdefMessage* aNdef);
+  static SnepMessage* FromByteArray(std::vector<uint8_t>& aBuf);
+  static SnepMessage* FromByteArray(uint8_t* aBuf, int aSize);
 
 private:
   SnepMessage();
-  SnepMessage(std::vector<uint8_t>& buf);
+  SnepMessage(std::vector<uint8_t>& aBuf);
 
-  static bool isValidFormat(std::vector<uint8_t>& buf);
+  static bool IsValidFormat(std::vector<uint8_t>& aBuf);
 
   static const int HEADER_LENGTH = 6;
 

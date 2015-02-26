@@ -31,14 +31,14 @@ int main() {
   // Create service thread to receive message from nfc library.
   NfcService* service = NfcService::Instance();
   MessageHandler* msgHandler = new MessageHandler(service);
-  service->initialize(pNfcManager, msgHandler);
+  service->Initialize(pNfcManager, msgHandler);
 
   // Create IPC socket & main thread will enter while loop to read data from socket.
   NfcIpcSocket* socket = NfcIpcSocket::Instance();
-  socket->initialize(msgHandler);
-  socket->setSocketListener(service);
-  msgHandler->setOutgoingSocket(socket);
-  socket->loop();
+  socket->Initialize(msgHandler);
+  socket->SetSocketListener(service);
+  msgHandler->SetOutgoingSocket(socket);
+  socket->Loop();
 
   //TODO delete NfcIpcSocket, NfcService
   delete msgHandler;

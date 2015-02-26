@@ -27,115 +27,118 @@ public:
   /**
    * To get a specific interface from NfcManager.
    *
-   * @param  name Interface name.
-   * @return      Return specific interface if exist, null if cannot find.
+   * @param  aName Interface name.
+   * @return       Return specific interface if exist, null if cannot find.
    */
-  virtual void* queryInterface(const char* name) = 0;
+  virtual void* QueryInterface(const char* aName) = 0;
 
   /**
    * Turn on NFC.
    *
    * @return True if ok.
    */
-  virtual bool initialize() = 0;
+  virtual bool Initialize() = 0;
 
   /**
    * Turn off NFC.
    *
    * @return True if ok.
    */
-  virtual bool deinitialize() = 0;
+  virtual bool Deinitialize() = 0;
 
   /**
    * Start polling and listening for devices.
    *
    * @return True if ok.
    */
-  virtual bool enableDiscovery() = 0;
+  virtual bool EnableDiscovery() = 0;
 
   /**
    * Stop polling and listening for devices.
    *
    * @return True if ok.
    */
-  virtual bool disableDiscovery() = 0;
+  virtual bool DisableDiscovery() = 0;
 
   /**
    * Start polling for devices.
    *
    * @return True if ok.
    */
-  virtual bool enablePolling() = 0;
+  virtual bool EnablePolling() = 0;
 
   /**
    * Stop polling for devices.
    *
    * @return True if ok.
    */
-  virtual bool disablePolling() = 0;
+  virtual bool DisablePolling() = 0;
 
   /**
    * Start peer-to-peer listening for devices.
    *
    * @return True if ok.
    */
-  virtual bool enableP2pListening() = 0;
+  virtual bool EnableP2pListening() = 0;
 
   /**
    * Stop peer-to-peer listening for devices.
    *
    * @return True if ok.
    */
-  virtual bool disableP2pListening() = 0;
+  virtual bool DisableP2pListening() = 0;
 
   /**
    * Check Llcp connection.
    *
    * @return True if ok.
    */
-  virtual bool checkLlcp() = 0;
+  virtual bool CheckLlcp() = 0;
 
   /**
    * Activate Llcp connection.
    *
    * @return True if ok.
    */
-  virtual bool activateLlcp() = 0;
+  virtual bool ActivateLlcp() = 0;
 
   /**
    * Create a LLCP connection-oriented socket.
    *
-   * @param  sap                Service access point.
-   * @param  miu                Maximum information unit.
-   * @param  rw                 Receive window size.
-   * @param  linearBufferLength Max buffer size.
-   * @return                    ILlcpSocket interface.
+   * @param  aSap    Service access point.
+   * @param  aMiu    Maximum information unit.
+   * @param  aRw     Receive window size.
+   * @param  aBufLen Length Max buffer size.
+   * @return         ILlcpSocket interface.
    */
-  virtual ILlcpSocket* createLlcpSocket(int sap, int miu, int rw, int linearBufferLength) = 0;
+  virtual ILlcpSocket* CreateLlcpSocket(int aSap,
+                                        int aMiu,
+                                        int aRw,
+                                        int aBufLen) = 0;
 
   /**
    * Create a new LLCP server socket.
    *
-   * @param  nSap               Service access point.
-   * @param  sn                 Service name.
-   * @param  miu                Maximum information unit.
-   * @param  rw                 Receive window size.
-   * @param  linearBufferLength Max buffer size.
-   * @return                    ILlcpServerSocket interface.
+   * @param  aSap    Service access point.
+   * @param  aSn     Service name.
+   * @param  aMiu    Maximum information unit.
+   * @param  aRw     Receive window size.
+   * @param  aBufLen Length Max buffer size.
+   * @return         ILlcpServerSocket interface.
    */
-  virtual ILlcpServerSocket* createLlcpServerSocket(int sap, const char* sn, int miu, int rw, int linearBufferLength) = 0;
+  virtual ILlcpServerSocket* CreateLlcpServerSocket(int aSap,
+                                                    const char* aSn,
+                                                    int aMiu,
+                                                    int aRw,
+                                                    int aBufLen) = 0;
 
   /**
-   * Create a new LLCP server socket.
+   * Set P2P initiator's activation modes.
    *
-   * @param  nSap               Service access point.
-   * @param  sn                 Service name.
-   * @param  miu                Maximum information unit.
-   * @param  rw                 Receive window size.
-   * @param  linearBufferLength Max buffer size.
-   * @return                    ILlcpServerSocket interface.
+   * @param  aModes Active and/or passive modes.
+   * @return        None.
    */
-  virtual void setP2pInitiatorModes(int modes) = 0;
+  virtual void SetP2pInitiatorModes(int aModes) = 0;
 
   /**
    * Set P2P target's activation modes.
@@ -143,35 +146,35 @@ public:
    * @param  modes Active and/or passive modes.
    * @return       None.
    */
-  virtual void setP2pTargetModes(int modes) = 0;
+  virtual void SetP2pTargetModes(int aModes) = 0;
 
   /**
    * Get default Llcp connection maxumum information unit.
    *
    * @return Default MIU.
    */
-  virtual int getDefaultLlcpMiu() const = 0;
+  virtual int GetDefaultLlcpMiu() const = 0;
 
   /**
    * Get default Llcp connection receive window size.
    *
    * @return Default receive window size.
    */
-  virtual int getDefaultLlcpRwSize() const = 0;
+  virtual int GetDefaultLlcpRwSize() const = 0;
 
   /**
    * NFC controller starts routing data in listen mode.
    *
    * @return True if ok.
    */
-  virtual bool doSelectSecureElement() = 0;
+  virtual bool DoSelectSecureElement() = 0;
 
   /**
    * NFC controller stops routing data in listen mode.
    *
    * @return True if ok.
    */
-  virtual bool doDeselectSecureElement() = 0;
+  virtual bool DoDeselectSecureElement() = 0;
 };
 
 #endif

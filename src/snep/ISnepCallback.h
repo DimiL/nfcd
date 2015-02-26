@@ -22,8 +22,9 @@ class NdefMessage;
 
 class ISnepCallback {
 public:
-  virtual SnepMessage* doPut(NdefMessage* msg) = 0;
-  virtual SnepMessage* doGet(int acceptableLength, NdefMessage* msg) = 0;
+  virtual SnepMessage* DoPut(NdefMessage* aMsg) = 0;
+  virtual SnepMessage* DoGet(int aAcceptableLength,
+                             NdefMessage* aMsg) = 0;
 
   virtual ~ISnepCallback(){};
 };

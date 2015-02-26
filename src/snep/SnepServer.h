@@ -24,10 +24,17 @@ class ISnepCallback;
 
 class SnepServer{
 public:
-  SnepServer(ISnepCallback* callback);
-  SnepServer(const char* serviceName, int serviceSap, ISnepCallback* callback);
-  SnepServer(ISnepCallback* callback, int miu, int rwSize);
-  SnepServer(const char* serviceName, int serviceSap, int fragmentLength, ISnepCallback* callback);
+  SnepServer(ISnepCallback* aCallback);
+  SnepServer(const char* aServiceName,
+             int aServiceSap,
+             ISnepCallback* aCallback);
+  SnepServer(ISnepCallback* aCallback,
+             int aMiu,
+             int aRwSize);
+  SnepServer(const char* aServiceName,
+             int aServiceSap,
+             int aFragmentLength,
+             ISnepCallback* aCallback);
   ~SnepServer();
 
   static const int DEFAULT_MIU = 248;
@@ -35,10 +42,11 @@ public:
   static const int DEFAULT_PORT = 4;
   static const char* DEFAULT_SERVICE_NAME;
 
-  void start();
-  void stop();
+  void Start();
+  void Stop();
 
-  static bool handleRequest(SnepMessenger* messenger, ISnepCallback* callback);
+  static bool HandleRequest(SnepMessenger* aMessenger,
+                            ISnepCallback* aCallback);
 
   ILlcpServerSocket* mServerSocket;
   ISnepCallback*     mCallback;
@@ -52,11 +60,14 @@ public:
 
 class SnepConnectionThread {
 public:
-  SnepConnectionThread(SnepServer* server, ILlcpSocket* socket, int fragmentLength, ISnepCallback* callback);
+  SnepConnectionThread(SnepServer* aServer,
+                       ILlcpSocket* aSocket,
+                       int aFragmentLength,
+                       ISnepCallback* aCallback);
   ~SnepConnectionThread();
 
-  void run();
-  bool isServerRunning() const;
+  void Run();
+  bool IsServerRunning() const;
 
   ILlcpSocket* mSock;
   SnepMessenger* mMessenger;

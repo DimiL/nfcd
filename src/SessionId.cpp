@@ -19,16 +19,16 @@
 int SessionId::mId = 0;
 
 int
-SessionId::generateNewId() {
+SessionId::GenerateNewId() {
   return ++mId;
 }
 
 int
-SessionId::getCurrentId() {
+SessionId::GetCurrentId() {
   return mId;
 }
 
 bool
-SessionId::isValid(int id) {
-  return mId == id;
+SessionId::IsValid(int aId) {
+  return mId == aId;
 }

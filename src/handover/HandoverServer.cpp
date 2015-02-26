@@ -29,23 +29,23 @@
 const char* HandoverServer::DEFAULT_SERVICE_NAME = "urn:nfc:sn:handover";
 
 // Handover conncetion thread is responsible for sending/receiving NDEF message.
-void* HandoverConnectionThreadFunc(void* arg)
+void* HandoverConnectionThreadFunc(void* aArg)
 {
   ALOGD("%s: connection thread enter", FUNC);
 
-  HandoverConnectionThread* pConnectionThread = reinterpret_cast<HandoverConnectionThread*>(arg);
+  HandoverConnectionThread* pConnectionThread = reinterpret_cast<HandoverConnectionThread*>(aArg);
   if (!pConnectionThread) {
     ALOGE("%s: invalid parameter", FUNC);
     return NULL;
   }
 
-  IHandoverCallback* ICallback = pConnectionThread->getCallback();
-  ILlcpSocket* socket = pConnectionThread->getSocket();
+  IHandoverCallback* ICallback = pConnectionThread->GetCallback();
+  ILlcpSocket* socket = pConnectionThread->GetSocket();
   bool connectionBroken = false;
   std::vector<uint8_t> buffer;
   while(!connectionBroken) {
     std::vector<uint8_t> partial;
-    int size = socket->receive(partial);
+    int size = socket->Receive(partial);
     if (size < 0) {
       ALOGE("%s: connection broken", FUNC);
       connectionBroken = true;
@@ -57,20 +57,20 @@ void* HandoverConnectionThreadFunc(void* arg)
     // Check if buffer can be create a NDEF message.
     // If yes. need to notify upper layer.
     NdefMessage* ndef = new NdefMessage();
-    if(ndef->init(buffer)) {
+    if(ndef->Init(buffer)) {
       ALOGD("%s: get a complete NDEF message", FUNC);
-      ICallback->onMessageReceived(ndef);
+      ICallback->OnMessageReceived(ndef);
     } else {
       ALOGD("%s: cannot get a complete NDEF message", FUNC);
     }
   }
 
   if (socket)
-    socket->close();
+    socket->Close();
 
-  HandoverServer* server = pConnectionThread->getServer();
+  HandoverServer* server = pConnectionThread->GetServer();
   if (server)
-    server->setConnectionThread(NULL);
+    server->SetConnectionThread(NULL);
 
   // TODO : is this correct ??
   delete pConnectionThread;
@@ -79,11 +79,12 @@ void* HandoverConnectionThreadFunc(void* arg)
   return NULL;
 }
 
-HandoverConnectionThread::HandoverConnectionThread(
-  HandoverServer* server, ILlcpSocket* socket, IHandoverCallback* ICallback)
- : mSock(socket)
- , mCallback(ICallback)
- , mServer(server)
+HandoverConnectionThread::HandoverConnectionThread(HandoverServer* aServer,
+                                                   ILlcpSocket* aSocket,
+                                                   IHandoverCallback* aCallback)
+ : mSock(aSocket)
+ , mCallback(aCallback)
+ , mServer(aServer)
 {
 }
 
@@ -91,7 +92,7 @@ HandoverConnectionThread::~HandoverConnectionThread()
 {
 }
 
-void HandoverConnectionThread::run()
+void HandoverConnectionThread::Run()
 {
   pthread_t tid;
   if(pthread_create(&tid, NULL, HandoverConnectionThreadFunc, this) != 0) {
@@ -100,15 +101,15 @@ void HandoverConnectionThread::run()
   }
 }
 
-bool HandoverConnectionThread::isServerRunning() const
+bool HandoverConnectionThread::IsServerRunning() const
 {
   return mServer->mServerRunning;
 }
 
 // Handover server thread is responsible for handling incoming connect request.
-void* handoverServerThreadFunc(void* arg)
+void* HandoverServerThreadFunc(void* aArg)
 {
-  HandoverServer* pHandoverServer = reinterpret_cast<HandoverServer*>(arg);
+  HandoverServer* pHandoverServer = reinterpret_cast<HandoverServer*>(aArg);
   if (!pHandoverServer) {
     ALOGE("%s: invalid parameter", FUNC);
     return NULL;
@@ -124,22 +125,22 @@ void* handoverServerThreadFunc(void* arg)
 
   while(pHandoverServer->mServerRunning) {
     if (!serverSocket) {
-        ALOGE("%s: server socket shut down", FUNC);
-        return NULL;
+      ALOGE("%s: server socket shut down", FUNC);
+      return NULL;
     }
 
-    ILlcpSocket* communicationSocket = serverSocket->accept();
+    ILlcpSocket* communicationSocket = serverSocket->Accept();
 
     if (communicationSocket != NULL) {
       HandoverConnectionThread* pConnectionThread =
-          new HandoverConnectionThread(pHandoverServer, communicationSocket, ICallback);
-      pHandoverServer->setConnectionThread(pConnectionThread);
-      pConnectionThread->run();
+        new HandoverConnectionThread(pHandoverServer, communicationSocket, ICallback);
+      pHandoverServer->SetConnectionThread(pConnectionThread);
+      pConnectionThread->Run();
     }
   }
 
   if (serverSocket) {
-    serverSocket->close();
+    serverSocket->Close();
     delete serverSocket;
   }
 
@@ -147,10 +148,10 @@ void* handoverServerThreadFunc(void* arg)
 }
 
 
-HandoverServer::HandoverServer(IHandoverCallback* ICallback)
+HandoverServer::HandoverServer(IHandoverCallback* aCallback)
  : mServerSocket(NULL)
  , mServiceSap(HANDOVER_SAP)
- , mCallback(ICallback)
+ , mCallback(aCallback)
  , mServerRunning(false)
  , mConnectionThread(NULL)
 {
@@ -160,20 +161,20 @@ HandoverServer::~HandoverServer()
 {
 }
 
-void HandoverServer::start()
+void HandoverServer::Start()
 {
   ALOGD("%s: enter", FUNC);
 
-  INfcManager* pINfcManager = NfcService::getNfcManager();
-  mServerSocket = pINfcManager->createLlcpServerSocket(mServiceSap, DEFAULT_SERVICE_NAME, DEFAULT_MIU, 1, 1024);
+  INfcManager* pINfcManager = NfcService::GetNfcManager();
+  mServerSocket = pINfcManager->CreateLlcpServerSocket(
+    mServiceSap, DEFAULT_SERVICE_NAME, DEFAULT_MIU, 1, 1024);
 
   if (!mServerSocket) {
     ALOGE("%s: cannot create llcp server socket", FUNC);
   }
 
   pthread_t tid;
-  if(pthread_create(&tid, NULL, handoverServerThreadFunc, this) != 0)
-  {
+  if(pthread_create(&tid, NULL, HandoverServerThreadFunc, this) != 0) {
     ALOGE("%s: pthread_create failed", FUNC);
     abort();
   }
@@ -182,7 +183,7 @@ void HandoverServer::start()
   ALOGD("%s: exit", FUNC);
 }
 
-void HandoverServer::stop()
+void HandoverServer::Stop()
 {
   mServerSocket = NULL;
   mServerRunning = false;
@@ -190,27 +191,27 @@ void HandoverServer::stop()
   // use pthread_join here to make sure all thread is finished ?
 }
 
-bool HandoverServer::put(NdefMessage& msg)
+bool HandoverServer::Put(NdefMessage& aMsg)
 {
   ALOGD("%s: enter", FUNC);
 
-  if (!mConnectionThread || !mConnectionThread->getSocket()) {
+  if (!mConnectionThread || !mConnectionThread->GetSocket()) {
     ALOGE("%s: connection is not established", FUNC);
     return false;
   }
 
   std::vector<uint8_t> buf;
-  msg.toByteArray(buf);
-  mConnectionThread->getSocket()->send(buf);
+  aMsg.ToByteArray(buf);
+  mConnectionThread->GetSocket()->Send(buf);
 
   ALOGD("%s: exit", FUNC);
   return true;
 }
 
-void HandoverServer::setConnectionThread(HandoverConnectionThread* pThread)
+void HandoverServer::SetConnectionThread(HandoverConnectionThread* aThread)
 {
-  if (pThread != NULL && mConnectionThread != NULL) {
+  if (aThread != NULL && mConnectionThread != NULL) {
     ALOGE("%s: there is more than one connection, should not happen!", FUNC);
   }
-  mConnectionThread = pThread;
+  mConnectionThread = aThread;
 }

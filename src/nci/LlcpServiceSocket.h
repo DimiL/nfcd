@@ -29,7 +29,10 @@ class LlcpServiceSocket
   : public ILlcpServerSocket
 {
 public:
-  LlcpServiceSocket(uint32_t handle, int localLinearBufferLength, int localMiu, int localRw);
+  LlcpServiceSocket(uint32_t aHandle,
+                    int aLocalLinearBufferLength,
+                    int aLocalMiu,
+                    int aLocalRw);
   virtual ~LlcpServiceSocket();
 
   /**
@@ -37,14 +40,14 @@ public:
    *
    * @return ILlcpSocket interface.
    */
-  ILlcpSocket* accept();
+  ILlcpSocket* Accept();
 
   /**
    * Close a server socket.
    *
    * @return True if ok.
    */
-  bool close();
+  bool Close();
 
 private:
   uint32_t mHandle;
