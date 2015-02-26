@@ -26,14 +26,14 @@ public:
   P2pDevice();
   virtual ~P2pDevice();
 
-  bool connect();
-  bool disconnect();
-  void transceive();
-  void receive();
-  bool send();
+  bool Connect();
+  bool Disconnect();
+  void Transceive();
+  void Receive();
+  bool Send();
 
-  int& getHandle();
-  int& getMode();
+  int& GetHandle();
+  int& GetMode();
 
 private:
   int mHandle;

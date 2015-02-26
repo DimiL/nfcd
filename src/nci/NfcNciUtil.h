@@ -117,8 +117,9 @@ struct nfc_data
 
 class NfcNciUtil {
 public:
-  static TagTechnology toTagTechnology(TechnologyType techType);
-  static TechnologyType toTechnologyType(TagTechnology tagTech);
+  static TagTechnology ToTagTechnology(TechnologyType aTechType);
+  static TechnologyType ToTechnologyType(TagTechnology aTagTech);
+
 private:
   NfcNciUtil();
 };

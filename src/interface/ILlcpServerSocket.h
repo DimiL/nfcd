@@ -28,14 +28,14 @@ public:
    *
    * @return ILlcpSocket interface.
    */
-  virtual ILlcpSocket* accept() = 0;
+  virtual ILlcpSocket* Accept() = 0;
 
   /**
    * Close a server socket.
    *
    * @return True if ok.
    */
-  virtual bool close() = 0;
+  virtual bool Close() = 0;
 };
 
 #endif

@@ -28,66 +28,66 @@ class LlcpSocket
   : public ILlcpSocket
 {
 public:
-  LlcpSocket(unsigned int handle, int sap, int miu, int rw);
-  LlcpSocket(unsigned int handle, int miu, int rw);
+  LlcpSocket(unsigned int aHandle, int aSap, int aMiu, int aRw);
+  LlcpSocket(unsigned int aHandle, int aMiu, int aRw);
   virtual ~LlcpSocket();
 
   /**
    * Establish a connection to the peer.
    *
-   * @param nSap Establish a connection to the peer.
+   * @param  aSap Establish a connection to the peer.
    * @return      True if ok.
    */
-  bool connectToSap(int nSap);
+  bool ConnectToSap(int aSap);
 
   /**
    * Establish a connection to the peer.
    *
-   * @param sn Service name.
-   * return    True if ok.
+   * @param  aSn Service name.
+   * @return     True if ok.
    */
-  bool connectToService(const char* serviceName);
+  bool ConnectToService(const char* aSn);
 
   /**
    * Close socket.
    *
    * @return True if ok.
    */
-  void close();
+  void Close();
 
   /**
    * Send data to peer.
    *
-   * @param sendBuff Buffer of data.
-   * @return         True if sent ok.
+   * @param  aSendBuf Buffer of data.
+   * @return          True if sent ok.
    */
-  bool send(std::vector<uint8_t>& sendBuff);
+  bool Send(std::vector<uint8_t>& aSendBuf);
 
   /**
    * Receive data from peer.
    *
-   * @param recvBuff Buffer to put received data.
-   * @return         Buffer to put received data.
+   * @param  aRecvBuf Buffer to put received data.
+   * @return          Buffer to put received data.
    */
-  int receive(std::vector<uint8_t>& recvBuff);
+  int Receive(std::vector<uint8_t>& aRecvBuf);
 
   /**
    * Get peer's maximum information unit.
    *
    * @return Peer's maximum information unit.
    */
-  int getRemoteMiu() const;
+  int GetRemoteMiu() const;
 
   /**
    * Peer's maximum information unit.
    *
    * @return Peer's receive window size.
    */
-  int getRemoteRw() const;
+  int GetRemoteRw() const;
 
-  int getLocalSap() const { return mSap; }
-  int getLocalMiu() const { return mLocalMiu; }
-  int getLocalRw() const { return mLocalRw; }
+  int GetLocalSap() const { return mSap; }
+  int GetLocalMiu() const { return mLocalMiu; }
+  int GetLocalRw() const { return mLocalRw; }
 
 private:
   uint32_t mHandle;
@@ -95,15 +95,15 @@ private:
   int mLocalMiu;
   int mLocalRw;
 
-  bool doConnect(int nSap);
-  bool doConnectBy(const char* sn);
-  bool doClose();
+  bool DoConnect(int aSap);
+  bool DoConnectBy(const char* aSn);
+  bool DoClose();
 
-  bool doSend(std::vector<uint8_t>& data);
-  int doReceive(std::vector<uint8_t>& recvBuff);
+  bool DoSend(std::vector<uint8_t>& aData);
+  int DoReceive(std::vector<uint8_t>& aRecvBuf);
 
-  int doGetRemoteSocketMIU() const;
-  int doGetRemoteSocketRW() const;
+  int DoGetRemoteSocketMIU() const;
+  int DoGetRemoteSocketRW() const;
 };
 
 #endif // mozilla_nfcd_LlcpSocket_h

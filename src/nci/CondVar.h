@@ -30,26 +30,26 @@ public:
   /**
    * Block the caller and wait for a condition.
    *
-   * @param  mutex Lock.
-   * @return       None.
+   * @param  aMutex Lock.
+   * @return        None.
    */
-  void wait(Mutex& mutex);
+  void Wait(Mutex& aMutex);
 
   /**
    * Block the caller and wait for a condition.
    *
-   * @param  mutex    Lock.
-   * @param  millisec Timeout in milliseconds.
-   * @return          True if wait is successful; false if timeout occurs.
+   * @param  aMutex    Lock.
+   * @param  aMillisec Timeout in milliseconds.
+   * @return           True if wait is successful; false if timeout occurs.
    */
-  bool wait(Mutex& mutex, long millisec);
+  bool Wait(Mutex& aMutex, long aMillisec);
 
   /**
    * Unblock the waiting thread.
    *
    * @return None.
    */
-  void notifyOne();
+  void NotifyOne();
 
 private:
   pthread_cond_t mCondition;

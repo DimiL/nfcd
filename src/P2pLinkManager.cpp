@@ -47,16 +47,16 @@ SnepCallback::~SnepCallback()
 {
 }
 
-SnepMessage* SnepCallback::doPut(NdefMessage* ndef)
+SnepMessage* SnepCallback::DoPut(NdefMessage* aNdef)
 {
-  if (!ndef) {
+  if (!aNdef) {
     ALOGE("%s: invalid parameter", FUNC);
     return NULL;
   }
 
-  sP2pLinkManager->notifyNdefReceived(ndef);
+  sP2pLinkManager->NotifyNdefReceived(aNdef);
 
-  return SnepMessage::getMessage(SnepMessage::RESPONSE_SUCCESS);
+  return SnepMessage::GetMessage(SnepMessage::RESPONSE_SUCCESS);
 }
 
 // The NFC Forum Default SNEP server is not allowed to respond to
@@ -64,9 +64,10 @@ SnepMessage* SnepCallback::doPut(NdefMessage* ndef)
 // since Android 4.1 used the NFC Forum default server to
 // implement connection handover, we will support this
 // until we can deprecate it.
-SnepMessage* SnepCallback::doGet(int acceptableLength, NdefMessage* ndef)
+SnepMessage* SnepCallback::DoGet(int aAcceptableLength,
+                                 NdefMessage* aNdef)
 {
-  if (!ndef) {
+  if (!aNdef) {
     ALOGE("%s: invalid parameter", FUNC);
     return NULL;
   }
@@ -76,7 +77,7 @@ SnepMessage* SnepCallback::doGet(int acceptableLength, NdefMessage* ndef)
    * The server does not support the functionality required to fulfill
    * the request.
    */
-  return SnepMessage::getMessage(SnepMessage::RESPONSE_NOT_IMPLEMENTED);
+  return SnepMessage::GetMessage(SnepMessage::RESPONSE_NOT_IMPLEMENTED);
 }
 
 HandoverCallback::HandoverCallback()
@@ -87,12 +88,12 @@ HandoverCallback::~HandoverCallback()
 {
 }
 
-void HandoverCallback::onMessageReceived(NdefMessage* ndef)
+void HandoverCallback::OnMessageReceived(NdefMessage* aNdef)
 {
-  sP2pLinkManager->notifyNdefReceived(ndef);
+  sP2pLinkManager->NotifyNdefReceived(aNdef);
 }
 
-P2pLinkManager::P2pLinkManager(NfcService* service)
+P2pLinkManager::P2pLinkManager(NfcService* aService)
  : mLinkState(LINK_STATE_DOWN)
  , mSessionId(-1)
  , mSnepClient(NULL)
@@ -104,13 +105,13 @@ P2pLinkManager::P2pLinkManager(NfcService* service)
   mHandoverCallback = new HandoverCallback();
   mHandoverServer = new HandoverServer(static_cast<IHandoverCallback*>(mHandoverCallback));
 
-  mNfcService = service;
+  mNfcService = aService;
   sP2pLinkManager = this;
 }
 
 P2pLinkManager::~P2pLinkManager()
 {
-  disconnectClients();
+  DisconnectClients();
 
   delete mSnepCallback;
   delete mSnepServer;
@@ -118,29 +119,29 @@ P2pLinkManager::~P2pLinkManager()
   delete mHandoverServer;
 }
 
-void P2pLinkManager::notifyNdefReceived(NdefMessage* ndef)
+void P2pLinkManager::NotifyNdefReceived(NdefMessage* aNdef)
 {
-  mNfcService->onP2pReceivedNdef(ndef);
+  mNfcService->OnP2pReceivedNdef(aNdef);
 }
 
-void P2pLinkManager::enableDisable(bool bEnable)
+void P2pLinkManager::EnableDisable(bool aEnable)
 {
-  if (bEnable) {
-    mSnepServer->start();
-    mHandoverServer->start();
+  if (aEnable) {
+    mSnepServer->Start();
+    mHandoverServer->Start();
   } else {
-    mSnepServer->stop();
-    mHandoverServer->stop();
+    mSnepServer->Stop();
+    mHandoverServer->Stop();
 
-    disconnectClients();
+    DisconnectClients();
   }
 }
 
 // TODO : P2P push will block in llcp socket send/receive.
 //        Maybe we should create a thread to do it ?
-void P2pLinkManager::push(NdefMessage& ndef)
+void P2pLinkManager::Push(NdefMessage& aNdef)
 {
-  if (ndef.mRecords.size() == 0) {
+  if (aNdef.mRecords.size() == 0) {
     ALOGE("%s: no NDEF record", FUNC);
     return;
   }
@@ -149,7 +150,7 @@ void P2pLinkManager::push(NdefMessage& ndef)
   // But nfcd will need to know if an NDEF message should be sent by SNEP client or HANDOVER client.
   // So parse NDEF message here to get correct client to send NDEF message.
   HandoverType handoverType = NOT_HANDOVER;
-  NdefRecord* record = &(ndef.mRecords[0]);
+  NdefRecord* record = &(aNdef.mRecords[0]);
   if (NdefRecord::TNF_WELL_KNOWN == record->mTnf && RTD_HANDOVER_SIZE == record->mType.size()) {
     std::vector<uint8_t>& type = record->mType;
 
@@ -163,12 +164,12 @@ void P2pLinkManager::push(NdefMessage& ndef)
   // Handover Reuqest:
   // Hr is sent by handover client and will receive response Hs.
   if (HANDOVER_REQUEST == handoverType) {
-    HandoverClient* pClient = getHandoverClient();
+    HandoverClient* pClient = GetHandoverClient();
     if (pClient) {
       ALOGD("%s: send Handover Request by handover client", FUNC);
-      NdefMessage* selectMsg = pClient->processHandoverRequest(ndef);
+      NdefMessage* selectMsg = pClient->ProcessHandoverRequest(aNdef);
       if (selectMsg) {
-        notifyNdefReceived(selectMsg);
+        NotifyNdefReceived(selectMsg);
         delete selectMsg;
       }
     } else {
@@ -180,40 +181,40 @@ void P2pLinkManager::push(NdefMessage& ndef)
   } else if (HANDOVER_SELECT == handoverType) {
     if (mHandoverServer) {
       ALOGD("%s: send Handover Select by handover server", FUNC);
-      mHandoverServer->put(ndef);
+      mHandoverServer->Put(aNdef);
     } else {
       ALOGE("%s: handover server not created", FUNC);
     }
   // For all other non-handover message, send through SNEP protocol.
   } else {
-    SnepClient* pClient = getSnepClient();
+    SnepClient* pClient = GetSnepClient();
     if (pClient) {
       ALOGD("%s: send NDEF by SNEP client", FUNC);
-      pClient->put(ndef);
+      pClient->Put(aNdef);
     } else {
       ALOGE("%s: snep client not connected", FUNC);
     }
   }
 }
 
-void P2pLinkManager::onLlcpActivated()
+void P2pLinkManager::OnLlcpActivated()
 {
   mLinkState = LINK_STATE_UP;
 }
 
-void P2pLinkManager::onLlcpDeactivated()
+void P2pLinkManager::OnLlcpDeactivated()
 {
   mLinkState = LINK_STATE_DOWN;
 
-  disconnectClients();
+  DisconnectClients();
 }
 
-SnepClient* P2pLinkManager::getSnepClient()
+SnepClient* P2pLinkManager::GetSnepClient()
 {
   if (!mSnepClient) {
     mSnepClient = new SnepClient();
-    if (!mSnepClient->connect()) {
-      mSnepClient->close();
+    if (!mSnepClient->Connect()) {
+      mSnepClient->Close();
       delete mSnepClient;
       mSnepClient = NULL;
     }
@@ -221,12 +222,12 @@ SnepClient* P2pLinkManager::getSnepClient()
   return mSnepClient;
 }
 
-HandoverClient* P2pLinkManager::getHandoverClient()
+HandoverClient* P2pLinkManager::GetHandoverClient()
 {
   if (!mHandoverClient) {
     mHandoverClient = new HandoverClient();
-    if (!mHandoverClient->connect()) {
-      mHandoverClient->close();
+    if (!mHandoverClient->Connect()) {
+      mHandoverClient->Close();
       delete mHandoverClient;
       mHandoverClient = NULL;
     }
@@ -234,21 +235,21 @@ HandoverClient* P2pLinkManager::getHandoverClient()
   return mHandoverClient;
 }
 
-void P2pLinkManager::disconnectClients()
+void P2pLinkManager::DisconnectClients()
 {
   if (mSnepClient) {
-    mSnepClient->close();
+    mSnepClient->Close();
     delete mSnepClient;
     mSnepClient = NULL;
   }
   if (mHandoverClient) {
-    mHandoverClient->close();
+    mHandoverClient->Close();
     delete mHandoverClient;
     mHandoverClient = NULL;
   }
 }
 
-bool P2pLinkManager::isLlcpActive()
+bool P2pLinkManager::IsLlcpActive()
 {
   return mLinkState != LINK_STATE_DOWN;
 }

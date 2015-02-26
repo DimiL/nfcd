@@ -48,199 +48,216 @@ public:
    *
    * @return Singleton PeerToPeer object.
    */
-  static PeerToPeer& getInstance();
+  static PeerToPeer& GetInstance();
 
   /**
    * Initialize member variables.
    *
+   * @param  aNfcManager NFC manager class instance.
    * @return None.
    */
-  void initialize(NfcManager* pNfcManager);
+  void Initialize(NfcManager* aNfcManager);
 
   /**
    * Receive LLLCP-activated event from stack.
    *
-   * @param activated Event data.
-   * @return          None.
+   * @param  aActivated Event data.
+   * @return            None.
    */
-  void llcpActivatedHandler(tNFA_LLCP_ACTIVATED& activated);
+  void LlcpActivatedHandler(tNFA_LLCP_ACTIVATED& aActivated);
 
   /**
    * Receive LLLCP-deactivated event from stack.
    *
-   * @param deactivated Event data.
-   * @return            None.
+   * @param  aDeactivated Event data.
+   * @return              None.
    */
-  void llcpDeactivatedHandler(tNFA_LLCP_DEACTIVATED& deactivated);
+  void LlcpDeactivatedHandler(tNFA_LLCP_DEACTIVATED& aDeactivated);
 
-  void llcpFirstPacketHandler();
+  void LlcpFirstPacketHandler();
 
   /**
    * Receive events from the stack.
    *
-   * @param  event     Event code.
-   * @param  eventData Event data.
-   * @return           None.
+   * @param  aEvent     Event code.
+   * @param  aEventData Event data.
+   * @return            None.
    */
-  void connectionEventHandler(UINT8 event, tNFA_CONN_EVT_DATA* eventData);
+  void ConnectionEventHandler(UINT8 aEvent,
+                              tNFA_CONN_EVT_DATA* aEventData);
 
   /**
    * Let a server start listening for peer's connection request.
    *
-   * @param  handle      Connection handle.
-   * @param  serviceName Server's service name.
-   * @return             True if ok.
+   * @param  aHandle      Connection handle.
+   * @param  aServiceName Server's service name.
+   * @return              True if ok.
    */
-  bool registerServer(unsigned int handle, const char* serviceName);
+  bool RegisterServer(unsigned int aHandle,
+                      const char* aServiceName);
 
   /**
    * Stop a P2pServer from listening for peer.
    *
-   * @param  handle Connection handle.
-   * @return        True if ok.
+   * @param  aHandle Connection handle.
+   * @return         True if ok.
    */
-  bool deregisterServer(unsigned int handle);
+  bool DeregisterServer(unsigned int aHandle);
 
   /**
    * Accept a peer's request to connect
    *
-   * @param  serverHandle Server's handle.
-   * @param  connHandle   Connection handle.
-   * @param  maxInfoUnit  Maximum information unit.
-   * @param  recvWindow   Receive window size.
-   * @return              True if ok.
+   * @param  aServerHandle Server's handle.
+   * @param  aConnHandle   Connection handle.
+   * @param  aMaxInfoUnit  Maximum information unit.
+   * @param  aRecvWindow   Receive window size.
+   * @return               True if ok.
    */
-  bool accept(unsigned int serverHandle, unsigned int connHandle, int maxInfoUnit, int recvWindow);
+  bool Accept(unsigned int aServerHandle,
+              unsigned int aConnHandle,
+              int aMaxInfoUnit,
+              int aRecvWindow);
 
   /**
    * Create a P2pClient object for a new out-bound connection.
    *
-   * @param  handle Connection handle.
-   * @param  miu    Maximum information unit.
-   * @param  rw     Receive window size.
-   * @return        True if ok.
+   * @param  aHandle Connection handle.
+   * @param  aMiu    Maximum information unit.
+   * @param  aRw     Receive window size.
+   * @return         True if ok.
    */
-  bool createClient(unsigned int handle, UINT16 miu, UINT8 rw);
+  bool CreateClient(unsigned int aHandle,
+                    UINT16 aMiu,
+                    UINT8 aRw);
 
   /**
    * Estabish a connection-oriented connection to a peer.
    *
-   * @param  handle      Connection handle.
-   * @param  serviceName Peer's service name.
-   * @return             True if ok.
+   * @param  aHandle      Connection handle.
+   * @param  aServiceName Peer's service name.
+   * @return              True if ok.
    */
-  bool connectConnOriented(unsigned int handle, const char* serviceName);
+  bool ConnectConnOriented(unsigned int aHandle,
+                           const char* aServiceName);
 
   /**
    * Estabish a connection-oriented connection to a peer.
    *
-   * @param  handle         Connection handle.
-   * @param  destinationSap Peer's service access point.
-   * @return                True if ok.
+   * @param  aHandle         Connection handle.
+   * @param  aDestinationSap Peer's service access point.
+   * @return                 True if ok.
    */
-  bool connectConnOriented(unsigned int handle, UINT8 destinationSap);
+  bool ConnectConnOriented(unsigned int aHandle,
+                           UINT8 aDestinationSap);
 
   /**
    * Send data to peer.
    *
-   * @param  handle    Handle of connection.
-   * @param  buffer    Buffer of data.
-   * @param  bufferLen Length of data.
-   * @return           True if ok.
+   * @param  aHandle    Handle of connection.
+   * @param  aBuffer    Buffer of data.
+   * @param  aBufferLen Length of data.
+   * @return            True if ok.
    */
-  bool send(unsigned int handle, UINT8* buffer, UINT16 bufferLen);
+  bool Send(unsigned int aHandle,
+            UINT8* aBuffer,
+            UINT16 aBufferLen);
 
   /**
    * Receive data from peer.
    *
-   * @param  handle    Handle of connection.
-   * @param  buffer    Buffer to store data.
-   * @param  bufferLen Max length of buffer.
-   * @param  actualLen Actual length received.
-   * @return           True if ok.
+   * @param  aHandle    Handle of connection.
+   * @param  aBuffer    Buffer to store data.
+   * @param  aBufferLen Max length of buffer.
+   * @param  aActualLen Actual length received.
+   * @return            True if ok.
    */
-  bool receive(unsigned int handle, UINT8* buffer, UINT16 bufferLen, UINT16& actualLen);
+  bool Receive(unsigned int aHandle,
+               UINT8* aBuffer,
+               UINT16 aBufferLen,
+               UINT16& aActualLen);
 
   /**
    * Disconnect a connection-oriented connection with peer.
    *
-   * @param  handle Handle of connection.
+   * @param  aHandle Handle of connection.
    * @return        True if ok.
    */
-  bool disconnectConnOriented(unsigned int handle);
+  bool DisconnectConnOriented(unsigned int aHandle);
 
   /**
    * Get peer's max information unit.
    *
-   * @param  handle Handle of the connection.
-   * @return        Peer's max information unit.
+   * @param  aHandle Handle of the connection.
+   * @return         Peer's max information unit.
    */
-  UINT16 getRemoteMaxInfoUnit(unsigned int handle);
+  UINT16 GetRemoteMaxInfoUnit(unsigned int aHandle);
 
   /**
    * Get peer's receive window size.
    *
-   * @param  handle Handle of the connection.
-   * @return        Peer's receive window size.
+   * @param  aHandle Handle of the connection.
+   * @return         Peer's receive window size.
    */
-  UINT8 getRemoteRecvWindow(unsigned int handle);
+  UINT8 GetRemoteRecvWindow(unsigned int aHandle);
 
   /**
    * Sets the p2p listen technology mask.
    *
-   * @param  p2pListenMask The p2p listen mask to be set?
-   * @return               None.
+   * @param  aP2pListenMask The p2p listen mask to be set?
+   * @return                None.
    */
-  void setP2pListenMask(tNFA_TECHNOLOGY_MASK p2pListenMask);
+  void SetP2pListenMask(tNFA_TECHNOLOGY_MASK aP2pListenMask);
 
   /**
    * Start/stop polling/listening to peer that supports P2P.
    *
-   * @param  isEnable Is enable polling/listening?
-   * @return          True if ok.
+   * @param  aIsEnable Is enable polling/listening?
+   * @return           True if ok.
    */
-  bool enableP2pListening(bool isEnable);
+  bool EnableP2pListening(bool aIsEnable);
 
   /**
    * Handle events related to turning NFC on/off by the user.
    *
-   * @param  isOn Is NFC turning on?
-   * @return      None.
+   * @param  aIsOn Is NFC turning on?
+   * @return       None.
    */
-  void handleNfcOnOff(bool isOn);
+  void HandleNfcOnOff(bool aIsOn);
 
   /**
    * Get a new handle.
    *
    * @return A new handle
    */
-  unsigned int getNewHandle();
+  unsigned int GetNewHandle();
 
   /**
    * Receive LLCP-related events from the stack.
    *
-   * @param  p2pEvent  Event code.
-   * @param  eventData Event data.
-   * @return           None.
+   * @param  aP2pEvent  Event code.
+   * @param  aEventData Event data.
+   * @return            None.
    */
-  static void nfaServerCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA *eventData);
+  static void NfaServerCallback(tNFA_P2P_EVT aP2pEvent,
+                                tNFA_P2P_EVT_DATA *aEventData);
 
   /**
    * Receive LLCP-related events from the stack.
    *
-   * @param  p2pEvent  Event code.
-   * @param  eventData Event data.
-   * @return           None.
+   * @param  aP2pEvent  Event code.
+   * @param  aEventData Event data.
+   * @return            None.
    */
-  static void nfaClientCallback(tNFA_P2P_EVT p2pEvent, tNFA_P2P_EVT_DATA *eventData);
+  static void NfaClientCallback(tNFA_P2P_EVT aP2pEvent,
+                                tNFA_P2P_EVT_DATA *aEventData);
 
 private:
   static const int  sMax = 10;
   static PeerToPeer sP2p;
 
   // Variables below only accessed from a single thread.
-  UINT16          		mRemoteWKS;         // Peer's well known services.
-  bool            		mIsP2pListening;    // If P2P listening is enabled or not.
+  UINT16                mRemoteWKS;         // Peer's well known services.
+  bool                  mIsP2pListening;    // If P2P listening is enabled or not.
   tNFA_TECHNOLOGY_MASK  mP2pListenTechMask; // P2P Listen mask.
 
   // Variable below is protected by mNewHandleMutex.
@@ -267,21 +284,24 @@ private:
 
   NfcManager*     mNfcManager;
 
-  static void ndefTypeCallback   (tNFA_NDEF_EVT event, tNFA_NDEF_EVT_DATA *evetnData);
+  static void NdefTypeCallback(tNFA_NDEF_EVT aEvent,
+                               tNFA_NDEF_EVT_DATA *aEvetnData);
 
-  android::sp<P2pServer>   findServerLocked(tNFA_HANDLE nfaP2pServerHandle);
-  android::sp<P2pServer>   findServerLocked(unsigned int handle);
-  android::sp<P2pServer>   findServerLocked(const char *serviceName);
+  android::sp<P2pServer> FindServerLocked(tNFA_HANDLE aNfaP2pServerHandle);
+  android::sp<P2pServer> FindServerLocked(unsigned int aHandle);
+  android::sp<P2pServer> FindServerLocked(const char* aServiceName);
 
-  void        removeServer(unsigned int handle);
-  void        removeConn(unsigned int handle);
-  bool        createDataLinkConn(unsigned int handle, const char* serviceName, UINT8 destinationSap);
+  void RemoveServer(unsigned int aHandle);
+  void RemoveConn(unsigned int aHandle);
+  bool CreateDataLinkConn(unsigned int aHandle,
+                          const char* aServiceName,
+                          UINT8 aDestinationSap);
 
-  android::sp<P2pClient>   findClient(tNFA_HANDLE nfaConnHandle);
-  android::sp<P2pClient>   findClient(unsigned int handle);
-  android::sp<P2pClient>   findClientCon(tNFA_HANDLE nfaConnHandle);
-  android::sp<NfaConn>     findConnection(tNFA_HANDLE nfaConnHandle);
-  android::sp<NfaConn>     findConnection(unsigned int handle);
+  android::sp<P2pClient> FindClient(tNFA_HANDLE aNfaConnHandle);
+  android::sp<P2pClient> FindClient(unsigned int aHandle);
+  android::sp<P2pClient> FindClientCon(tNFA_HANDLE aNfaConnHandle);
+  android::sp<NfaConn>   FindConnection(tNFA_HANDLE aNfaConnHandle);
+  android::sp<NfaConn>   FindConnection(unsigned int aHandle);
 };
 
 class NfaConn
@@ -313,24 +333,27 @@ public:
   SyncEvent       mConnRequestEvent;    // For accept()
   std::string     mServiceName;
 
-  P2pServer(unsigned int handle, const char* serviceName);
+  P2pServer(unsigned int aHandle,
+            const char* aServiceName);
 
-  bool registerWithStack();
-  bool accept(unsigned int serverHandle, unsigned int connHandle,
-            int maxInfoUnit, int recvWindow);
-  void unblockAll();
+  bool RegisterWithStack();
+  bool Accept(unsigned int aServerHandle,
+              unsigned int aConnHandle,
+              int aMaxInfoUnit,
+              int aRecvWindow);
+  void UnblockAll();
 
-  android::sp<NfaConn> findServerConnection(tNFA_HANDLE nfaConnHandle);
-  android::sp<NfaConn> findServerConnection(unsigned int handle);
+  android::sp<NfaConn> FindServerConnection(tNFA_HANDLE aNfaConnHandle);
+  android::sp<NfaConn> FindServerConnection(unsigned int aHandle);
 
-  bool removeServerConnection(unsigned int handle);
+  bool RemoveServerConnection(unsigned int aHandle);
 
 private:
   Mutex           mMutex;
   // mServerConn is protected by mMutex.
-  android::sp<NfaConn>     mServerConn[MAX_NFA_CONNS_PER_SERVER];
+  android::sp<NfaConn> mServerConn[MAX_NFA_CONNS_PER_SERVER];
 
-  android::sp<NfaConn> allocateConnection(unsigned int handle);
+  android::sp<NfaConn> AllocateConnection(unsigned int aHandle);
 };
 
 class P2pClient
@@ -347,5 +370,5 @@ public:
   P2pClient();
   ~P2pClient();
 
-  void unblock();
+  void Unblock();
 };

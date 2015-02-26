@@ -44,7 +44,7 @@ static UINT32 TimeDiff(timespec start, timespec end)
   return (temp.tv_sec * 1000) + (temp.tv_nsec / 1000000);
 }
 
-void doStartupConfig();
+void DoStartupConfig();
 
 PowerSwitch PowerSwitch::sPowerSwitch;
 const PowerSwitch::PowerActivity PowerSwitch::DISCOVERY=0x01;
@@ -64,65 +64,65 @@ PowerSwitch::~PowerSwitch()
 {
 }
 
-PowerSwitch& PowerSwitch::getInstance()
+PowerSwitch& PowerSwitch::GetInstance()
 {
   return sPowerSwitch;
 }
 
-void PowerSwitch::initialize(PowerLevel level)
+void PowerSwitch::Initialize(PowerLevel aLevel)
 {
-  mMutex.lock();
+  mMutex.Lock();
 
-  ALOGD("%s: level=%s (%u)", __FUNCTION__, powerLevelToString(level), level);
+  ALOGD("%s: level=%s (%u)", __FUNCTION__, PowerLevelToString(aLevel), aLevel);
   GetNumValue(NAME_SCREEN_OFF_POWER_STATE, &mDesiredScreenOffPowerState, sizeof(mDesiredScreenOffPowerState));
   ALOGD("%s: desired screen-off state=%d", __FUNCTION__, mDesiredScreenOffPowerState);
 
-  switch (level) {
+  switch (aLevel) {
     case FULL_POWER:
       mCurrDeviceMgtPowerState = NFA_DM_PWR_MODE_FULL;
-      mCurrLevel = level;
+      mCurrLevel = aLevel;
       break;
     case UNKNOWN_LEVEL:
       mCurrDeviceMgtPowerState = NFA_DM_PWR_STATE_UNKNOWN;
-      mCurrLevel = level;
+      mCurrLevel = aLevel;
       break;
     default:
       ALOGE("%s: not handled", __FUNCTION__);
       break;
   }
-  mMutex.unlock();
+  mMutex.Unlock();
 }
 
-PowerSwitch::PowerLevel PowerSwitch::getLevel()
+PowerSwitch::PowerLevel PowerSwitch::GetLevel()
 {
   PowerLevel level = UNKNOWN_LEVEL;
-  mMutex.lock();
+  mMutex.Lock();
   level = mCurrLevel;
-  mMutex.unlock();
+  mMutex.Unlock();
   return level;
 }
 
-bool PowerSwitch::setLevel(PowerLevel newLevel)
+bool PowerSwitch::SetLevel(PowerLevel aNewLevel)
 {
   bool retval = false;
 
-  mMutex.lock();
+  mMutex.Lock();
 
-  ALOGD("%s: level=%s (%u)", __FUNCTION__, powerLevelToString(newLevel), newLevel);
-  if (mCurrLevel == newLevel) {
+  ALOGD("%s: level=%s (%u)", __FUNCTION__, PowerLevelToString(aNewLevel), aNewLevel);
+  if (mCurrLevel == aNewLevel) {
     retval = true;
     goto TheEnd;
   }
 
-  switch (newLevel) {
+  switch (aNewLevel) {
     case FULL_POWER:
       if (mCurrDeviceMgtPowerState == NFA_DM_PWR_MODE_OFF_SLEEP)
-        retval = setPowerOffSleepState(false);
+        retval = SetPowerOffSleepState(false);
       break;
     case LOW_POWER:
     case POWER_OFF:
-      if (isPowerOffSleepFeatureEnabled()) {
-        retval = setPowerOffSleepState(true);
+      if (IsPowerOffSleepFeatureEnabled()) {
+        retval = SetPowerOffSleepState(true);
       } else if (mDesiredScreenOffPowerState == 1) { //.conf file desires full-power.
         mCurrLevel = FULL_POWER;
         retval = true;
@@ -134,41 +134,41 @@ bool PowerSwitch::setLevel(PowerLevel newLevel)
   }
 
 TheEnd:
-  mMutex.unlock();
+  mMutex.Unlock();
   return retval;
 }
 
-bool PowerSwitch::setModeOff(PowerActivity deactivated)
+bool PowerSwitch::SetModeOff(PowerActivity aDeactivated)
 {
   bool retVal = false;
 
-  mMutex.lock();
-  mCurrActivity &= ~deactivated;
+  mMutex.Lock();
+  mCurrActivity &= ~aDeactivated;
   retVal = mCurrActivity != 0;
-  ALOGD("%s: (deactivated=0x%x) : mCurrActivity=0x%x", __FUNCTION__, deactivated, mCurrActivity);
-  mMutex.unlock();
+  ALOGD("%s: (deactivated=0x%x) : mCurrActivity=0x%x", __FUNCTION__, aDeactivated, mCurrActivity);
+  mMutex.Unlock();
   return retVal;
 }
 
-bool PowerSwitch::setModeOn(PowerActivity activated)
+bool PowerSwitch::SetModeOn(PowerActivity aActivated)
 {
   bool retVal = false;
 
-  mMutex.lock();
-  mCurrActivity |= activated;
+  mMutex.Lock();
+  mCurrActivity |= aActivated;
   retVal = mCurrActivity != 0;
-  ALOGD("%s: (activated=0x%x) : mCurrActivity=0x%x", __FUNCTION__, activated, mCurrActivity);
-  mMutex.unlock();
+  ALOGD("%s: (activated=0x%x) : mCurrActivity=0x%x", __FUNCTION__, aActivated, mCurrActivity);
+  mMutex.Unlock();
   return retVal;
 }
 
-bool PowerSwitch::setPowerOffSleepState(bool sleep)
+bool PowerSwitch::SetPowerOffSleepState(bool aSleep)
 {
-  ALOGD("%s: enter; sleep=%u", __FUNCTION__, sleep);
+  ALOGD("%s: enter; sleep=%u", __FUNCTION__, aSleep);
   tNFA_STATUS stat = NFA_STATUS_FAILED;
   bool retval = false;
 
-  if (sleep) { // Enter power-off-sleep state.
+  if (aSleep) { // Enter power-off-sleep state.
     // Make sure the current power state is ON
     if (mCurrDeviceMgtPowerState != NFA_DM_PWR_MODE_OFF_SLEEP) {
       SyncEventGuard guard(mPowerStateEvent);
@@ -176,7 +176,7 @@ bool PowerSwitch::setPowerOffSleepState(bool sleep)
       ALOGD("%s: try power off", __FUNCTION__);
       stat = NFA_PowerOffSleepMode(TRUE);
       if (stat == NFA_STATUS_OK) {
-        mPowerStateEvent.wait();
+        mPowerStateEvent.Wait();
         mCurrLevel = LOW_POWER;
         clock_gettime(CLOCK_REALTIME, &mLastPowerOffTime);
       } else {
@@ -185,7 +185,7 @@ bool PowerSwitch::setPowerOffSleepState(bool sleep)
       }
     } else {
       ALOGE("%s: power is not ON; curr device mgt power state=%s (%u)", __FUNCTION__,
-        deviceMgtPowerStateToString(mCurrDeviceMgtPowerState), mCurrDeviceMgtPowerState);
+        DeviceMgtPowerStateToString(mCurrDeviceMgtPowerState), mCurrDeviceMgtPowerState);
       goto TheEnd;
     }
   } else { // Exit power-off-sleep state.
@@ -204,13 +204,13 @@ bool PowerSwitch::setPowerOffSleepState(bool sleep)
       }
       stat = NFA_PowerOffSleepMode(FALSE);
       if (stat == NFA_STATUS_OK) {
-        mPowerStateEvent.wait();
+        mPowerStateEvent.Wait();
         if (mCurrDeviceMgtPowerState != NFA_DM_PWR_MODE_FULL) {
           ALOGE("%s: unable to full power; curr device mgt power stat=%s (%u)", __FUNCTION__,
-            deviceMgtPowerStateToString(mCurrDeviceMgtPowerState), mCurrDeviceMgtPowerState);
+            DeviceMgtPowerStateToString(mCurrDeviceMgtPowerState), mCurrDeviceMgtPowerState);
           goto TheEnd;
         }
-        doStartupConfig();
+        DoStartupConfig();
         mCurrLevel = FULL_POWER;
       } else {
         ALOGE("%s: API fail; stat=0x%X", __FUNCTION__, stat);
@@ -218,7 +218,7 @@ bool PowerSwitch::setPowerOffSleepState(bool sleep)
       }
     } else {
       ALOGE("%s: not in power-off state; curr device mgt power state=%s (%u)", __FUNCTION__,
-        deviceMgtPowerStateToString(mCurrDeviceMgtPowerState), mCurrDeviceMgtPowerState);
+        DeviceMgtPowerStateToString(mCurrDeviceMgtPowerState), mCurrDeviceMgtPowerState);
       goto TheEnd;
     }
   }
@@ -229,9 +229,9 @@ TheEnd:
   return retval;
 }
 
-const char* PowerSwitch::deviceMgtPowerStateToString(UINT8 deviceMgtPowerState)
+const char* PowerSwitch::DeviceMgtPowerStateToString(UINT8 aDeviceMgtPowerState)
 {
-  switch (deviceMgtPowerState) {
+  switch (aDeviceMgtPowerState) {
     case NFA_DM_PWR_MODE_FULL:
       return "DM-FULL";
     case NFA_DM_PWR_MODE_OFF_SLEEP:
@@ -241,9 +241,9 @@ const char* PowerSwitch::deviceMgtPowerStateToString(UINT8 deviceMgtPowerState)
   }
 }
 
-const char* PowerSwitch::powerLevelToString(PowerLevel level)
+const char* PowerSwitch::PowerLevelToString(PowerLevel aLevel)
 {
-  switch (level) {
+  switch (aLevel) {
     case UNKNOWN_LEVEL:
       return "PS-UNKNOWN";
     case FULL_POWER:
@@ -257,30 +257,32 @@ const char* PowerSwitch::powerLevelToString(PowerLevel level)
   }
 }
 
-void PowerSwitch::abort()
+void PowerSwitch::Abort()
 {
   ALOGD("%s", __FUNCTION__);
   SyncEventGuard guard(mPowerStateEvent);
-  mPowerStateEvent.notifyOne();
+  mPowerStateEvent.NotifyOne();
 }
 
-void PowerSwitch::deviceManagementCallback(UINT8 event, tNFA_DM_CBACK_DATA* eventData)
+void PowerSwitch::DeviceManagementCallback(UINT8 aEvent,
+                                           tNFA_DM_CBACK_DATA* aEventData)
 {
-  switch (event) {
+  switch (aEvent) {
     case NFA_DM_PWR_MODE_CHANGE_EVT: {
-      tNFA_DM_PWR_MODE_CHANGE& power_mode = eventData->power_mode;
+      tNFA_DM_PWR_MODE_CHANGE& power_mode = aEventData->power_mode;
       ALOGD("%s: NFA_DM_PWR_MODE_CHANGE_EVT; status=%u; device mgt power mode=%s (%u)", __FUNCTION__,
-        power_mode.status, sPowerSwitch.deviceMgtPowerStateToString(power_mode.power_mode), power_mode.power_mode);
+        power_mode.status, sPowerSwitch.DeviceMgtPowerStateToString(power_mode.power_mode), power_mode.power_mode);
       SyncEventGuard guard(sPowerSwitch.mPowerStateEvent);
-      if (power_mode.status == NFA_STATUS_OK)
+      if (power_mode.status == NFA_STATUS_OK) {
         sPowerSwitch.mCurrDeviceMgtPowerState = power_mode.power_mode;
-      sPowerSwitch.mPowerStateEvent.notifyOne();
+      }
+      sPowerSwitch.mPowerStateEvent.NotifyOne();
       break;
     }
   }
 }
 
-bool PowerSwitch::isPowerOffSleepFeatureEnabled()
+bool PowerSwitch::IsPowerOffSleepFeatureEnabled()
 {
   return mDesiredScreenOffPowerState == 0;
 }

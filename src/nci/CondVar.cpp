@@ -40,15 +40,15 @@ CondVar::~CondVar()
   }
 }
 
-void CondVar::wait(Mutex& mutex)
+void CondVar::Wait(Mutex& aMutex)
 {
-  int const res = pthread_cond_wait(&mCondition, mutex.nativeHandle());
+  int const res = pthread_cond_wait(&mCondition, aMutex.GetHandle());
   if (res) {
     ALOGE("%s: fail wait; error=0x%X", __FUNCTION__, res);
   }
 }
 
-bool CondVar::wait(Mutex& mutex, long millisec)
+bool CondVar::Wait(Mutex& aMutex, long aMillisec)
 {
   bool retVal = false;
   struct timespec absoluteTime;
@@ -56,8 +56,8 @@ bool CondVar::wait(Mutex& mutex, long millisec)
   if (clock_gettime(CLOCK_MONOTONIC, &absoluteTime) == -1) {
     ALOGE("%s: fail get time; errno=0x%X", __FUNCTION__, errno);
   } else {
-    absoluteTime.tv_sec += millisec / 1000;
-    long ns = absoluteTime.tv_nsec + ((millisec % 1000) * 1000000);
+    absoluteTime.tv_sec += aMillisec / 1000;
+    long ns = absoluteTime.tv_nsec + ((aMillisec % 1000) * 1000000);
     if (ns > 1000000000) {
       absoluteTime.tv_sec++;
       absoluteTime.tv_nsec = ns - 1000000000;
@@ -69,7 +69,7 @@ bool CondVar::wait(Mutex& mutex, long millisec)
   // Declared in /development/ndk/platforms/android-9/include/pthread.h.
   // It uses monotonic clock.
   // The standard pthread_cond_timedwait() uses realtime clock.
-  const int waitResult = pthread_cond_timedwait_monotonic_np(&mCondition, mutex.nativeHandle(), &absoluteTime);
+  const int waitResult = pthread_cond_timedwait_monotonic_np(&mCondition, aMutex.GetHandle(), &absoluteTime);
   if ((waitResult != 0) && (waitResult != ETIMEDOUT)) {
     ALOGE("%s: fail timed wait; error=0x%X", __FUNCTION__, waitResult);
   }
@@ -77,7 +77,7 @@ bool CondVar::wait(Mutex& mutex, long millisec)
   return retVal;
 }
 
-void CondVar::notifyOne()
+void CondVar::NotifyOne()
 {
   const int res = pthread_cond_signal(&mCondition);
   if (res) {

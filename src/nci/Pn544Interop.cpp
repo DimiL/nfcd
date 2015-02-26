@@ -30,34 +30,34 @@
 #define LOG_TAG "NfcNci"
 #include <cutils/log.h>
 
-extern void startStopPolling(bool isStartPolling);
+extern void StartStopPolling(bool aIsStartPolling);
+static void Pn544InteropStartPolling(union sigval); // Callback function for interval timer.
 
 static const int gIntervalTime = 1000; // Millisecond between the check to restore polling.
 static IntervalTimer gTimer;
 static Mutex gMutex;
-static void pn544InteropStartPolling(union sigval); // Callback function for interval timer.
 static bool gIsBusy = false;   // Is timer busy?
 static bool gAbortNow = false; // Stop timer during next callback.
 
-void pn544InteropStopPolling()
+void Pn544InteropStopPolling()
 {
   ALOGD("%s: enter", __FUNCTION__);
-  gMutex.lock();
-  gTimer.kill();
-  startStopPolling(false);
+  gMutex.Lock();
+  gTimer.Kill();
+  StartStopPolling(false);
   gIsBusy = true;
   gAbortNow = false;
-  gTimer.set(gIntervalTime, pn544InteropStartPolling); // After some time, start polling again.
-  gMutex.unlock();
+  gTimer.Set(gIntervalTime, Pn544InteropStartPolling); // After some time, start polling again.
+  gMutex.Unlock();
   ALOGD("%s: exit", __FUNCTION__);
 }
 
-void pn544InteropStartPolling(union sigval)
+void Pn544InteropStartPolling(union sigval)
 {
   ALOGD("%s: enter", __FUNCTION__);
 
-  gMutex.lock();
-  NfcTag::ActivationState state = NfcTag::getInstance().getActivationState();
+  gMutex.Lock();
+  NfcTag::ActivationState state = NfcTag::GetInstance().GetActivationState();
 
   if (gAbortNow) {
     ALOGD("%s: abort now", __FUNCTION__);
@@ -69,36 +69,36 @@ void pn544InteropStartPolling(union sigval)
   if (state == NfcTag::Idle) {
     ALOGD("%s: start polling", __FUNCTION__);
 
-    startStopPolling(true);
+    StartStopPolling(true);
     gIsBusy = false;
   } else {
     ALOGD("%s: try again later", __FUNCTION__);
 
-    gTimer.set(gIntervalTime, pn544InteropStartPolling); // After some time, start polling again.
+    gTimer.Set(gIntervalTime, Pn544InteropStartPolling); // After some time, start polling again.
   }
 
 TheEnd:
-  gMutex.unlock();
+  gMutex.Unlock();
 
   ALOGD("%s: exit", __FUNCTION__);
 }
 
-bool pn544InteropIsBusy()
+bool Pn544InteropIsBusy()
 {
   bool isBusy = false;
-  gMutex.lock();
+  gMutex.Lock();
   isBusy = gIsBusy;
-  gMutex.unlock();
+  gMutex.Unlock();
 
   ALOGD("%s: %u", __FUNCTION__, isBusy);
   return isBusy;
 }
 
-void pn544InteropAbortNow()
+void Pn544InteropAbortNow()
 {
   ALOGD("%s", __FUNCTION__);
 
-  gMutex.lock();
+  gMutex.Lock();
   gAbortNow = true;
-  gMutex.unlock();
+  gMutex.Unlock();
 }

@@ -40,7 +40,7 @@ Mutex::~Mutex()
   }
 }
 
-void Mutex::lock()
+void Mutex::Lock()
 {
   const int res = pthread_mutex_lock(&mMutex);
   if (res != 0) {
@@ -48,7 +48,7 @@ void Mutex::lock()
   }
 }
 
-void Mutex::unlock()
+void Mutex::Unlock()
 {
   const int res = pthread_mutex_unlock(&mMutex);
   if (res != 0) {
@@ -56,7 +56,7 @@ void Mutex::unlock()
   }
 }
 
-bool Mutex::tryLock()
+bool Mutex::TryLock()
 {
   const int res = pthread_mutex_trylock(&mMutex);
   if ((res != 0) && (res != EBUSY)) {
@@ -65,7 +65,7 @@ bool Mutex::tryLock()
   return res == 0;
 }
 
-pthread_mutex_t* Mutex::nativeHandle()
+pthread_mutex_t* Mutex::GetHandle()
 {
   return &mMutex;
 }

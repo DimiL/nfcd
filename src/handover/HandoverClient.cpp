@@ -37,10 +37,10 @@ HandoverClient::HandoverClient()
 
 HandoverClient::~HandoverClient()
 {
-  close();
+  Close();
 }
 
-bool HandoverClient::connect()
+bool HandoverClient::Connect()
 {
   ALOGD("%s: enter", FUNC);
 
@@ -50,18 +50,18 @@ bool HandoverClient::connect()
   }
   mState = HandoverClient::CONNECTING;
 
-  INfcManager* pINfcManager = NfcService::getNfcManager();
+  INfcManager* pINfcManager = NfcService::GetNfcManager();
 
-  mSocket = pINfcManager->createLlcpSocket(0, mMiu, 1, 1024);
+  mSocket = pINfcManager->CreateLlcpSocket(0, mMiu, 1, 1024);
   if (!mSocket) {
     ALOGE("%s: could not connect to socket", FUNC);
     mState = HandoverClient::DISCONNECTED;
     return false;
   }
 
-  if (!mSocket->connectToService(mServiceName)) {
+  if (!mSocket->ConnectToService(mServiceName)) {
     ALOGE("%s: could not connect to service (%s)", FUNC, mServiceName);
-    mSocket->close();
+    mSocket->Close();
     delete mSocket;
     mSocket = NULL;
     mState = HandoverClient::DISCONNECTED;
@@ -74,24 +74,24 @@ bool HandoverClient::connect()
   return true;
 }
 
-NdefMessage* HandoverClient::processHandoverRequest(NdefMessage& msg)
+NdefMessage* HandoverClient::ProcessHandoverRequest(NdefMessage& aMsg)
 {
   NdefMessage* ndef = NULL;
   // Send handover request message.
-  if (put(msg)) {
+  if (Put(aMsg)) {
     // Get handover select message sent from remote.
-    ndef = receive();
+    ndef = Receive();
   }
 
   return ndef;
 }
 
-NdefMessage* HandoverClient::receive()
+NdefMessage* HandoverClient::Receive()
 {
   std::vector<uint8_t> buffer;
   while(true) {
     std::vector<uint8_t> partial;
-    int size = mSocket->receive(partial);
+    int size = mSocket->Receive(partial);
     if (size < 0) {
       ALOGE("%s: connection broken", FUNC);
       break;
@@ -100,7 +100,7 @@ NdefMessage* HandoverClient::receive()
     }
 
     NdefMessage* ndef = new NdefMessage();
-    if(ndef->init(buffer)) {
+    if(ndef->Init(buffer)) {
       ALOGD("%s: get a complete NDEF message", FUNC);
       return ndef;
     } else {
@@ -110,7 +110,7 @@ NdefMessage* HandoverClient::receive()
   return NULL;
 }
 
-bool HandoverClient::put(NdefMessage& msg)
+bool HandoverClient::Put(NdefMessage& aMsg)
 {
   ALOGD("%s: enter", FUNC);
 
@@ -120,19 +120,19 @@ bool HandoverClient::put(NdefMessage& msg)
   }
 
   std::vector<uint8_t> buf;
-  msg.toByteArray(buf);
-  mSocket->send(buf);
+  aMsg.ToByteArray(buf);
+  mSocket->Send(buf);
 
   ALOGD("%s: exit", FUNC);
   return true;
 }
 
-void HandoverClient::close()
+void HandoverClient::Close()
 {
   ALOGD("%s: enter", FUNC);
 
   if (mSocket) {
-    mSocket->close();
+    mSocket->Close();
     delete mSocket;
     mSocket = NULL;
   }

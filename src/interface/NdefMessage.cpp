@@ -20,14 +20,17 @@ NdefMessage::NdefMessage()
 {
 }
 
-NdefMessage::NdefMessage(NdefMessage* ndef)
+NdefMessage::NdefMessage(NdefMessage* aNdef)
 {
-  if (!ndef)
+  if (!aNdef)
     return;
 
-  std::vector<NdefRecord>& record = ndef->mRecords;
+  std::vector<NdefRecord>& record = aNdef->mRecords;
   for (uint32_t i = 0; i < record.size(); i++) {
-    mRecords.push_back(NdefRecord(record[i].mTnf, record[i].mType, record[i].mId, record[i].mPayload));
+    mRecords.push_back(NdefRecord(record[i].mTnf,
+                                  record[i].mType,
+                                  record[i].mId,
+                                  record[i].mPayload));
   }
 }
 
@@ -36,26 +39,26 @@ NdefMessage::~NdefMessage()
   mRecords.clear();
 }
 
-bool NdefMessage::init(std::vector<uint8_t>& buf, int offset)
+bool NdefMessage::Init(std::vector<uint8_t>& aBuf, int aOffset)
 {
-  return NdefRecord::parse(buf, false, mRecords, offset);
+  return NdefRecord::Parse(aBuf, false, mRecords, aOffset);
 }
 
-bool NdefMessage::init(std::vector<uint8_t>& buf)
+bool NdefMessage::Init(std::vector<uint8_t>& aBuf)
 {
-  return NdefRecord::parse(buf, false, mRecords);
+  return NdefRecord::Parse(aBuf, false, mRecords);
 }
 
 /**
  * This method will generate current NDEF message to byte array(vector).
  */
-void NdefMessage::toByteArray(std::vector<uint8_t>& buf)
+void NdefMessage::ToByteArray(std::vector<uint8_t>& aBuf)
 {
   int recordSize = mRecords.size();
   for (int i = 0; i < recordSize; i++) {
     bool mb = (i == 0);  // first record.
     bool me = (i == recordSize - 1);  // last record.
-    mRecords[i].writeToByteBuffer(buf, mb, me);
+    mRecords[i].WriteToByteBuffer(aBuf, mb, me);
   }
   return;
 }

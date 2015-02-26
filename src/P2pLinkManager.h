@@ -34,8 +34,8 @@ public:
    SnepCallback();
    virtual ~SnepCallback();
 
-   virtual SnepMessage* doPut(NdefMessage* msg);
-   virtual SnepMessage* doGet(int acceptableLength, NdefMessage* msg);
+   virtual SnepMessage* DoPut(NdefMessage* aMsg);
+   virtual SnepMessage* DoGet(int aAcceptableLength, NdefMessage* aMsg);
 };
 
 class HandoverCallback
@@ -45,31 +45,31 @@ public:
    HandoverCallback();
    virtual ~HandoverCallback();
 
-   virtual void onMessageReceived(NdefMessage* msg);
+   virtual void OnMessageReceived(NdefMessage* aMsg);
 };
 
 class P2pLinkManager{
 public:
-  P2pLinkManager(NfcService* service);
+  P2pLinkManager(NfcService* aService);
   ~P2pLinkManager();
 
-  void notifyNdefReceived(NdefMessage* ndef);
-  void enableDisable(bool bEnable);
-  void push(NdefMessage& ndef);
-  void onLlcpActivated();
-  void onLlcpDeactivated();
-  bool isLlcpActive();
+  void NotifyNdefReceived(NdefMessage* aNdef);
+  void EnableDisable(bool aEnable);
+  void Push(NdefMessage& aNdef);
+  void OnLlcpActivated();
+  void OnLlcpDeactivated();
+  bool IsLlcpActive();
 
-  void setSessionId(int sessionId) { mSessionId = sessionId; }
-  int getSessionId() { return mSessionId; }
+  void SetSessionId(int aSessionId) { mSessionId = aSessionId; }
+  int GetSessionId() { return mSessionId; }
 
 private:
   static const int LINK_STATE_DOWN = 1;
   static const int LINK_STATE_UP = 2;
 
-  SnepClient* getSnepClient();
-  HandoverClient* getHandoverClient();
-  void disconnectClients();
+  SnepClient* GetSnepClient();
+  HandoverClient* GetHandoverClient();
+  void DisconnectClients();
 
   int mLinkState;
   int mSessionId;

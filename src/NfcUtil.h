@@ -26,9 +26,9 @@
 class NfcUtil{
 
 public:
-  static void convertNdefPduToNdefMessage(NdefMessagePdu& ndefPdu, NdefMessage* ndefMessage);
-  static NfcEvtTransactionOrigin convertOriginType(TransactionEvent::OriginType type);
-  static NfcNdefType convertNdefType(NdefType type);
+  static void ConvertNdefPduToNdefMessage(NdefMessagePdu& aNdefPdu, NdefMessage* aNdefMessage);
+  static NfcEvtTransactionOrigin ConvertOriginType(TransactionEvent::OriginType aType);
+  static NfcNdefType ConvertNdefType(NdefType aType);
 private:
   NfcUtil();
 };

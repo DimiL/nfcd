@@ -26,14 +26,14 @@ class IP2pDevice {
 public:
   virtual ~IP2pDevice() {};
 
-  virtual bool connect() = 0;
-  virtual bool disconnect() = 0;
-  virtual void transceive() = 0;
-  virtual void receive() = 0;
-  virtual bool send() = 0;
+  virtual bool Connect() = 0;
+  virtual bool Disconnect() = 0;
+  virtual void Transceive() = 0;
+  virtual void Receive() = 0;
+  virtual bool Send() = 0;
 
-  virtual int& getMode() =0;
-  virtual int& getHandle() = 0;
+  virtual int& GetMode() =0;
+  virtual int& GetHandle() = 0;
 };
 
 #endif

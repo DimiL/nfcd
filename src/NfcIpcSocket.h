@@ -32,13 +32,13 @@ public:
   ~NfcIpcSocket();
 
   static NfcIpcSocket* Instance();
-  void initialize(MessageHandler* msgHandler);
-  void loop();
+  void Initialize(MessageHandler* aMsgHandler);
+  void Loop();
 
-  void setSocketListener(IpcSocketListener* lister);
+  void SetSocketListener(IpcSocketListener* alistener);
 
-  void writeToOutgoingQueue(uint8_t *data, size_t dataLen);
-  void writeToIncomingQueue(uint8_t *data, size_t dataLen);
+  void WriteToOutgoingQueue(uint8_t* aData, size_t aDataLen);
+  void WriteToIncomingQueue(uint8_t* aData, size_t aDataLen);
 
 private:
   NfcIpcSocket();
@@ -50,8 +50,8 @@ private:
 
   IpcSocketListener* mListener;
 
-  void initSocket();
-  int getListenSocket();
+  void InitSocket();
+  int GetListenSocket();
 };
 
 #endif // mozilla_nfcd_NfcIpcSocket_h

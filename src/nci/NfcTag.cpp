@@ -50,46 +50,47 @@ NfcTag::NfcTag()
   memset(mLastKovioUid, 0, NFC_KOVIO_MAX_LEN);
 }
 
-NfcTag& NfcTag::getInstance()
+NfcTag& NfcTag::GetInstance()
 {
   static NfcTag tag;
   return tag;
 }
 
-void NfcTag::initialize(NfcManager* pNfcManager)
+void NfcTag::Initialize(NfcManager* aNfcManager)
 {
-  mNfcManager = pNfcManager;
+  mNfcManager = aNfcManager;
 
   mActivationState = Idle;
   mProtocol = NFC_PROTOCOL_UNKNOWN;
   mNumTechList = 0;
   mtT1tMaxMessageSize = 0;
   mReadCompletedStatus = NFA_STATUS_OK;
-  resetTechnologies();
+  ResetTechnologies();
 }
 
-void NfcTag::abort()
+void NfcTag::Abort()
 {
   SyncEventGuard g(mReadCompleteEvent);
-  mReadCompleteEvent.notifyOne();
+  mReadCompleteEvent.NotifyOne();
 }
 
-NfcTag::ActivationState NfcTag::getActivationState()
+NfcTag::ActivationState NfcTag::GetActivationState()
 {
   return mActivationState;
 }
 
-void NfcTag::setDeactivationState(tNFA_DEACTIVATED& deactivated)
+void NfcTag::SetDeactivationState(tNFA_DEACTIVATED& aDeactivated)
 {
   static const char fn [] = "NfcTag::setDeactivationState";
   mActivationState = Idle;
   mNdefDetectionTimedOut = false;
-  if (deactivated.type == NFA_DEACTIVATE_TYPE_SLEEP)
+  if (aDeactivated.type == NFA_DEACTIVATE_TYPE_SLEEP) {
     mActivationState = Sleep;
+  }
   ALOGD("%s: state=%u", fn, mActivationState);
 }
 
-void NfcTag::setActivationState()
+void NfcTag::SetActivationState()
 {
   static const char fn [] = "NfcTag::setActivationState";
   mNdefDetectionTimedOut = false;
@@ -97,44 +98,47 @@ void NfcTag::setActivationState()
   ALOGD("%s: state=%u", fn, mActivationState);
 }
 
-tNFC_PROTOCOL NfcTag::getProtocol()
+tNFC_PROTOCOL NfcTag::GetProtocol()
 {
   return mProtocol;
 }
 
-UINT32 TimeDiff(timespec start, timespec end)
+UINT32 TimeDiff(timespec aStart, timespec aEnd)
 {
   timespec temp;
-  if ((end.tv_nsec-start.tv_nsec)<0) {
-    temp.tv_sec = end.tv_sec-start.tv_sec-1;
-    temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
+  if ((aEnd.tv_nsec-aStart.tv_nsec)<0) {
+    temp.tv_sec = aEnd.tv_sec - aStart.tv_sec - 1;
+    temp.tv_nsec = 1000000000 + aEnd.tv_nsec - aStart.tv_nsec;
   } else {
-    temp.tv_sec = end.tv_sec-start.tv_sec;
-    temp.tv_nsec = end.tv_nsec-start.tv_nsec;
+    temp.tv_sec = aEnd.tv_sec - aStart.tv_sec;
+    temp.tv_nsec = aEnd.tv_nsec - aStart.tv_nsec;
   }
 
   return (temp.tv_sec * 1000) + (temp.tv_nsec / 1000000);
 }
 
-bool NfcTag::IsSameKovio(tNFA_ACTIVATED& activationData)
+bool NfcTag::IsSameKovio(tNFA_ACTIVATED& aActivationData)
 {
   static const char fn [] = "NfcTag::IsSameKovio";
   ALOGD("%s: enter", fn);
-  tNFC_ACTIVATE_DEVT& rfDetail = activationData.activate_ntf;
+  tNFC_ACTIVATE_DEVT& rfDetail = aActivationData.activate_ntf;
 
   if (rfDetail.protocol != NFC_PROTOCOL_KOVIO)
     return false;
 
   memcpy(&(mTechParams[0]), &(rfDetail.rf_tech_param), sizeof(rfDetail.rf_tech_param));
-  if (mTechParams[0].mode != NFC_DISCOVERY_TYPE_POLL_KOVIO)
+  if (mTechParams[0].mode != NFC_DISCOVERY_TYPE_POLL_KOVIO) {
     return false;
+  }
 
   struct timespec now;
   clock_gettime(CLOCK_REALTIME, &now);
 
   bool rVal = false;
   if (mTechParams[0].param.pk.uid_len == mLastKovioUidLen) {
-    if (memcmp(mLastKovioUid, &mTechParams [0].param.pk.uid, mTechParams[0].param.pk.uid_len) == 0) {
+    if (memcmp(mLastKovioUid,
+               &mTechParams[0].param.pk.uid,
+               mTechParams[0].param.pk.uid_len) == 0) {
       // Same tag.
       if (TimeDiff(mLastKovioTime, now) < 500) {
         // Same tag within 500 ms, ignore activation.
@@ -154,11 +158,11 @@ bool NfcTag::IsSameKovio(tNFA_ACTIVATED& activationData)
   return rVal;
 }
 
-void NfcTag::discoverTechnologies(tNFA_ACTIVATED& activationData)
+void NfcTag::DiscoverTechnologies(tNFA_ACTIVATED& aActivationData)
 {
   static const char fn [] = "NfcTag::discoverTechnologies (activation)";
   ALOGD("%s: enter", fn);
-  tNFC_ACTIVATE_DEVT& rfDetail = activationData.activate_ntf;
+  tNFC_ACTIVATE_DEVT& rfDetail = aActivationData.activate_ntf;
 
   mNumTechList = 0;
   mTechHandles[mNumTechList] = rfDetail.rf_disc_id;
@@ -247,10 +251,10 @@ void NfcTag::discoverTechnologies(tNFA_ACTIVATED& activationData)
   ALOGD("%s: exit", fn);
 }
 
-void NfcTag::discoverTechnologies(tNFA_DISC_RESULT& discoveryData)
+void NfcTag::DiscoverTechnologies(tNFA_DISC_RESULT& aDiscoveryData)
 {
   static const char fn [] = "NfcTag::discoverTechnologies (discovery)";
-  tNFC_RESULT_DEVT& discovery_ntf = discoveryData.discovery_ntf;
+  tNFC_RESULT_DEVT& discovery_ntf = aDiscoveryData.discovery_ntf;
 
   ALOGD("%s: enter: rf disc. id=%u; protocol=%u, mNumTechList=%u", fn, discovery_ntf.rf_disc_id, discovery_ntf.protocol, mNumTechList);
   if (mNumTechList >= MAX_NUM_TECHNOLOGY) {
@@ -334,12 +338,12 @@ TheEnd:
   ALOGD("%s: exit", fn);
 }
 
-void NfcTag::createNfcTag(tNFA_ACTIVATED& activationData)
+void NfcTag::CreateNfcTag(tNFA_ACTIVATED& aActivationData)
 {
   static const char fn [] = "NfcTag::createNfcTag";
   ALOGD ("%s: enter", fn);
 
-  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(mNfcManager->queryInterface(INTERFACE_TAG_MANAGER));
+  INfcTag* pINfcTag = reinterpret_cast<INfcTag*>(mNfcManager->QueryInterface(INTERFACE_TAG_MANAGER));
 
   if (pINfcTag == NULL) {
     ALOGE("%s : cannot get nfc tag class", fn);
@@ -347,63 +351,64 @@ void NfcTag::createNfcTag(tNFA_ACTIVATED& activationData)
   }
 
   // Fill NfcTag's mProtocols, mTechList, mTechHandles, mTechLibNfcTypes.
-  fillNfcTagMembers1(pINfcTag);
+  FillNfcTagMembers1(pINfcTag);
 
   // Fill NfcTag's members: mHandle, mConnectedTechnology.
-  fillNfcTagMembers2(pINfcTag);
+  FillNfcTagMembers2(pINfcTag);
 
   // Fill NfcTag's members: mTechPollBytes.
-  fillNfcTagMembers3(pINfcTag, activationData);
+  FillNfcTagMembers3(pINfcTag, aActivationData);
 
   // Fill NfcTag's members: mTechActBytes.
-  fillNfcTagMembers4(pINfcTag, activationData);
+  FillNfcTagMembers4(pINfcTag, aActivationData);
 
   // Fill NfcTag's members: mUid.
-  fillNfcTagMembers5(pINfcTag, activationData);
+  FillNfcTagMembers5(pINfcTag, aActivationData);
 
   // Notify NFC service about this new tag.
   ALOGD("%s: try notify nfc service", fn);
-  mNfcManager->notifyTagDiscovered(pINfcTag);
+  mNfcManager->NotifyTagDiscovered(pINfcTag);
 
   ALOGD("%s: exit", fn);
 }
 
-void NfcTag::fillNfcTagMembers1(INfcTag* pINfcTag)
+void NfcTag::FillNfcTagMembers1(INfcTag* aINfcTag)
 {
   static const char fn [] = "NfcTag::fillNfcTagMembers1";
   ALOGD("%s", fn);
 
-  std::vector<TagTechnology>& techList = pINfcTag->getTechList();
-  std::vector<int>& techHandles = pINfcTag->getTechHandles();
-  std::vector<int>& techLibNfcTypes = pINfcTag->getTechLibNfcTypes();
+  std::vector<TagTechnology>& techList = aINfcTag->GetTechList();
+  std::vector<int>& techHandles = aINfcTag->GetTechHandles();
+  std::vector<int>& techLibNfcTypes = aINfcTag->GetTechLibNfcTypes();
 
   for (int i = 0; i < mNumTechList; i++) {
     gNat.tProtocols[i] = mTechLibNfcTypes[i];
     gNat.handles[i] = mTechHandles[i];
 
     // Convert from vendor specific technology definition to common tag technology definition.
-    techList.push_back(NfcNciUtil::toTagTechnology(mTechList[i]));
+    techList.push_back(NfcNciUtil::ToTagTechnology(mTechList[i]));
     techHandles.push_back(mTechHandles[i]);
     techLibNfcTypes.push_back(mTechLibNfcTypes[i]);
   }
 }
 
 // Fill NfcTag's members: mHandle, mConnectedTechnology.
-void NfcTag::fillNfcTagMembers2(INfcTag* pINfcTag)
+void NfcTag::FillNfcTagMembers2(INfcTag* aINfcTag)
 {
   static const char fn [] = "NfcTag::fillNfcTagMembers2";
   ALOGD("%s", fn);
 
-  int& connectedTechIndex = pINfcTag->getConnectedHandle();
+  int& connectedTechIndex = aINfcTag->GetConnectedHandle();
   connectedTechIndex = 0;
 }
 
-void NfcTag::fillNfcTagMembers3(INfcTag* pINfcTag, tNFA_ACTIVATED& activationData)
+void NfcTag::FillNfcTagMembers3(INfcTag* aINfcTag,
+                                tNFA_ACTIVATED& aActivationData)
 {
   static const char fn [] = "NfcTag::fillNfcTagMembers3";
   int len = 0;
   std::vector<uint8_t> pollBytes;
-  std::vector<std::vector<uint8_t> >& techPollBytes = pINfcTag->getTechPollBytes();
+  std::vector<std::vector<uint8_t> >& techPollBytes = aINfcTag->GetTechPollBytes();
 
   for (int i = 0; i < mNumTechList; i++) {
     ALOGD("%s: index=%d; rf tech params mode=%u", fn, i, mTechParams [i].mode);
@@ -459,8 +464,8 @@ void NfcTag::fillNfcTagMembers3(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
         }
         ***/
         memcpy(result, mTechParams [i].param.pf.sensf_res + 8, 8); // Copy PMm.
-        if (activationData.params.t3t.num_system_codes > 0) {      // Copy the first System Code.
-          UINT16 systemCode = *(activationData.params.t3t.p_system_codes);
+        if (aActivationData.params.t3t.num_system_codes > 0) {      // Copy the first System Code.
+          UINT16 systemCode = *(aActivationData.params.t3t.p_system_codes);
           result [8] = (UINT8) (systemCode >> 8);
           result [9] = (UINT8) systemCode;
           ALOGD("%s: tech F; sys code=0x%X 0x%X", fn, result [8], result [9]);
@@ -478,7 +483,7 @@ void NfcTag::fillNfcTagMembers3(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
         // iso 15693 response flags: 1 octet.
         // iso 15693 Data Structure Format Identifier (DSF ID): 1 octet.
         // used by public API: NfcV.getDsfId(), NfcV.getResponseFlags().
-        uint8_t data [2]= {activationData.params.i93.afi, activationData.params.i93.dsfid};
+        uint8_t data [2]= {aActivationData.params.i93.afi, aActivationData.params.i93.dsfid};
         pollBytes.clear();
         for (int idx = 0; idx < 2; idx++) {
           pollBytes.push_back(data[idx]);
@@ -495,11 +500,12 @@ void NfcTag::fillNfcTagMembers3(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
   } // for: every technology in the array.
 }
 
-void NfcTag::fillNfcTagMembers4(INfcTag* pINfcTag, tNFA_ACTIVATED& activationData)
+void NfcTag::FillNfcTagMembers4(INfcTag* aINfcTag,
+                                tNFA_ACTIVATED& aActivationData)
 {
   static const char fn [] = "NfcTag::fillNfcTagMembers4";
   std::vector<unsigned char> actBytes;
-  std::vector<std::vector<uint8_t> >& techActBytes = pINfcTag->getTechActBytes();
+  std::vector<std::vector<uint8_t> >& techActBytes = aINfcTag->GetTechActBytes();
 
   for (int i = 0; i < mNumTechList; i++) {
     ALOGD("%s: index=%d", fn, i);
@@ -534,8 +540,8 @@ void NfcTag::fillNfcTagMembers4(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
             // See NFC Forum Digital Protocol specification, section 11.6.2, "RATS Response"; search for "historical bytes".
             // Copy historical bytes into Java object.
             // The public API, IsoDep.getHistoricalBytes(), returns this data.
-            if (activationData.activate_ntf.intf_param.type == NFC_INTERFACE_ISO_DEP) {
-              tNFC_INTF_PA_ISO_DEP& pa_iso = activationData.activate_ntf.intf_param.intf_param.pa_iso;
+            if (aActivationData.activate_ntf.intf_param.type == NFC_INTERFACE_ISO_DEP) {
+              tNFC_INTF_PA_ISO_DEP& pa_iso = aActivationData.activate_ntf.intf_param.intf_param.pa_iso;
               ALOGD("%s: T4T; ISO_DEP for tech A; copy historical bytes; len=%u", fn, pa_iso.his_byte_len);
               actBytes.clear();
               if (pa_iso.his_byte_len > 0) {
@@ -544,7 +550,7 @@ void NfcTag::fillNfcTagMembers4(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
                 }
               }
             } else {
-              ALOGE ("%s: T4T; ISO_DEP for tech A; wrong interface=%u", fn, activationData.activate_ntf.intf_param.type);
+              ALOGE("%s: T4T; ISO_DEP for tech A; wrong interface=%u", fn, aActivationData.activate_ntf.intf_param.type);
               actBytes.clear();
             }
           } else if ( (mTechParams[i].mode == NFC_DISCOVERY_TYPE_POLL_B) ||
@@ -554,8 +560,8 @@ void NfcTag::fillNfcTagMembers4(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
             // See NFC Forum Digital Protocol specification, section 12.6.2, "ATTRIB Response".
             // Copy higher-layer response bytes into Java object.
             // The public API, IsoDep.getHiLayerResponse(), returns this data.
-            if (activationData.activate_ntf.intf_param.type == NFC_INTERFACE_ISO_DEP) {
-              tNFC_INTF_PB_ISO_DEP& pb_iso = activationData.activate_ntf.intf_param.intf_param.pb_iso;
+            if (aActivationData.activate_ntf.intf_param.type == NFC_INTERFACE_ISO_DEP) {
+              tNFC_INTF_PB_ISO_DEP& pb_iso = aActivationData.activate_ntf.intf_param.intf_param.pb_iso;
               ALOGD("%s: T4T; ISO_DEP for tech B; copy response bytes; len=%u", fn, pb_iso.hi_info_len);
               actBytes.clear();
               if (pb_iso.hi_info_len > 0) {
@@ -564,7 +570,7 @@ void NfcTag::fillNfcTagMembers4(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
                 }
               }
             } else {
-              ALOGE ("%s: T4T; ISO_DEP for tech B; wrong interface=%u", fn, activationData.activate_ntf.intf_param.type);
+              ALOGE("%s: T4T; ISO_DEP for tech B; wrong interface=%u", fn, aActivationData.activate_ntf.intf_param.type);
               actBytes.clear();
             }
           }
@@ -583,7 +589,7 @@ void NfcTag::fillNfcTagMembers4(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
         // iso 15693 response flags: 1 octet.
         // iso 15693 Data Structure Format Identifier (DSF ID): 1 octet.
         // used by public API: NfcV.getDsfId(), NfcV.getResponseFlags().
-        uint8_t data [2]= {activationData.params.i93.afi, activationData.params.i93.dsfid};
+        uint8_t data [2]= {aActivationData.params.i93.afi, aActivationData.params.i93.dsfid};
         actBytes.clear();
         for (int idx = 0;idx < 2;idx++) {
           actBytes.push_back(data[idx]);
@@ -600,11 +606,12 @@ void NfcTag::fillNfcTagMembers4(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
   } // For: every technology in the array.
 }
 
-void NfcTag::fillNfcTagMembers5(INfcTag* pINfcTag, tNFA_ACTIVATED& activationData)
+void NfcTag::FillNfcTagMembers5(INfcTag* aINfcTag,
+                                tNFA_ACTIVATED& aActivationData)
 {
   static const char fn [] = "NfcTag::fillNfcTagMembers5";
   int len = 0;
-  std::vector<unsigned char>& uid = pINfcTag->getUid();
+  std::vector<unsigned char>& uid = aINfcTag->GetUid();
 
   switch (mTechParams [0].mode) {
     case NFC_DISCOVERY_TYPE_POLL_KOVIO:
@@ -655,7 +662,7 @@ void NfcTag::fillNfcTagMembers5(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
       ALOGD("%s: tech iso 15693", fn);
       unsigned char data [I93_UID_BYTE_LEN];  // 8 bytes.
       for (int i=0; i<I93_UID_BYTE_LEN; ++i)  // Reverse the ID.
-        data[i] = activationData.params.i93.uid [I93_UID_BYTE_LEN - i - 1];
+        data[i] = aActivationData.params.i93.uid [I93_UID_BYTE_LEN - i - 1];
       uid.clear();
       for (int idx = 0;idx < I93_UID_BYTE_LEN;idx++) {
         uid.push_back(data[idx]);
@@ -670,7 +677,7 @@ void NfcTag::fillNfcTagMembers5(INfcTag* pINfcTag, tNFA_ACTIVATED& activationDat
   }
 }
 
-bool NfcTag::isP2pDiscovered()
+bool NfcTag::IsP2pDiscovered()
 {
   static const char fn [] = "NfcTag::isP2pDiscovered";
   bool retval = false;
@@ -687,7 +694,7 @@ bool NfcTag::isP2pDiscovered()
   return retval;
 }
 
-void NfcTag::selectP2p()
+void NfcTag::SelectP2p()
 {
   static const char fn [] = "NfcTag::selectP2p";
   UINT8 rfDiscoveryId = 0;
@@ -718,10 +725,10 @@ void NfcTag::selectP2p()
       ALOGE("%s: fail select P2P; error=0x%X", fn, stat);
   } else
     ALOGE("%s: cannot find P2P", fn);
-  resetTechnologies();
+  ResetTechnologies();
 }
 
-void NfcTag::resetTechnologies()
+void NfcTag::ResetTechnologies()
 {
   static const char fn [] = "NfcTag::resetTechnologies";
   ALOGD("%s", fn);
@@ -731,10 +738,10 @@ void NfcTag::resetTechnologies()
   memset(mTechLibNfcTypes, 0, sizeof(mTechLibNfcTypes));
   memset(mTechParams, 0, sizeof(mTechParams));
 
-  resetAllTransceiveTimeouts();
+  ResetAllTransceiveTimeouts();
 }
 
-void NfcTag::selectFirstTag()
+void NfcTag::SelectFirstTag()
 {
   static const char fn [] = "NfcTag::selectFirstTag";
   ALOGD("%s: nfa target h=0x%X; protocol=0x%X",
@@ -755,7 +762,7 @@ void NfcTag::selectFirstTag()
     ALOGE("%s: fail select; error=0x%X", fn, stat);
 }
 
-int NfcTag::getT1tMaxMessageSize()
+int NfcTag::GetT1tMaxMessageSize()
 {
   static const char fn [] = "NfcTag::getT1tMaxMessageSize";
 
@@ -766,7 +773,7 @@ int NfcTag::getT1tMaxMessageSize()
   return mtT1tMaxMessageSize;
 }
 
-void NfcTag::calculateT1tMaxMessageSize(tNFA_ACTIVATED& activate)
+void NfcTag::CalculateT1tMaxMessageSize(tNFA_ACTIVATED& activate)
 {
   static const char fn [] = "NfcTag::calculateT1tMaxMessageSize";
 
@@ -791,7 +798,7 @@ void NfcTag::calculateT1tMaxMessageSize(tNFA_ACTIVATED& activate)
   }
 }
 
-bool NfcTag::isMifareUltralight()
+bool NfcTag::IsMifareUltralight()
 {
   static const char fn [] = "NfcTag::isMifareUltralight";
   bool retval = false;
@@ -825,35 +832,38 @@ bool NfcTag::isMifareUltralight()
   return retval;
 }
 
-bool NfcTag::isT2tNackResponse(const UINT8* response, UINT32 responseLen)
+bool NfcTag::IsT2tNackResponse(const UINT8* aResponse,
+                               UINT32 aResponseLen)
 {
   static const char fn [] = "NfcTag::isT2tNackResponse";
   bool isNack = false;
 
-  if (responseLen == 1) {
-    if (response[0] == 0xA)
+  if (aResponseLen == 1) {
+    if (aResponse[0] == 0xA) {
       isNack = false; // An ACK response, so definitely not a NACK.
-    else
+    } else {
       isNack = true;  // Assume every value is a NACK.
+    }
   }
   ALOGD("%s: return %u", fn, isNack);
   return isNack;
 }
 
-bool NfcTag::isNdefDetectionTimedOut()
+bool NfcTag::IsNdefDetectionTimedOut()
 {
   return mNdefDetectionTimedOut;
 }
 
-void NfcTag::connectionEventHandler(UINT8 event, tNFA_CONN_EVT_DATA* data)
+void NfcTag::ConnectionEventHandler(UINT8 aEvent,
+                                    tNFA_CONN_EVT_DATA* aData)
 {
   static const char fn [] = "NfcTag::connectionEventHandler";
 
-  switch (event) {
+  switch (aEvent) {
     case NFA_DISC_RESULT_EVT: {
-      tNFA_DISC_RESULT& disc_result = data->disc_result;
+      tNFA_DISC_RESULT& disc_result = aData->disc_result;
       if (disc_result.status == NFA_STATUS_OK) {
-        discoverTechnologies(disc_result);
+        DiscoverTechnologies(disc_result);
       }
       break;
     }
@@ -861,32 +871,32 @@ void NfcTag::connectionEventHandler(UINT8 event, tNFA_CONN_EVT_DATA* data)
     case NFA_ACTIVATED_EVT:
       // Only do tag detection if we are polling and it is not 'EE Direct RF' activation.
       // (which may happen when we are activated as a tag).
-      if (data->activated.activate_ntf.rf_tech_param.mode < NCI_DISCOVERY_TYPE_LISTEN_A
-          && data->activated.activate_ntf.intf_param.type != NFC_INTERFACE_EE_DIRECT_RF) {
-        tNFA_ACTIVATED& activated = data->activated;
+      if (aData->activated.activate_ntf.rf_tech_param.mode < NCI_DISCOVERY_TYPE_LISTEN_A
+          && aData->activated.activate_ntf.intf_param.type != NFC_INTERFACE_EE_DIRECT_RF) {
+        tNFA_ACTIVATED& activated = aData->activated;
         if (IsSameKovio(activated))
           break;
         mProtocol = activated.activate_ntf.protocol;
-        calculateT1tMaxMessageSize(activated);
-        discoverTechnologies(activated);
-        createNfcTag(activated);
+        CalculateT1tMaxMessageSize(activated);
+        DiscoverTechnologies(activated);
+        CreateNfcTag(activated);
       }
       break;
 
     case NFA_DEACTIVATED_EVT:
       mProtocol = NFC_PROTOCOL_UNKNOWN;
-      resetTechnologies();
+      ResetTechnologies();
       break;
 
     case NFA_READ_CPLT_EVT: {
       SyncEventGuard g (mReadCompleteEvent);
-      mReadCompletedStatus = data->status;
-      mReadCompleteEvent.notifyOne();
+      mReadCompletedStatus = aData->status;
+      mReadCompleteEvent.NotifyOne();
       break;
     }
 
     case NFA_NDEF_DETECT_EVT: {
-      tNFA_NDEF_DETECT& ndef_detect = data->ndef_detect;
+      tNFA_NDEF_DETECT& ndef_detect = aData->ndef_detect;
       mNdefDetectionTimedOut = ndef_detect.status == NFA_STATUS_TIMEOUT;
       if (mNdefDetectionTimedOut)
         ALOGE("%s: NDEF detection timed out", fn);
@@ -894,7 +904,7 @@ void NfcTag::connectionEventHandler(UINT8 event, tNFA_CONN_EVT_DATA* data)
   }
 }
 
-void NfcTag::resetAllTransceiveTimeouts()
+void NfcTag::ResetAllTransceiveTimeouts()
 {
   mTimeoutTable[TECHNOLOGY_TYPE_ISO14443_3A] = 618;     // NfcA
   mTimeoutTable[TECHNOLOGY_TYPE_ISO14443_3B] = 1000;    // NfcB
@@ -906,13 +916,13 @@ void NfcTag::resetAllTransceiveTimeouts()
   mTimeoutTable[TECHNOLOGY_TYPE_KOVIO_BARCODE] = 1000;  // NfcBarcode
 }
 
-int NfcTag::getTransceiveTimeout(int techId)
+int NfcTag::GetTransceiveTimeout(int aTechId)
 {
   int retval = 1000;
-  if ((techId > 0) && (techId < (int)mTimeoutTable.size())) {
-    retval = mTimeoutTable[techId];
+  if ((aTechId > 0) && (aTechId < (int)mTimeoutTable.size())) {
+    retval = mTimeoutTable[aTechId];
   } else {
-    ALOGE("%s: invalid tech=%d", __FUNCTION__, techId);
+    ALOGE("%s: invalid tech=%d", __FUNCTION__, aTechId);
   }
 
   return retval;

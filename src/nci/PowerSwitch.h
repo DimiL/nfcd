@@ -93,93 +93,94 @@ public:
    *
    * @return Reference to this object.
    */
-  static PowerSwitch& getInstance();
+  static PowerSwitch& GetInstance();
 
   /**
    * Initialize member variables.
    *
-   * @param  level Set the controller's power level.
-   * @return       None.
+   * @param  aLevel Set the controller's power level.
+   * @return        None.
    */
-  void initialize(PowerLevel level);
+  void Initialize(PowerLevel aLevel);
 
   /**
    * Callback function for the stack.
    *
-   * @param  event     Event ID.
-   * @parm   eventData Event's data.
-   * @return           None.
+   * @param  aEvent     Event ID.
+   * @parm   aEventData Event's data.
+   * @return            None.
    */
 
-  static void deviceManagementCallback(UINT8 event, tNFA_DM_CBACK_DATA* eventData);
+  static void DeviceManagementCallback(UINT8 aEvent,
+                                       tNFA_DM_CBACK_DATA* aEventData);
 
   /**
    * Get the current power level of the controller.
    *
    * @return Power level.
    */
-  PowerLevel getLevel();
+  PowerLevel GetLevel();
 
   /**
    * Set the controller's power level.
    *
-   * @param  level Set the controller's power level.
+   * @param  aLevel Set the controller's power level.
    * @return       True if ok.
    */
-  bool setLevel(PowerLevel level);
+  bool SetLevel(PowerLevel aLevel);
 
   /**
    * Set a mode to be deactive.
    *
    * @return True if any mode is still active.
    */
-  bool setModeOff(PowerActivity deactivated);
+  bool SetModeOff(PowerActivity aDeactivated);
 
   /**
    * Set a mode to be active.
    *
    * @return True if any mode is active.
    */
-  bool setModeOn(PowerActivity activated);
+  bool SetModeOn(PowerActivity aActivated);
 
   /**
    * Whether power-off-sleep feature is enabled in .conf file.
    *
    * @return True if feature is enabled.
    */
-  bool isPowerOffSleepFeatureEnabled();
+  bool IsPowerOffSleepFeatureEnabled();
 
   /**
    * Abort and unblock currrent operation.
    *
    * @return None.
    */
-  void abort();
+  void Abort();
 
 private:
   /**
    * Adjust controller's power-off-sleep state.
    *
-   * @param  sleep Whether to enter sleep state.
-   * @return       True if ok.
+   * @param  aSleep Whether to enter sleep state.
+   * @return        True if ok.
    */
-  bool setPowerOffSleepState(bool sleep);
+  bool SetPowerOffSleepState(bool aSleep);
 
   /**
    * Decode power level to a string.
    *
-   * @param  deviceMgtPowerState Power level.
-   * @return                     Text representation of power level.
+   * @param  aDeviceMgtPowerState Power level.
+   * @return                      Text representation of power level.
    */
-  const char* deviceMgtPowerStateToString(UINT8 deviceMgtPowerState);
+  const char* DeviceMgtPowerStateToString(UINT8 aDeviceMgtPowerState);
 
   /**
    * Decode power level to a string.
    *
-   * @param  level Power level.
-   * @return       Text representation of power level.
+   * @param  aLevel Power level.
+   * @return        Text representation of power level.
    */
-  const char* powerLevelToString(PowerLevel level);
+  const char* PowerLevelToString(PowerLevel aLevel);
 
   // Singleton object.
   static PowerSwitch sPowerSwitch;

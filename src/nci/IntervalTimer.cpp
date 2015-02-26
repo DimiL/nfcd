@@ -28,41 +28,45 @@ IntervalTimer::IntervalTimer()
   mCb = NULL;
 }
 
-bool IntervalTimer::set(int ms, TIMER_FUNC cb)
+bool IntervalTimer::Set(int aMs, TIMER_FUNC aCb)
 {
   if (mTimerId == 0) {
-    if (!cb)
+    if (!aCb) {
       return false;
+    }
 
-    if (!create(cb))
+    if (!Create(aCb)) {
       return false;
+    }
   }
-  if (cb != mCb) {
-    kill();
-    if (!create(cb))
+  if (aCb != mCb) {
+    Kill();
+    if (!Create(aCb)) {
       return false;
+    }
   }
 
   int stat = 0;
   struct itimerspec ts;
-  ts.it_value.tv_sec = ms / 1000;
-  ts.it_value.tv_nsec = (ms % 1000) * 1000000;
+  ts.it_value.tv_sec = aMs / 1000;
+  ts.it_value.tv_nsec = (aMs % 1000) * 1000000;
 
   ts.it_interval.tv_sec = 0;
   ts.it_interval.tv_nsec = 0;
 
   stat = timer_settime(mTimerId, 0, &ts, 0);
-  if (stat == -1)
+  if (stat == -1) {
     ALOGE("%s: fail set timer", __FUNCTION__);
+  }
   return stat == 0;
 }
 
 IntervalTimer::~IntervalTimer()
 {
-  kill();
+  Kill();
 }
 
-void IntervalTimer::kill()
+void IntervalTimer::Kill()
 {
   if (mTimerId == 0)
     return;
@@ -72,7 +76,7 @@ void IntervalTimer::kill()
   mCb = NULL;
 }
 
-bool IntervalTimer::create(TIMER_FUNC cb)
+bool IntervalTimer::Create(TIMER_FUNC aCb)
 {
   struct sigevent se;
   int stat = 0;
@@ -81,11 +85,12 @@ bool IntervalTimer::create(TIMER_FUNC cb)
   // delivered by creating a new thread.
   se.sigev_notify = SIGEV_THREAD;
   se.sigev_value.sival_ptr = &mTimerId;
-  se.sigev_notify_function = cb;
+  se.sigev_notify_function = aCb;
   se.sigev_notify_attributes = NULL;
-  mCb = cb;
+  mCb = aCb;
   stat = timer_create(CLOCK_MONOTONIC, &se, &mTimerId);
-  if (stat == -1)
+  if (stat == -1) {
     ALOGE("%s: fail create timer", __FUNCTION__);
+  }
   return stat == 0;
 }

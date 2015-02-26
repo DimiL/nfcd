@@ -24,16 +24,20 @@ class SnepMessenger;
 class SnepClient{
 public:
   SnepClient();
-  SnepClient(const char* serviceName);
-  SnepClient(int miu, int rwSize);
-  SnepClient(const char* serviceName, int fragmentLength);
-  SnepClient(const char* serviceName, int acceptableLength, int fragmentLength);
+  SnepClient(const char* aServiceName);
+  SnepClient(int aMiu,
+             int aRwSize);
+  SnepClient(const char* aServiceName,
+             int aFragmentLength);
+  SnepClient(const char* aServiceName,
+             int aAcceptableLength,
+             int aFragmentLength);
   ~SnepClient();
 
-  void put(NdefMessage& msg);
-  SnepMessage* get(NdefMessage& msg);
-  bool connect();
-  void close();
+  void Put(NdefMessage& aMsg);
+  SnepMessage* Get(NdefMessage& aMsg);
+  bool Connect();
+  void Close();
 
 private:
   static const int DEFAULT_ACCEPTABLE_LENGTH = 100*1024;

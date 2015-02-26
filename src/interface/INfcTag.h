@@ -32,91 +32,91 @@ public:
   /**
    * Connect to the tag in RF field.
    *
-   * @param  technology Specify the tag technology to be connected.
-   * @return            True if ok.
+   * @param  aTechnology Specify the tag technology to be connected.
+   * @return             True if ok.
    */
-  virtual bool connect(TagTechnology technology) = 0;
+  virtual bool Connect(TagTechnology aTechnology) = 0;
 
   /**
    * Deactivate the RF field.
    *
    * @return True if ok.
    */
-  virtual bool disconnect() = 0;
+  virtual bool Disconnect() = 0;
 
   /**
    * Re-connect to the tag in RF field.
    *
    * @return True if ok.
    */
-  virtual bool reconnect() = 0;
+  virtual bool Reconnect() = 0;
 
   /**
    * Read the NDEF message on the tag.
    *
    * @return NDEF message.
    */
-  virtual NdefMessage* readNdef() = 0;
+  virtual NdefMessage* ReadNdef() = 0;
 
   /**
    * Read tag information and fill the NdefInfo structure.
    *
    * @return NDEF Info structure.
    */
-  virtual NdefInfo* readNdefInfo() = 0;
+  virtual NdefInfo* ReadNdefInfo() = 0;
 
   /**
    * Write a NDEF message to the tag.
    *
-   * @param  ndef Contains a NDEF message.
-   * @return      True if ok.
+   * @param  aNdef Contains a NDEF message.
+   * @return       True if ok.
    */
-  virtual bool writeNdef(NdefMessage& ndef) = 0;
+  virtual bool WriteNdef(NdefMessage& aNdef) = 0;
 
   /**
    * Check if the tag is in the RF field.
    *
    * @return True if tag is in RF field.
    */
-  virtual bool presenceCheck() = 0;
+  virtual bool PresenceCheck() = 0;
 
   /**
    * Make the tag read-only.
    *
    * @return True if ok.
    */
-  virtual bool makeReadOnly() = 0;
+  virtual bool MakeReadOnly() = 0;
 
   /**
    * Format a tag so it can store NDEF message.
    *
    * @return True if ok.
    */
-  virtual bool formatNdef() = 0;
+  virtual bool FormatNdef() = 0;
 
   /**
    * Send raw data to the tag.
    *
-   * @param  command     Contains command to send.
-   * @param  outResponse Contains tag's response.
+   * @param  aCommand     Contains command to send.
+   * @param  aOutResponse Contains tag's response.
    * @return True if ok.
    */
-  virtual bool transceive(const std::vector<uint8_t>& command,
-                          std::vector<uint8_t>& outResponse) = 0;
+  virtual bool Transceive(const std::vector<uint8_t>& aCommand,
+                          std::vector<uint8_t>& aOutResponse) = 0;
 
   /**
    * Get detected tag supported technologies.
    *
    * @return Technologies supported by the tag.
    */
-  virtual std::vector<TagTechnology>& getTechList() = 0;
+  virtual std::vector<TagTechnology>& GetTechList() = 0;
 
-  virtual std::vector<int>& getTechHandles() = 0;
-  virtual std::vector<int>& getTechLibNfcTypes() = 0;
-  virtual std::vector<std::vector<uint8_t> >& getTechPollBytes() = 0;
-  virtual std::vector<std::vector<uint8_t> >& getTechActBytes() = 0;
-  virtual std::vector<uint8_t>& getUid() = 0;
-  virtual int& getConnectedHandle() = 0;
+  virtual std::vector<int>& GetTechHandles() = 0;
+  virtual std::vector<int>& GetTechLibNfcTypes() = 0;
+  virtual std::vector<std::vector<uint8_t> >& GetTechPollBytes() = 0;
+  virtual std::vector<std::vector<uint8_t> >& GetTechActBytes() = 0;
+  virtual std::vector<uint8_t>& GetUid() = 0;
+  virtual int& GetConnectedHandle() = 0;
 };
 
 #endif

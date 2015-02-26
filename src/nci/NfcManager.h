@@ -39,66 +39,66 @@ public:
   /**
    * To get a specific interface from NfcManager
    *
-   * @param  name Interface name
-   * @return      Return specific interface if exist, null if cannot find.
+   * @param  aName Interface name
+   * @return       Return specific interface if exist, null if cannot find.
    */
-  void* queryInterface(const char* name);
+  void* QueryInterface(const char* aName);
 
   /**
    * Turn on NFC.
    *
    * @return True if ok.
    */
-  bool initialize();
+  bool Initialize();
 
   /**
    * Turn off NFC.
    *
    * @return True if ok.
    */
-  bool deinitialize();
+  bool Deinitialize();
 
   /**
    * Start polling and listening for devices.
    *
    * @return True if ok.
    */
-  bool enableDiscovery();
+  bool EnableDiscovery();
 
   /**
    * Stop polling and listening for devices.
    *
    * @return True if ok.
    */
-  bool disableDiscovery();
+  bool DisableDiscovery();
 
   /**
    * Start polling for devices.
    *
    * @return True if ok.
    */
-  bool enablePolling();
+  bool EnablePolling();
 
   /**
    * Stop polling for devices.
    *
    * @return True if ok.
    */
-  bool disablePolling();
+  bool DisablePolling();
 
   /**
    * Start peer-to-peer listening for devices.
    *
    * @return True if ok.
    */
-  bool enableP2pListening();
+  bool EnableP2pListening();
 
   /**
    * Stop peer-to-peer listening for devices.
    *
    * @return True if ok.
    */
-  bool disableP2pListening();
+  bool DisableP2pListening();
 
   /**
    * Check Llcp connection.
@@ -106,7 +106,7 @@ public:
    *
    * @return True if ok.
    */
-  bool checkLlcp();
+  bool CheckLlcp();
 
   /**
    * Activate Llcp connection.
@@ -114,38 +114,45 @@ public:
    *
    * @return True if ok.
    */
-  bool activateLlcp();
+  bool ActivateLlcp();
 
   /**
    * Create a LLCP connection-oriented socket.
    *
-   * @param  sap                Service access point.
-   * @param  miu                Maximum information unit.
-   * @param  rw                 Receive window size.
-   * @param  linearBufferLength Max buffer size.
-   * @return                    ILlcpSocket interface.
+   * @param  aSap    Service access point.
+   * @param  aMiu    Maximum information unit.
+   * @param  aRw     Receive window size.
+   * @param  aBufLen Max buffer size.
+   * @return         ILlcpSocket interface.
    */
-  ILlcpSocket* createLlcpSocket(int sap, int miu, int rw, int linearBufferLength);
+  ILlcpSocket* CreateLlcpSocket(int aSap,
+                                int aMiu,
+                                int aRw,
+                                int aBufLen);
 
   /**
    * Create a new LLCP server socket.
    *
-   * @param  nSap               Service access point.
-   * @param  sn                 Service name.
-   * @param  miu                Maximum information unit.
-   * @param  rw                 Receive window size.
-   * @param  linearBufferLength Max buffer size.
-   * @return                    ILlcpServerSocket interface.
+   * @param  aSap    Service access point.
+   * @param  aSn     Service name.
+   * @param  aMiu    Maximum information unit.
+   * @param  aRw     Receive window size.
+   * @param  aBugLen Max buffer size.
+   * @return         LlcpServerSocket interface.
    */
-  ILlcpServerSocket* createLlcpServerSocket(int nSap, const char* sn, int miu, int rw, int linearBufferLength);
+  ILlcpServerSocket* CreateLlcpServerSocket(int aSap,
+                                            const char* aSn,
+                                            int aMiu,
+                                            int aRw,
+                                            int aBufLen);
 
   /**
    * Set P2P initiator's activation modes.
    *
-   * @param  modes Active and/or passive modes.
-   * @return       None.
+   * @param  aModes Active and/or passive modes.
+   * @return        None.
    */
-  void setP2pInitiatorModes(int modes);
+  void SetP2pInitiatorModes(int aModes);
 
   /**
    * Set P2P target's activation modes.
@@ -153,35 +160,35 @@ public:
    * @param  modes Active and/or passive modes.
    * @return       None.
    */
-  void setP2pTargetModes(int modes);
+  void SetP2pTargetModes(int aModes);
 
   /**
    * Get default Llcp connection maxumum information unit
    *
    * @return Default MIU.
    */
-  int getDefaultLlcpMiu() const { return NfcManager::DEFAULT_LLCP_MIU; };
+  int GetDefaultLlcpMiu() const { return NfcManager::DEFAULT_LLCP_MIU; };
 
   /**
    * Get default Llcp connection receive window size
    *
    * @return Default receive window size
    */
-  int getDefaultLlcpRwSize() const { return NfcManager::DEFAULT_LLCP_RWSIZE; };
+  int GetDefaultLlcpRwSize() const { return NfcManager::DEFAULT_LLCP_RWSIZE; };
 
   /**
    * NFC controller starts routing data in listen mode.
    *
    * @return True if ok.
    */
-  bool doSelectSecureElement();
+  bool DoSelectSecureElement();
 
   /**
    * NFC controller stops routing data in listen mode.
    *
    * @return True if ok.
    */
-  bool doDeselectSecureElement();
+  bool DoDeselectSecureElement();
 
 private:
   P2pDevice* mP2pDevice;

@@ -21,7 +21,7 @@ class NdefMessage;
 
 class IHandoverCallback {
 public:
-  virtual void onMessageReceived(NdefMessage* msg) = 0;
+  virtual void OnMessageReceived(NdefMessage* aMsg) = 0;
 
   virtual ~IHandoverCallback(){};
 };

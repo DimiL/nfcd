@@ -27,9 +27,9 @@ public:
   IntervalTimer();
   ~IntervalTimer();
 
-  bool set(int ms, TIMER_FUNC cb);
-  void kill();
-  bool create(TIMER_FUNC);
+  bool Set(int aMs, TIMER_FUNC aCb);
+  void Kill();
+  bool Create(TIMER_FUNC);
 
 private:
   timer_t mTimerId;

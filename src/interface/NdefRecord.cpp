@@ -20,8 +20,11 @@
 #define LOG_TAG "nfcd"
 #include <utils/Log.h>
 
-static bool ensureSanePayloadSize(long size);
-static bool validateTnf(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload);
+static bool EnsureSanePayloadSize(long aSize);
+static bool ValidateTnf(uint8_t aTnf,
+                        std::vector<uint8_t>& aType,
+                        std::vector<uint8_t>& aId,
+                        std::vector<uint8_t>& aPayload);
 
 static const uint8_t FLAG_MB = 0x80;
 static const uint8_t FLAG_ME = 0x40;
@@ -32,45 +35,65 @@ static const uint8_t FLAG_IL = 0x08;
 // 10 MB payload limit.
 static const int MAX_PAYLOAD_SIZE = 10 * (1 << 20);
 
-NdefRecord::NdefRecord(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload)
+NdefRecord::NdefRecord(uint8_t aTnf,
+                       std::vector<uint8_t>& aType,
+                       std::vector<uint8_t>& aId,
+                       std::vector<uint8_t>& aPayload)
 {
-  mTnf = tnf;
+  mTnf = aTnf;
 
-  for(uint32_t i = 0; i < type.size(); i++)
-    mType.push_back(type[i]);
-  for(uint32_t i = 0; i < id.size(); i++)
-    mId.push_back(id[i]);
-  for(uint32_t i = 0; i < payload.size(); i++)
-    mPayload.push_back(payload[i]);
+  for(uint32_t i = 0; i < aType.size(); i++) {
+    mType.push_back(aType[i]);
+  }
+  for(uint32_t i = 0; i < aId.size(); i++) {
+    mId.push_back(aId[i]);
+  }
+  for(uint32_t i = 0; i < aPayload.size(); i++) {
+    mPayload.push_back(aPayload[i]);
+  }
 }
 
-NdefRecord::NdefRecord(uint8_t tnf, uint32_t typeLength, uint8_t* type, uint32_t idLength, uint8_t* id, uint32_t payloadLength, uint8_t* payload)
+NdefRecord::NdefRecord(uint8_t aTnf,
+                       uint32_t aTypeLength,
+                       uint8_t* aType,
+                       uint32_t aIdLength,
+                       uint8_t* aId,
+                       uint32_t aPayloadLength,
+                       uint8_t* aPayload)
 {
-  mTnf = tnf;
+  mTnf = aTnf;
 
-  for (uint32_t i = 0; i < typeLength; i++)
-    mType.push_back((uint8_t)type[i]);
-  for (uint32_t i = 0; i < idLength; i++)
-    mId.push_back((uint8_t)id[i]);
-  for (uint32_t i = 0; i < payloadLength; i++)
-    mPayload.push_back((uint8_t)payload[i]);
+  for (uint32_t i = 0; i < aTypeLength; i++) {
+    mType.push_back((uint8_t)aType[i]);
+  }
+  for (uint32_t i = 0; i < aIdLength; i++) {
+    mId.push_back((uint8_t)aId[i]);
+  }
+  for (uint32_t i = 0; i < aPayloadLength; i++) {
+    mPayload.push_back((uint8_t)aPayload[i]);
+  }
 }
 
 NdefRecord::~NdefRecord()
 {
 }
 
-bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<NdefRecord>& records)
+bool NdefRecord::Parse(std::vector<uint8_t>& aBuf,
+                       bool aIgnoreMbMe,
+                       std::vector<NdefRecord>& aRecords)
 {
-  return NdefRecord::parse(buf, ignoreMbMe, records, 0);
+  return NdefRecord::Parse(aBuf, aIgnoreMbMe, aRecords, 0);
 }
 
-bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<NdefRecord>& records, int offset)
+bool NdefRecord::Parse(std::vector<uint8_t>& aBuf,
+                       bool aIgnoreMbMe,
+                       std::vector<NdefRecord>& aRecords,
+                       int aOffset)
 {
   bool inChunk = false;
   uint8_t chunkTnf = -1;
   bool me = false;
-  uint32_t index = offset;
+  uint32_t index = aOffset;
 
   while(!me) {
     std::vector<uint8_t> type;
@@ -78,7 +101,7 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
     std::vector<uint8_t> payload;
     std::vector<std::vector<uint8_t> > chunks;
 
-    uint8_t flag = buf[index++];
+    uint8_t flag = aBuf[index++];
 
     bool mb = (flag & FLAG_MB) != 0;
     me = (flag & FLAG_ME) != 0;
@@ -87,10 +110,10 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
     bool il = (flag & FLAG_IL) != 0;
     uint8_t tnf = flag & 0x07;
 
-    if (!mb && records.size() == 0 && !inChunk && !ignoreMbMe) {
+    if (!mb && aRecords.size() == 0 && !inChunk && !aIgnoreMbMe) {
       ALOGE("expected MB flag");
       return false;
-    } else if (mb && records.size() != 0 && !ignoreMbMe) {
+    } else if (mb && aRecords.size() != 0 && !aIgnoreMbMe) {
       ALOGE("unexpected MB flag");
       return false;
     } else if (inChunk && il) {
@@ -107,7 +130,7 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
       return false;
     }
 
-    uint32_t typeLength = buf[index++] & 0xFF;
+    uint32_t typeLength = aBuf[index++] & 0xFF;
 
     if (!tnf && typeLength != 0) {
       ALOGE("expected zero-length type in empty NDEF message");
@@ -116,12 +139,12 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
 
     uint32_t payloadLength;
     if (sr) {
-      payloadLength = buf[index++] & 0xFF;
+      payloadLength = aBuf[index++] & 0xFF;
     } else {
-      payloadLength = ((uint32_t)buf[index]     << 24) |
-                      ((uint32_t)buf[index + 1] << 16) |
-                      ((uint32_t)buf[index + 2] <<  8) |
-                      ((uint32_t)buf[index + 3]);
+      payloadLength = ((uint32_t)aBuf[index]     << 24) |
+                      ((uint32_t)aBuf[index + 1] << 16) |
+                      ((uint32_t)aBuf[index + 2] <<  8) |
+                      ((uint32_t)aBuf[index + 3]);
       index += 4;
     }
 
@@ -130,7 +153,7 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
       return false;
     }
 
-    uint32_t idLength = il ? (buf[index++] & 0xFF) : 0;
+    uint32_t idLength = il ? (aBuf[index++] & 0xFF) : 0;
 
     if (!tnf && idLength != 0) {
       ALOGE("expected zero-length id in empty NDEF message");
@@ -144,19 +167,19 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
 
     if (!inChunk) {
       for (uint32_t idx = 0; idx < typeLength; idx++) {
-        type.push_back(buf[index++]);
+        type.push_back(aBuf[index++]);
       }
       for (uint32_t idx = 0; idx < idLength; idx++) {
-        id.push_back(buf[index++]);
+        id.push_back(aBuf[index++]);
       }
     }
 
-    if (!ensureSanePayloadSize(payloadLength)) {
+    if (!EnsureSanePayloadSize(payloadLength)) {
       return false;
     }
 
     for (uint32_t idx = 0; idx < payloadLength; idx++) {
-      payload.push_back(buf[index++]);
+      payload.push_back(aBuf[index++]);
     }
 
     if (cf && !inChunk) {
@@ -174,7 +197,7 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
       for (uint32_t idx = 0; idx < chunks.size(); idx++) {
         payloadLength += chunks[idx].size();
       }
-      if (!ensureSanePayloadSize(payloadLength)) {
+      if (!EnsureSanePayloadSize(payloadLength)) {
         return false;
       }
 
@@ -193,36 +216,39 @@ bool NdefRecord::parse(std::vector<uint8_t>& buf, bool ignoreMbMe, std::vector<N
       inChunk = false;
     }
 
-    bool isValid = validateTnf(tnf, type, id, payload);
+    bool isValid = ValidateTnf(tnf, type, id, payload);
     if (isValid == false) {
       return false;
     }
 
     NdefRecord record(tnf, type, id, payload);
-    records.push_back(record);
+    aRecords.push_back(record);
 
-    if (ignoreMbMe) {  // for parsing a single NdefRecord.
+    if (aIgnoreMbMe) {  // for parsing a single NdefRecord.
       break;
     }
   }
   return true;
 }
 
-bool ensureSanePayloadSize(long size)
+bool EnsureSanePayloadSize(long aSize)
 {
-  if (size > MAX_PAYLOAD_SIZE) {
+  if (aSize > MAX_PAYLOAD_SIZE) {
     ALOGE("payload above max limit: %d > ", MAX_PAYLOAD_SIZE);
     return false;
   }
   return true;
 }
 
-bool validateTnf(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& id, std::vector<uint8_t>& payload)
+bool ValidateTnf(uint8_t aTnf,
+                 std::vector<uint8_t>& aType,
+                 std::vector<uint8_t>& aId,
+                 std::vector<uint8_t>& aPayload)
 {
   bool isValid = true;
-  switch (tnf) {
+  switch (aTnf) {
     case NdefRecord::TNF_EMPTY:
-      if (type.size() != 0 || id.size() != 0 || payload.size() != 0) {
+      if (aType.size() != 0 || aId.size() != 0 || aPayload.size() != 0) {
         ALOGE("unexpected data in TNF_EMPTY record");
         isValid = false;
       }
@@ -234,7 +260,7 @@ bool validateTnf(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& 
       break;
     case NdefRecord::TNF_UNKNOWN:
     case NdefRecord::TNF_RESERVED:
-      if (type.size() != 0) {
+      if (aType.size() != 0) {
         ALOGE("unexpected type field in TNF_UNKNOWN or TNF_RESERVEd record");
         isValid = false;
       }
@@ -251,34 +277,39 @@ bool validateTnf(uint8_t tnf, std::vector<uint8_t>& type, std::vector<uint8_t>& 
   return isValid;
 }
 
-void NdefRecord::writeToByteBuffer(std::vector<uint8_t>& buf, bool mb, bool me)
+void NdefRecord::WriteToByteBuffer(std::vector<uint8_t>& aBuf,
+                                   bool aMb,
+                                   bool aMe)
 {
   bool sr = mPayload.size() < 256;
   bool il = mId.size() > 0;
 
-  uint8_t flags = (uint8_t)((mb ? FLAG_MB : 0) |
-                            (me ? FLAG_ME : 0) |
-                            (sr ? FLAG_SR : 0) |
-                            (il ? FLAG_IL : 0) | mTnf);
-  buf.push_back(flags);
+  uint8_t flags = (uint8_t)((aMb ? FLAG_MB : 0) |
+                            (aMe ? FLAG_ME : 0) |
+                            (sr  ? FLAG_SR : 0) |
+                            (il  ? FLAG_IL : 0) | mTnf);
+  aBuf.push_back(flags);
 
-  buf.push_back((uint8_t)mType.size());
+  aBuf.push_back((uint8_t)mType.size());
   if (sr) {
-    buf.push_back((uint8_t)mPayload.size());
+    aBuf.push_back((uint8_t)mPayload.size());
   } else {
-    buf.push_back((mPayload.size() >> 24) & 0xff);
-    buf.push_back((mPayload.size() >> 16) & 0xff);
-    buf.push_back((mPayload.size() >>  8) & 0xff);
-    buf.push_back(mPayload.size() & 0xff);
+    aBuf.push_back((mPayload.size() >> 24) & 0xff);
+    aBuf.push_back((mPayload.size() >> 16) & 0xff);
+    aBuf.push_back((mPayload.size() >>  8) & 0xff);
+    aBuf.push_back(mPayload.size() & 0xff);
   }
   if (il) {
-    buf.push_back((uint8_t)mId.size());
+    aBuf.push_back((uint8_t)mId.size());
   }
 
-  for (uint32_t i = 0; i < mType.size(); i++)
-    buf.push_back(mType[i]);
-  for (uint32_t i = 0; i < mId.size(); i++)
-    buf.push_back(mId[i]);
-  for (uint32_t i = 0; i < mPayload.size(); i++)
-    buf.push_back(mPayload[i]);
+  for (uint32_t i = 0; i < mType.size(); i++) {
+    aBuf.push_back(mType[i]);
+  }
+  for (uint32_t i = 0; i < mId.size(); i++) {
+    aBuf.push_back(mId[i]);
+  }
+  for (uint32_t i = 0; i < mPayload.size(); i++) {
+    aBuf.push_back(mPayload[i]);
+  }
 }

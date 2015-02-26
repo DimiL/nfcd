@@ -36,150 +36,155 @@ public:
   virtual ~NfcTagManager();
 
   // INfcTag interface.
-  bool connect(TagTechnology technology);
-  bool disconnect();
-  bool reconnect();
-  NdefMessage* readNdef();
-  NdefInfo* readNdefInfo();
-  bool writeNdef(NdefMessage& ndef);
-  bool presenceCheck();
-  bool makeReadOnly();
-  bool formatNdef();
-  bool transceive(const std::vector<uint8_t>& command,
-                  std::vector<uint8_t>& outResponse);
+  bool Connect(TagTechnology aTechnology);
+  bool Disconnect();
+  bool Reconnect();
+  NdefMessage* ReadNdef();
+  NdefInfo* ReadNdefInfo();
+  bool WriteNdef(NdefMessage& aNdef);
+  bool PresenceCheck();
+  bool MakeReadOnly();
+  bool FormatNdef();
+  bool Transceive(const std::vector<uint8_t>& aCommand,
+                  std::vector<uint8_t>& aOutResponse);
 
-  std::vector<TagTechnology>& getTechList() { return mTechList; };
-  std::vector<int>& getTechHandles() { return mTechHandles; };
-  std::vector<int>& getTechLibNfcTypes() { return mTechLibNfcTypes; };
-  std::vector<std::vector<uint8_t> >& getTechPollBytes() { return mTechPollBytes; };
-  std::vector<std::vector<uint8_t> >& getTechActBytes() { return mTechActBytes; };
-  std::vector<uint8_t>& getUid() { return mUid; };
-  int& getConnectedHandle() { return mConnectedHandle; };
+  std::vector<TagTechnology>& GetTechList() { return mTechList; };
+  std::vector<int>& GetTechHandles() { return mTechHandles; };
+  std::vector<int>& GetTechLibNfcTypes() { return mTechLibNfcTypes; };
+  std::vector<std::vector<uint8_t> >& GetTechPollBytes() { return mTechPollBytes; };
+  std::vector<std::vector<uint8_t> >& GetTechActBytes() { return mTechActBytes; };
+  std::vector<uint8_t>& GetUid() { return mUid; };
+  int& GetConnectedHandle() { return mConnectedHandle; };
 
   /**
    * Does the tag contain a NDEF message?
    *
-   * @param  ndefInfo NDEF info.
-   * @return          Status code; 0 is success.
+   * @param  aNdefInfo NDEF info.
+   * @return           Status code; 0 is success.
    */
-  static int doCheckNdef(int ndefInfo[]);
+  static int DoCheckNdef(int aNdefInfo[]);
 
   /**
    * Notify tag I/O operation is timeout.
    *
    * @return None
    */
-  static void notifyRfTimeout();
+  static void NotifyRfTimeout();
 
    /**
    * Receive the completion status of transceive operation.
    *
-   * @param  buf    Contains tag's response.
-   * @param  bufLen Length of buffer.
+   * @param  aBuf    Contains tag's response.
+   * @param  aBufLen Length of buffer.
    * @return None
    */
-  static void doTransceiveComplete(uint8_t* buf, uint32_t bufLen);
+  static void DoTransceiveComplete(uint8_t* aBuf,
+                                   uint32_t aBufLen);
 
   /**
    * Send raw data to the tag; receive tag's response.
    *
-   * @param  command     Contains command to send.
-   * @param  outResponse Contains tag's response.
+   * @param  aCommand     Contains command to send.
+   * @param  aOutResponse Contains tag's response.
    * @return True if ok.
    */
-  static bool doTransceive(const std::vector<uint8_t>& command,
-                           std::vector<uint8_t>& outResponse);
+  static bool DoTransceive(const std::vector<uint8_t>& aCommand,
+                           std::vector<uint8_t>& aOutResponse);
 
   /**
    * Read the NDEF message on the tag.
    *
-   * @param  buf NDEF message read from tag.
-   * @return     None.
+   * @param  aBuf NDEF message read from tag.
+   * @return      None.
    */
-  static void doRead(std::vector<uint8_t>& buf);
+  static void DoRead(std::vector<uint8_t>& aBuf);
 
   /**
    * Write a NDEF message to the tag.
    *
-   * @param  buf Contains a NDEF message.
-   * @return     True if ok.
+   * @param  aBuf Contains a NDEF message.
+   * @return      True if ok.
    */
-  static bool doWrite(std::vector<uint8_t>& buf);
+  static bool DoWrite(std::vector<uint8_t>& aBuf);
 
   /**
    * Unblock all thread synchronization objects.
    *
    * @return None.
    */
-  static void doAbortWaits();
+  static void DoAbortWaits();
 
   /**
    * Receive the completion status of read operation. Called by
    * NFA_READ_CPLT_EVT.
    *
-   * @param  status Status of operation.
-   * @return        None.
+   * @param  aStatus Status of operation.
+   * @return         None.
    */
-  static void doReadCompleted(tNFA_STATUS status);
+  static void DoReadCompleted(tNFA_STATUS aStatus);
 
   /**
    * Receive the completion status of write operation. Called by
    * NFA_WRITE_CPLT_EVT.
    *
-   * @param  isWriteOk Status of operation.
-   * @return           None.
+   * @param  aIsWriteOk Status of operation.
+   * @return            None.
    */
-  static void doWriteStatus(bool isWriteOk);
+  static void DoWriteStatus(bool aIsWriteOk);
 
   /**
    * Receive the completion status of connect operation.
    *
-   * @param  isConnectOk Status of the operation.
-   * @return             None.
+   * @param  aIsConnectOk Status of the operation.
+   * @return              None.
    */
-  static void doConnectStatus(bool isConnectOk);
+  static void DoConnectStatus(bool aIsConnectOk);
 
   /**
    * Receive the completion status of deactivate operation.
    *
+   * @param  aStatus Status of operation.
    * @return None.
    */
-  static void doDeactivateStatus(int status);
+  static void DoDeactivateStatus(int aStatus);
 
   /**
    * Connect to the tag in RF field.
    *
-   * @param  targetHandle Handle of the tag.
+   * @param  aTargetHandle Handle of the tag.
    * @return Must return NXP status code, which NFC service expects.
    */
-  static int doConnect(int targetHandle);
+  static int DoConnect(int aTargetHandle);
 
   /**
    * Reset variables related to presence-check.
    *
    * @return None.
    */
-  static void doResetPresenceCheck();
+  static void DoResetPresenceCheck();
 
   /**
    * Receive the result of presence-check.
    *
-   * @param  status Result of presence-check.
-   * @return        None.
+   * @param  aStatus Result of presence-check.
+   * @return         None.
    */
-  static void doPresenceCheckResult(tNFA_STATUS status);
+  static void DoPresenceCheckResult(tNFA_STATUS aStatus);
 
   /**
    * Receive the result of checking whether the tag contains a NDEF
    * message. Called by the NFA_NDEF_DETECT_EVT.
    *
-   * @param  status      Status of the operation.
-   * @param  maxSize     Maximum size of NDEF message.
-   * @param  currentSize Current size of NDEF message.
-   * @param  flags       Indicate various states.
-   * @return             None.
+   * @param  aStatus      Status of the operation.
+   * @param  aMaxSize     Maximum size of NDEF message.
+   * @param  aCurrentSize Current size of NDEF message.
+   * @param  aFlags       Indicate various states.
+   * @return              None.
    */
-  static void doCheckNdefResult(tNFA_STATUS status, uint32_t maxSize, uint32_t currentSize, uint8_t flags);
+  static void DoCheckNdefResult(tNFA_STATUS aStatus,
+                                uint32_t aMaxSize,
+                                uint32_t aCurrentSize,
+                                uint8_t aFlags);
 
   /**
    * Register a callback to receive NDEF message from the tag
@@ -187,44 +192,44 @@ public:
    *
    * @return None.
    */
-  static void doRegisterNdefTypeHandler();
+  static void DoRegisterNdefTypeHandler();
 
   /**
    * No longer need to receive NDEF message from the tag.
    *
    * @return None.
    */
-  static void doDeregisterNdefTypeHandler();
+  static void DoDeregisterNdefTypeHandler();
 
   /**
    * Check if the tag is in the RF field.
    *
    * @return None.
    */
-  static bool doPresenceCheck();
+  static bool DoPresenceCheck();
 
   /**
    * Deactivate the RF field.
    *
    * @return True if ok.
    */
-  static bool doDisconnect();
+  static bool DoDisconnect();
 
   /**
    * Receive the result of making a tag read-only. Called by the
    * NFA_SET_TAG_RO_EVT.
    *
-   * @param  status Status of the operation.
-   * @return        None.
+   * @param  aStatus Status of the operation.
+   * @return         None.
    */
-  static void doMakeReadonlyResult(tNFA_STATUS status);
+  static void DoMakeReadonlyResult(tNFA_STATUS aStatus);
 
   /**
    * Make the tag read-only.
    *
    * @return True if ok.
    */
-  static bool doMakeReadonly();
+  static bool DoMakeReadonly();
 
   /**
    * Receive the completion status of format operation. Called by NFA_FORMAT_CPLT_EVT.
@@ -232,23 +237,23 @@ public:
    * @param  isOk Status of operation.
    * @return      None.
    */
-  static void formatStatus(bool isOk);
+  static void FormatStatus(bool aIsOk);
 
   /**
    * Format a tag so it can store NDEF message.
    *
    * @return True if ok.
    */
-  static bool doNdefFormat();
+  static bool DoNdefFormat();
 
-  static bool doIsNdefFormatable();
+  static bool DoIsNdefFormatable();
 
-  int connectWithStatus(TechnologyType technology);
-  int reconnectWithStatus(int targetHandle);
-  int reconnectWithStatus();
-  NdefMessage* doReadNdef();
-  NdefInfo* doReadNdefInfo();
-  bool isNdefFormatable();
+  int ConnectWithStatus(TechnologyType aTechnology);
+  int ReconnectWithStatus(int aTargetHandle);
+  int ReconnectWithStatus();
+  NdefMessage* DoReadNdef();
+  NdefInfo* DoReadNdefInfo();
+  bool IsNdefFormatable();
 
 private:
   pthread_mutex_t mMutex;
@@ -280,23 +285,23 @@ private:
    * Deactivates the tag and re-selects it with the specified
    * rf interface.
    *
-   * @param  rfInterface Type of RF interface.
-   * @return             Status code, 0 on success, 1 on failure,
-   *                     146 (defined in service) on tag lost.
+   * @param  aRfInterface Type of RF interface.
+   * @return              Status code, 0 on success, 1 on failure,
+   *                      146 (defined in service) on tag lost.
    */
-  static int reSelect(tNFA_INTF_TYPE rfInterface);
+  static int ReSelect(tNFA_INTF_TYPE aRfInterface);
 
   /**
    * Switch controller's RF interface to frame, ISO-DEP, or NFC-DEP.
    *
-   * @param  rfInterface Type of RF interface.
+   * @param  aRfInterface Type of RF interface.
    * @return             True if ok.
    */
-  static bool switchRfInterface(tNFA_INTF_TYPE rfInterface);
+  static bool SwitchRfInterface(tNFA_INTF_TYPE aRfInterface);
 
-  NdefType getNdefType(int libnfcType);
+  NdefType GetNdefType(int aLibnfcType);
 
-  int getConnectedLibNfcType();
+  int GetConnectedLibNfcType();
 };
 
 #endif // mozilla_nfcd_NfcTagManager_h

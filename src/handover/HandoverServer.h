@@ -23,17 +23,17 @@ class HandoverConnectionThread;
 
 class HandoverServer{
 public:
-  HandoverServer(IHandoverCallback* callback);
+  HandoverServer(IHandoverCallback* aCallback);
   ~HandoverServer();
 
   static const int DEFAULT_MIU = 128;
   static const char* DEFAULT_SERVICE_NAME;
   static const int HANDOVER_SAP = 0x14;
 
-  void start();
-  void stop();
-  bool put(NdefMessage& msg);
-  void setConnectionThread(HandoverConnectionThread* pThread);
+  void Start();
+  void Stop();
+  bool Put(NdefMessage& msg);
+  void SetConnectionThread(HandoverConnectionThread* aThread);
 
   ILlcpServerSocket* mServerSocket;
   int                mServiceSap;
@@ -46,15 +46,17 @@ private:
 
 class HandoverConnectionThread {
 public:
-  HandoverConnectionThread(HandoverServer* server, ILlcpSocket* socket, IHandoverCallback* callback);
+  HandoverConnectionThread(HandoverServer* aServer,
+                           ILlcpSocket* aSocket,
+                           IHandoverCallback* aCallback);
   ~HandoverConnectionThread();
 
-  void run();
-  bool isServerRunning() const;
+  void Run();
+  bool IsServerRunning() const;
 
-  ILlcpSocket* getSocket() {  return mSock;  }
-  IHandoverCallback* getCallback() {  return mCallback;  }
-  HandoverServer* getServer() {  return mServer;  }
+  ILlcpSocket* GetSocket() { return mSock; }
+  IHandoverCallback* GetCallback() { return mCallback; }
+  HandoverServer* GetServer() { return mServer; }
 
 private:
   ILlcpSocket* mSock;

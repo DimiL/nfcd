@@ -30,27 +30,27 @@ public:
   /**
    * Initialize NDEF meesage with NDEF binary data.
    *
-   * @param  buf Input buffer contains raw NDEF data.
-   * @return     True if the buffer can be correctly parsed.
+   * @param  aBuf Input buffer contains raw NDEF data.
+   * @return      True if the buffer can be correctly parsed.
    */
-  bool init(std::vector<uint8_t>& buf);
+  bool Init(std::vector<uint8_t>& aBuf);
 
   /**
    * Initialize NDEF meesage with NDEF binary data.
    *
-   * @param  buf    Input buffer contains raw NDEF data.
-   * @param  offset Indicate the start position of buffer to be parsed.
-   * @return        True if the buffer can be correctly parsed.
+   * @param  aBuf    Input buffer contains raw NDEF data.
+   * @param  aOffset Indicate the start position of buffer to be parsed.
+   * @return         True if the buffer can be correctly parsed.
    */
-  bool init(std::vector<uint8_t>& buf, int offset);
+  bool Init(std::vector<uint8_t>& aBuf, int aOffset);
 
   /**
    * Write current NdefMessage to byte buffer.
    *
-   * @param  buf Output raw buffer.
-   * @return     None.
+   * @param  aBuf Output raw buffer.
+   * @return      None.
    */
-  void toByteArray(std::vector<uint8_t>& buf);
+  void ToByteArray(std::vector<uint8_t>& aBuf);
 
   // Array of NDEF records.
   std::vector<NdefRecord> mRecords;

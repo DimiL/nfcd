@@ -20,42 +20,42 @@
 #define LOG_TAG "nfcd"
 #include <cutils/log.h>
 
-void DeviceHost::notifyTagDiscovered(INfcTag* pTag)
+void DeviceHost::NotifyTagDiscovered(INfcTag* aTag)
 {
-  NfcService::notifyTagDiscovered(pTag);
+  NfcService::NotifyTagDiscovered(aTag);
 }
 
-void DeviceHost::notifyTargetDeselected()
-{
-  ALOGE("%s: not implement", __FUNCTION__);
-}
-
-void DeviceHost::notifyTransactionEvent(TransactionEvent* pEvent)
-{
-  NfcService::notifySETransactionEvent(pEvent);
-}
-
-void DeviceHost::notifyLlcpLinkActivated(IP2pDevice* pDevice)
-{
-  NfcService::notifyLlcpLinkActivated(pDevice);
-}
-
-void DeviceHost::notifyLlcpLinkDeactivated(IP2pDevice* pDevice)
-{
-  NfcService::notifyLlcpLinkDeactivated(pDevice);
-}
-
-void DeviceHost::notifyLlcpLinkFirstPacketReceived()
+void DeviceHost::NotifyTargetDeselected()
 {
   ALOGE("%s: not implement", __FUNCTION__);
 }
 
-void DeviceHost::notifySeFieldActivated()
+void DeviceHost::NotifyTransactionEvent(TransactionEvent* aEvent)
+{
+  NfcService::NotifySETransactionEvent(aEvent);
+}
+
+void DeviceHost::NotifyLlcpLinkActivated(IP2pDevice* aDevice)
+{
+  NfcService::NotifyLlcpLinkActivated(aDevice);
+}
+
+void DeviceHost::NotifyLlcpLinkDeactivated(IP2pDevice* aDevice)
+{
+  NfcService::NotifyLlcpLinkDeactivated(aDevice);
+}
+
+void DeviceHost::NotifyLlcpLinkFirstPacketReceived()
 {
   ALOGE("%s: not implement", __FUNCTION__);
 }
 
-void DeviceHost::notifySeFieldDeactivated()
+void DeviceHost::NotifySeFieldActivated()
+{
+  ALOGE("%s: not implement", __FUNCTION__);
+}
+
+void DeviceHost::NotifySeFieldDeactivated()
 {
   ALOGE("%s: not implement", __FUNCTION__);
 }

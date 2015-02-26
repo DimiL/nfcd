@@ -31,35 +31,46 @@ public:
    *
    * @return None.
    */
-  void lock();
+  void Lock();
 
   /**
    * Unlock a mutex to unblock a thread.
    *
    * @return None.
    */
-  void unlock();
+  void Unlock();
 
   /**
    * Try to lock the mutex.
    *
    * @return True if the mutex is locked.
    */
-  bool tryLock();
+  bool TryLock();
 
   /**
    * Get the handle of the mutex.
    *
    * @return Handle of the mutex.
    */
-  pthread_mutex_t* nativeHandle();
+  pthread_mutex_t* GetHandle();
 
   class Autolock
   {
   public:
-    inline Autolock(Mutex& mutex) : mLock(mutex)  { mLock.lock(); }
-    inline Autolock(Mutex* mutex) : mLock(*mutex) { mLock.lock(); }
-    inline ~Autolock() { mLock.unlock(); }
+    inline Autolock(Mutex& aMutex)
+             : mLock(aMutex)
+           {
+             mLock.Lock();
+           }
+
+    inline Autolock(Mutex* aMutex)
+             : mLock(*aMutex)
+           {
+             mLock.Lock();
+           }
+
+    inline ~Autolock() { mLock.Unlock(); }
+
   private:
     Mutex& mLock;
   };

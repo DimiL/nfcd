@@ -23,23 +23,24 @@ class ILlcpSocket;
 
 class SnepMessenger{
 public:
-  SnepMessenger(bool isClient, ILlcpSocket* socket, uint32_t fragmentLength);
+  SnepMessenger(bool aIsClient,
+                ILlcpSocket* aSocket,
+                uint32_t aFragmentLength);
   ~SnepMessenger();
 
   ILlcpSocket* mSocket;
   uint32_t mFragmentLength;
   bool mIsClient;
 
-  void sendMessage(SnepMessage& msg);
-  SnepMessage* getMessage();
-  void close();
-
-  static SnepMessage* getPutRequest(NdefMessage& ndef);
+  void SendMessage(SnepMessage& aMsg);
+  SnepMessage* GetMessage();
+  void Close();
+  static SnepMessage* GetPutRequest(NdefMessage& aNdef);
 
 private:
   static const int HEADER_LENGTH = 6;
 
-  bool socketSend(uint8_t field);
+  bool SocketSend(uint8_t aField);
 };
 
 #endif

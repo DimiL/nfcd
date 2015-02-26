@@ -30,34 +30,35 @@ class NdefInfo;
 class MessageHandler {
 public:
   MessageHandler(NfcService* service): mService(service) {};
-  void processRequest(const uint8_t* data, size_t length);
-  void processResponse(NfcResponseType response, NfcErrorCode error, void* data);
-  void processNotification(NfcNotificationType notification, void* data);
 
-  void setOutgoingSocket(NfcIpcSocket* socket);
+  void ProcessRequest(const uint8_t* aData, size_t aLength);
+  void ProcessResponse(NfcResponseType aResponse, NfcErrorCode aError, void* aData);
+  void ProcessNotification(NfcNotificationType aNotification, void* aData);
+
+  void SetOutgoingSocket(NfcIpcSocket* aSocket);
 
 private:
-  void notifyInitialized(android::Parcel& parcel);
-  void notifyTechDiscovered(android::Parcel& parcel, void* data);
-  void notifyTechLost(android::Parcel& parcel, void* data);
-  void notifyTransactionEvent(android::Parcel& parcel, void* data);
+  void NotifyInitialized(android::Parcel& aParcel);
+  void NotifyTechDiscovered(android::Parcel& aParcel, void* aData);
+  void NotifyTechLost(android::Parcel& aParcel, void* aData);
+  void NotifyTransactionEvent(android::Parcel& aParcel, void* aData);
 
-  bool handleChangeRFStateRequest(android::Parcel& parcel);
-  bool handleReadNdefRequest(android::Parcel& parcel);
-  bool handleWriteNdefRequest(android::Parcel& parcel);
-  bool handleMakeNdefReadonlyRequest(android::Parcel& parcel);
-  bool handleNdefFormatRequest(android::Parcel& parcel);
-  bool handleTagTransceiveRequest(android::Parcel& parcel);
+  bool HandleChangeRFStateRequest(android::Parcel& aParcel);
+  bool HandleReadNdefRequest(android::Parcel& aParcel);
+  bool HandleWriteNdefRequest(android::Parcel& aParcel);
+  bool HandleMakeNdefReadonlyRequest(android::Parcel& aParcel);
+  bool HandleNdefFormatRequest(android::Parcel& aParcel);
+  bool HandleTagTransceiveRequest(android::Parcel& aParcel);
 
-  bool handleChangeRFStateResponse(android::Parcel& parcel, void* data);
-  bool handleReadNdefResponse(android::Parcel& parcel, void* data);
-  bool handleTagTransceiveResponse(android::Parcel& parcel, void* data);
-  bool handleResponse(android::Parcel& parcel);
+  bool HandleChangeRFStateResponse(android::Parcel& aParcel, void* aData);
+  bool HandleReadNdefResponse(android::Parcel& aParcel, void* aData);
+  bool HandleTagTransceiveResponse(android::Parcel& aParcel, void* aData);
+  bool HandleResponse(android::Parcel& aParcel);
 
-  void sendResponse(android::Parcel& parcel);
+  void SendResponse(android::Parcel& aParcel);
 
-  bool sendNdefMsg(android::Parcel& parcel, NdefMessage* ndef);
-  bool sendNdefInfo(android::Parcel& parcel, NdefInfo* info);
+  bool SendNdefMsg(android::Parcel& aParcel, NdefMessage* aNdef);
+  bool SendNdefInfo(android::Parcel& aParcel, NdefInfo* aInfo);
 
   NfcIpcSocket* mSocket;
   NfcService* mService;

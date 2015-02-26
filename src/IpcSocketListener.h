@@ -19,7 +19,7 @@
 
 class IpcSocketListener {
 public:
-  virtual void onConnected() = 0;
+  virtual void OnConnected() = 0;
   virtual ~IpcSocketListener() = 0;
 };
 

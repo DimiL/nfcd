@@ -16,11 +16,11 @@
 
 class SessionId {
 public:
-  static int generateNewId();
+  static int GenerateNewId();
 
-  static int getCurrentId();
+  static int GetCurrentId();
 
-  static bool isValid(int id);
+  static bool IsValid(int aId);
 private:
   static int mId;
 };

@@ -29,66 +29,66 @@
 
 using android::Parcel;
 
-void MessageHandler::notifyInitialized(Parcel& parcel)
+void MessageHandler::NotifyInitialized(Parcel& aParcel)
 {
-  parcel.writeInt32(0); // status
-  parcel.writeInt32(MAJOR_VERSION);
-  parcel.writeInt32(MINOR_VERSION);
-  sendResponse(parcel);
+  aParcel.writeInt32(0); // status
+  aParcel.writeInt32(MAJOR_VERSION);
+  aParcel.writeInt32(MINOR_VERSION);
+  SendResponse(aParcel);
 }
 
-void MessageHandler::notifyTechDiscovered(Parcel& parcel, void* data)
+void MessageHandler::NotifyTechDiscovered(Parcel& aParcel, void* aData)
 {
-  TechDiscoveredEvent *event = reinterpret_cast<TechDiscoveredEvent*>(data);
+  TechDiscoveredEvent *event = reinterpret_cast<TechDiscoveredEvent*>(aData);
 
-  parcel.writeInt32(event->sessionId);
-  parcel.writeInt32(event->isP2P);
-  parcel.writeInt32(event->techCount);
-  void* dest = parcel.writeInplace(event->techCount);
+  aParcel.writeInt32(event->sessionId);
+  aParcel.writeInt32(event->isP2P);
+  aParcel.writeInt32(event->techCount);
+  void* dest = aParcel.writeInplace(event->techCount);
   memcpy(dest, event->techList, event->techCount);
-  parcel.writeInt32(event->tagIdCount);
-  void* idPtr = parcel.writeInplace(event->tagIdCount);
+  aParcel.writeInt32(event->tagIdCount);
+  void* idPtr = aParcel.writeInplace(event->tagIdCount);
   memcpy(idPtr, event->tagId, event->tagIdCount);
-  parcel.writeInt32(event->ndefMsgCount);
-  sendNdefMsg(parcel, event->ndefMsg);
-  sendNdefInfo(parcel, event->ndefInfo);
-  sendResponse(parcel);
+  aParcel.writeInt32(event->ndefMsgCount);
+  SendNdefMsg(aParcel, event->ndefMsg);
+  SendNdefInfo(aParcel, event->ndefInfo);
+  SendResponse(aParcel);
 }
 
-void MessageHandler::notifyTechLost(Parcel& parcel, void* data)
+void MessageHandler::NotifyTechLost(Parcel& aParcel, void* aData)
 {
-  parcel.writeInt32(reinterpret_cast<int>(data));
-  sendResponse(parcel);
+  aParcel.writeInt32(reinterpret_cast<int>(aData));
+  SendResponse(aParcel);
 }
 
-void MessageHandler::notifyTransactionEvent(Parcel& parcel, void* data)
+void MessageHandler::NotifyTransactionEvent(Parcel& aParcel, void* aData)
 {
-  TransactionEvent *event = reinterpret_cast<TransactionEvent*>(data);
+  TransactionEvent *event = reinterpret_cast<TransactionEvent*>(aData);
 
-  parcel.writeInt32(NfcUtil::convertOriginType(event->originType));
-  parcel.writeInt32(event->originIndex);
+  aParcel.writeInt32(NfcUtil::ConvertOriginType(event->originType));
+  aParcel.writeInt32(event->originIndex);
 
-  parcel.writeInt32(event->aidLen);
-  void* aid = parcel.writeInplace(event->aidLen);
+  aParcel.writeInt32(event->aidLen);
+  void* aid = aParcel.writeInplace(event->aidLen);
   memcpy(aid, event->aid, event->aidLen);
 
-  parcel.writeInt32(event->payloadLen);
-  void* payload = parcel.writeInplace(event->payloadLen);
+  aParcel.writeInt32(event->payloadLen);
+  void* payload = aParcel.writeInplace(event->payloadLen);
   memcpy(payload, event->payload, event->payloadLen);
 
-  sendResponse(parcel);
+  SendResponse(aParcel);
 
   delete event;
 }
 
-void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
+void MessageHandler::ProcessRequest(const uint8_t* aData, size_t aDataLen)
 {
   Parcel parcel;
   int32_t sizeLe, size, request;
   uint32_t status;
 
-  ALOGD("%s enter data=%p, dataLen=%d", FUNC, data, dataLen);
-  parcel.setData((uint8_t*)data, dataLen);
+  ALOGD("%s enter data=%p, dataLen=%d", FUNC, aData, aDataLen);
+  parcel.setData((uint8_t*)aData, aDataLen);
   status = parcel.readInt32(&request);
   if (status != 0) {
     ALOGE("Invalid request block");
@@ -97,22 +97,22 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
 
   switch (request) {
     case NFC_REQUEST_CHANGE_RF_STATE:
-      handleChangeRFStateRequest(parcel);
+      HandleChangeRFStateRequest(parcel);
       break;
     case NFC_REQUEST_READ_NDEF:
-      handleReadNdefRequest(parcel);
+      HandleReadNdefRequest(parcel);
       break;
     case NFC_REQUEST_WRITE_NDEF:
-      handleWriteNdefRequest(parcel);
+      HandleWriteNdefRequest(parcel);
       break;
     case NFC_REQUEST_MAKE_NDEF_READ_ONLY:
-      handleMakeNdefReadonlyRequest(parcel);
+      HandleMakeNdefReadonlyRequest(parcel);
       break;
     case NFC_REQUEST_FORMAT:
-      handleNdefFormatRequest(parcel);
+      HandleNdefFormatRequest(parcel);
       break;
     case NFC_REQUEST_TRANSCEIVE:
-      handleTagTransceiveRequest(parcel);
+      HandleTagTransceiveRequest(parcel);
       break;
     default:
       ALOGE("Unhandled Request %d", request);
@@ -120,26 +120,26 @@ void MessageHandler::processRequest(const uint8_t* data, size_t dataLen)
   }
 }
 
-void MessageHandler::processResponse(NfcResponseType response, NfcErrorCode error, void* data)
+void MessageHandler::ProcessResponse(NfcResponseType aResponse, NfcErrorCode aError, void* aData)
 {
-  ALOGD("%s enter response=%d, error=%d", FUNC, response, error);
+  ALOGD("%s enter response=%d, error=%d", FUNC, aResponse, aError);
   Parcel parcel;
   parcel.writeInt32(0); // Parcel Size.
-  parcel.writeInt32(response);
-  parcel.writeInt32(error);
+  parcel.writeInt32(aResponse);
+  parcel.writeInt32(aError);
 
-  switch (response) {
+  switch (aResponse) {
     case NFC_RESPONSE_CHANGE_RF_STATE:
-      handleChangeRFStateResponse(parcel, data);
+      HandleChangeRFStateResponse(parcel, aData);
       break;
     case NFC_RESPONSE_READ_NDEF:
-      handleReadNdefResponse(parcel, data);
+      HandleReadNdefResponse(parcel, aData);
       break;
     case NFC_RESPONSE_TAG_TRANSCEIVE:
-      handleTagTransceiveResponse(parcel, data);
+      HandleTagTransceiveResponse(parcel, aData);
       break;
     case NFC_RESPONSE_GENERAL:
-      handleResponse(parcel);
+      HandleResponse(parcel);
       break;
     default:
       ALOGE("Not implement");
@@ -147,25 +147,25 @@ void MessageHandler::processResponse(NfcResponseType response, NfcErrorCode erro
   }
 }
 
-void MessageHandler::processNotification(NfcNotificationType notification, void* data)
+void MessageHandler::ProcessNotification(NfcNotificationType aNotification, void* aData)
 {
-  ALOGD("processNotificaton notification=%d", notification);
+  ALOGD("processNotificaton notification=%d", aNotification);
   Parcel parcel;
   parcel.writeInt32(0); // Parcel Size.
-  parcel.writeInt32(notification);
+  parcel.writeInt32(aNotification);
 
-  switch (notification) {
+  switch (aNotification) {
     case NFC_NOTIFICATION_INITIALIZED :
-      notifyInitialized(parcel);
+      NotifyInitialized(parcel);
       break;
     case NFC_NOTIFICATION_TECH_DISCOVERED:
-      notifyTechDiscovered(parcel, data);
+      NotifyTechDiscovered(parcel, aData);
       break;
     case NFC_NOTIFICATION_TECH_LOST:
-      notifyTechLost(parcel, data);
+      NotifyTechLost(parcel, aData);
       break;
     case NFC_NOTIFICATION_TRANSACTION_EVENT:
-      notifyTransactionEvent(parcel, data);
+      NotifyTransactionEvent(parcel, aData);
       break;
     default:
       ALOGE("Not implement");
@@ -173,79 +173,79 @@ void MessageHandler::processNotification(NfcNotificationType notification, void*
   }
 }
 
-void MessageHandler::setOutgoingSocket(NfcIpcSocket* socket)
+void MessageHandler::SetOutgoingSocket(NfcIpcSocket* aSocket)
 {
-  mSocket = socket;
+  mSocket = aSocket;
 }
 
-void MessageHandler::sendResponse(Parcel& parcel)
+void MessageHandler::SendResponse(Parcel& aParcel)
 {
-  parcel.setDataPosition(0);
-  uint32_t sizeBE = htonl(parcel.dataSize() - sizeof(int));
-  parcel.writeInt32(sizeBE);
-  mSocket->writeToOutgoingQueue(const_cast<uint8_t*>(parcel.data()), parcel.dataSize());
+  aParcel.setDataPosition(0);
+  uint32_t sizeBE = htonl(aParcel.dataSize() - sizeof(int));
+  aParcel.writeInt32(sizeBE);
+  mSocket->WriteToOutgoingQueue(const_cast<uint8_t*>(aParcel.data()), aParcel.dataSize());
 }
 
-bool MessageHandler::handleChangeRFStateRequest(Parcel& parcel)
+bool MessageHandler::HandleChangeRFStateRequest(Parcel& aParcel)
 {
-  int rfState = parcel.readInt32();
+  int rfState = aParcel.readInt32();
   bool value;
   switch (rfState) {
     case NFC_RF_STATE_IDLE: // Fall through.
     case NFC_RF_STATE_DISCOVERY:
       value = rfState == NFC_RF_STATE_DISCOVERY;
-      return mService->handleEnableRequest(value);
+      return mService->HandleEnableRequest(value);
     case NFC_RF_STATE_LISTEN:
       value = rfState == NFC_RF_STATE_LISTEN;
-      return mService->handleEnterLowPowerRequest(value);
+      return mService->HandleEnterLowPowerRequest(value);
   }
   return false;
 
 }
 
-bool MessageHandler::handleReadNdefRequest(Parcel& parcel)
+bool MessageHandler::HandleReadNdefRequest(Parcel& aParcel)
 {
-  int sessionId = parcel.readInt32();
+  int sessionId = aParcel.readInt32();
   //TODO check SessionId
-  return mService->handleReadNdefRequest();
+  return mService->HandleReadNdefRequest();
 }
 
-bool MessageHandler::handleWriteNdefRequest(Parcel& parcel)
+bool MessageHandler::HandleWriteNdefRequest(Parcel& aParcel)
 {
   NdefMessagePdu ndefMessagePdu;
   NdefMessage* ndefMessage = new NdefMessage();
 
-  int sessionId = parcel.readInt32();
+  int sessionId = aParcel.readInt32();
   //TODO check SessionId
-  bool isP2P = parcel.readInt32() != 0;
+  bool isP2P = aParcel.readInt32() != 0;
 
-  uint32_t numRecords = parcel.readInt32();
+  uint32_t numRecords = aParcel.readInt32();
   ndefMessagePdu.numRecords = numRecords;
   ndefMessagePdu.records = new NdefRecordPdu[numRecords];
 
   for (uint32_t i = 0; i < numRecords; i++) {
-    ndefMessagePdu.records[i].tnf = parcel.readInt32();
+    ndefMessagePdu.records[i].tnf = aParcel.readInt32();
 
-    uint32_t typeLength = parcel.readInt32();
+    uint32_t typeLength = aParcel.readInt32();
     ndefMessagePdu.records[i].typeLength = typeLength;
     ndefMessagePdu.records[i].type = new uint8_t[typeLength];
-    const void* data = parcel.readInplace(typeLength);
+    const void* data = aParcel.readInplace(typeLength);
     memcpy(ndefMessagePdu.records[i].type, data, typeLength);
 
-    uint32_t idLength = parcel.readInt32();
+    uint32_t idLength = aParcel.readInt32();
     ndefMessagePdu.records[i].idLength = idLength;
     ndefMessagePdu.records[i].id = new uint8_t[idLength];
-    data = parcel.readInplace(idLength);
+    data = aParcel.readInplace(idLength);
     memcpy(ndefMessagePdu.records[i].id, data, idLength);
 
-    uint32_t payloadLength = parcel.readInt32();
+    uint32_t payloadLength = aParcel.readInt32();
     ndefMessagePdu.records[i].payloadLength = payloadLength;
     ndefMessagePdu.records[i].payload = new uint8_t[payloadLength];
-    data = parcel.readInplace(payloadLength);
+    data = aParcel.readInplace(payloadLength);
     memcpy(ndefMessagePdu.records[i].payload, data, payloadLength);
   }
 
-  NfcUtil::convertNdefPduToNdefMessage(ndefMessagePdu, ndefMessage);
+  NfcUtil::ConvertNdefPduToNdefMessage(ndefMessagePdu, ndefMessage);
 
   for (uint32_t i = 0; i < numRecords; i++) {
     delete[] ndefMessagePdu.records[i].type;
@@ -254,93 +254,93 @@ bool MessageHandler::handleWriteNdefRequest(Parcel& parcel)
   }
   delete[] ndefMessagePdu.records;
 
-  return mService->handleWriteNdefRequest(ndefMessage, isP2P);
+  return mService->HandleWriteNdefRequest(ndefMessage, isP2P);
 }
 
-bool MessageHandler::handleMakeNdefReadonlyRequest(Parcel& parcel)
+bool MessageHandler::HandleMakeNdefReadonlyRequest(Parcel& aParcel)
 {
-  mService->handleMakeNdefReadonlyRequest();
+  mService->HandleMakeNdefReadonlyRequest();
   return true;
 }
 
-bool MessageHandler::handleNdefFormatRequest(Parcel& parcel)
+bool MessageHandler::HandleNdefFormatRequest(Parcel& aParcel)
 {
-  mService->handleNdefFormatRequest();
+  mService->HandleNdefFormatRequest();
   return true;
 }
 
-bool MessageHandler::handleTagTransceiveRequest(Parcel& parcel)
+bool MessageHandler::HandleTagTransceiveRequest(Parcel& aParcel)
 {
-  int sessionId = parcel.readInt32();
-  int tech = parcel.readInt32();
-  int bufLen = parcel.readInt32();
+  int sessionId = aParcel.readInt32();
+  int tech = aParcel.readInt32();
+  int bufLen = aParcel.readInt32();
 
-  const void* buf = parcel.readInplace(bufLen);
-  mService->handleTagTransceiveRequest(tech, static_cast<const uint8_t*>(buf), bufLen);
+  const void* buf = aParcel.readInplace(bufLen);
+  mService->HandleTagTransceiveRequest(tech, static_cast<const uint8_t*>(buf), bufLen);
   return true;
 }
 
-bool MessageHandler::handleChangeRFStateResponse(Parcel& parcel, void* data)
+bool MessageHandler::HandleChangeRFStateResponse(Parcel& aParcel, void* aData)
 {
-  parcel.writeInt32(*reinterpret_cast<int*>(data));
-  sendResponse(parcel);
+  aParcel.writeInt32(*reinterpret_cast<int*>(aData));
+  SendResponse(aParcel);
   return true;
 }
 
-bool MessageHandler::handleReadNdefResponse(Parcel& parcel, void* data)
+bool MessageHandler::HandleReadNdefResponse(Parcel& aParcel, void* aData)
 {
-  NdefMessage* ndef = reinterpret_cast<NdefMessage*>(data);
+  NdefMessage* ndef = reinterpret_cast<NdefMessage*>(aData);
 
-  parcel.writeInt32(SessionId::getCurrentId());
+  aParcel.writeInt32(SessionId::GetCurrentId());
 
-  sendNdefMsg(parcel, ndef);
-  sendResponse(parcel);
+  SendNdefMsg(aParcel, ndef);
+  SendResponse(aParcel);
 
   return true;
 }
 
-bool MessageHandler::handleTagTransceiveResponse(Parcel& parcel, void* data)
+bool MessageHandler::HandleTagTransceiveResponse(Parcel& aParcel, void* aData)
 {
-  std::vector<uint8_t>* response = reinterpret_cast<std::vector<uint8_t>*>(data);
+  std::vector<uint8_t>* response = reinterpret_cast<std::vector<uint8_t>*>(aData);
   uint32_t length = response->size();
 
-  parcel.writeInt32(SessionId::getCurrentId());
-  parcel.writeInt32(length);
+  aParcel.writeInt32(SessionId::GetCurrentId());
+  aParcel.writeInt32(length);
 
-  uint8_t* buf = static_cast<uint8_t*>(parcel.writeInplace(length));
+  uint8_t* buf = static_cast<uint8_t*>(aParcel.writeInplace(length));
   std::copy(response->begin(), response->end(), buf);
 
-  sendResponse(parcel);
+  SendResponse(aParcel);
 
   return true;
 }
 
-bool MessageHandler::handleResponse(Parcel& parcel)
+bool MessageHandler::HandleResponse(Parcel& aParcel)
 {
-  parcel.writeInt32(SessionId::getCurrentId());
-  sendResponse(parcel);
+  aParcel.writeInt32(SessionId::GetCurrentId());
+  SendResponse(aParcel);
   return true;
 }
 
-bool MessageHandler::sendNdefMsg(Parcel& parcel, NdefMessage* ndef)
+bool MessageHandler::SendNdefMsg(Parcel& aParcel, NdefMessage* aNdef)
 {
-  if (!ndef)
+  if (!aNdef)
     return false;
 
-  int numRecords = ndef->mRecords.size();
+  int numRecords = aNdef->mRecords.size();
   ALOGD("numRecords=%d", numRecords);
-  parcel.writeInt32(numRecords);
+  aParcel.writeInt32(numRecords);
 
   for (int i = 0; i < numRecords; i++) {
-    NdefRecord &record = ndef->mRecords[i];
+    NdefRecord &record = aNdef->mRecords[i];
 
     ALOGD("tnf=%u",record.mTnf);
-    parcel.writeInt32(record.mTnf);
+    aParcel.writeInt32(record.mTnf);
 
     uint32_t typeLength = record.mType.size();
     ALOGD("typeLength=%u",typeLength);
-    parcel.writeInt32(typeLength);
-    void* dest = parcel.writeInplace(typeLength);
+    aParcel.writeInt32(typeLength);
+    void* dest = aParcel.writeInplace(typeLength);
     if (dest == NULL) {
       ALOGE("writeInplace returns NULL");
       return false;
@@ -349,14 +349,14 @@ bool MessageHandler::sendNdefMsg(Parcel& parcel, NdefMessage* ndef)
 
     uint32_t idLength = record.mId.size();
     ALOGD("idLength=%d",idLength);
-    parcel.writeInt32(idLength);
-    dest = parcel.writeInplace(idLength);
+    aParcel.writeInt32(idLength);
+    dest = aParcel.writeInplace(idLength);
     memcpy(dest, &record.mId.front(), idLength);
 
     uint32_t payloadLength = record.mPayload.size();
     ALOGD("payloadLength=%u",payloadLength);
-    parcel.writeInt32(payloadLength);
-    dest = parcel.writeInplace(payloadLength);
+    aParcel.writeInt32(payloadLength);
+    dest = aParcel.writeInplace(payloadLength);
     memcpy(dest, &record.mPayload.front(), payloadLength);
     for (uint32_t j = 0; j < payloadLength; j++) {
       ALOGD("mPayload %d = %u", j, record.mPayload[j]);
@@ -366,27 +366,27 @@ bool MessageHandler::sendNdefMsg(Parcel& parcel, NdefMessage* ndef)
   return true;
 }
 
-bool MessageHandler::sendNdefInfo(Parcel& parcel, NdefInfo* info)
+bool MessageHandler::SendNdefInfo(Parcel& aParcel, NdefInfo* aInfo)
 {
   // if contain ndef information
-  parcel.writeInt32(info ? true : false);
+  aParcel.writeInt32(aInfo ? true : false);
 
-  if (!info) {
+  if (!aInfo) {
     return false;
   }
 
   // ndef tyoe
-  NfcNdefType type = (NfcUtil::convertNdefType(info->ndefType));
-  parcel.writeInt32(static_cast<int>(type));
+  NfcNdefType type = (NfcUtil::ConvertNdefType(aInfo->ndefType));
+  aParcel.writeInt32(static_cast<int>(type));
 
   // max support length
-  parcel.writeInt32(info->maxSupportedLength);
+  aParcel.writeInt32(aInfo->maxSupportedLength);
 
   // is ready only
-  parcel.writeInt32(info->isReadOnly);
+  aParcel.writeInt32(aInfo->isReadOnly);
 
   // ndef formatable
-  parcel.writeInt32(info->isFormatable);
+  aParcel.writeInt32(aInfo->isFormatable);
 
   return true;
 }

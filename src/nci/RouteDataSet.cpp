@@ -56,13 +56,13 @@ static const char* ROUTE_TYPE_SEC = "SecElemSelectedRoutes";
 static const char* BOOL_TRUE = "true";
 static const char* BOOL_FALSE = "false";
 
-void RouteDataSet::importProtocolRoute(const char **attribute)
+void RouteDataSet::ImportProtocolRoute(const char **aAttribute)
 {
   RouteDataForProtocol* data = new RouteDataForProtocol;
 
-  for (int i = 0; attribute[i]; i += 2) {
-    const char* prop = attribute[i];
-    const char* value = attribute[i + 1];
+  for (int i = 0; aAttribute[i]; i += 2) {
+    const char* prop = aAttribute[i];
+    const char* value = aAttribute[i + 1];
 
     if (strcmp(prop, PROP_ID) == 0) {
       if (strcmp(value, PROTO_ID_T1T) == 0) {
@@ -88,13 +88,13 @@ void RouteDataSet::importProtocolRoute(const char **attribute)
   mCurrentDB->push_back(data);
 }
 
-void RouteDataSet::importTechnologyRoute(const char **attribute)
+void RouteDataSet::ImportTechnologyRoute(const char **aAttribute)
 {
   RouteDataForTechnology* data = new RouteDataForTechnology;
 
-  for (int i = 0; attribute[i]; i += 2) {
-    const char* prop = attribute[i];
-    const char* value = attribute[i + 1];
+  for (int i = 0; aAttribute[i]; i += 2) {
+    const char* prop = aAttribute[i];
+    const char* value = aAttribute[i + 1];
 
     if (strcmp(prop, PROP_ID) == 0) {
       if (strcmp(value, TECH_ID_NFCA) == 0) {
@@ -118,17 +118,19 @@ void RouteDataSet::importTechnologyRoute(const char **attribute)
   mCurrentDB->push_back(data);
 }
 
-void RouteDataSet::xmlStartElement(void *data, const char *element, const char **attribute)
+void RouteDataSet::XmlStartElement(void *aData,
+                                   const char *aElement,
+                                   const char **aAttribute)
 {
-  RouteDataSet* route = reinterpret_cast<RouteDataSet*>(data);
+  RouteDataSet* route = reinterpret_cast<RouteDataSet*>(aData);
   if (!route) {
     return;
   }
 
-  if (strcmp(element, TAG_ROUTE) == 0) {
-    for (uint32_t i = 0; attribute[i]; i += 2) {
-      const char* prop = attribute[i];
-      const char* value = attribute[i + 1];
+  if (strcmp(aElement, TAG_ROUTE) == 0) {
+    for (uint32_t i = 0; aAttribute[i]; i += 2) {
+      const char* prop = aAttribute[i];
+      const char* value = aAttribute[i + 1];
 
       if (strcmp(prop, PROP_TYPE) == 0) {
         if (strcmp(value, ROUTE_TYPE_DEFAULT) == 0) {
@@ -138,28 +140,29 @@ void RouteDataSet::xmlStartElement(void *data, const char *element, const char *
         }
       }
     }
-  } else if (strcmp(element, TAG_TECH) == 0) {
-    route->importTechnologyRoute(attribute);
-  } else if (strcmp(element, TAG_PROTO) == 0) {
-    route->importProtocolRoute(attribute);
+  } else if (strcmp(aElement, TAG_TECH) == 0) {
+    route->ImportTechnologyRoute(aAttribute);
+  } else if (strcmp(aElement, TAG_PROTO) == 0) {
+    route->ImportProtocolRoute(aAttribute);
   }
 }
 
-void RouteDataSet::xmlEndElement(void *data, const char *element)
+void RouteDataSet::XmlEndElement(void *aData,
+                                 const char *aElement)
 {
 }
 
 RouteDataSet::~RouteDataSet()
 {
-  deleteDatabase();
+  DeleteDatabase();
 }
 
-bool RouteDataSet::initialize()
+bool RouteDataSet::Initialize()
 {
   return true;
 }
 
-void RouteDataSet::deleteDatabase()
+void RouteDataSet::DeleteDatabase()
 {
   ALOGD("%s: default db size=%u; sec elem db size=%u",
         __FUNCTION__, mDefaultRouteDatabase.size(), mSecElemRouteDatabase.size());
@@ -176,14 +179,14 @@ void RouteDataSet::deleteDatabase()
   mSecElemRouteDatabase.clear();
 }
 
-bool RouteDataSet::import()
+bool RouteDataSet::Import()
 {
   ALOGD ("%s: enter", __FUNCTION__);
 
   std::string strFilename(bcm_nfc_location);
   strFilename += sConfigFile;
 
-  deleteDatabase();
+  DeleteDatabase();
 
   FILE *file = fopen(strFilename.c_str(), "r");
   if (!file) {
@@ -199,8 +202,8 @@ bool RouteDataSet::import()
 
   XML_SetUserData(parser, this);
   XML_SetElementHandler(parser,
-                        RouteDataSet::xmlStartElement,
-                        RouteDataSet::xmlEndElement);
+                        RouteDataSet::XmlStartElement,
+                        RouteDataSet::XmlEndElement);
 
   while (true) {
     size_t actual = 0;

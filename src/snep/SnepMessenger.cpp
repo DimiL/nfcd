@@ -26,19 +26,21 @@
  * version, a request method, the length of an information field in octets,
  * and an information field.
  */
-SnepMessenger::SnepMessenger(bool isClient, ILlcpSocket* socket, uint32_t fragmentLength)
- : mSocket(socket)
- , mFragmentLength(fragmentLength)
- , mIsClient(isClient)
+SnepMessenger::SnepMessenger(bool aIsClient,
+                             ILlcpSocket* aSocket,
+                             uint32_t aFragmentLength)
+ : mSocket(aSocket)
+ , mFragmentLength(aFragmentLength)
+ , mIsClient(aIsClient)
 {
 }
 
 SnepMessenger::~SnepMessenger()
 {
-  close();
+  Close();
 }
 
-void SnepMessenger::sendMessage(SnepMessage& msg)
+void SnepMessenger::SendMessage(SnepMessage& aMsg)
 {
   ALOGD("%s: enter", FUNC);
 
@@ -50,18 +52,19 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
   }
 
   std::vector<uint8_t> buf;
-  msg.toByteArray(buf);
+  aMsg.ToByteArray(buf);
   uint32_t length = -1;
 
   if (buf.size() <  mFragmentLength) {
     length = buf.size();
-    mSocket->send(buf);
+    mSocket->Send(buf);
   } else {
     length = mFragmentLength;
     std::vector<uint8_t> tmpBuf;
-    for (uint32_t i = 0; i < mFragmentLength; i++)
+    for (uint32_t i = 0; i < mFragmentLength; i++) {
       tmpBuf.push_back(buf[i]);
-    mSocket->send(tmpBuf);
+    }
+    mSocket->Send(tmpBuf);
   }
 
   if (length == buf.size()) {
@@ -73,16 +76,16 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
   // Look for Continue or Reject from peer.
   uint32_t offset = length;
   std::vector<uint8_t> responseBytes;
-  mSocket->receive(responseBytes);
+  mSocket->Receive(responseBytes);
 
-  SnepMessage* snepResponse = SnepMessage::fromByteArray(responseBytes);
+  SnepMessage* snepResponse = SnepMessage::FromByteArray(responseBytes);
   if (!snepResponse) {
     ALOGE("%s: invalid SNEP message", FUNC);
     return;
   }
 
-  if (snepResponse->getField() != remoteContinue) {
-    ALOGE("%s: invalid response from server (%d)", FUNC, snepResponse->getField());
+  if (snepResponse->GetField() != remoteContinue) {
+    ALOGE("%s: invalid response from server (%d)", FUNC, snepResponse->GetField());
     delete snepResponse;
     return;
   }
@@ -92,9 +95,10 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
     std::vector<uint8_t> tmpBuf;
     length = buf.size() - offset < mFragmentLength ? buf.size() - offset : mFragmentLength;
     // TODO : Need check here
-    for(uint32_t i = offset; i < offset + length; i++)
+    for(uint32_t i = offset; i < offset + length; i++) {
       tmpBuf.push_back(buf[i]);
-    mSocket->send(tmpBuf);
+    }
+    mSocket->Send(tmpBuf);
     offset += length;
   }
 
@@ -104,7 +108,7 @@ void SnepMessenger::sendMessage(SnepMessage& msg)
 /**
  * Get Snep message from remote side.
  */
-SnepMessage* SnepMessenger::getMessage()
+SnepMessage* SnepMessenger::GetMessage()
 {
   ALOGD("%s: enter", FUNC);
 
@@ -141,9 +145,9 @@ SnepMessage* SnepMessenger::getMessage()
   }
 
   uint32_t readSize = 0;
-  int size = mSocket->receive(partial);
+  int size = mSocket->Receive(partial);
   if (size < 0 || size < HEADER_LENGTH) {
-    if (!socketSend(fieldReject)) {
+    if (!SocketSend(fieldReject)) {
       ALOGE("%s: snep message send fail", FUNC);
       return NULL;
     }
@@ -168,7 +172,7 @@ SnepMessage* SnepMessenger::getMessage()
 
   bool doneReading = false;
   if (requestSize > readSize) {
-    if (!socketSend(fieldContinue)) {
+    if (!SocketSend(fieldContinue)) {
       ALOGE("%s: snep message send fail", FUNC);
       return NULL;
     }
@@ -180,9 +184,9 @@ SnepMessage* SnepMessenger::getMessage()
   // Remaining fragments.
   while (!doneReading) {
     partial.clear();
-    size = mSocket->receive(partial);
+    size = mSocket->Receive(partial);
     if (size < 0) {
-      if (!socketSend(fieldReject)) {
+      if (!SocketSend(fieldReject)) {
         ALOGE("%s: snep message send fail", FUNC);
         return NULL;
       }
@@ -195,7 +199,7 @@ SnepMessage* SnepMessenger::getMessage()
     }
   }
 
-  SnepMessage* snep = SnepMessage::fromByteArray(buffer);
+  SnepMessage* snep = SnepMessage::FromByteArray(buffer);
   if (!snep)
     ALOGE("%s: nadly formatted NDEF message, ignoring", FUNC);
 
@@ -203,21 +207,21 @@ SnepMessage* SnepMessenger::getMessage()
   return snep;
 }
 
-void SnepMessenger::close()
+void SnepMessenger::Close()
 {
   if (mSocket) {
-    mSocket->close();
+    mSocket->Close();
     mSocket = NULL;
   }
 }
 
-bool SnepMessenger::socketSend(uint8_t field)
+bool SnepMessenger::SocketSend(uint8_t aField)
 {
   bool status = false;
   std::vector<uint8_t> data;
-  SnepMessage* msg = SnepMessage::getMessage(field);
-  msg->toByteArray(data);
-  status = mSocket->send(data);
+  SnepMessage* msg = SnepMessage::GetMessage(aField);
+  msg->ToByteArray(data);
+  status = mSocket->Send(data);
   delete msg;
   return status;
 }
