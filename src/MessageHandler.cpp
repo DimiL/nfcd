@@ -25,7 +25,7 @@
 #include "NfcDebug.h"
 
 #define MAJOR_VERSION (1)
-#define MINOR_VERSION (20)
+#define MINOR_VERSION (21)
 
 using android::Parcel;
 
@@ -135,11 +135,13 @@ void MessageHandler::ProcessResponse(NfcResponseType aResponse, NfcErrorCode aEr
     case NFC_RESPONSE_READ_NDEF:
       HandleReadNdefResponse(parcel, aData);
       break;
+    case NFC_RESPONSE_WRITE_NDEF: // Fall through.
+    case NFC_RESPONSE_MAKE_READ_ONLY:
+    case NFC_RESPONSE_FORMAT:
+      HandleResponse(parcel);
+      break;
     case NFC_RESPONSE_TAG_TRANSCEIVE:
       HandleTagTransceiveResponse(parcel, aData);
-      break;
-    case NFC_RESPONSE_GENERAL:
-      HandleResponse(parcel);
       break;
     default:
       ALOGE("Not implement");
@@ -152,7 +154,7 @@ void MessageHandler::ProcessNotification(NfcNotificationType aNotification, void
   ALOGD("processNotificaton notification=%d", aNotification);
   Parcel parcel;
   parcel.writeInt32(0); // Parcel Size.
-  parcel.writeInt32(aNotification);
+  parcel.writeInt32(aNotification | 0x80000000);
 
   switch (aNotification) {
     case NFC_NOTIFICATION_INITIALIZED :
