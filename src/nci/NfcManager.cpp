@@ -22,6 +22,7 @@
 
 #include "SyncEvent.h"
 #include "SecureElement.h"
+#include "RoutingManager.h"
 #include "PeerToPeer.h"
 #include "PowerSwitch.h"
 #include "NfcTag.h"
@@ -159,6 +160,7 @@ bool NfcManager::Initialize()
   if (stat == NFA_STATUS_OK) {
     if (sIsNfaEnabled) {
       SecureElement::GetInstance().Initialize(this);
+      RoutingManager::GetInstance().Initialize(this);
       NfcTagManager::DoRegisterNdefTypeHandler();
       NfcTag::GetInstance().Initialize(this);
 
@@ -492,12 +494,6 @@ bool NfcManager::DoDeselectSecureElement()
 
   result = SecureElement::GetInstance().RouteToDefault();
   sIsSecElemSelected = false;
-
-  //if controller is not routing to sec elems AND there is no pipe connected,
-  //then turn off the sec elems
-  if (!SecureElement::GetInstance().IsBusy()) {
-    SecureElement::GetInstance().Deactivate();
-  }
 
 TheEnd:
   if (reDiscover) {

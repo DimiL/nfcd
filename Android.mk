@@ -55,6 +55,7 @@ NCI_SRC_FILES := \
     src/nci/IntervalTimer.cpp \
     src/nci/SecureElement.cpp \
     src/nci/RouteDataSet.cpp \
+    src/nci/RoutingManager.cpp \
     src/nci/NfcNciUtil.cpp
 
 INTERFACE_SRC_FILES := \

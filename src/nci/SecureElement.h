@@ -87,14 +87,6 @@ public:
   void ResetRfFieldStatus();
 
   /**
-   * Store a copy of the execution environment information from the stack.
-   *
-   * @param  info execution environment information.
-   * @return None.
-   */
-  void StoreUiccInfo(tNFA_EE_DISCOVER_REQ& info);
-
-  /**
    * Notify the NFC service about whether the SE was activated
    * in listen mode
    *
@@ -159,13 +151,6 @@ public:
   bool RouteToDefault();
 
   /**
-   * Whether NFC controller is routing listen-mode events or a pipe is connected.
-   *
-   * @return True if either case is true.
-   */
-  bool IsBusy();
-
-  /**
    * Can be used to determine if the SE is activated in listen mode.
    *
    * @return True if the SE is activated in listen mode.
@@ -179,6 +164,9 @@ public:
    */
   bool IsRfFieldOn();
 
+  void NotifyModeSet(tNFA_HANDLE aEeHandle, bool aSuccess);
+
+  tNFA_HANDLE GetDefaultEeHandle();
 private:
   static const unsigned int MAX_RESPONSE_SIZE = 1024;
   enum RouteSelection {NoRoute, DefaultRoute, SecElemRoute};
@@ -199,7 +187,6 @@ private:
   bool mIsInit;  // whether EE is initialized
   uint8_t mActualNumEe;  // actual number of EE's reported by the stack
   uint8_t mNumEePresent;  // actual number of usable EE's
-  bool mbNewEE;
   uint16_t mActiveSeOverride;  // active "enable" seid, 0 means activate all SEs
   bool mIsPiping;  //is a pipe connected to the controller?
   RouteSelection mCurrentRouteSelection;
@@ -207,30 +194,15 @@ private:
   bool mActivatedInListenMode; // whether we're activated in listen mode
   tNFA_EE_INFO mEeInfo[MAX_NUM_EE];  //actual size stored in mActualNumEe
   tNFA_EE_DISCOVER_REQ mUiccInfo;
-  SyncEvent mEeRegisterEvent;
   SyncEvent mHciRegisterEvent;
   SyncEvent mEeSetModeEvent;
-  SyncEvent mRoutingEvent;
-  SyncEvent mUiccInfoEvent;
   SyncEvent mUiccListenEvent;
-  SyncEvent mAidAddRemoveEvent;
-  RouteDataSet mRouteDataSet; //routing data
   Mutex mMutex;  // protects fields below
   bool mRfFieldIsOn;  // last known RF field state
   struct timespec mLastRfFieldToggle;  // last time RF field went off
 
   SecureElement();
   ~SecureElement();
-
-  /**
-   * Receive execution environment-related events from stack.
-   *
-   * @param aEvent Event code.
-   * @param aEventData Event data.
-   * return None.
-   */
-  static void NfaEeCallback(tNFA_EE_EVT aEvent,
-                            tNFA_EE_CBACK_DATA* aEventData);
 
   /**
    * Receive Host Controller Interface-related events from stack.
@@ -249,37 +221,6 @@ private:
    * @return Information about an execution environment.
    */
   tNFA_EE_INFO* FindEeByHandle(tNFA_HANDLE aEeHandle);
-
-  /**
-   * Get the handle to the execution environment.
-   *
-   * @return Handle to the execution environment.
-   */
-  tNFA_HANDLE GetDefaultEeHandle();
-
-  /**
-   * Adjust routes in the controller's listen-mode routing table.
-   *
-   * @param  aSelection which set of routes to configure the controller.
-   * @return None.
-   */
-  void AdjustRoutes(RouteSelection aSelection);
-
-  /**
-   * Adjust default routing based on protocol in NFC listen mode.
-   *
-   * @param  isRouteToEe Whether routing to EE (true) or host (false).
-   * @return None.
-   */
-  void AdjustProtocolRoutes(RouteSelection aRouteSelection);
-
-  /**
-   * Adjust default routing based on technology in NFC listen mode.
-   *
-   * @param  isRouteToEe Whether routing to EE (true) or host (false).
-   * @return None.
-   */
-  void AdjustTechnologyRoutes(RouteSelection aRouteSelection);
 
   /**
    * Get latest information about execution environments from stack.
