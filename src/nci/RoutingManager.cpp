@@ -49,7 +49,9 @@ bool RoutingManager::Initialize(NfcManager* aNfcManager)
   if (GetNumValue("DEFAULT_ISODEP_ROUTE", &num, sizeof(num))) {
     mDefaultEe = num;
   } else {
-    mDefaultEe = 0x00;
+    ALOGD("[Dimi]No config, use default EE");
+    mDefaultEe = 0x400;
+//    mDefaultEe = 0x402;
   }
 
   SetDefaultRouting();
@@ -70,7 +72,8 @@ void RoutingManager::SetDefaultRouting()
   ALOGD("[Dimi]SetDefaultRouting >>");
 
   // Default routing for NFC-A technology
-  nfaStat = NFA_EeSetDefaultTechRouting(mDefaultEe, NFA_TECHNOLOGY_MASK_A, 0, 0);
+//  nfaStat = NFA_EeSetDefaultTechRouting(mDefaultEe, NFA_TECHNOLOGY_MASK_A, 0, 0);
+  nfaStat = NFA_EeSetDefaultTechRouting(0x402, NFA_TECHNOLOGY_MASK_A, 0, 0);
   if (nfaStat == NFA_STATUS_OK) {
     mRoutingEvent.Wait();
   } else {
@@ -78,7 +81,8 @@ void RoutingManager::SetDefaultRouting()
   }
 
   // Default routing for IsoDep protocol
-  nfaStat = NFA_EeSetDefaultProtoRouting(mDefaultEe, NFA_PROTOCOL_MASK_ISO_DEP, 0, 0);
+//  nfaStat = NFA_EeSetDefaultProtoRouting(mDefaultEe, NFA_PROTOCOL_MASK_ISO_DEP, 0, 0);
+  nfaStat = NFA_EeSetDefaultProtoRouting(0x402, NFA_PROTOCOL_MASK_ISO_DEP, 0, 0);
   if (nfaStat == NFA_STATUS_OK) {
     mRoutingEvent.Wait();
   } else {
@@ -86,7 +90,8 @@ void RoutingManager::SetDefaultRouting()
   }
 
   // Tell the UICC to only listen on Nfc-A
-  nfaStat = NFA_CeConfigureUiccListenTech(mDefaultEe, NFA_TECHNOLOGY_MASK_A);
+//  nfaStat = NFA_CeConfigureUiccListenTech(mDefaultEe, NFA_TECHNOLOGY_MASK_A);
+  nfaStat = NFA_CeConfigureUiccListenTech(0x402, NFA_TECHNOLOGY_MASK_A);
   if (nfaStat != NFA_STATUS_OK) {
     ALOGE("Failed to configure UICC listen technologies");
   }
@@ -98,12 +103,22 @@ void RoutingManager::SetDefaultRouting()
   }
 
   // Register a wild-card for AIDs routed to the host
-  //nfaStat = NFA_CeRegisterAidOnDH (NULL, 0, stackCallback);
-  //if (nfaStat != NFA_STATUS_OK) {
-  //  ALOGE("Failed to register wildcard AID for DH");
-  //}
+
+  nfaStat = NFA_CeRegisterAidOnDH (NULL, 0, StackCallback);
+  if (nfaStat != NFA_STATUS_OK) {
+    ALOGE("Failed to register wildcard AID for DH");
+  }
 
   // Commit the routing configuration
+  nfaStat = NFA_EeUpdateNow();
+  if (nfaStat != NFA_STATUS_OK) {
+    ALOGE("Failed to commit routing configuration");
+  }
+
+  uint8_t aid[] = {0xA0, 0x00, 0x00, 0x00, 0x01, 0x02};
+  nfaStat = NFA_EeAddAidRouting(mDefaultEe, 6, (UINT8*) aid, 0x01);
+//  nfaStat = NFA_EeAddAidRouting(0x402, 6, (UINT8*) aid, 0x01);
+
   nfaStat = NFA_EeUpdateNow();
   if (nfaStat != NFA_STATUS_OK) {
     ALOGE("Failed to commit routing configuration");
@@ -112,9 +127,86 @@ void RoutingManager::SetDefaultRouting()
   ALOGD("[Dimi]SetDefaultRouting <<");
 }
 
+bool RoutingManager::addAidRouting(const UINT8* aid, UINT8 aidLen, int route)
+{
+  static const char fn [] = "RoutingManager::addAidRouting";
+  ALOGD("%s: enter", fn);
+//  tNFA_STATUS nfaStat = NFA_EeAddAidRouting(route, aidLen, (UINT8*) aid, 0x01);
+  tNFA_STATUS nfaStat = NFA_EeAddAidRouting(mDefaultEe, aidLen, (UINT8*) aid, 0x01);
+  if (nfaStat == NFA_STATUS_OK) {
+    ALOGD("%s: routed AID", fn);
+    return true;
+  } else {
+    ALOGE("%s: failed to route AID", fn);
+    return false;
+  }
+}
+
 void RoutingManager::StackCallback(UINT8 aEvent, tNFA_CONN_EVT_DATA* aEventData)
 {
+  static const char fn [] = "[Dimi]RoutingManager::stackCallback";
   RoutingManager& rm = RoutingManager::GetInstance();
+
+  switch (aEvent)
+  {
+    case NFA_CE_REGISTERED_EVT:
+    {
+      tNFA_CE_REGISTERED& ce_registered = aEventData->ce_registered;
+      ALOGD("%s: NFA_CE_REGISTERED_EVT; status=0x%X; h=0x%X",
+            fn, ce_registered.status, ce_registered.handle);
+    }
+    break;
+
+    case NFA_CE_DEREGISTERED_EVT:
+    {
+      tNFA_CE_DEREGISTERED& ce_deregistered = aEventData->ce_deregistered;
+      ALOGD("%s: NFA_CE_DEREGISTERED_EVT; h=0x%X", fn, ce_deregistered.handle);
+    }
+    break;
+
+    case NFA_CE_ACTIVATED_EVT:
+    {
+      ALOGD("%s: NFA_CE_ACTIVATED_EVT, NFA_CE_ACTIVATED_EVT", fn);
+    }
+    break;
+
+    case NFA_DEACTIVATED_EVT:
+    case NFA_CE_DEACTIVATED_EVT:
+    {
+      ALOGD("%s: NFA_DEACTIVATED_EVT, NFA_CE_DEACTIVATED_EVT", fn);
+    }
+    break;
+
+    case NFA_CE_DATA_EVT:
+    {
+      tNFA_CE_DATA& ce_data = aEventData->ce_data;
+      ALOGD("%s: NFA_CE_DATA_EVT; h=0x%X; data len=%u",
+            fn, ce_data.handle, ce_data.len);
+      for (int i = 0; i < ce_data.len; i++) {
+        ALOGD("[Dimi]NFA_CE_DATA_EVT: [%d]=0x%x", i, ce_data.p_data[i]);
+      }
+
+      if (ce_data.len > 4 &&
+          ce_data.p_data[0] == 0x00 &&
+          ce_data.p_data[1] == 0xA4 &&  // INS
+          ce_data.p_data[2] == 0x04 &&  // P1
+          ce_data.p_data[3] == 0x00 &&  // P2
+          ce_data.p_data[4] == 0x06 &&  // LC
+          ce_data.p_data[5] == 0xA0 &&  // DATA
+          ce_data.p_data[6] == 0x00 &&  // DATA
+          ce_data.p_data[7] == 0x00 &&  // DATA
+          ce_data.p_data[8] == 0x00 &&  // DATA
+          ce_data.p_data[9] == 0x01 &&  // DATA
+          ce_data.p_data[10] == 0x02) { // DATA
+        ALOGD("[Dimi]Response 0x90 0x00");
+        uint8_t buf[2] = {0x90, 0x00};
+        NFA_SendRawFrame (buf, 2, 0);
+      }
+
+//      getInstance().handleData(ce_data.p_data, ce_data.len, ce_data.status);
+    }
+    break;
+  }
 }
 
 void RoutingManager::NfaEeCallback(tNFA_EE_EVT aEvent, tNFA_EE_CBACK_DATA* aEventData)

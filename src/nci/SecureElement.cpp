@@ -135,14 +135,14 @@ bool SecureElement::GetEeInfo()
     return false;
   }
 
-  ALOGD("%s: num EEs discovered: %u", __FUNCTION__, mActualNumEe);
+  ALOGD("[Dimi]%s: num EEs discovered: %u", __FUNCTION__, mActualNumEe);
   for (uint8_t i = 0; i < mActualNumEe; i++) {
     if ((mEeInfo[i].num_interface != 0) &&
         (mEeInfo[i].ee_interface[0] != NCI_NFCEE_INTERFACE_HCI_ACCESS)) {
       mNumEePresent++;
     }
 
-    ALOGD("%s: EE[%u] Handle: 0x%04x  Status: %s  Num I/f: %u: (0x%02x, 0x%02x)  Num TLVs: %u",
+    ALOGD("[Dimi]%s: EE[%u] Handle: 0x%04x  Status: %s  Num I/f: %u: (0x%02x, 0x%02x)  Num TLVs: %u",
           __FUNCTION__, i,
           mEeInfo[i].ee_handle,
           EeStatusToString(mEeInfo[i].ee_status),
@@ -337,6 +337,10 @@ void SecureElement::NotifyTransactionEvent(const uint8_t* aAid,
   //       So use SIM1 as dfault value.
   pTransaction->originType = TransactionEvent::SIM;
   pTransaction->originIndex = 1;
+
+  for (int i = 0; i < aAidLen; i++) {
+    ALOGD("[Dimi][AID %d] = 0x%x", i, aAid[i]);
+  }
 
   pTransaction->aidLen = aAidLen;
   pTransaction->aid = new uint8_t[aAidLen];

@@ -32,6 +32,8 @@ public:
   static RoutingManager& GetInstance();
   bool Initialize(NfcManager* aNfcManager);
 
+  bool addAidRouting(const UINT8* aid, UINT8 aidLen, int route);
+
 private:
   RoutingManager();
   ~RoutingManager();

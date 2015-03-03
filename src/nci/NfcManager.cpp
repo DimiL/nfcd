@@ -143,7 +143,7 @@ bool NfcManager::Initialize()
 
     stat = NFA_Enable(NfaDeviceManagementCallback, NfaConnectionCallback);
     if (stat == NFA_STATUS_OK) {
-      num = initializeGlobalAppLogLevel();
+      num = 5;//initializeGlobalAppLogLevel();
       CE_SetTraceLevel(num);
       LLCP_SetTraceLevel(num);
       NFC_SetTraceLevel(num);
