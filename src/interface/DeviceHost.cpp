@@ -45,6 +45,21 @@ void DeviceHost::NotifyLlcpLinkDeactivated(IP2pDevice* aDevice)
   NfcService::NotifyLlcpLinkDeactivated(aDevice);
 }
 
+void DeviceHost::NotifyHostCardEmulationActivated()
+{
+  NfcService::NotifyHostCardEmulationActivated();
+}
+
+void DeviceHost::NotifyHostCardEmulationData(HostCardEmulationEvent* aEvent)
+{
+  NfcService::NotifyHostCardEmulationData(aEvent);
+}
+
+void DeviceHost::NotifyHostCardEmulationDeactivated()
+{
+  NfcService::NotifyHostCardEmulationDeactivated();
+}
+
 void DeviceHost::NotifyLlcpLinkFirstPacketReceived()
 {
   ALOGE("%s: not implement", __FUNCTION__);
@@ -74,4 +89,15 @@ TransactionEvent::~TransactionEvent()
 {
   delete aid;
   delete payload;
+}
+
+HostCardEmulationEvent::HostCardEmulationEvent()
+ : data(NULL)
+ , dataLength(0)
+{
+}
+
+HostCardEmulationEvent::~HostCardEmulationEvent()
+{
+  delete data;
 }

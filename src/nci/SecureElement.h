@@ -20,6 +20,7 @@
 #include <string>
 #include "SyncEvent.h"
 #include "RouteDataSet.h"
+#include "ICardEmulation.h"
 
 extern "C"
 {
@@ -31,7 +32,8 @@ extern "C"
 
 class NfcManager;
 
-class SecureElement
+class SecureElement :
+  public ICardEmulation
 {
 public:
   tNFA_HANDLE mActiveEeHandle;
@@ -167,6 +169,8 @@ public:
   void NotifyModeSet(tNFA_HANDLE aEeHandle, bool aSuccess);
 
   tNFA_HANDLE GetDefaultEeHandle();
+
+  bool SendApdu(const std::vector<uint8_t>& aApdu);
 private:
   static const unsigned int MAX_RESPONSE_SIZE = 1024;
   enum RouteSelection {NoRoute, DefaultRoute, SecElemRoute};
@@ -202,7 +206,7 @@ private:
   struct timespec mLastRfFieldToggle;  // last time RF field went off
 
   SecureElement();
-  ~SecureElement();
+  virtual ~SecureElement();
 
   /**
    * Receive Host Controller Interface-related events from stack.

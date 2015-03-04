@@ -31,6 +31,7 @@
 #include "LlcpServiceSocket.h"
 #include "NfcTagManager.h"
 #include "P2pDevice.h"
+#include "ICardEmulation.h"
 
 extern "C"
 {
@@ -119,6 +120,8 @@ void* NfcManager::QueryInterface(const char* aName)
     return reinterpret_cast<void*>(mP2pDevice);
   } else if (0 == strcmp(aName, INTERFACE_TAG_MANAGER)) {
     return reinterpret_cast<void*>(mNfcTagManager);
+  } else if (0 == strcmp(aName, INTERFACE_CARD_EMULATION)) {
+    return reinterpret_cast<void*>(&(SecureElement::GetInstance()));
   }
 
   return NULL;

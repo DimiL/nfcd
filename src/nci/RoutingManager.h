@@ -34,10 +34,13 @@ public:
 
   bool addAidRouting(const UINT8* aid, UINT8 aidLen, int route);
 
+  void NotifyHCEDataEvent(const uint8_t* aData,
+                          uint32_t aDataLength);
 private:
   RoutingManager();
   ~RoutingManager();
 
+  NfcManager* mNfcManager;
   int mDefaultEe;
   SyncEvent mEeRegisterEvent;
   SyncEvent mRoutingEvent;

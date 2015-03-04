@@ -263,6 +263,8 @@ typedef enum {
    * response is tag response data.
    */
   NFC_REQUEST_TRANSCEIVE,
+
+  NFC_REQUEST_SEND_APDU,
 } NfcRequestType;
 
 typedef enum {
@@ -332,6 +334,10 @@ typedef enum {
    * data is [origin type][origin index][aid length][aid][payload length][payload]
    */
   NFC_NOTIFICATION_TRANSACTION_EVENT,
+
+  NFC_NOTIFICATION_HCE_ACTIVATED_EVENT,
+  NFC_NOTIFICATION_HCE_DATA_EVENT,
+  NFC_NOTIFICATION_HCE_DEACTIVATED_EVENT,
 } NfcNotificationType;
 
 /**

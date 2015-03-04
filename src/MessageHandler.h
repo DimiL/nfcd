@@ -42,6 +42,7 @@ private:
   void NotifyTechDiscovered(android::Parcel& aParcel, void* aData);
   void NotifyTechLost(android::Parcel& aParcel, void* aData);
   void NotifyTransactionEvent(android::Parcel& aParcel, void* aData);
+  void NotifyHCEDataEvent(android::Parcel& aParcel, void* aData);
 
   bool HandleChangeRFStateRequest(android::Parcel& aParcel);
   bool HandleReadNdefRequest(android::Parcel& aParcel);
@@ -49,6 +50,7 @@ private:
   bool HandleMakeNdefReadonlyRequest(android::Parcel& aParcel);
   bool HandleNdefFormatRequest(android::Parcel& aParcel);
   bool HandleTagTransceiveRequest(android::Parcel& aParcel);
+  bool HandleSendApduRequest(android::Parcel& aParcel);
 
   bool HandleChangeRFStateResponse(android::Parcel& aParcel, void* aData);
   bool HandleReadNdefResponse(android::Parcel& aParcel, void* aData);

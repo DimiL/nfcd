@@ -52,6 +52,19 @@ SecureElement& SecureElement::GetInstance()
   return sSecElem;
 }
 
+bool SecureElement::SendApdu(const std::vector<uint8_t>& aApdu)
+{
+  ALOGD("[Dimi]SecureElement::SendApdu >>");
+  uint32_t size = aApdu.size();
+  uint8_t* buf = new uint8_t[size];
+
+  NFA_SendRawFrame(buf, size, 0);
+
+  delete buf;
+
+  return true;
+}
+
 void SecureElement::SetActiveSeOverride(uint8_t aActiveSeOverride)
 {
   ALOGD("%s, seid=0x%X", __FUNCTION__, aActiveSeOverride);
@@ -338,7 +351,7 @@ void SecureElement::NotifyTransactionEvent(const uint8_t* aAid,
   pTransaction->originType = TransactionEvent::SIM;
   pTransaction->originIndex = 1;
 
-  for (int i = 0; i < aAidLen; i++) {
+  for (uint32_t i = 0; i < aAidLen; i++) {
     ALOGD("[Dimi][AID %d] = 0x%x", i, aAid[i]);
   }
 

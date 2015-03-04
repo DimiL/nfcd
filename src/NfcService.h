@@ -45,6 +45,9 @@ public:
   static void NotifySEFieldActivated();
   static void NotifySEFieldDeactivated();
   static void NotifySETransactionEvent(TransactionEvent* aEvent);
+  static void NotifyHostCardEmulationActivated();
+  static void NotifyHostCardEmulationData(HostCardEmulationEvent* aEvent);
+  static void NotifyHostCardEmulationDeactivated();
 
   static bool HandleDisconnect();
 
@@ -66,11 +69,16 @@ public:
   void HandleNdefFormatResponse(NfcEvent* aEvent);
   bool HandleTagTransceiveRequest(int aTech, const uint8_t* aBuf, uint32_t aBufLen);
   void HandleTagTransceiveResponse(NfcEvent* aEvent);
+  bool HandleSendApduRequest(const uint8_t* aApdu, uint32_t aApduLen);
+  void HandleSendApduResponse(NfcEvent* aEvent);
   bool HandleEnterLowPowerRequest(bool aEnter);
   void HandleEnterLowPowerResponse(NfcEvent* aEvent);
   bool HandleEnableRequest(bool aEnable);
   void HandleEnableResponse(NfcEvent* aEvent);
   void HandleReceiveNdefEvent(NfcEvent* aEvent);
+  void HandleHCEActivatedEvent(NfcEvent* aEvent);
+  void HandleHCEDataEvent(NfcEvent* aEvent);
+  void HandleHCEDeactivatedEvent(NfcEvent* aEvent);
 
   void OnConnected();
   void OnP2pReceivedNdef(NdefMessage* aNdef);

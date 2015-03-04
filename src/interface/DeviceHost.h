@@ -22,6 +22,7 @@
 class INfcTag;
 class IP2pDevice;
 class TransactionEvent;
+class HostCardEmulationEvent;
 
 class DeviceHost {
 public:
@@ -59,6 +60,10 @@ public:
    * @return        None.
    */
   void NotifyTransactionEvent(TransactionEvent* aEvent);
+
+  void NotifyHostCardEmulationActivated();
+  void NotifyHostCardEmulationData(HostCardEmulationEvent* aEvent);
+  void NotifyHostCardEmulationDeactivated();
 
   // Interfaces are not yet used.
   void NotifyTargetDeselected();
@@ -100,4 +105,14 @@ public:
   uint32_t payloadLen;
   uint8_t* payload;
 };
+
+class HostCardEmulationEvent {
+public:
+  HostCardEmulationEvent();
+  ~HostCardEmulationEvent();
+
+  uint32_t dataLength;
+  uint8_t* data;
+};
+
 #endif

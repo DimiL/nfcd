@@ -81,6 +81,20 @@ void MessageHandler::NotifyTransactionEvent(Parcel& aParcel, void* aData)
   delete event;
 }
 
+void MessageHandler::NotifyHCEDataEvent(Parcel& aParcel, void* aData)
+{
+  HostCardEmulationEvent* event = reinterpret_cast<HostCardEmulationEvent*>(aData);
+
+  ALOGD("[Dimi]Data write length = %d", event->dataLength);
+  aParcel.writeInt32(event->dataLength);
+  void* data = aParcel.writeInplace(event->dataLength);
+  memcpy(data, event->data, event->dataLength);
+
+  SendResponse(aParcel);
+
+  delete event;
+}
+
 void MessageHandler::ProcessRequest(const uint8_t* aData, size_t aDataLen)
 {
   Parcel parcel;
@@ -113,6 +127,9 @@ void MessageHandler::ProcessRequest(const uint8_t* aData, size_t aDataLen)
       break;
     case NFC_REQUEST_TRANSCEIVE:
       HandleTagTransceiveRequest(parcel);
+      break;
+    case NFC_REQUEST_SEND_APDU:
+      HandleSendApduRequest(parcel);
       break;
     default:
       ALOGE("Unhandled Request %d", request);
@@ -168,6 +185,13 @@ void MessageHandler::ProcessNotification(NfcNotificationType aNotification, void
       break;
     case NFC_NOTIFICATION_TRANSACTION_EVENT:
       NotifyTransactionEvent(parcel, aData);
+      break;
+    case NFC_NOTIFICATION_HCE_ACTIVATED_EVENT:
+      break;
+    case NFC_NOTIFICATION_HCE_DATA_EVENT:
+      NotifyHCEDataEvent(parcel, aData);
+      break;
+    case NFC_NOTIFICATION_HCE_DEACTIVATED_EVENT:
       break;
     default:
       ALOGE("Not implement");
@@ -279,6 +303,15 @@ bool MessageHandler::HandleTagTransceiveRequest(Parcel& aParcel)
 
   const void* buf = aParcel.readInplace(bufLen);
   mService->HandleTagTransceiveRequest(tech, static_cast<const uint8_t*>(buf), bufLen);
+  return true;
+}
+
+bool MessageHandler::HandleSendApduRequest(Parcel& aParcel)
+{
+  int apduLen = aParcel.readInt32();
+
+  const void* apdu = aParcel.readInplace(apduLen);
+  mService->HandleSendApduRequest(static_cast<const uint8_t*>(apdu), apduLen);
   return true;
 }
 

@@ -20,6 +20,7 @@
 #include <memory>
 
 #include "MessageHandler.h"
+#include "ICardEmulation.h"
 #include "INfcManager.h"
 #include "INfcTag.h"
 #include "IP2pDevice.h"
@@ -50,7 +51,11 @@ typedef enum {
   MSG_ENABLE,
   MSG_RECEIVE_NDEF_EVENT,
   MSG_NDEF_FORMAT,
-  MSG_TAG_TRANSCEIVE
+  MSG_TAG_TRANSCEIVE,
+  MSG_HCE_ACTIVATED,
+  MSG_HCE_DATA,
+  MSG_HCE_DEACTIVATED,
+  MSG_SEND_APDU,
 } NfcEventType;
 
 typedef enum {
@@ -179,6 +184,31 @@ void NfcService::NotifySETransactionEvent(TransactionEvent* aEvent)
   ALOGD("%s: enter", FUNC);
   NfcEvent *event = new NfcEvent(MSG_SE_NOTIFY_TRANSACTION_EVENT);
   event->obj = reinterpret_cast<void*>(aEvent);
+  NfcService::Instance()->mQueue.push_back(event);
+  sem_post(&thread_sem);
+}
+
+void NfcService::NotifyHostCardEmulationActivated()
+{
+  ALOGD("%s: enter", FUNC);
+  NfcEvent *event = new NfcEvent(MSG_HCE_ACTIVATED);
+  NfcService::Instance()->mQueue.push_back(event);
+  sem_post(&thread_sem);
+}
+
+void NfcService::NotifyHostCardEmulationData(HostCardEmulationEvent* aEvent)
+{
+  ALOGD("%s: enter", FUNC);
+  NfcEvent *event = new NfcEvent(MSG_HCE_DATA);
+  event->obj = reinterpret_cast<void*>(aEvent);
+  NfcService::Instance()->mQueue.push_back(event);
+  sem_post(&thread_sem);
+}
+
+void NfcService::NotifyHostCardEmulationDeactivated()
+{
+  ALOGD("%s: enter", FUNC);
+  NfcEvent *event = new NfcEvent(MSG_HCE_DEACTIVATED);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
 }
@@ -333,6 +363,19 @@ void NfcService::HandleTransactionEvent(NfcEvent* aEvent)
   mMsgHandler->ProcessNotification(NFC_NOTIFICATION_TRANSACTION_EVENT, aEvent->obj);
 }
 
+void NfcService::HandleHCEActivatedEvent(NfcEvent* aEvent)
+{
+}
+
+void NfcService::HandleHCEDataEvent(NfcEvent* aEvent)
+{
+  mMsgHandler->ProcessNotification(NFC_NOTIFICATION_HCE_DATA_EVENT, aEvent->obj);
+}
+
+void NfcService::HandleHCEDeactivatedEvent(NfcEvent* aEvent)
+{
+}
+
 void* NfcService::EventLoop()
 {
   ALOGD("%s: NFCService started", FUNC);
@@ -364,6 +407,15 @@ void* NfcService::EventLoop()
         case MSG_SE_NOTIFY_TRANSACTION_EVENT:
           HandleTransactionEvent(event);
           break;
+        case MSG_HCE_ACTIVATED:
+          HandleHCEActivatedEvent(event);
+          break;
+        case MSG_HCE_DATA:
+          HandleHCEDataEvent(event);
+          break;
+        case MSG_HCE_DEACTIVATED:
+          HandleHCEDeactivatedEvent(event);
+          break;
         case MSG_READ_NDEF:
           HandleReadNdefResponse(event);
           break;
@@ -390,6 +442,9 @@ void* NfcService::EventLoop()
           break;
         case MSG_TAG_TRANSCEIVE:
           HandleTagTransceiveResponse(event);
+          break;
+        case MSG_SEND_APDU:
+          HandleSendApduResponse(event);
           break;
         default:
           ALOGE("%s: NFCService bad message", FUNC);
@@ -575,6 +630,33 @@ void NfcService::HandleTagTransceiveResponse(NfcEvent* aEvent)
 
   mMsgHandler->ProcessResponse(NFC_RESPONSE_TAG_TRANSCEIVE, code,
                                reinterpret_cast<void*>(&response));
+}
+
+void NfcService::HandleSendApduResponse(NfcEvent* aEvent)
+{
+  const std::vector<uint8_t>* apdu =
+    reinterpret_cast<const std::vector<uint8_t>*>(aEvent->obj);
+
+  ICardEmulation* pICardEmulation = reinterpret_cast<ICardEmulation*>
+    (sNfcManager->QueryInterface(INTERFACE_CARD_EMULATION));
+
+  pICardEmulation->SendApdu(*apdu);
+
+  delete apdu;
+
+//  mMsgHandler->ProcessResponse(NFC_RESPONSE_TAG_TRANSCEIVE, code,
+//                               reinterpret_cast<void*>(&response));
+}
+
+bool NfcService::HandleSendApduRequest(const uint8_t* aApdu, uint32_t aApduLen)
+{
+  std::vector<uint8_t>* apdu = new std::vector<uint8_t>(aApdu, aApdu + aApduLen);
+
+  NfcEvent *event = new NfcEvent(MSG_SEND_APDU);
+  event->obj = reinterpret_cast<void*>(apdu);
+  mQueue.push_back(event);
+  sem_post(&thread_sem);
+  return true;
 }
 
 void NfcService::HandleNdefFormatResponse(NfcEvent* aEvent)

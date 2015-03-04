@@ -15,6 +15,7 @@
  */
 
 #include "RoutingManager.h"
+#include "DeviceHost.h"
 #include "SecureElement.h"
 #include "NfcManager.h"
 #include "config.h"
@@ -34,6 +35,8 @@ RoutingManager::~RoutingManager ()
 
 bool RoutingManager::Initialize(NfcManager* aNfcManager)
 {
+  mNfcManager = aNfcManager;
+
   tNFA_STATUS nfaStat;
   {
     SyncEventGuard guard(mEeRegisterEvent);
@@ -50,8 +53,8 @@ bool RoutingManager::Initialize(NfcManager* aNfcManager)
     mDefaultEe = num;
   } else {
     ALOGD("[Dimi]No config, use default EE");
-    mDefaultEe = 0x400;
-//    mDefaultEe = 0x402;
+    mDefaultEe = 0x00;
+//    mDefaultEe = 0x4f;
   }
 
   SetDefaultRouting();
@@ -72,8 +75,7 @@ void RoutingManager::SetDefaultRouting()
   ALOGD("[Dimi]SetDefaultRouting >>");
 
   // Default routing for NFC-A technology
-//  nfaStat = NFA_EeSetDefaultTechRouting(mDefaultEe, NFA_TECHNOLOGY_MASK_A, 0, 0);
-  nfaStat = NFA_EeSetDefaultTechRouting(0x402, NFA_TECHNOLOGY_MASK_A, 0, 0);
+  nfaStat = NFA_EeSetDefaultTechRouting(mDefaultEe, NFA_TECHNOLOGY_MASK_A, 0, 0);
   if (nfaStat == NFA_STATUS_OK) {
     mRoutingEvent.Wait();
   } else {
@@ -81,8 +83,7 @@ void RoutingManager::SetDefaultRouting()
   }
 
   // Default routing for IsoDep protocol
-//  nfaStat = NFA_EeSetDefaultProtoRouting(mDefaultEe, NFA_PROTOCOL_MASK_ISO_DEP, 0, 0);
-  nfaStat = NFA_EeSetDefaultProtoRouting(0x402, NFA_PROTOCOL_MASK_ISO_DEP, 0, 0);
+  nfaStat = NFA_EeSetDefaultProtoRouting(mDefaultEe, NFA_PROTOCOL_MASK_ISO_DEP, 0, 0);
   if (nfaStat == NFA_STATUS_OK) {
     mRoutingEvent.Wait();
   } else {
@@ -90,8 +91,7 @@ void RoutingManager::SetDefaultRouting()
   }
 
   // Tell the UICC to only listen on Nfc-A
-//  nfaStat = NFA_CeConfigureUiccListenTech(mDefaultEe, NFA_TECHNOLOGY_MASK_A);
-  nfaStat = NFA_CeConfigureUiccListenTech(0x402, NFA_TECHNOLOGY_MASK_A);
+  nfaStat = NFA_CeConfigureUiccListenTech(mDefaultEe, NFA_TECHNOLOGY_MASK_A);
   if (nfaStat != NFA_STATUS_OK) {
     ALOGE("Failed to configure UICC listen technologies");
   }
@@ -103,8 +103,7 @@ void RoutingManager::SetDefaultRouting()
   }
 
   // Register a wild-card for AIDs routed to the host
-
-  nfaStat = NFA_CeRegisterAidOnDH (NULL, 0, StackCallback);
+  nfaStat = NFA_CeRegisterAidOnDH(NULL, 0, StackCallback);
   if (nfaStat != NFA_STATUS_OK) {
     ALOGE("Failed to register wildcard AID for DH");
   }
@@ -115,8 +114,8 @@ void RoutingManager::SetDefaultRouting()
     ALOGE("Failed to commit routing configuration");
   }
 
-  uint8_t aid[] = {0xA0, 0x00, 0x00, 0x00, 0x01, 0x02};
-  nfaStat = NFA_EeAddAidRouting(mDefaultEe, 6, (UINT8*) aid, 0x01);
+//  uint8_t aid[] = {0xA0, 0x00, 0x00, 0x00, 0x01, 0x02};
+//  nfaStat = NFA_EeAddAidRouting(mDefaultEe, 6, (UINT8*) aid, 0x01);
 //  nfaStat = NFA_EeAddAidRouting(0x402, 6, (UINT8*) aid, 0x01);
 
   nfaStat = NFA_EeUpdateNow();
@@ -140,6 +139,16 @@ bool RoutingManager::addAidRouting(const UINT8* aid, UINT8 aidLen, int route)
     ALOGE("%s: failed to route AID", fn);
     return false;
   }
+}
+
+void RoutingManager::NotifyHCEDataEvent(const uint8_t* aData, uint32_t aDataLength)
+{
+  HostCardEmulationEvent* pEvent = new HostCardEmulationEvent();
+  pEvent->dataLength = aDataLength;
+  pEvent->data = new uint8_t[aDataLength];
+  memcpy(pEvent->data, aData, aDataLength);
+
+  mNfcManager->NotifyHostCardEmulationData(pEvent);
 }
 
 void RoutingManager::StackCallback(UINT8 aEvent, tNFA_CONN_EVT_DATA* aEventData)
@@ -183,8 +192,10 @@ void RoutingManager::StackCallback(UINT8 aEvent, tNFA_CONN_EVT_DATA* aEventData)
       ALOGD("%s: NFA_CE_DATA_EVT; h=0x%X; data len=%u",
             fn, ce_data.handle, ce_data.len);
       for (int i = 0; i < ce_data.len; i++) {
-        ALOGD("[Dimi]NFA_CE_DATA_EVT: [%d]=0x%x", i, ce_data.p_data[i]);
+//        ALOGD("[Dimi]NFA_CE_DATA_EVT: [%d]=0x%x", i, ce_data.p_data[i]);
       }
+
+      rm.NotifyHCEDataEvent(ce_data.p_data, ce_data.len);
 
       if (ce_data.len > 4 &&
           ce_data.p_data[0] == 0x00 &&
@@ -198,9 +209,18 @@ void RoutingManager::StackCallback(UINT8 aEvent, tNFA_CONN_EVT_DATA* aEventData)
           ce_data.p_data[8] == 0x00 &&  // DATA
           ce_data.p_data[9] == 0x01 &&  // DATA
           ce_data.p_data[10] == 0x02) { // DATA
+
         ALOGD("[Dimi]Response 0x90 0x00");
+        uint8_t buf2[2] = {0x90, 0x00};
+        NFA_SendRawFrame(buf2, 2, 0);
+
+//        ALOGD("[Dimi]Response 0x00 0xA4");
+//        uint8_t buf[11] = {0x00, 0xA4, 0x04, 0x00, 0x06, 0xA0, 0x00, 0x00, 0x00, 0x01, 0x02};
+//        NFA_SendRawFrame(buf, 11, 0);
+      } else {
         uint8_t buf[2] = {0x90, 0x00};
         NFA_SendRawFrame (buf, 2, 0);
+        ALOGD("[Dimi]Response2 0x90 0x00");
       }
 
 //      getInstance().handleData(ce_data.p_data, ce_data.len, ce_data.status);
