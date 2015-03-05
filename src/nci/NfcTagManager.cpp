@@ -79,7 +79,6 @@ static bool            sWriteWaitingForComplete = false;
 static bool            sFormatOk = false;
 static bool            sConnectOk = false;
 static bool            sConnectWaitingForComplete = false;
-static bool            sGotDeactivate = false;
 static uint32_t        sCheckNdefMaxSize = 0;
 static bool            sCheckNdefCardReadOnly = false;
 static bool            sCheckNdefWaitingForComplete = false;
@@ -623,8 +622,6 @@ void NfcTagManager::DoConnectStatus(bool aIsConnectOk)
 
 void NfcTagManager::DoDeactivateStatus(int aStatus)
 {
-  sGotDeactivate = (aStatus == 0);
-
   SyncEventGuard g(sReconnectEvent);
   sReconnectEvent.NotifyOne();
 }
@@ -925,7 +922,6 @@ int NfcTagManager::ReSelect(tNFA_INTF_TYPE aRfInterface)
     {
       SyncEventGuard g(sReconnectEvent);
       gIsTagDeactivating = true;
-      sGotDeactivate = false;
       ALOGD("%s: deactivate to sleep", __FUNCTION__);
       if (NFA_STATUS_OK != (status = NFA_Deactivate(TRUE))) { // Deactivate to sleep state.
         ALOGE("%s: deactivate failed, status = %d", __FUNCTION__, status);
