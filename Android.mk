@@ -41,7 +41,6 @@ LOCAL_SRC_FILES := \
 
 NCI_SRC_FILES := \
     src/nci/NfcManager.cpp \
-    src/nci/LlcpConnectionlessSocket.cpp \
     src/nci/LlcpSocket.cpp \
     src/nci/LlcpServiceSocket.cpp \
     src/nci/P2pDevice.cpp \

@@ -605,22 +605,10 @@ void SecureElement::NfaEeCallback(tNFA_EE_EVT aEvent,
       sSecElem.mRoutingEvent.NotifyOne();
       break;
     }
-    case NFA_EE_ACTION_EVT: {
-      tNFA_EE_ACTION& action = aEventData->action;
-      if (action.trigger == NFC_EE_TRIG_SELECT) {
-        ALOGD("%s: NFA_EE_ACTION_EVT; h=0x%X; trigger=select (0x%X)",
-              __FUNCTION__, action.ee_handle, action.trigger);
-      }
-      break;
-    }
     case NFA_EE_DISCOVER_REQ_EVT: {
       ALOGD("%s: NFA_EE_DISCOVER_REQ_EVT; status=0x%X; num ee=%u",
             __FUNCTION__, aEventData->discover_req.status, aEventData->discover_req.num_ee);
       sSecElem.StoreUiccInfo(aEventData->discover_req);
-      break;
-    }
-    case NFA_EE_NO_CB_ERR_EVT: {
-      ALOGD("%s: NFA_EE_NO_CB_ERR_EVT  status=%u", __FUNCTION__, aEventData->status);
       break;
     }
     case NFA_EE_ADD_AID_EVT: {

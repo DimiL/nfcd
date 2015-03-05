@@ -147,22 +147,6 @@ public:
                                             int aBufLen);
 
   /**
-   * Set P2P initiator's activation modes.
-   *
-   * @param  aModes Active and/or passive modes.
-   * @return        None.
-   */
-  void SetP2pInitiatorModes(int aModes);
-
-  /**
-   * Set P2P target's activation modes.
-   *
-   * @param  modes Active and/or passive modes.
-   * @return       None.
-   */
-  void SetP2pTargetModes(int aModes);
-
-  /**
    * Get default Llcp connection maxumum information unit
    *
    * @return Default MIU.

@@ -72,7 +72,6 @@ static bool                 sIsDisabling = false;
 static bool                 sRfEnabled = false;             // Whether RF discovery is enabled.
 static bool                 sSeRfActive = false;            // Whether RF with SE is likely active.
 static bool                 sP2pActive = false;             // Whether p2p was last active.
-static bool                 sAbortConnlessWait = false;
 static bool                 sIsSecElemSelected = false;     // Has NFC service selected a sec elem.
 
 #define CONFIG_UPDATE_TECH_MASK     (1 << 1)
@@ -221,7 +220,6 @@ bool NfcManager::Deinitialize()
 
   NfcTagManager::DoAbortWaits();
   NfcTag::GetInstance().Abort();
-  sAbortConnlessWait = true;
   // TODO : Implement LLCP.
   sIsNfaEnabled = false;
   sDiscoveryEnabled = false;
@@ -409,36 +407,6 @@ ILlcpServerSocket* NfcManager::CreateLlcpServerSocket(int aSap,
   return static_cast<ILlcpServerSocket*>(pLlcpServiceSocket);
 }
 
-void NfcManager::SetP2pInitiatorModes(int aModes)
-{
-  ALOGD ("%s: modes=0x%X", __FUNCTION__, aModes);
-
-  tNFA_TECHNOLOGY_MASK mask = 0;
-  if (aModes & 0x01) mask |= NFA_TECHNOLOGY_MASK_A;
-  if (aModes & 0x02) mask |= NFA_TECHNOLOGY_MASK_F;
-  if (aModes & 0x04) mask |= NFA_TECHNOLOGY_MASK_F;
-  if (aModes & 0x08) mask |= NFA_TECHNOLOGY_MASK_A_ACTIVE;
-  if (aModes & 0x10) mask |= NFA_TECHNOLOGY_MASK_F_ACTIVE;
-  if (aModes & 0x20) mask |= NFA_TECHNOLOGY_MASK_F_ACTIVE;
-  gNat.tech_mask = mask;
-
-  //this function is not called by the NFC service nor exposed by public API.
-}
-
-void NfcManager::SetP2pTargetModes(int aModes)
-{
-  ALOGD("%s: modes=0x%X", __FUNCTION__, aModes);
-  // Map in the right modes.
-  tNFA_TECHNOLOGY_MASK mask = 0;
-  if (aModes & 0x01) mask |= NFA_TECHNOLOGY_MASK_A;
-  if (aModes & 0x02) mask |= NFA_TECHNOLOGY_MASK_F;
-  if (aModes & 0x04) mask |= NFA_TECHNOLOGY_MASK_F;
-  if (aModes & 0x08) mask |= NFA_TECHNOLOGY_MASK_A_ACTIVE | NFA_TECHNOLOGY_MASK_F_ACTIVE;
-
-  PeerToPeer::GetInstance().SetP2pListenMask(mask);
-  // This function is not called by the NFC service nor exposed by public API.
-}
-
 bool NfcManager::DoSelectSecureElement()
 {
   bool result = true;
@@ -603,7 +571,6 @@ void NfaDeviceManagementCallback(UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
 
       NfcTagManager::DoAbortWaits();
       NfcTag::GetInstance().Abort();
-      sAbortConnlessWait = true;
       // TODO : Implement LLCP.
       {
         ALOGD("%s: aborting sNfaEnableDisablePollingEvent", __FUNCTION__);
@@ -693,13 +660,6 @@ static void NfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
         HandleRfDiscoveryEvent(&eventData->disc_result.discovery_ntf);
       }
       break;
-    // NFC link/protocol discovery select response.
-    case NFA_SELECT_RESULT_EVT:
-      ALOGD("%s: NFA_SELECT_RESULT_EVT: status = %d, gIsSelectingRfInterface = %d, sIsDisabling=%d", __FUNCTION__, eventData->status, gIsSelectingRfInterface, sIsDisabling);
-      break;
-    case NFA_DEACTIVATE_FAIL_EVT:
-      ALOGD("%s: NFA_DEACTIVATE_FAIL_EVT: status = 0x%x", __FUNCTION__, eventData->status);
-      break;
     // NFC link/protocol activated.
     case NFA_ACTIVATED_EVT:
       ALOGD("%s: NFA_ACTIVATED_EVT: gIsSelectingRfInterface=%d, sIsDisabling=%d", __FUNCTION__, gIsSelectingRfInterface, sIsDisabling);
@@ -777,16 +737,6 @@ static void NfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
         }
       }
       break;
-    // TLV Detection complete.
-    case NFA_TLV_DETECT_EVT:
-      status = eventData->tlv_detect.status;
-      ALOGD("%s: NFA_TLV_DETECT_EVT: status = %d, protocol = %d, num_tlvs = %d, num_bytes = %d",
-        __FUNCTION__, status, eventData->tlv_detect.protocol,
-        eventData->tlv_detect.num_tlvs, eventData->tlv_detect.num_bytes);
-      if (status != NFA_STATUS_OK) {
-        ALOGE("%s: NFA_TLV_DETECT_EVT error: status = 0x%X", __FUNCTION__, status);
-      }
-      break;
     // NDEF Detection complete.
     case NFA_NDEF_DETECT_EVT:
       // If status is failure, it means the tag does not contain any or valid NDEF data.
@@ -836,17 +786,6 @@ static void NfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
       ALOGD("%s: NFA_SET_TAG_RO_EVT: status = 0x%X", __FUNCTION__, eventData->status);
       NfcTagManager::DoMakeReadonlyResult(eventData->status);
       break;
-    // NDEF write started.
-    case NFA_CE_NDEF_WRITE_START_EVT:
-      ALOGD("%s: NFA_CE_NDEF_WRITE_START_EVT: status: 0x%X", __FUNCTION__, eventData->status);
-
-      if (eventData->status != NFA_STATUS_OK)
-        ALOGE("%s: NFA_CE_NDEF_WRITE_START_EVT error: status = 0x%X", __FUNCTION__, eventData->status);
-      break;
-    // NDEF write completed.
-    case NFA_CE_NDEF_WRITE_CPLT_EVT:
-      ALOGD("%s: FA_CE_NDEF_WRITE_CPLT_EVT: len = %lu", __FUNCTION__, eventData->ndef_write_cplt.len);
-      break;
     // LLCP link is activated.
     case NFA_LLCP_ACTIVATED_EVT:
       ALOGD("%s: NFA_LLCP_ACTIVATED_EVT: is_initiator: %d  remote_wks: %d, remote_lsc: %d, remote_link_miu: %d, local_link_miu: %d",
@@ -878,10 +817,6 @@ static void NfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
     case NFA_FORMAT_CPLT_EVT:
       ALOGD("%s: NFA_FORMAT_CPLT_EVT: status=0x%X", __FUNCTION__, eventData->status);
       NfcTagManager::FormatStatus(eventData->status == NFA_STATUS_OK);
-      break;
-
-    case NFA_I93_CMD_CPLT_EVT:
-      ALOGD("%s: NFA_I93_CMD_CPLT_EVT: status=0x%X", __FUNCTION__, eventData->status);
       break;
 
     case NFA_CE_UICC_LISTEN_CONFIGURED_EVT :
