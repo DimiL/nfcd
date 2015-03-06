@@ -40,8 +40,6 @@
 
 using android::Parcel;
 
-static int nfcdRw;
-
 /**
  * NfcIpcSocket
  */
@@ -57,6 +55,7 @@ NfcIpcSocket* NfcIpcSocket::Instance() {
 NfcIpcSocket::NfcIpcSocket()
   : mMsgHandler(NULL)
   , mListener(NULL)
+  , mNfcdRw(-1)
 {
 }
 
@@ -113,15 +112,15 @@ void NfcIpcSocket::Loop()
       }
     }
 
-    nfcdRw = accept(nfcdConn, (struct sockaddr*)&peeraddr, &socklen);
+    mNfcdRw = accept(nfcdConn, (struct sockaddr*)&peeraddr, &socklen);
 
-    if (nfcdRw < 0 ) {
+    if (mNfcdRw < 0 ) {
       ALOGE("Error on accept() errno:%d", errno);
       /* start listening for new connections again */
       continue;
     }
 
-    ret = fcntl(nfcdRw, F_SETFL, O_NONBLOCK);
+    ret = fcntl(mNfcdRw, F_SETFL, O_NONBLOCK);
     if (ret < 0) {
       ALOGE ("Error setting O_NONBLOCK errno:%d", errno);
     }
@@ -129,12 +128,12 @@ void NfcIpcSocket::Loop()
     ALOGD("Socket connected");
     connected = true;
 
-    RecordStream *rs = record_stream_new(nfcdRw, MAX_COMMAND_BYTES);
+    RecordStream *rs = record_stream_new(mNfcdRw, MAX_COMMAND_BYTES);
 
     mListener->OnConnected();
 
     struct pollfd fds[1];
-    fds[0].fd = nfcdRw;
+    fds[0].fd = mNfcdRw;
     fds[0].events = POLLIN;
     fds[0].revents = 0;
 
@@ -157,7 +156,7 @@ void NfcIpcSocket::Loop()
       }
     }
     record_stream_free(rs);
-    close(nfcdRw);
+    close(mNfcdRw);
   }
 
   return;
@@ -180,7 +179,7 @@ void NfcIpcSocket::WriteToOutgoingQueue(uint8_t* aData, size_t aDataLen)
   ALOGD("Writing %d bytes to gecko ", aDataLen);
   while (writeOffset < aDataLen) {
     do {
-      written = write (nfcdRw, aData + writeOffset, aDataLen - writeOffset);
+      written = write (mNfcdRw, aData + writeOffset, aDataLen - writeOffset);
     } while (written < 0 && errno == EINTR);
 
     if (written >= 0) {

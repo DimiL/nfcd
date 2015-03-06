@@ -48,6 +48,7 @@ private:
 
   MessageHandler* mMsgHandler;
   IpcSocketListener* mListener;
+  int mNfcdRw;
 
   void InitSocket();
   int GetListenSocket();
