@@ -56,6 +56,7 @@ NfcIpcSocket* NfcIpcSocket::Instance() {
 
 NfcIpcSocket::NfcIpcSocket()
   : mMsgHandler(NULL)
+  , mListener(NULL)
 {
 }
 
