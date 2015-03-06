@@ -46,8 +46,7 @@ private:
   timespec mSleep_spec;
   timespec mSleep_spec_rem;
 
-  static MessageHandler* sMsgHandler;
-
+  MessageHandler* mMsgHandler;
   IpcSocketListener* mListener;
 
   void InitSocket();

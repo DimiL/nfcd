@@ -42,8 +42,6 @@ using android::Parcel;
 
 static int nfcdRw;
 
-MessageHandler* NfcIpcSocket::sMsgHandler = NULL;
-
 /**
  * NfcIpcSocket
  */
@@ -57,6 +55,7 @@ NfcIpcSocket* NfcIpcSocket::Instance() {
 }
 
 NfcIpcSocket::NfcIpcSocket()
+  : mMsgHandler(NULL)
 {
 }
 
@@ -67,7 +66,7 @@ NfcIpcSocket::~NfcIpcSocket()
 void NfcIpcSocket::Initialize(MessageHandler* aMsgHandler)
 {
   InitSocket();
-  sMsgHandler = aMsgHandler;
+  mMsgHandler = aMsgHandler;
 }
 
 void NfcIpcSocket::InitSocket()
@@ -200,6 +199,6 @@ void NfcIpcSocket::WriteToIncomingQueue(uint8_t* aData, size_t aDataLen)
   ALOGD("%s enter, data=%p, dataLen=%d", __func__, aData, aDataLen);
 
   if (aData != NULL && aDataLen > 0) {
-    sMsgHandler->ProcessRequest(aData, aDataLen);
+    mMsgHandler->ProcessRequest(aData, aDataLen);
   }
 }
