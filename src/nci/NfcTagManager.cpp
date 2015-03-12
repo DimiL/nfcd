@@ -35,6 +35,9 @@ extern "C"
   #include "nfa_rw_api.h"
   #include "ndef_utils.h"
   #include "rw_api.h"
+#ifdef NFCC_PN547
+  #include "phNxpExtns.h"
+#endif
 }
 
 #undef LOG_TAG
@@ -249,6 +252,10 @@ int NfcTagManager::ReconnectWithStatus()
     retCode = ReSelect(NFA_INTERFACE_ISO_DEP);
   } else if (tag.mTechLibNfcTypes[0] == NFA_PROTOCOL_T2T) {
     retCode = ReSelect(NFA_INTERFACE_FRAME);
+  } else if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
+#ifdef NFCC_PN547
+    retCode = ReSelect(NFA_INTERFACE_MIFARE);
+#endif
   }
 
 TheEnd:
@@ -335,6 +342,20 @@ void NfcTagManager::DoTransceiveComplete(uint8_t* aBuf,
                                          uint32_t aBufLen)
 {
   ALOGD("%s: data len=%d, waiting for transceive: %d", __FUNCTION__, aBufLen, sWaitingForTransceive);
+  NfcTag& tag = NfcTag::GetInstance();
+
+  if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
+#ifdef NFCC_PN547
+    if (!EXTNS_GetCallBackFlag()) {
+      EXTNS_MfcCallBack(aBuf, aBufLen);
+
+      SyncEventGuard g(sTransceiveEvent);
+      sTransceiveEvent.NotifyOne();
+      return;
+    }
+#endif
+  }
+
   if (!sWaitingForTransceive) {
     return;
   }
@@ -379,8 +400,16 @@ bool NfcTagManager::DoTransceive(const std::vector<uint8_t>& aCommand,
       uint8_t* cmd = new uint8_t[size];
       std::copy(aCommand.begin(), aCommand.end(), cmd);
 
-      tNFA_STATUS status = NFA_SendRawFrame(cmd, size,
-                             NFA_DM_DEFAULT_PRESENCE_CHECK_START_DELAY);
+      tNFA_STATUS status = NFA_STATUS_FAILED;
+      if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
+#ifdef NFCC_PN547
+        status = EXTNS_MfcTransceive(cmd, size);
+#endif
+      } else {
+        status = NFA_SendRawFrame(cmd, size,
+                   NFA_DM_DEFAULT_PRESENCE_CHECK_START_DELAY);
+      }
+
       delete cmd;
 
       if (status != NFA_STATUS_OK) {
@@ -408,6 +437,15 @@ bool NfcTagManager::DoTransceive(const std::vector<uint8_t>& aCommand,
     }
 
     if (!isNack) {
+      if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
+#ifdef NFCC_PN547
+        uint8_t** sTransData = &sTransceiveData;
+        if (NFCSTATUS_FAILED ==
+            EXTNS_CheckMfcResponse(sTransData, &sTransceiveDataLen)) {
+          ALOGE("%s: fail get response", __FUNCTION__);
+        }
+#endif
+      }
       for (size_t i = 0; i < sTransceiveDataLen; i++) {
         aOutResponse.push_back(sTransceiveData[i]);
       }
@@ -427,7 +465,7 @@ bool NfcTagManager::DoTransceive(const std::vector<uint8_t>& aCommand,
 void NfcTagManager::DoRead(std::vector<uint8_t>& aBuf)
 {
   ALOGD("%s: enter", __FUNCTION__);
-  tNFA_STATUS status = NFA_STATUS_FAILED;
+  NfcTag& tag = NfcTag::GetInstance();
 
   sReadDataLen = 0;
   if (sReadData != NULL) {
@@ -439,7 +477,15 @@ void NfcTagManager::DoRead(std::vector<uint8_t>& aBuf)
     {
       SyncEventGuard g(sReadEvent);
       sIsReadingNdefMessage = true;
-      status = NFA_RwReadNDef();
+
+      tNFA_STATUS status = NFA_STATUS_FAILED;
+      if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
+#ifdef NFCC_PN547
+        status = EXTNS_MfcReadNDef();
+#endif
+      } else {
+        status = NFA_RwReadNDef();
+      }
       sReadEvent.Wait(); // Wait for NFA_READ_CPLT_EVT.
     }
     sIsReadingNdefMessage = false;
@@ -479,16 +525,7 @@ void NfcTagManager::DoWriteStatus(bool aIsWriteOk)
 int NfcTagManager::DoCheckNdef(int aNdefInfo[])
 {
   ALOGD("%s: enter", __FUNCTION__);
-  tNFA_STATUS status = NFA_STATUS_FAILED;
   NfcTag& tag = NfcTag::GetInstance();
-
-  // Special case for Kovio.
-  if (tag.mTechList[0] == TECHNOLOGY_TYPE_KOVIO_BARCODE) {
-    ALOGD("%s: Kovio tag, no NDEF", __FUNCTION__);
-    aNdefInfo[0] = 0;
-    aNdefInfo[1] = NDEF_MODE_READ_ONLY;
-    return NFA_STATUS_FAILED;
-  }
 
   // Special case for Kovio.
   if (tag.mTechList[0] == TECHNOLOGY_TYPE_KOVIO_BARCODE) {
@@ -504,14 +541,22 @@ int NfcTagManager::DoCheckNdef(int aNdefInfo[])
     return false;
   }
 
+  tNFA_STATUS status = NFA_STATUS_FAILED;
   if (tag.GetActivationState() != NfcTag::Active) {
     ALOGE("%s: tag already deactivated", __FUNCTION__);
     goto TheEnd;
   }
 
-  ALOGD("%s: try NFA_RwDetectNDef", __FUNCTION__);
   sCheckNdefWaitingForComplete = true;
-  status = NFA_RwDetectNDef();
+  if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
+#ifdef NFCC_PN547
+    ALOGD("%s: try EXTNS_MfcCheckNDef", __FUNCTION__);
+    status = EXTNS_MfcCheckNDef();
+#endif
+  } else {
+    ALOGD("%s: try NFA_RwDetectNDef", __FUNCTION__);
+    status = NFA_RwDetectNDef();
+  }
 
   if (status != NFA_STATUS_OK) {
     ALOGE("%s: NFA_RwDetectNDef failed, status = 0x%X", __FUNCTION__, status);
@@ -646,11 +691,20 @@ void NfcTagManager::DoPresenceCheckResult(tNFA_STATUS aStatus)
 bool NfcTagManager::DoNdefFormat()
 {
   ALOGD("%s: enter", __FUNCTION__);
-  tNFA_STATUS status = NFA_STATUS_OK;
-
   sem_init(&sFormatSem, 0, 0);
   sFormatOk = false;
-  status = NFA_RwFormatTag();
+
+  tNFA_STATUS status = NFA_STATUS_FAILED;
+  NfcTag& tag = NfcTag::GetInstance();
+  if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
+#ifdef NFCC_PN547
+    uint8_t key1[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+	status = EXTNS_MfcFormatTag(key1, sizeof(key1));
+#endif
+  } else {
+    status = NFA_RwFormatTag();
+  }
+
   if (status == NFA_STATUS_OK) {
     ALOGD("%s: wait for completion", __FUNCTION__);
     sem_wait(&sFormatSem);
@@ -659,6 +713,28 @@ bool NfcTagManager::DoNdefFormat()
     ALOGE("%s: error status=%u", __FUNCTION__, status);
   }
   sem_destroy(&sFormatSem);
+
+  if(IsMifareTech(tag.mTechLibNfcTypes[0]) && !sFormatOk) {
+#ifdef NFCC_PN547
+    uint8_t key2[6] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
+    sem_init(&sFormatSem, 0, 0);
+
+    ALOGD("%s: Format with Second Key", __FUNCTION__);
+    status = EXTNS_MfcFormatTag(key2, sizeof(key2));
+    if (status == NFA_STATUS_OK) {
+      ALOGD("%s:2nd try wait for completion", __FUNCTION__);
+      sem_wait(&sFormatSem);
+      status = sFormatOk ? NFA_STATUS_OK : NFA_STATUS_FAILED;
+    } else {
+      ALOGE("%s: error status=%u", __FUNCTION__, status);
+      sem_destroy(&sFormatSem);
+    }
+
+    if(!sFormatOk) {
+      ALOGE("%s: Format with Second Key Failed", __FUNCTION__);
+    }
+#endif
+  }
 
   ALOGD("%s: exit", __FUNCTION__);
   return status == NFA_STATUS_OK;
@@ -744,7 +820,7 @@ void NfcTagManager::DoMakeReadonlyResult(tNFA_STATUS aStatus)
 bool NfcTagManager::DoMakeReadonly()
 {
   bool result = false;
-  tNFA_STATUS status;
+  NfcTag& tag = NfcTag::GetInstance();
 
   ALOGD("%s", __FUNCTION__);
 
@@ -754,7 +830,17 @@ bool NfcTagManager::DoMakeReadonly()
     return false;
   }
 
+  tNFA_STATUS status = NFA_STATUS_FAILED;
   sMakeReadonlyWaitingForComplete = true;
+
+  if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
+#ifdef NFCC_PN547
+    status = EXTNS_MfcSetReadOnly();
+#endif
+  } else {
+    // Hard-lock the tag (cannot be reverted).
+    status = NFA_RwSetTagReadOnly(true);
+  }
 
   // Hard-lock the tag (cannot be reverted).
   status = NFA_RwSetTagReadOnly(true);
@@ -843,7 +929,6 @@ TheEnd:
 bool NfcTagManager::DoPresenceCheck()
 {
   ALOGD("%s", __FUNCTION__);
-  tNFA_STATUS status = NFA_STATUS_OK;
   bool isPresent = false;
   NfcTag& tag = NfcTag::GetInstance();
 
@@ -878,6 +963,7 @@ bool NfcTagManager::DoPresenceCheck()
     return false;
   }
 
+  tNFA_STATUS status = NFA_STATUS_OK;
 #ifdef NFA_DM_PRESENCE_CHECK_OPTION
   status = NFA_RwPresenceCheck(NFA_RW_PRES_CHK_DEFAULT);
 #else
@@ -1001,13 +1087,21 @@ bool NfcTagManager::SwitchRfInterface(tNFA_INTF_TYPE aRfInterface)
   return rVal;
 }
 
-NdefType NfcTagManager::GetNdefType(int libnfcType)
+bool NfcTagManager::IsMifareTech(int aTechTypes)
+{
+#ifdef NFCC_PN547
+  return aTechTypes == NFA_PROTOCOL_MIFARE;
+#endif
+  return false;
+}
+
+NdefType NfcTagManager::GetNdefType(int aLibnfcType)
 {
   NdefType ndefType = NDEF_UNKNOWN_TYPE;
 
   // For NFA, libnfcType is mapped to the protocol value received
   // in the NFA_ACTIVATED_EVT and NFA_DISC_RESULT_EVT event.
-  switch (libnfcType) {
+  switch (aLibnfcType) {
     case NFA_PROTOCOL_T1T:
       ndefType = NDEF_TYPE1_TAG;
       break;
@@ -1020,12 +1114,13 @@ NdefType NfcTagManager::GetNdefType(int libnfcType)
     case NFA_PROTOCOL_ISO_DEP:
       ndefType = NDEF_TYPE4_TAG;
       break;
+#ifdef NFCC_PN547
+    case NFA_PROTOCOL_MIFARE:
+      ndefType = NDEF_MIFARE_CLASSIC_TAG;
+      break;
+#endif
     case NFA_PROTOCOL_ISO15693:
-      ndefType = NDEF_UNKNOWN_TYPE;
-      break;
     case NFA_PROTOCOL_INVALID:
-      ndefType = NDEF_UNKNOWN_TYPE;
-      break;
     default:
       ndefType = NDEF_UNKNOWN_TYPE;
       break;
@@ -1067,7 +1162,7 @@ TheEnd:
   return (nfaStat == NFA_STATUS_OK) ? true : false;
 }
 
-void NfcTagManager::FormatStatus(bool aIsOk)
+void NfcTagManager::DoFormatStatus(bool aIsOk)
 {
   sFormatOk = aIsOk;
   sem_post(&sFormatSem);
@@ -1076,14 +1171,15 @@ void NfcTagManager::FormatStatus(bool aIsOk)
 bool NfcTagManager::DoWrite(std::vector<uint8_t>& aBuf)
 {
   bool result = false;
-  tNFA_STATUS status = 0;
   const int maxBufferSize = 1024;
   UINT8 buffer[maxBufferSize] = { 0 };
   UINT32 curDataSize = 0;
+  NfcTag& tag = NfcTag::GetInstance();
 
   uint8_t* p_data = reinterpret_cast<uint8_t*>(malloc(aBuf.size()));
-  for (uint8_t idx = 0; idx < aBuf.size(); idx++)
+  for (uint8_t idx = 0; idx < aBuf.size(); idx++) {
     p_data[idx] = aBuf[idx];
+  }
 
   ALOGD("%s: enter; len = %zu", __FUNCTION__, aBuf.size());
 
@@ -1094,6 +1190,7 @@ bool NfcTagManager::DoWrite(std::vector<uint8_t>& aBuf)
     return false;
   }
 
+  tNFA_STATUS status = NFA_STATUS_FAILED;
   sWriteWaitingForComplete = true;
   if (sCheckNdefStatus == NFA_STATUS_FAILED) {
     // If tag does not contain a NDEF message
@@ -1102,11 +1199,32 @@ bool NfcTagManager::DoWrite(std::vector<uint8_t>& aBuf)
       ALOGD("%s: try format", __FUNCTION__);
       sem_init(&sFormatSem, 0, 0);
       sFormatOk = false;
-      status = NFA_RwFormatTag();
+
+      if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
+#ifdef NFCC_PN547
+        uint8_t key1[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+        status = EXTNS_MfcFormatTag(key1, sizeof(key1));
+#endif
+      } else {
+        status = NFA_RwFormatTag();
+      }
+
       sem_wait(&sFormatSem);
       sem_destroy(&sFormatSem);
-      if (sFormatOk == false) // If format operation failed.
+
+      if(IsMifareTech(tag.mTechLibNfcTypes[0]) && !sFormatOk) {
+#ifdef NFCC_PN547
+        uint8_t key2[6] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
+        sem_init (&sFormatSem, 0, 0);
+        status = EXTNS_MfcFormatTag(key2, sizeof(key2));
+        sem_wait(&sFormatSem);
+        sem_destroy(&sFormatSem);
+#endif
+      }
+
+      if (!sFormatOk) { // If format operation failed.
         goto TheEnd;
+      }
     }
     ALOGD("%s: try write", __FUNCTION__);
     status = NFA_RwWriteNDef(p_data, aBuf.size());
@@ -1115,10 +1233,23 @@ bool NfcTagManager::DoWrite(std::vector<uint8_t>& aBuf)
     NDEF_MsgInit(buffer, maxBufferSize, &curDataSize);
     status = NDEF_MsgAddRec(buffer, maxBufferSize, &curDataSize, NDEF_TNF_EMPTY, NULL, 0, NULL, 0, NULL, 0);
     ALOGD("%s: create empty ndef msg; status=%u; size=%lu", __FUNCTION__, status, curDataSize);
-    status = NFA_RwWriteNDef(buffer, curDataSize);
+
+    if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
+#ifdef NFCC_PN547
+      status = EXTNS_MfcWriteNDef(buffer, curDataSize);
+#endif
+    } else {
+      status = NFA_RwWriteNDef(buffer, curDataSize);
+    }
   } else {
     ALOGD("%s: NFA_RwWriteNDef", __FUNCTION__);
-    status = NFA_RwWriteNDef(p_data, aBuf.size());
+    if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
+#ifdef NFCC_PN547
+      status = EXTNS_MfcWriteNDef(p_data, aBuf.size());
+#endif
+    } else {
+      status = NFA_RwWriteNDef(p_data, aBuf.size());
+    }
   }
 
   if (status != NFA_STATUS_OK) {
@@ -1155,10 +1286,13 @@ bool NfcTagManager::DoIsNdefFormatable()
   {
     case NFA_PROTOCOL_T1T:
     case NFA_PROTOCOL_ISO15693:
+#ifdef NFCC_PN547
+    case NFA_PROTOCOL_MIFARE:
+#endif
       isFormattable = true;
       break;
     case NFA_PROTOCOL_T2T:
-        isFormattable = tag.IsMifareUltralight() ? true : false;
+        isFormattable = tag.IsMifareUltralight();
   }
   ALOGD("%s: is formattable=%u", __FUNCTION__, isFormattable);
   return isFormattable;

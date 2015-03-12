@@ -234,10 +234,10 @@ public:
   /**
    * Receive the completion status of format operation. Called by NFA_FORMAT_CPLT_EVT.
    *
-   * @param  isOk Status of operation.
-   * @return      None.
+   * @param  aIsOk Status of operation.
+   * @return       None.
    */
-  static void FormatStatus(bool aIsOk);
+  static void DoFormatStatus(bool aIsOk);
 
   /**
    * Format a tag so it can store NDEF message.
@@ -298,6 +298,14 @@ private:
    * @return             True if ok.
    */
   static bool SwitchRfInterface(tNFA_INTF_TYPE aRfInterface);
+
+  /**
+   * Check if specified technology is mifare
+   *
+   * @param  aTechType Technology to check.
+   * @return           True if it is Mifare.
+   */
+  static bool IsMifareTech(int aTechType);
 
   NdefType GetNdefType(int aLibnfcType);
 

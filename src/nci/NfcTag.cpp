@@ -25,6 +25,9 @@
 extern "C"
 {
   #include "rw_int.h"
+#ifdef NFCC_PN547
+  #include "phNxpExtns.h"
+#endif
 }
 
 #undef LOG_TAG
@@ -237,6 +240,20 @@ void NfcTag::DiscoverTechnologies(tNFA_ACTIVATED& aActivationData)
       mTechList[mNumTechList] = TECHNOLOGY_TYPE_KOVIO_BARCODE;
       break;
 
+#ifdef NFCC_PN547
+    case NFC_PROTOCOL_MIFARE:
+      ALOGD("%s: Mifare Classic detected", fn);
+      EXTNS_MfcInit(aActivationData);
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO14443_3A;
+      mNumTechList++;
+      mTechHandles[mNumTechList] = rfDetail.rf_disc_id;
+      mTechLibNfcTypes[mNumTechList] = rfDetail.protocol;
+      // Save the stack's data structure for interpretation later.
+      memcpy(&(mTechParams[mNumTechList]), &(rfDetail.rf_tech_param),
+             sizeof(rfDetail.rf_tech_param));
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_MIFARE_CLASSIC;
+      break;
+#endif
     default:
       ALOGE("%s: unknown protocol ????", fn);
       mTechList[mNumTechList] = TECHNOLOGY_TYPE_UNKNOWN;
@@ -320,6 +337,18 @@ void NfcTag::DiscoverTechnologies(tNFA_DISC_RESULT& aDiscoveryData)
       mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO15693;
       break;
 
+#ifdef NFCC_PN547
+    case NFC_PROTOCOL_MIFARE:
+      mTechHandles[mNumTechList] = discovery_ntf.rf_disc_id;
+      mTechLibNfcTypes[mNumTechList] = discovery_ntf.protocol;
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_MIFARE_CLASSIC;
+      // Save the stack's data structure for interpretation later
+      memcpy(&(mTechParams[mNumTechList]), &(discovery_ntf.rf_tech_param),
+             sizeof(discovery_ntf.rf_tech_param));
+      mNumTechList++;
+      mTechList[mNumTechList] = TECHNOLOGY_TYPE_ISO14443_3A;
+      break;
+#endif
     default:
       ALOGE("%s: unknown protocol ????", fn);
       mTechList[mNumTechList] = TECHNOLOGY_TYPE_UNKNOWN;
@@ -583,6 +612,15 @@ void NfcTag::FillNfcTagMembers4(INfcTag* aINfcTag,
         }
         break;
       } // Case NFC_PROTOCOL_ISO_DEP: //t4t.
+
+#ifdef NFCC_PN547
+      case NFC_PROTOCOL_MIFARE: {
+        ALOGD("%s: Mifare Classic; tech A", fn);
+        actBytes.clear();
+        actBytes.push_back(mTechParams[i].param.pa.sel_rsp);
+        break;
+      }
+#endif
 
       case NFC_PROTOCOL_15693: {
         ALOGD("%s: tech iso 15693", fn);
