@@ -20,6 +20,11 @@
 #include "DeviceHost.h"
 #include "INfcManager.h"
 
+extern "C"
+{
+  #include "nfa_api.h"
+}
+
 class P2pDevice;
 class NfcTagManager;
 class ILlcpServerSocket;
@@ -173,6 +178,11 @@ public:
    * @return True if ok.
    */
   bool DoDeselectSecureElement();
+
+  /**
+   * This function is called to shutdown NFC.
+   */
+  static tNFA_STATUS Disable(bool aGraceful);
 
 private:
   P2pDevice* mP2pDevice;

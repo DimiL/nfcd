@@ -33,12 +33,15 @@
 
 extern "C"
 {
-  #include "nfa_api.h"
   #include "nfa_p2p_api.h"
   #include "rw_api.h"
   #include "nfa_ee_api.h"
   #include "nfc_brcm_defs.h"
   #include "ce_api.h"
+#ifdef NFCC_PN547
+  #include "phNxpExtns.h"
+  #include "phNxpConfig.h"
+#endif
 }
 
 #undef LOG_TAG
@@ -153,6 +156,9 @@ bool NfcManager::Initialize()
     } else {
       ALOGE("%s: NFA_Enable fail, error = 0x%X", __FUNCTION__, stat);
     }
+#ifdef NFCC_PN547
+    EXTNS_Init(NfaDeviceManagementCallback, NfaConnectionCallback);
+#endif
   }
 
   if (stat == NFA_STATUS_OK) {
@@ -184,8 +190,9 @@ bool NfcManager::Initialize()
     }
   }
 
-  if (sIsNfaEnabled)
-    stat = NFA_Disable(FALSE /* ungraceful */);
+  if (sIsNfaEnabled) {
+    stat = Disable(FALSE /* ungraceful */);
+  }
 
   theInstance.Finalize();
 
@@ -208,7 +215,7 @@ bool NfcManager::Deinitialize()
   if (sIsNfaEnabled) {
     SyncEventGuard guard(sNfaDisableEvent);
 
-    tNFA_STATUS stat = NFA_Disable(TRUE /* graceful */);
+    tNFA_STATUS stat = Disable(TRUE /* graceful */);
     if (stat == NFA_STATUS_OK) {
       ALOGD("%s: wait for completion", __FUNCTION__);
       sNfaDisableEvent.Wait(); // Wait for NFA command to finish.
@@ -480,6 +487,14 @@ TheEnd:
   return result;
 }
 
+tNFA_STATUS NfcManager::Disable(bool aGraceful)
+{
+#ifdef NFCC_PN547
+  EXTNS_Close();
+#endif
+  return NFA_Disable(aGraceful);
+}
+
 /**
  * Private functions.
  */
@@ -591,7 +606,7 @@ void NfaDeviceManagementCallback(UINT8 dmEvent, tNFA_DM_CBACK_DATA* eventData)
       PowerSwitch::GetInstance().Abort();
 
       if (!sIsDisabling && sIsNfaEnabled) {
-        NFA_Disable(FALSE);
+        NfcManager::Disable(false);
         sIsDisabling = true;
       } else {
         sIsNfaEnabled = false;
@@ -663,8 +678,17 @@ static void NfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
     // NFC link/protocol activated.
     case NFA_ACTIVATED_EVT:
       ALOGD("%s: NFA_ACTIVATED_EVT: gIsSelectingRfInterface=%d, sIsDisabling=%d", __FUNCTION__, gIsSelectingRfInterface, sIsDisabling);
-      if (sIsDisabling || !sIsNfaEnabled)
+      if (sIsDisabling || !sIsNfaEnabled) {
         break;
+      }
+
+#ifdef NFCC_PN547
+      if (EXTNS_GetConnectFlag()) {
+        NfcTag::GetInstance().SetActivationState();
+        NfcTagManager::DoConnectStatus(true);
+        break;
+      }
+#endif
 
       NfcTag::GetInstance().SetActivationState();
       if (gIsSelectingRfInterface) {
@@ -708,6 +732,10 @@ static void NfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
         NfcTag::GetInstance().Abort();
       } else if (gIsTagDeactivating) {
         NfcTagManager::DoDeactivateStatus(0);
+#ifdef NFCC_PN547
+      } else if (EXTNS_GetDeactivateFlag()) {
+        NfcTagManager::DoDeactivateStatus(0);
+#endif
       }
 
       // If RF is activated for what we think is a Secure Element transaction
@@ -816,7 +844,7 @@ static void NfaConnectionCallback(UINT8 connEvent, tNFA_CONN_EVT_DATA* eventData
 
     case NFA_FORMAT_CPLT_EVT:
       ALOGD("%s: NFA_FORMAT_CPLT_EVT: status=0x%X", __FUNCTION__, eventData->status);
-      NfcTagManager::FormatStatus(eventData->status == NFA_STATUS_OK);
+      NfcTagManager::DoFormatStatus(eventData->status == NFA_STATUS_OK);
       break;
 
     case NFA_CE_UICC_LISTEN_CONFIGURED_EVT :
