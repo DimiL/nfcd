@@ -40,10 +40,6 @@
 
 using android::Parcel;
 
-static int nfcdRw;
-
-MessageHandler* NfcIpcSocket::sMsgHandler = NULL;
-
 /**
  * NfcIpcSocket
  */
@@ -57,6 +53,9 @@ NfcIpcSocket* NfcIpcSocket::Instance() {
 }
 
 NfcIpcSocket::NfcIpcSocket()
+  : mMsgHandler(NULL)
+  , mListener(NULL)
+  , mNfcdRw(-1)
 {
 }
 
@@ -67,7 +66,7 @@ NfcIpcSocket::~NfcIpcSocket()
 void NfcIpcSocket::Initialize(MessageHandler* aMsgHandler)
 {
   InitSocket();
-  sMsgHandler = aMsgHandler;
+  mMsgHandler = aMsgHandler;
 }
 
 void NfcIpcSocket::InitSocket()
@@ -91,37 +90,93 @@ int NfcIpcSocket::GetListenSocket() {
   return nfcdConn;
 }
 
+int NfcIpcSocket::GetConnectedSocket(const char* aSocketName)
+{
+  static const size_t NBOUNDS = 2; // respect leading and trailing '\0'
+
+  size_t len = strlen(aSocketName);
+  if (len > (SIZE_MAX - NBOUNDS)) {
+    ALOGE("Socket address too long\n");
+    return -1;
+  }
+
+  size_t siz = len + NBOUNDS;
+  if (siz > UNIX_PATH_MAX) {
+    ALOGE("Socket address too long\n");
+    return -1;
+  }
+
+  struct sockaddr_un addr;
+  addr.sun_family = AF_UNIX;
+  addr.sun_path[0] = '\0'; /* abstract socket namespace */
+  memcpy(addr.sun_path + 1, aSocketName, len + 1);
+  socklen_t addrLen = offsetof(struct sockaddr_un, sun_path) + siz;
+
+  int nfcdRw = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (nfcdRw < 0) {
+    ALOGE("Could not create %s socket: %s\n", aSocketName, strerror(errno));
+    return -1;
+  }
+
+  int res = TEMP_FAILURE_RETRY(
+    connect(nfcdRw, reinterpret_cast<struct sockaddr*>(&addr), addrLen));
+  if (res < 0) {
+    ALOGE("Could not connect %s socket: %s\n", aSocketName, strerror(errno));
+    close(nfcdRw);
+    return -1;
+  }
+
+  return nfcdRw;
+}
+
 void NfcIpcSocket::SetSocketListener(IpcSocketListener* aListener) {
   mListener = aListener;
 }
 
-void NfcIpcSocket::Loop()
+void NfcIpcSocket::Loop(const char* aSocketName)
 {
   bool connected = false;
   int nfcdConn = -1;
   int ret;
 
-  while(1) {
-    struct sockaddr_un peeraddr;
-    socklen_t socklen = sizeof (peeraddr);
+  while (1) {
 
-    if (!connected) {
-      nfcdConn = GetListenSocket();
-      if (nfcdConn < 0) {
-        nanosleep(&mSleep_spec, &mSleep_spec_rem);
+    /* If a socket name was given to nfcd, we connect to it. Otherwise
+     * we fall back to the old method of listening ourselves.
+     */
+
+    if (aSocketName) {
+      if (aSocketName == reinterpret_cast<const char*>(uintptr_t(-1))) {
+        break; /* connected before; return */
+      }
+      mNfcdRw = GetConnectedSocket(aSocketName);
+      if (mNfcdRw < 0) {
+        break; /* no connection; return */
+      }
+      /* signal success to next iteration */
+      aSocketName = reinterpret_cast<const char*>(uintptr_t(-1));
+    } else {
+      struct sockaddr_un peeraddr;
+      socklen_t socklen = sizeof(peeraddr);
+
+      if (!connected) {
+        nfcdConn = GetListenSocket();
+        if (nfcdConn < 0) {
+          nanosleep(&mSleep_spec, &mSleep_spec_rem);
+          continue;
+        }
+      }
+
+      mNfcdRw = accept(nfcdConn, (struct sockaddr*)&peeraddr, &socklen);
+
+      if (mNfcdRw < 0 ) {
+        ALOGE("Error on accept() errno:%d", errno);
+        /* start listening for new connections again */
         continue;
       }
     }
 
-    nfcdRw = accept(nfcdConn, (struct sockaddr*)&peeraddr, &socklen);
-
-    if (nfcdRw < 0 ) {
-      ALOGE("Error on accept() errno:%d", errno);
-      /* start listening for new connections again */
-      continue;
-    }
-
-    ret = fcntl(nfcdRw, F_SETFL, O_NONBLOCK);
+    ret = fcntl(mNfcdRw, F_SETFL, O_NONBLOCK);
     if (ret < 0) {
       ALOGE ("Error setting O_NONBLOCK errno:%d", errno);
     }
@@ -129,12 +184,12 @@ void NfcIpcSocket::Loop()
     ALOGD("Socket connected");
     connected = true;
 
-    RecordStream *rs = record_stream_new(nfcdRw, MAX_COMMAND_BYTES);
+    RecordStream *rs = record_stream_new(mNfcdRw, MAX_COMMAND_BYTES);
 
     mListener->OnConnected();
 
     struct pollfd fds[1];
-    fds[0].fd = nfcdRw;
+    fds[0].fd = mNfcdRw;
     fds[0].events = POLLIN;
     fds[0].revents = 0;
 
@@ -157,7 +212,7 @@ void NfcIpcSocket::Loop()
       }
     }
     record_stream_free(rs);
-    close(nfcdRw);
+    close(mNfcdRw);
   }
 
   return;
@@ -180,7 +235,7 @@ void NfcIpcSocket::WriteToOutgoingQueue(uint8_t* aData, size_t aDataLen)
   ALOGD("Writing %d bytes to gecko ", aDataLen);
   while (writeOffset < aDataLen) {
     do {
-      written = write (nfcdRw, aData + writeOffset, aDataLen - writeOffset);
+      written = write (mNfcdRw, aData + writeOffset, aDataLen - writeOffset);
     } while (written < 0 && errno == EINTR);
 
     if (written >= 0) {
@@ -200,6 +255,6 @@ void NfcIpcSocket::WriteToIncomingQueue(uint8_t* aData, size_t aDataLen)
   ALOGD("%s enter, data=%p, dataLen=%d", __func__, aData, aDataLen);
 
   if (aData != NULL && aDataLen > 0) {
-    sMsgHandler->ProcessRequest(aData, aDataLen);
+    mMsgHandler->ProcessRequest(aData, aDataLen);
   }
 }
