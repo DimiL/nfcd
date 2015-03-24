@@ -19,16 +19,14 @@
  */
 #include "CondVar.h"
 #include <errno.h>
-
-#define LOG_TAG "NfcNci"
-#include <cutils/log.h>
+#include "NfcDebug.h"
 
 CondVar::CondVar()
 {
   memset(&mCondition, 0, sizeof(mCondition));
   int const res = pthread_cond_init(&mCondition, NULL);
   if (res) {
-    ALOGE("%s: fail init; error=0x%X", __FUNCTION__, res);
+    NCI_ERROR("fail init; error=0x%X", res);
   }
 }
 
@@ -36,7 +34,7 @@ CondVar::~CondVar()
 {
   int const res = pthread_cond_destroy(&mCondition);
   if (res) {
-    ALOGE("%s: fail destroy; error=0x%X", __FUNCTION__, res);
+    NCI_ERROR("fail destroy; error=0x%X", res);
   }
 }
 
@@ -44,7 +42,7 @@ void CondVar::Wait(Mutex& aMutex)
 {
   int const res = pthread_cond_wait(&mCondition, aMutex.GetHandle());
   if (res) {
-    ALOGE("%s: fail wait; error=0x%X", __FUNCTION__, res);
+    NCI_ERROR("fail wait; error=0x%X", res);
   }
 }
 
@@ -54,7 +52,7 @@ bool CondVar::Wait(Mutex& aMutex, long aMillisec)
   struct timespec absoluteTime;
 
   if (clock_gettime(CLOCK_MONOTONIC, &absoluteTime) == -1) {
-    ALOGE("%s: fail get time; errno=0x%X", __FUNCTION__, errno);
+    NCI_ERROR("fail get time; errno=0x%X", errno);
   } else {
     absoluteTime.tv_sec += aMillisec / 1000;
     long ns = absoluteTime.tv_nsec + ((aMillisec % 1000) * 1000000);
@@ -71,7 +69,7 @@ bool CondVar::Wait(Mutex& aMutex, long aMillisec)
   // The standard pthread_cond_timedwait() uses realtime clock.
   const int waitResult = pthread_cond_timedwait_monotonic_np(&mCondition, aMutex.GetHandle(), &absoluteTime);
   if ((waitResult != 0) && (waitResult != ETIMEDOUT)) {
-    ALOGE("%s: fail timed wait; error=0x%X", __FUNCTION__, waitResult);
+    NCI_ERROR("fail timed wait; error=0x%X", waitResult);
   }
   retVal = (waitResult == 0); // Waited successfully.
   return retVal;
@@ -81,6 +79,6 @@ void CondVar::NotifyOne()
 {
   const int res = pthread_cond_signal(&mCondition);
   if (res) {
-    ALOGE("%s: fail signal; error=0x%X", __FUNCTION__, res);
+    NCI_ERROR("fail signal; error=0x%X", res);
   }
 }

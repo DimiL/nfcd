@@ -16,12 +16,10 @@
 
 #include "LlcpServiceSocket.h"
 
+#include "NfcDebug.h"
 #include "LlcpSocket.h"
 #include "ILlcpSocket.h"
 #include "PeerToPeer.h"
-
-#define LOG_TAG "NfcNci"
-#include <cutils/log.h>
 
 LlcpServiceSocket::LlcpServiceSocket(uint32_t aHandle,
                                      int aLocalLinearBufferLength,
@@ -40,7 +38,7 @@ LlcpServiceSocket::~LlcpServiceSocket()
 
 ILlcpSocket* LlcpServiceSocket::Accept()
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  NCI_DEBUG("enter");
 
   const uint32_t serverHandle = mHandle;
   const uint32_t connHandle = PeerToPeer::GetInstance().GetNewHandle();
@@ -48,29 +46,29 @@ ILlcpSocket* LlcpServiceSocket::Accept()
 
   stat = PeerToPeer::GetInstance().Accept(serverHandle, connHandle, mLocalMiu, mLocalRw);
   if (!stat) {
-    ALOGE("%s: fail accept", __FUNCTION__);
+    NCI_ERROR("fail accept");
     return NULL;
   }
 
   LlcpSocket* clientSocket = new LlcpSocket(connHandle, mLocalMiu, mLocalRw);
 
-  ALOGD("%s: exit", __FUNCTION__);
+  NCI_DEBUG("exit");
   return static_cast<ILlcpSocket*>(clientSocket);
 }
 
 bool LlcpServiceSocket::Close()
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  NCI_DEBUG("enter");
 
   const uint32_t serverHandle = mHandle;
   bool stat = false;
 
   stat = PeerToPeer::GetInstance().DeregisterServer(serverHandle);
   if (!stat) {
-    ALOGE("%s: fail deregister server", __FUNCTION__);
+    NCI_ERROR("fail deregister server");
     return NULL;
   }
 
-  ALOGD("%s: exit", __FUNCTION__);
+  NCI_DEBUG("exit");
   return true;
 }

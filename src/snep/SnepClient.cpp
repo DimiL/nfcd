@@ -98,12 +98,12 @@ SnepClient::~SnepClient()
 void SnepClient::Put(NdefMessage& aMsg)
 {
   if (!mMessenger) {
-    ALOGE("%s: no messenger", FUNC);
+    NFCD_ERROR("no messenger");
     return;
   }
 
   if (mState != SnepClient::CONNECTED) {
-    ALOGE("%s: socket is not connected", FUNC);
+    NFCD_ERROR("socket is not connected");
     return;
   }
 
@@ -112,7 +112,7 @@ void SnepClient::Put(NdefMessage& aMsg)
     // Send request.
     mMessenger->SendMessage(*snepRequest);
   } else {
-    ALOGE("%s: get put request fail", FUNC);
+    NFCD_ERROR("get put request fail");
   }
 
   // Get response.
@@ -130,12 +130,12 @@ void SnepClient::Put(NdefMessage& aMsg)
 SnepMessage* SnepClient::Get(NdefMessage& aMsg)
 {
   if (!mMessenger) {
-    ALOGE("%s: no messenger", FUNC);
+    NFCD_ERROR("no messenger");
     return NULL;
   }
 
   if (mState != SnepClient::CONNECTED) {
-    ALOGE("%s: socket is not connected", FUNC);
+    NFCD_ERROR("socket is not connected");
     return NULL;
   }
 
@@ -150,7 +150,7 @@ SnepMessage* SnepClient::Get(NdefMessage& aMsg)
 bool SnepClient::Connect()
 {
   if (mState != SnepClient::DISCONNECTED) {
-    ALOGE("%s: snep already connected", FUNC);
+    NFCD_ERROR("snep already connected");
     return false;
   }
   mState = SnepClient::CONNECTING;
@@ -163,7 +163,7 @@ bool SnepClient::Connect()
    */
   ILlcpSocket* socket = pINfcManager->CreateLlcpSocket(0, mMiu, mRwSize, 1024);
   if (!socket) {
-    ALOGE("%s: could not connect to socket", FUNC);
+    NFCD_ERROR("could not connect to socket");
     mState = SnepClient::DISCONNECTED;
     return false;
   }
@@ -171,14 +171,14 @@ bool SnepClient::Connect()
   bool ret = false;
   if (mPort == -1) {
     if (!socket->ConnectToService(mServiceName)) {
-      ALOGE("%s: could not connect to service (%s)", FUNC, mServiceName);
+      NFCD_ERROR("could not connect to service (%s)", mServiceName);
       mState = SnepClient::DISCONNECTED;
       delete socket;
       return false;
     }
   } else {
     if (!socket->ConnectToSap(mPort)) {
-      ALOGE("%s: could not connect to sap (%d)", FUNC, mPort);
+      NFCD_ERROR("could not connect to sap (%d)", mPort);
       mState = SnepClient::DISCONNECTED;
       delete socket;
       return false;

@@ -18,9 +18,7 @@
  * Asynchronous interval timer.
  */
 #include "IntervalTimer.h"
-
-#define LOG_TAG "NfcNci"
-#include <cutils/log.h>
+#include "NfcDebug.h"
 
 IntervalTimer::IntervalTimer()
 {
@@ -56,7 +54,7 @@ bool IntervalTimer::Set(int aMs, TIMER_FUNC aCb)
 
   stat = timer_settime(mTimerId, 0, &ts, 0);
   if (stat == -1) {
-    ALOGE("%s: fail set timer", __FUNCTION__);
+    NCI_ERROR("fail set timer");
   }
   return stat == 0;
 }
@@ -90,7 +88,7 @@ bool IntervalTimer::Create(TIMER_FUNC aCb)
   mCb = aCb;
   stat = timer_create(CLOCK_MONOTONIC, &se, &mTimerId);
   if (stat == -1) {
-    ALOGE("%s: fail create timer", __FUNCTION__);
+    NCI_ERROR("fail create timer");
   }
   return stat == 0;
 }

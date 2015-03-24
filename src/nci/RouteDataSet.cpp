@@ -18,9 +18,7 @@
 #include <expat.h>
 #include <stdio.h>
 
-#undef LOG_TAG
-#define LOG_TAG "NfcNci"
-#include <cutils/log.h>
+#include "NfcDebug.h"
 
 extern char bcm_nfc_location[];
 
@@ -164,8 +162,8 @@ bool RouteDataSet::Initialize()
 
 void RouteDataSet::DeleteDatabase()
 {
-  ALOGD("%s: default db size=%u; sec elem db size=%u",
-        __FUNCTION__, mDefaultRouteDatabase.size(), mSecElemRouteDatabase.size());
+  NCI_DEBUG("default db size=%u; sec elem db size=%u",
+            mDefaultRouteDatabase.size(), mSecElemRouteDatabase.size());
   Database::iterator it;
 
   for (it = mDefaultRouteDatabase.begin(); it != mDefaultRouteDatabase.end(); it++) {
@@ -181,7 +179,7 @@ void RouteDataSet::DeleteDatabase()
 
 bool RouteDataSet::Import()
 {
-  ALOGD ("%s: enter", __FUNCTION__);
+  NCI_DEBUG("enter");
 
   std::string strFilename(bcm_nfc_location);
   strFilename += sConfigFile;
@@ -190,13 +188,13 @@ bool RouteDataSet::Import()
 
   FILE *file = fopen(strFilename.c_str(), "r");
   if (!file) {
-    ALOGD("Failed to open %s", strFilename.c_str());
+    NCI_DEBUG("Failed to open %s", strFilename.c_str());
     return false;
   }
 
   XML_Parser parser = XML_ParserCreate(NULL);
   if (!parser) {
-    ALOGE("Failed to create XML parser");
+    NCI_ERROR("Failed to create XML parser");
     return false;
   }
 
