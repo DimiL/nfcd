@@ -42,10 +42,10 @@ HandoverClient::~HandoverClient()
 
 bool HandoverClient::Connect()
 {
-  ALOGD("%s: enter", FUNC);
+  NFCD_DEBUG("enter");
 
   if (mState != HandoverClient::DISCONNECTED) {
-    ALOGE("%s: socket already in use", FUNC);
+    NFCD_ERROR("socket already in use");
     return false;
   }
   mState = HandoverClient::CONNECTING;
@@ -54,13 +54,13 @@ bool HandoverClient::Connect()
 
   mSocket = pINfcManager->CreateLlcpSocket(0, mMiu, 1, 1024);
   if (!mSocket) {
-    ALOGE("%s: could not connect to socket", FUNC);
+    NFCD_ERROR("could not connect to socket");
     mState = HandoverClient::DISCONNECTED;
     return false;
   }
 
   if (!mSocket->ConnectToService(mServiceName)) {
-    ALOGE("%s: could not connect to service (%s)", FUNC, mServiceName);
+    NFCD_ERROR("could not connect to service (%s)", mServiceName);
     mSocket->Close();
     delete mSocket;
     mSocket = NULL;
@@ -70,7 +70,7 @@ bool HandoverClient::Connect()
 
   mState = HandoverClient::CONNECTED;
 
-  ALOGD("%s: exit", FUNC);
+  NFCD_DEBUG("exit");
   return true;
 }
 
@@ -93,7 +93,7 @@ NdefMessage* HandoverClient::Receive()
     std::vector<uint8_t> partial;
     int size = mSocket->Receive(partial);
     if (size < 0) {
-      ALOGE("%s: connection broken", FUNC);
+      NFCD_ERROR("connection broken");
       break;
     } else {
       buffer.insert(buffer.end(), partial.begin(), partial.end());
@@ -101,7 +101,7 @@ NdefMessage* HandoverClient::Receive()
 
     NdefMessage* ndef = new NdefMessage();
     if(ndef->Init(buffer)) {
-      ALOGD("%s: get a complete NDEF message", FUNC);
+      NFCD_DEBUG("get a complete NDEF message");
       return ndef;
     } else {
       delete ndef;
@@ -112,10 +112,10 @@ NdefMessage* HandoverClient::Receive()
 
 bool HandoverClient::Put(NdefMessage& aMsg)
 {
-  ALOGD("%s: enter", FUNC);
+  NFCD_DEBUG("enter");
 
   if (mState != HandoverClient::CONNECTED) {
-    ALOGE("%s: not connected", FUNC);
+    NFCD_ERROR("not connected");
     return false;
   }
 
@@ -123,13 +123,13 @@ bool HandoverClient::Put(NdefMessage& aMsg)
   aMsg.ToByteArray(buf);
   mSocket->Send(buf);
 
-  ALOGD("%s: exit", FUNC);
+  NFCD_DEBUG("exit");
   return true;
 }
 
 void HandoverClient::Close()
 {
-  ALOGD("%s: enter", FUNC);
+  NFCD_DEBUG("enter");
 
   if (mSocket) {
     mSocket->Close();
@@ -139,5 +139,5 @@ void HandoverClient::Close()
 
   mState = HandoverClient::DISCONNECTED;
 
-  ALOGD("%s: exit", FUNC);
+  NFCD_DEBUG("exit");
 }

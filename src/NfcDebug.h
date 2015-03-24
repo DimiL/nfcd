@@ -17,10 +17,36 @@
 #ifndef mozilla_nfcd_NfcDebug_h
 #define mozilla_nfcd_NfcDebug_h
 
-#undef LOG_TAG
-#define LOG_TAG "nfcd"
 #include "utils/Log.h"
 
+extern bool gNfcDebugFlag;
+
 #define FUNC __PRETTY_FUNCTION__
+
+// Property to enable/disable daemon log
+// It is only read when nfcd starts.
+#define NFC_DEBUG_PROPERTY "debug.nfcd.enabled"
+
+#define TAG_NFCD "nfcd"
+#define TAG_NCI "NfcNci"
+
+#define NFC_DEBUG(level, tag, msg, ...)                                  \
+  if (gNfcDebugFlag) {                                                   \
+    __android_log_print(level, tag, "%s: " msg, FUNC, ##__VA_ARGS__);    \
+  }
+
+#define NFCD_DEBUG(msg, ...)  \
+  NFC_DEBUG(ANDROID_LOG_DEBUG, TAG_NFCD, msg, ##__VA_ARGS__)
+#define NFCD_WARNING(msg, ...)  \
+  NFC_DEBUG(ANDROID_LOG_WARN, TAG_NFCD, msg, ##__VA_ARGS__)
+#define NFCD_ERROR(msg, ...)  \
+  NFC_DEBUG(ANDROID_LOG_ERROR, TAG_NFCD, msg, ##__VA_ARGS__)
+
+#define NCI_DEBUG(msg, ...)  \
+  NFC_DEBUG(ANDROID_LOG_DEBUG, TAG_NCI, msg, ##__VA_ARGS__)
+#define NCI_WARNING(msg, ...)  \
+  NFC_DEBUG(ANDROID_LOG_WARN, TAG_NCI, msg, ##__VA_ARGS__)
+#define NCI_ERROR(msg, ...)  \
+  NFC_DEBUG(ANDROID_LOG_ERROR, TAG_NCI, msg, ##__VA_ARGS__)
 
 #endif

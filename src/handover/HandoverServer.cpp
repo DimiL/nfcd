@@ -31,11 +31,11 @@ const char* HandoverServer::DEFAULT_SERVICE_NAME = "urn:nfc:sn:handover";
 // Handover conncetion thread is responsible for sending/receiving NDEF message.
 void* HandoverConnectionThreadFunc(void* aArg)
 {
-  ALOGD("%s: connection thread enter", FUNC);
+  NFCD_DEBUG("connection thread enter");
 
   HandoverConnectionThread* pConnectionThread = reinterpret_cast<HandoverConnectionThread*>(aArg);
   if (!pConnectionThread) {
-    ALOGE("%s: invalid parameter", FUNC);
+    NFCD_ERROR("invalid parameter");
     return NULL;
   }
 
@@ -47,7 +47,7 @@ void* HandoverConnectionThreadFunc(void* aArg)
     std::vector<uint8_t> partial;
     int size = socket->Receive(partial);
     if (size < 0) {
-      ALOGE("%s: connection broken", FUNC);
+      NFCD_ERROR("connection broken");
       connectionBroken = true;
       break;
     } else {
@@ -58,10 +58,10 @@ void* HandoverConnectionThreadFunc(void* aArg)
     // If yes. need to notify upper layer.
     NdefMessage* ndef = new NdefMessage();
     if(ndef->Init(buffer)) {
-      ALOGD("%s: get a complete NDEF message", FUNC);
+      NFCD_DEBUG("get a complete NDEF message");
       ICallback->OnMessageReceived(ndef);
     } else {
-      ALOGD("%s: cannot get a complete NDEF message", FUNC);
+      NFCD_DEBUG("cannot get a complete NDEF message");
     }
   }
 
@@ -75,7 +75,7 @@ void* HandoverConnectionThreadFunc(void* aArg)
   // TODO : is this correct ??
   delete pConnectionThread;
 
-  ALOGD("%s: connection thread exit", FUNC);
+  NFCD_DEBUG("connection thread exit");
   return NULL;
 }
 
@@ -96,7 +96,7 @@ void HandoverConnectionThread::Run()
 {
   pthread_t tid;
   if(pthread_create(&tid, NULL, HandoverConnectionThreadFunc, this) != 0) {
-    ALOGE("connection pthread_create failed");
+    NFCD_ERROR("connection pthread_create failed");
     abort();
   }
 }
@@ -111,7 +111,7 @@ void* HandoverServerThreadFunc(void* aArg)
 {
   HandoverServer* pHandoverServer = reinterpret_cast<HandoverServer*>(aArg);
   if (!pHandoverServer) {
-    ALOGE("%s: invalid parameter", FUNC);
+    NFCD_ERROR("invalid parameter");
     return NULL;
   }
 
@@ -119,13 +119,13 @@ void* HandoverServerThreadFunc(void* aArg)
   IHandoverCallback* ICallback = pHandoverServer->mCallback;
 
   if (!serverSocket) {
-    ALOGE("%s: no server socket", FUNC);
+    NFCD_ERROR("no server socket");
     return NULL;
   }
 
   while(pHandoverServer->mServerRunning) {
     if (!serverSocket) {
-      ALOGE("%s: server socket shut down", FUNC);
+      NFCD_ERROR("server socket shut down");
       return NULL;
     }
 
@@ -163,24 +163,24 @@ HandoverServer::~HandoverServer()
 
 void HandoverServer::Start()
 {
-  ALOGD("%s: enter", FUNC);
+  NFCD_DEBUG("enter");
 
   INfcManager* pINfcManager = NfcService::GetNfcManager();
   mServerSocket = pINfcManager->CreateLlcpServerSocket(
     mServiceSap, DEFAULT_SERVICE_NAME, DEFAULT_MIU, 1, 1024);
 
   if (!mServerSocket) {
-    ALOGE("%s: cannot create llcp server socket", FUNC);
+    NFCD_ERROR("cannot create llcp server socket");
   }
 
   pthread_t tid;
   if(pthread_create(&tid, NULL, HandoverServerThreadFunc, this) != 0) {
-    ALOGE("%s: pthread_create failed", FUNC);
+    NFCD_ERROR("pthread_create failed");
     abort();
   }
   mServerRunning = true;
 
-  ALOGD("%s: exit", FUNC);
+  NFCD_DEBUG("exit");
 }
 
 void HandoverServer::Stop()
@@ -193,10 +193,10 @@ void HandoverServer::Stop()
 
 bool HandoverServer::Put(NdefMessage& aMsg)
 {
-  ALOGD("%s: enter", FUNC);
+  NFCD_DEBUG("enter");
 
   if (!mConnectionThread || !mConnectionThread->GetSocket()) {
-    ALOGE("%s: connection is not established", FUNC);
+    NFCD_ERROR("connection is not established");
     return false;
   }
 
@@ -204,14 +204,14 @@ bool HandoverServer::Put(NdefMessage& aMsg)
   aMsg.ToByteArray(buf);
   mConnectionThread->GetSocket()->Send(buf);
 
-  ALOGD("%s: exit", FUNC);
+  NFCD_DEBUG("exit");
   return true;
 }
 
 void HandoverServer::SetConnectionThread(HandoverConnectionThread* aThread)
 {
   if (aThread != NULL && mConnectionThread != NULL) {
-    ALOGE("%s: there is more than one connection, should not happen!", FUNC);
+    NFCD_ERROR("there is more than one connection, should not happen!");
   }
   mConnectionThread = aThread;
 }

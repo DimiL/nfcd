@@ -15,10 +15,8 @@
  */
 
 #include "DeviceHost.h"
+#include "NfcDebug.h"
 #include "NfcService.h"
-
-#define LOG_TAG "nfcd"
-#include <cutils/log.h>
 
 void DeviceHost::NotifyTagDiscovered(INfcTag* aTag)
 {
@@ -27,7 +25,7 @@ void DeviceHost::NotifyTagDiscovered(INfcTag* aTag)
 
 void DeviceHost::NotifyTargetDeselected()
 {
-  ALOGE("%s: not implement", __FUNCTION__);
+  NFCD_ERROR("not implement");
 }
 
 void DeviceHost::NotifyTransactionEvent(TransactionEvent* aEvent)
@@ -47,17 +45,17 @@ void DeviceHost::NotifyLlcpLinkDeactivated(IP2pDevice* aDevice)
 
 void DeviceHost::NotifyLlcpLinkFirstPacketReceived()
 {
-  ALOGE("%s: not implement", __FUNCTION__);
+  NFCD_ERROR("not implement");
 }
 
 void DeviceHost::NotifySeFieldActivated()
 {
-  ALOGE("%s: not implement", __FUNCTION__);
+  NFCD_ERROR("not implement");
 }
 
 void DeviceHost::NotifySeFieldDeactivated()
 {
-  ALOGE("%s: not implement", __FUNCTION__);
+  NFCD_ERROR("not implement");
 }
 
 TransactionEvent::TransactionEvent()

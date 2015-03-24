@@ -80,7 +80,7 @@ void NfcIpcSocket::InitSocket()
 int NfcIpcSocket::GetListenSocket() {
   const int nfcdConn = android_get_control_socket(NFCD_SOCKET_NAME);
   if (nfcdConn < 0) {
-    ALOGE("Could not connect to %s socket: %s\n", NFCD_SOCKET_NAME, strerror(errno));
+    NFCD_ERROR("Could not connect to %s socket: %s\n", NFCD_SOCKET_NAME, strerror(errno));
     return -1;
   }
 
@@ -96,13 +96,13 @@ int NfcIpcSocket::GetConnectedSocket(const char* aSocketName)
 
   size_t len = strlen(aSocketName);
   if (len > (SIZE_MAX - NBOUNDS)) {
-    ALOGE("Socket address too long\n");
+    NFCD_ERROR("Socket address too long\n");
     return -1;
   }
 
   size_t siz = len + NBOUNDS;
   if (siz > UNIX_PATH_MAX) {
-    ALOGE("Socket address too long\n");
+    NFCD_ERROR("Socket address too long\n");
     return -1;
   }
 
@@ -114,14 +114,14 @@ int NfcIpcSocket::GetConnectedSocket(const char* aSocketName)
 
   int nfcdRw = socket(AF_UNIX, SOCK_STREAM, 0);
   if (nfcdRw < 0) {
-    ALOGE("Could not create %s socket: %s\n", aSocketName, strerror(errno));
+    NFCD_ERROR("Could not create %s socket: %s\n", aSocketName, strerror(errno));
     return -1;
   }
 
   int res = TEMP_FAILURE_RETRY(
     connect(nfcdRw, reinterpret_cast<struct sockaddr*>(&addr), addrLen));
   if (res < 0) {
-    ALOGE("Could not connect %s socket: %s\n", aSocketName, strerror(errno));
+    NFCD_ERROR("Could not connect %s socket: %s\n", aSocketName, strerror(errno));
     close(nfcdRw);
     return -1;
   }
@@ -170,7 +170,7 @@ void NfcIpcSocket::Loop(const char* aSocketName)
       mNfcdRw = accept(nfcdConn, (struct sockaddr*)&peeraddr, &socklen);
 
       if (mNfcdRw < 0 ) {
-        ALOGE("Error on accept() errno:%d", errno);
+        NFCD_ERROR("Error on accept() errno:%d", errno);
         /* start listening for new connections again */
         continue;
       }
@@ -178,10 +178,10 @@ void NfcIpcSocket::Loop(const char* aSocketName)
 
     ret = fcntl(mNfcdRw, F_SETFL, O_NONBLOCK);
     if (ret < 0) {
-      ALOGE ("Error setting O_NONBLOCK errno:%d", errno);
+      NFCD_ERROR ("Error setting O_NONBLOCK errno:%d", errno);
     }
 
-    ALOGD("Socket connected");
+    NFCD_DEBUG("Socket connected");
     connected = true;
 
     RecordStream *rs = record_stream_new(mNfcdRw, MAX_COMMAND_BYTES);
@@ -201,7 +201,7 @@ void NfcIpcSocket::Loop(const char* aSocketName)
         void* data;
         size_t dataLen;
         int ret = record_stream_get_next(rs, &data, &dataLen);
-        ALOGD(" %d of bytes to be sent... data=%p ret=%d", dataLen, data, ret);
+        NFCD_DEBUG(" %d of bytes to be sent... data=%p ret=%d", dataLen, data, ret);
         if (ret == 0 && data == NULL) {
           // end-of-stream
           break;
@@ -223,7 +223,7 @@ void NfcIpcSocket::Loop(const char* aSocketName)
 // TODO check thread, this should run on the NfcService thread.
 void NfcIpcSocket::WriteToOutgoingQueue(uint8_t* aData, size_t aDataLen)
 {
-  ALOGD("%s enter, data=%p, dataLen=%d", __func__, aData, aDataLen);
+  NFCD_DEBUG("enter, data=%p, dataLen=%d", aData, aDataLen);
 
   if (aData == NULL || aDataLen == 0) {
     return;
@@ -232,7 +232,7 @@ void NfcIpcSocket::WriteToOutgoingQueue(uint8_t* aData, size_t aDataLen)
   size_t writeOffset = 0;
   int written = 0;
 
-  ALOGD("Writing %d bytes to gecko ", aDataLen);
+  NFCD_DEBUG("Writing %d bytes to gecko ", aDataLen);
   while (writeOffset < aDataLen) {
     do {
       written = write (mNfcdRw, aData + writeOffset, aDataLen - writeOffset);
@@ -241,7 +241,7 @@ void NfcIpcSocket::WriteToOutgoingQueue(uint8_t* aData, size_t aDataLen)
     if (written >= 0) {
       writeOffset += written;
     } else {
-      ALOGE("Response: unexpected error on write errno:%d", errno);
+      NFCD_ERROR("Response: unexpected error on write errno:%d", errno);
       break;
     }
   }
@@ -252,7 +252,7 @@ void NfcIpcSocket::WriteToOutgoingQueue(uint8_t* aData, size_t aDataLen)
 // TODO check thread, this should run on top of main thread of nfcd.
 void NfcIpcSocket::WriteToIncomingQueue(uint8_t* aData, size_t aDataLen)
 {
-  ALOGD("%s enter, data=%p, dataLen=%d", __func__, aData, aDataLen);
+  NFCD_DEBUG("enter, data=%p, dataLen=%d", aData, aDataLen);
 
   if (aData != NULL && aDataLen > 0) {
     mMsgHandler->ProcessRequest(aData, aDataLen);

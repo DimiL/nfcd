@@ -19,16 +19,14 @@
  */
 #include "Mutex.h"
 #include <errno.h>
-
-#define LOG_TAG "NfcNci"
-#include <cutils/log.h>
+#include "NfcDebug.h"
 
 Mutex::Mutex()
 {
   memset(&mMutex, 0, sizeof(mMutex));
   const int res = pthread_mutex_init(&mMutex, NULL);
   if (res != 0) {
-    ALOGE("%s: fail init; error=0x%X", __FUNCTION__, res);
+    NCI_ERROR("fail init; error=0x%X", res);
   }
 }
 
@@ -36,7 +34,7 @@ Mutex::~Mutex()
 {
   const int res = pthread_mutex_destroy(&mMutex);
   if (res != 0) {
-    ALOGE("%s: fail destroy; error=0x%X", __FUNCTION__, res);
+    NCI_ERROR("fail destroy; error=0x%X", res);
   }
 }
 
@@ -44,7 +42,7 @@ void Mutex::Lock()
 {
   const int res = pthread_mutex_lock(&mMutex);
   if (res != 0) {
-    ALOGE("%s: fail lock; error=0x%X", __FUNCTION__, res);
+    NCI_ERROR("fail lock; error=0x%X", res);
   }
 }
 
@@ -52,7 +50,7 @@ void Mutex::Unlock()
 {
   const int res = pthread_mutex_unlock(&mMutex);
   if (res != 0) {
-    ALOGE("%s: fail unlock; error=0x%X", __FUNCTION__, res);
+    NCI_ERROR("fail unlock; error=0x%X", res);
   }
 }
 
@@ -60,7 +58,7 @@ bool Mutex::TryLock()
 {
   const int res = pthread_mutex_trylock(&mMutex);
   if ((res != 0) && (res != EBUSY)) {
-    ALOGE("%s: error=0x%X", __FUNCTION__, res);
+    NCI_ERROR("error=0x%X", res);
   }
   return res == 0;
 }

@@ -50,7 +50,7 @@ SnepCallback::~SnepCallback()
 SnepMessage* SnepCallback::DoPut(NdefMessage* aNdef)
 {
   if (!aNdef) {
-    ALOGE("%s: invalid parameter", FUNC);
+    NFCD_ERROR("invalid parameter");
     return NULL;
   }
 
@@ -68,7 +68,7 @@ SnepMessage* SnepCallback::DoGet(int aAcceptableLength,
                                  NdefMessage* aNdef)
 {
   if (!aNdef) {
-    ALOGE("%s: invalid parameter", FUNC);
+    NFCD_ERROR("invalid parameter");
     return NULL;
   }
 
@@ -142,7 +142,7 @@ void P2pLinkManager::EnableDisable(bool aEnable)
 void P2pLinkManager::Push(NdefMessage& aNdef)
 {
   if (aNdef.mRecords.size() == 0) {
-    ALOGE("%s: no NDEF record", FUNC);
+    NFCD_ERROR("no NDEF record");
     return;
   }
 
@@ -166,33 +166,33 @@ void P2pLinkManager::Push(NdefMessage& aNdef)
   if (HANDOVER_REQUEST == handoverType) {
     HandoverClient* pClient = GetHandoverClient();
     if (pClient) {
-      ALOGD("%s: send Handover Request by handover client", FUNC);
+      NFCD_DEBUG("send Handover Request by handover client");
       NdefMessage* selectMsg = pClient->ProcessHandoverRequest(aNdef);
       if (selectMsg) {
         NotifyNdefReceived(selectMsg);
         delete selectMsg;
       }
     } else {
-      ALOGE("%s: handover client not connected", FUNC);
+      NFCD_ERROR("handover client not connected");
     }
   // Handover Select:
   // Hs is always sent in order to response for receiving Hr.
   // So we should send by the same socket receiving Hr (Hr is always received by HANDOVER server).
   } else if (HANDOVER_SELECT == handoverType) {
     if (mHandoverServer) {
-      ALOGD("%s: send Handover Select by handover server", FUNC);
+      NFCD_DEBUG("send Handover Select by handover server");
       mHandoverServer->Put(aNdef);
     } else {
-      ALOGE("%s: handover server not created", FUNC);
+      NFCD_ERROR("handover server not created");
     }
   // For all other non-handover message, send through SNEP protocol.
   } else {
     SnepClient* pClient = GetSnepClient();
     if (pClient) {
-      ALOGD("%s: send NDEF by SNEP client", FUNC);
+      NFCD_DEBUG("send NDEF by SNEP client");
       pClient->Put(aNdef);
     } else {
-      ALOGE("%s: snep client not connected", FUNC);
+      NFCD_ERROR("snep client not connected");
     }
   }
 }

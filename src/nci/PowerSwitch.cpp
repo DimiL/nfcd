@@ -20,10 +20,7 @@
 #include "PowerSwitch.h"
 
 #include "config.h"
-
-#undef LOG_TAG
-#define LOG_TAG "NfcNci"
-#include <cutils/log.h>
+#include "NfcDebug.h"
 
 // Bug 934835 : B2G NFC: NFC Daemon crash sometimes when enabled
 // Set a delay between power off and power on,because libnfc-nci will crash if
@@ -73,9 +70,9 @@ void PowerSwitch::Initialize(PowerLevel aLevel)
 {
   mMutex.Lock();
 
-  ALOGD("%s: level=%s (%u)", __FUNCTION__, PowerLevelToString(aLevel), aLevel);
+  NCI_DEBUG("level=%s (%u)", PowerLevelToString(aLevel), aLevel);
   GetNumValue(NAME_SCREEN_OFF_POWER_STATE, &mDesiredScreenOffPowerState, sizeof(mDesiredScreenOffPowerState));
-  ALOGD("%s: desired screen-off state=%d", __FUNCTION__, mDesiredScreenOffPowerState);
+  NCI_DEBUG("desired screen-off state=%d", mDesiredScreenOffPowerState);
 
   switch (aLevel) {
     case FULL_POWER:
@@ -87,7 +84,7 @@ void PowerSwitch::Initialize(PowerLevel aLevel)
       mCurrLevel = aLevel;
       break;
     default:
-      ALOGE("%s: not handled", __FUNCTION__);
+      NCI_ERROR("not handled");
       break;
   }
   mMutex.Unlock();
@@ -108,7 +105,7 @@ bool PowerSwitch::SetLevel(PowerLevel aNewLevel)
 
   mMutex.Lock();
 
-  ALOGD("%s: level=%s (%u)", __FUNCTION__, PowerLevelToString(aNewLevel), aNewLevel);
+  NCI_DEBUG("level=%s (%u)", PowerLevelToString(aNewLevel), aNewLevel);
   if (mCurrLevel == aNewLevel) {
     retval = true;
     goto TheEnd;
@@ -129,7 +126,7 @@ bool PowerSwitch::SetLevel(PowerLevel aNewLevel)
       }
       break;
     default:
-      ALOGE("%s: not handled", __FUNCTION__);
+      NCI_ERROR("not handled");
       break;
   }
 
@@ -145,7 +142,7 @@ bool PowerSwitch::SetModeOff(PowerActivity aDeactivated)
   mMutex.Lock();
   mCurrActivity &= ~aDeactivated;
   retVal = mCurrActivity != 0;
-  ALOGD("%s: (deactivated=0x%x) : mCurrActivity=0x%x", __FUNCTION__, aDeactivated, mCurrActivity);
+  NCI_DEBUG("(deactivated=0x%x) : mCurrActivity=0x%x", aDeactivated, mCurrActivity);
   mMutex.Unlock();
   return retVal;
 }
@@ -157,14 +154,14 @@ bool PowerSwitch::SetModeOn(PowerActivity aActivated)
   mMutex.Lock();
   mCurrActivity |= aActivated;
   retVal = mCurrActivity != 0;
-  ALOGD("%s: (activated=0x%x) : mCurrActivity=0x%x", __FUNCTION__, aActivated, mCurrActivity);
+  NCI_DEBUG("(activated=0x%x) : mCurrActivity=0x%x", aActivated, mCurrActivity);
   mMutex.Unlock();
   return retVal;
 }
 
 bool PowerSwitch::SetPowerOffSleepState(bool aSleep)
 {
-  ALOGD("%s: enter; sleep=%u", __FUNCTION__, aSleep);
+  NCI_DEBUG("enter; sleep=%u", aSleep);
   tNFA_STATUS stat = NFA_STATUS_FAILED;
   bool retval = false;
 
@@ -173,19 +170,20 @@ bool PowerSwitch::SetPowerOffSleepState(bool aSleep)
     if (mCurrDeviceMgtPowerState != NFA_DM_PWR_MODE_OFF_SLEEP) {
       SyncEventGuard guard(mPowerStateEvent);
 
-      ALOGD("%s: try power off", __FUNCTION__);
+      NCI_DEBUG("try power off");
       stat = NFA_PowerOffSleepMode(TRUE);
       if (stat == NFA_STATUS_OK) {
         mPowerStateEvent.Wait();
         mCurrLevel = LOW_POWER;
         clock_gettime(CLOCK_REALTIME, &mLastPowerOffTime);
       } else {
-        ALOGE("%s: API fail; stat=0x%X", __FUNCTION__, stat);
+        NCI_ERROR("API fail; stat=0x%X", stat);
         goto TheEnd;
       }
     } else {
-      ALOGE("%s: power is not ON; curr device mgt power state=%s (%u)", __FUNCTION__,
-        DeviceMgtPowerStateToString(mCurrDeviceMgtPowerState), mCurrDeviceMgtPowerState);
+      NCI_ERROR("power is not ON; curr device mgt power state=%s (%u)",
+                DeviceMgtPowerStateToString(mCurrDeviceMgtPowerState),
+                mCurrDeviceMgtPowerState);
       goto TheEnd;
     }
   } else { // Exit power-off-sleep state.
@@ -194,7 +192,7 @@ bool PowerSwitch::SetPowerOffSleepState(bool aSleep)
       mCurrDeviceMgtPowerState = NFA_DM_PWR_STATE_UNKNOWN;
       SyncEventGuard guard(mPowerStateEvent);
 
-      ALOGD("%s: try full power", __FUNCTION__);
+      NCI_DEBUG("try full power");
 
       struct timespec now;
       clock_gettime(CLOCK_REALTIME, &now);
@@ -206,26 +204,28 @@ bool PowerSwitch::SetPowerOffSleepState(bool aSleep)
       if (stat == NFA_STATUS_OK) {
         mPowerStateEvent.Wait();
         if (mCurrDeviceMgtPowerState != NFA_DM_PWR_MODE_FULL) {
-          ALOGE("%s: unable to full power; curr device mgt power stat=%s (%u)", __FUNCTION__,
-            DeviceMgtPowerStateToString(mCurrDeviceMgtPowerState), mCurrDeviceMgtPowerState);
+          NCI_ERROR("unable to full power; curr device mgt power stat=%s (%u)",
+                    DeviceMgtPowerStateToString(mCurrDeviceMgtPowerState),
+                    mCurrDeviceMgtPowerState);
           goto TheEnd;
         }
         DoStartupConfig();
         mCurrLevel = FULL_POWER;
       } else {
-        ALOGE("%s: API fail; stat=0x%X", __FUNCTION__, stat);
+        NCI_ERROR("API fail; stat=0x%X", stat);
         goto TheEnd;
       }
     } else {
-      ALOGE("%s: not in power-off state; curr device mgt power state=%s (%u)", __FUNCTION__,
-        DeviceMgtPowerStateToString(mCurrDeviceMgtPowerState), mCurrDeviceMgtPowerState);
+      NCI_ERROR("not in power-off state; curr device mgt power state=%s (%u)",
+                DeviceMgtPowerStateToString(mCurrDeviceMgtPowerState),
+                mCurrDeviceMgtPowerState);
       goto TheEnd;
     }
   }
 
   retval = true;
 TheEnd:
-  ALOGD("%s: exit; return %u", __FUNCTION__, retval);
+  NCI_DEBUG("exit; return %u", retval);
   return retval;
 }
 
@@ -259,7 +259,7 @@ const char* PowerSwitch::PowerLevelToString(PowerLevel aLevel)
 
 void PowerSwitch::Abort()
 {
-  ALOGD("%s", __FUNCTION__);
+  NCI_DEBUG("enter");
   SyncEventGuard guard(mPowerStateEvent);
   mPowerStateEvent.NotifyOne();
 }
@@ -270,8 +270,10 @@ void PowerSwitch::DeviceManagementCallback(UINT8 aEvent,
   switch (aEvent) {
     case NFA_DM_PWR_MODE_CHANGE_EVT: {
       tNFA_DM_PWR_MODE_CHANGE& power_mode = aEventData->power_mode;
-      ALOGD("%s: NFA_DM_PWR_MODE_CHANGE_EVT; status=%u; device mgt power mode=%s (%u)", __FUNCTION__,
-        power_mode.status, sPowerSwitch.DeviceMgtPowerStateToString(power_mode.power_mode), power_mode.power_mode);
+      NCI_DEBUG("NFA_DM_PWR_MODE_CHANGE_EVT; status=%u; device mgt power mode=%s (%u)",
+                power_mode.status,
+                sPowerSwitch.DeviceMgtPowerStateToString(power_mode.power_mode),
+                power_mode.power_mode);
       SyncEventGuard guard(sPowerSwitch.mPowerStateEvent);
       if (power_mode.status == NFA_STATUS_OK) {
         sPowerSwitch.mCurrDeviceMgtPowerState = power_mode.power_mode;

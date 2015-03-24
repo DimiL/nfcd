@@ -18,7 +18,9 @@
 #include <stdlib.h>
 
 #include "nfcd.h"
+#include <cutils/properties.h>
 
+#include "NfcDebug.h"
 #include "NfcManager.h"
 #include "NfcService.h"
 #include "NfcIpcSocket.h"
@@ -26,6 +28,7 @@
 #include "MessageHandler.h"
 #include "SnepServer.h"
 
+bool gNfcDebugFlag;
 static const char* DEFAULT_SOCKET_NAME = NULL; /* creates a listen socket */
 
 struct Options {
@@ -108,6 +111,12 @@ private:
   }
 };
 
+void Init() {
+  char debug[PROPERTY_VALUE_MAX];
+  property_get(NFC_DEBUG_PROPERTY, debug, "true");
+  gNfcDebugFlag = !strcmp(debug, "true");
+}
+
 int main(int argc, char *argv[]) {
 
   struct Options options;
@@ -118,6 +127,9 @@ int main(int argc, char *argv[]) {
   } else if (res < 0) {
     return EXIT_FAILURE;
   }
+
+  // Initialize
+  Init();
 
   // Create NFC Manager and do initialize.
   NfcManager* pNfcManager = new NfcManager();

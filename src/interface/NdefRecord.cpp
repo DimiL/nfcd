@@ -15,10 +15,7 @@
  */
 
 #include "NdefRecord.h"
-
-#undef LOG_TAG
-#define LOG_TAG "nfcd"
-#include <utils/Log.h>
+#include "NfcDebug.h"
 
 static bool EnsureSanePayloadSize(long aSize);
 static bool ValidateTnf(uint8_t aTnf,
@@ -111,29 +108,29 @@ bool NdefRecord::Parse(std::vector<uint8_t>& aBuf,
     uint8_t tnf = flag & 0x07;
 
     if (!mb && aRecords.size() == 0 && !inChunk && !aIgnoreMbMe) {
-      ALOGE("expected MB flag");
+      NFCD_ERROR("expected MB flag");
       return false;
     } else if (mb && aRecords.size() != 0 && !aIgnoreMbMe) {
-      ALOGE("unexpected MB flag");
+      NFCD_ERROR("unexpected MB flag");
       return false;
     } else if (inChunk && il) {
-      ALOGE("unexpected IL flag in non-leading chunk");
+      NFCD_ERROR("unexpected IL flag in non-leading chunk");
       return false;
     } else if (cf && me) {
-      ALOGE("unexpected ME flag in non-trailing chunk");
+      NFCD_ERROR("unexpected ME flag in non-trailing chunk");
       return false ;
     } else if (inChunk && tnf != NdefRecord::TNF_UNCHANGED) {
-      ALOGE("expected TNF_UNCHANGED in non-leading chunk");
+      NFCD_ERROR("expected TNF_UNCHANGED in non-leading chunk");
       return false ;
     } else if (!inChunk && tnf == NdefRecord::TNF_UNCHANGED) {
-      ALOGE("unexpected TNF_UNCHANGED in first chunk or unchunked record");
+      NFCD_ERROR("unexpected TNF_UNCHANGED in first chunk or unchunked record");
       return false;
     }
 
     uint32_t typeLength = aBuf[index++] & 0xFF;
 
     if (!tnf && typeLength != 0) {
-      ALOGE("expected zero-length type in empty NDEF message");
+      NFCD_ERROR("expected zero-length type in empty NDEF message");
       return false;
     }
 
@@ -149,19 +146,19 @@ bool NdefRecord::Parse(std::vector<uint8_t>& aBuf,
     }
 
     if (!tnf && payloadLength != 0) {
-      ALOGE("expected zero-length payload in empty NDEF message");
+      NFCD_ERROR("expected zero-length payload in empty NDEF message");
       return false;
     }
 
     uint32_t idLength = il ? (aBuf[index++] & 0xFF) : 0;
 
     if (!tnf && idLength != 0) {
-      ALOGE("expected zero-length id in empty NDEF message");
+      NFCD_ERROR("expected zero-length id in empty NDEF message");
       return false;
     }
 
     if (inChunk && typeLength != 0) {
-      ALOGE("expected zero-length type in non-leading chunk");
+      NFCD_ERROR("expected zero-length type in non-leading chunk");
       return false;
     }
 
@@ -234,7 +231,7 @@ bool NdefRecord::Parse(std::vector<uint8_t>& aBuf,
 bool EnsureSanePayloadSize(long aSize)
 {
   if (aSize > MAX_PAYLOAD_SIZE) {
-    ALOGE("payload above max limit: %d > ", MAX_PAYLOAD_SIZE);
+    NFCD_ERROR("payload above max limit: %d > ", MAX_PAYLOAD_SIZE);
     return false;
   }
   return true;
@@ -249,7 +246,7 @@ bool ValidateTnf(uint8_t aTnf,
   switch (aTnf) {
     case NdefRecord::TNF_EMPTY:
       if (aType.size() != 0 || aId.size() != 0 || aPayload.size() != 0) {
-        ALOGE("unexpected data in TNF_EMPTY record");
+        NFCD_ERROR("unexpected data in TNF_EMPTY record");
         isValid = false;
       }
       break;
@@ -261,16 +258,16 @@ bool ValidateTnf(uint8_t aTnf,
     case NdefRecord::TNF_UNKNOWN:
     case NdefRecord::TNF_RESERVED:
       if (aType.size() != 0) {
-        ALOGE("unexpected type field in TNF_UNKNOWN or TNF_RESERVEd record");
+        NFCD_ERROR("unexpected type field in TNF_UNKNOWN or TNF_RESERVEd record");
         isValid = false;
       }
       break;
     case NdefRecord::TNF_UNCHANGED:
-      ALOGE("unexpected TNF_UNCHANGED in first chunk or logical record");
+      NFCD_ERROR("unexpected TNF_UNCHANGED in first chunk or logical record");
       isValid = false;
       break;
     default:
-      ALOGE("unexpected tnf value");
+      NFCD_ERROR("unexpected tnf value");
       isValid = false;
       break;
   }

@@ -22,7 +22,7 @@ TagTechnology NfcNciUtil::ToTagTechnology(TechnologyType aTechType)
   // Now we don't expose NDEF as a technology to gecko.
   // It should be only used inside NCI stack.
   if (aTechType == TECHNOLOGY_TYPE_NDEF) {
-    ALOGE("NDEF technology should only be used internally in NCI");
+    NCI_ERROR("NDEF technology should only be used internally in NCI");
   }
 
   switch(aTechType) {

@@ -87,11 +87,11 @@ void MessageHandler::ProcessRequest(const uint8_t* aData, size_t aDataLen)
   int32_t sizeLe, size, request;
   uint32_t status;
 
-  ALOGD("%s enter data=%p, dataLen=%d", FUNC, aData, aDataLen);
+  NFCD_DEBUG("enter data=%p, dataLen=%d", aData, aDataLen);
   parcel.setData((uint8_t*)aData, aDataLen);
   status = parcel.readInt32(&request);
   if (status != 0) {
-    ALOGE("Invalid request block");
+    NFCD_ERROR("Invalid request block");
     return;
   }
 
@@ -115,14 +115,14 @@ void MessageHandler::ProcessRequest(const uint8_t* aData, size_t aDataLen)
       HandleTagTransceiveRequest(parcel);
       break;
     default:
-      ALOGE("Unhandled Request %d", request);
+      NFCD_ERROR("Unhandled Request=%d", request);
       break;
   }
 }
 
 void MessageHandler::ProcessResponse(NfcResponseType aResponse, NfcErrorCode aError, void* aData)
 {
-  ALOGD("%s enter response=%d, error=%d", FUNC, aResponse, aError);
+  NFCD_DEBUG("enter response=%d, error=%d", aResponse, aError);
   Parcel parcel;
   parcel.writeInt32(0); // Parcel Size.
   parcel.writeInt32(aResponse);
@@ -144,14 +144,14 @@ void MessageHandler::ProcessResponse(NfcResponseType aResponse, NfcErrorCode aEr
       HandleTagTransceiveResponse(parcel, aData);
       break;
     default:
-      ALOGE("Not implement");
+      NFCD_ERROR("Not implement");
       break;
   }
 }
 
 void MessageHandler::ProcessNotification(NfcNotificationType aNotification, void* aData)
 {
-  ALOGD("processNotificaton notification=%d", aNotification);
+  NFCD_DEBUG("processNotificaton notification=%d", aNotification);
   Parcel parcel;
   parcel.writeInt32(0); // Parcel Size.
   parcel.writeInt32(aNotification | 0x80000000);
@@ -170,7 +170,7 @@ void MessageHandler::ProcessNotification(NfcNotificationType aNotification, void
       NotifyTransactionEvent(parcel, aData);
       break;
     default:
-      ALOGE("Not implement");
+      NFCD_ERROR("Not implement");
       break;
   }
 }
@@ -330,38 +330,38 @@ bool MessageHandler::SendNdefMsg(Parcel& aParcel, NdefMessage* aNdef)
     return false;
 
   int numRecords = aNdef->mRecords.size();
-  ALOGD("numRecords=%d", numRecords);
+  NFCD_DEBUG("numRecords=%d", numRecords);
   aParcel.writeInt32(numRecords);
 
   for (int i = 0; i < numRecords; i++) {
     NdefRecord &record = aNdef->mRecords[i];
 
-    ALOGD("tnf=%u",record.mTnf);
+    NFCD_DEBUG("tnf=%u", record.mTnf);
     aParcel.writeInt32(record.mTnf);
 
     uint32_t typeLength = record.mType.size();
-    ALOGD("typeLength=%u",typeLength);
+    NFCD_DEBUG("typeLength=%u", typeLength);
     aParcel.writeInt32(typeLength);
     void* dest = aParcel.writeInplace(typeLength);
     if (dest == NULL) {
-      ALOGE("writeInplace returns NULL");
+      NFCD_ERROR("writeInplace returns NULL");
       return false;
     }
     memcpy(dest, &record.mType.front(), typeLength);
 
     uint32_t idLength = record.mId.size();
-    ALOGD("idLength=%d",idLength);
+    NFCD_DEBUG("idLength=%d", idLength);
     aParcel.writeInt32(idLength);
     dest = aParcel.writeInplace(idLength);
     memcpy(dest, &record.mId.front(), idLength);
 
     uint32_t payloadLength = record.mPayload.size();
-    ALOGD("payloadLength=%u",payloadLength);
+    NFCD_DEBUG("payloadLength=%u", payloadLength);
     aParcel.writeInt32(payloadLength);
     dest = aParcel.writeInplace(payloadLength);
     memcpy(dest, &record.mPayload.front(), payloadLength);
     for (uint32_t j = 0; j < payloadLength; j++) {
-      ALOGD("mPayload %d = %u", j, record.mPayload[j]);
+      NFCD_DEBUG("mPayload %d = %u", j, record.mPayload[j]);
     }
   }
 

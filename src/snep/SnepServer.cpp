@@ -30,11 +30,11 @@ const char* SnepServer::DEFAULT_SERVICE_NAME = "urn:nfc:sn:snep";
 // Connection thread, used to handle incoming connections.
 void* SnepConnectionThreadFunc(void* aArg)
 {
-  ALOGD("%s: connection thread enter", FUNC);
+  NFCD_DEBUG("connection thread enter");
 
   SnepConnectionThread* pConnectionThread = reinterpret_cast<SnepConnectionThread*>(aArg);
   if (!pConnectionThread) {
-    ALOGE("%s: invalid parameter", FUNC);
+    NFCD_ERROR("invalid parameter");
     return NULL;
   }
 
@@ -52,7 +52,7 @@ void* SnepConnectionThreadFunc(void* aArg)
   // TODO : is this correct ??
   delete pConnectionThread;
 
-  ALOGD("%s: connection thread exit", FUNC);
+  NFCD_DEBUG("connection thread exit");
   return NULL;
 }
 
@@ -79,7 +79,7 @@ void SnepConnectionThread::Run()
 {
   pthread_t tid;
   if(pthread_create(&tid, NULL, SnepConnectionThreadFunc, this) != 0) {
-    ALOGE("%s: pthread_create fail", FUNC);
+    NFCD_ERROR("pthread_create fail");
     abort();
   }
 }
@@ -96,7 +96,7 @@ void* SnepServerThreadFunc(void* aArg)
 {
   SnepServer* pSnepServer = reinterpret_cast<SnepServer*>(aArg);
   if (!pSnepServer) {
-    ALOGE("%s: invalid parameter", FUNC);
+    NFCD_ERROR("invalid parameter");
     return NULL;
   }
 
@@ -105,13 +105,13 @@ void* SnepServerThreadFunc(void* aArg)
   const int fragmentLength = pSnepServer->mFragmentLength;
 
   if (!serverSocket) {
-    ALOGE("%s: no server socket", FUNC);
+    NFCD_ERROR("no server socket");
     return NULL;
   }
 
   while(pSnepServer->mServerRunning) {
     if (!serverSocket) {
-      ALOGD("%s: server socket shut down", FUNC);
+      NFCD_DEBUG("server socket shut down");
       return NULL;
     }
 
@@ -197,25 +197,25 @@ SnepServer::~SnepServer()
 
 void SnepServer::Start()
 {
-  ALOGD("%s: enter", FUNC);
+  NFCD_DEBUG("enter");
 
   INfcManager* pINfcManager = NfcService::GetNfcManager();
   mServerSocket = pINfcManager->CreateLlcpServerSocket(mServiceSap, mServiceName, mMiu, mRwSize, 1024);
 
   if (!mServerSocket) {
-    ALOGE("%s: cannot create llcp server socket", FUNC);
+    NFCD_ERROR("cannot create llcp server socket");
     abort();
   }
 
   pthread_t tid;
   if(pthread_create(&tid, NULL, SnepServerThreadFunc, this) != 0)
   {
-    ALOGE("%s: pthread_create failed", FUNC);
+    NFCD_ERROR("pthread_create failed");
     abort();
   }
   mServerRunning = true;
 
-  ALOGD("%s: exit", FUNC);
+  NFCD_DEBUG("exit");
 }
 
 void SnepServer::Stop()
@@ -230,7 +230,7 @@ bool SnepServer::HandleRequest(SnepMessenger* aMessenger,
                                ISnepCallback* aCallback)
 {
   if (!aMessenger || !aCallback) {
-    ALOGE("%s:: invalid parameter", FUNC);
+    NFCD_ERROR("invalid parameter");
     return false;
   }
 
@@ -242,7 +242,7 @@ bool SnepServer::HandleRequest(SnepMessenger* aMessenger,
      * Response Codes : BAD REQUEST
      * The request could not be understood by the server due to malformed syntax.
      */
-    ALOGE("%s: bad snep message", FUNC);
+    NFCD_ERROR("bad snep message");
     response = SnepMessage::GetMessage(SnepMessage::RESPONSE_BAD_REQUEST);
     if (response) {
       aMessenger->SendMessage(*response);
@@ -257,7 +257,7 @@ bool SnepServer::HandleRequest(SnepMessenger* aMessenger,
      * The server does not support, or refuses to support, the SNEP protocol
      * version that was used in the request message.
      */
-    ALOGE("%s: unsupported version", FUNC);
+    NFCD_ERROR("unsupported version");
     response = SnepMessage::GetMessage(SnepMessage::RESPONSE_UNSUPPORTED_VERSION);
 
   } else if (request->GetField() == SnepMessage::REQUEST_GET) {
@@ -269,7 +269,7 @@ bool SnepServer::HandleRequest(SnepMessenger* aMessenger,
     response = aCallback->DoPut(ndef);
 
   } else {
-    ALOGE("%s: bad request", FUNC);
+    NFCD_ERROR("bad request");
     response = SnepMessage::GetMessage(SnepMessage::RESPONSE_BAD_REQUEST);
   }
 
@@ -278,7 +278,7 @@ bool SnepServer::HandleRequest(SnepMessenger* aMessenger,
     aMessenger->SendMessage(*response);
     delete response;
   } else {
-    ALOGE("%s: no response message is generated", FUNC);
+    NFCD_ERROR("no response message is generated");
     return false;
   }
 

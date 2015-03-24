@@ -16,10 +16,8 @@
 
 #include "LlcpSocket.h"
 
+#include "NfcDebug.h"
 #include "PeerToPeer.h"
-
-#define LOG_TAG "NfcNci"
-#include <cutils/log.h>
 
 LlcpSocket::LlcpSocket(unsigned int aHandle, int aSap, int aMiu, int aRw)
   : mHandle(aHandle)
@@ -83,43 +81,43 @@ int LlcpSocket::GetRemoteRw() const
  */
 bool LlcpSocket::DoConnect(int aSap)
 {
-  ALOGD("%s: enter; sap=%d", __FUNCTION__, aSap);
+  NCI_DEBUG("enter; sap=%d", aSap);
 
   bool stat = PeerToPeer::GetInstance().ConnectConnOriented(mHandle, aSap);
   if (!stat) {
-    ALOGE("%s: fail connect oriented", __FUNCTION__);
+    NCI_ERROR("fail connect oriented");
   }
 
-  ALOGD("%s: exit", __FUNCTION__);
+  NCI_DEBUG("exit");
   return stat;
 }
 
 bool LlcpSocket::DoConnectBy(const char* aSn)
 {
-  ALOGD("%s: enter; sn = %s", __FUNCTION__, aSn);
+  NCI_DEBUG("enter; sn = %s", aSn);
 
   if (!aSn) {
     return false;
   }
   bool stat = PeerToPeer::GetInstance().ConnectConnOriented(mHandle, aSn);
   if (!stat) {
-    ALOGE("%s: fail connect connection oriented", __FUNCTION__);
+    NCI_ERROR("fail connect connection oriented");
   }
 
-  ALOGD("%s: exit", __FUNCTION__);
+  NCI_DEBUG("exit");
   return stat;
 }
 
 bool LlcpSocket::DoClose()
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  NCI_DEBUG("enter");
 
   bool stat = PeerToPeer::GetInstance().DisconnectConnOriented(mHandle);
   if (!stat) {
-    ALOGE("%s: fail disconnect connection oriented", __FUNCTION__);
+    NCI_ERROR("fail disconnect connection oriented");
   }
 
-  ALOGD("%s: exit", __FUNCTION__);
+  NCI_DEBUG("exit");
   return true;  // TODO: stat?
 }
 
@@ -133,7 +131,7 @@ bool LlcpSocket::DoSend(std::vector<uint8_t>& aData)
 
   bool stat = PeerToPeer::GetInstance().Send(mHandle, raw_ptr, aData.size());
   if (!stat) {
-    ALOGE("%s: fail send", __FUNCTION__);
+    NCI_ERROR("fail send");
   }
 
   delete[] raw_ptr;
@@ -166,20 +164,20 @@ int LlcpSocket::DoReceive(std::vector<uint8_t>& aRecvBuf)
 
 int LlcpSocket::DoGetRemoteSocketMIU() const
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  NCI_DEBUG("enter");
 
   int miu = PeerToPeer::GetInstance().GetRemoteMaxInfoUnit(mHandle);
 
-  ALOGD("%s: exit", __FUNCTION__);
+  NCI_DEBUG("exit");
   return miu;
 }
 
 int LlcpSocket::DoGetRemoteSocketRW() const
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  NCI_DEBUG("enter");
 
   int rw = PeerToPeer::GetInstance().GetRemoteRecvWindow(mHandle);
 
-  ALOGD("%s: exit", __FUNCTION__);
+  NCI_DEBUG("exit");
   return rw;
 }

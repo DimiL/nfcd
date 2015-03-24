@@ -22,6 +22,7 @@
 #include <signal.h>
 
 #include "NdefMessage.h"
+#include "NfcDebug.h"
 #include "TagTechnology.h"
 #include "NfcTag.h"
 #include "config.h"
@@ -39,10 +40,6 @@ extern "C"
   #include "phNxpExtns.h"
 #endif
 }
-
-#undef LOG_TAG
-#define LOG_TAG "NfcNci"
-#include <cutils/log.h>
 
 extern bool IsNfcActive();
 extern int gGeneralTransceiveTimeout;
@@ -92,18 +89,19 @@ static TechnologyType  sCurrentConnectedTargetType = TECHNOLOGY_TYPE_UNKNOWN;
 
 static void NdefHandlerCallback(tNFA_NDEF_EVT event, tNFA_NDEF_EVT_DATA *eventData)
 {
-  ALOGD("%s: event=%u, eventData=%p", __FUNCTION__, event, eventData);
+  NCI_DEBUG("event=%u, eventData=%p", event, eventData);
 
   switch (event) {
     case NFA_NDEF_REGISTER_EVT: {
       tNFA_NDEF_REGISTER& ndef_reg = eventData->ndef_reg;
-      ALOGD("%s: NFA_NDEF_REGISTER_EVT; status=0x%X; h=0x%X", __FUNCTION__, ndef_reg.status, ndef_reg.ndef_type_handle);
+      NCI_DEBUG("NFA_NDEF_REGISTER_EVT; status=0x%X; h=0x%X",
+                ndef_reg.status, ndef_reg.ndef_type_handle);
       sNdefTypeHandlerHandle = ndef_reg.ndef_type_handle;
       break;
     }
 
     case NFA_NDEF_DATA_EVT: {
-      ALOGD("%s: NFA_NDEF_DATA_EVT; data_len = %lu", __FUNCTION__, eventData->ndef_data.len);
+      NCI_DEBUG("NFA_NDEF_DATA_EVT; data_len = %lu", eventData->ndef_data.len);
       sReadDataLen = eventData->ndef_data.len;
       sReadData = (uint8_t*) malloc(sReadDataLen);
       memcpy(sReadData, eventData->ndef_data.p_data, eventData->ndef_data.len);
@@ -111,7 +109,7 @@ static void NdefHandlerCallback(tNFA_NDEF_EVT event, tNFA_NDEF_EVT_DATA *eventDa
     }
 
     default:
-      ALOGE("%s: Unknown event %u ????", __FUNCTION__, event);
+      NCI_ERROR("Unknown event %u ????", event);
       break;
   }
 }
@@ -132,7 +130,7 @@ NdefInfo* NfcTagManager::DoReadNdefInfo()
   NdefInfo* pNdefInfo = NULL;
   status = DoCheckNdef(ndefinfo);
   if (status != 0) {
-    ALOGE("%s: Check NDEF Failed - status = %d", __FUNCTION__, status);
+    NCI_ERROR("Check NDEF Failed - status = %d", status);
   } else {
     NdefType ndefType = GetNdefType(GetConnectedLibNfcType());
 
@@ -165,13 +163,13 @@ NdefMessage* NfcTagManager::DoReadNdef()
 
     status = ConnectWithStatus(tag.mTechList[techIndex]);
     if (status != 0) {
-      ALOGE("%s: Connect Failed - status = %d", __FUNCTION__, status);
+      NCI_ERROR("Connect Failed - status = %d", status);
       if (status == STATUS_CODE_TARGET_LOST) {
         break;
       }
       continue;  // Try next handle.
     } else {
-      ALOGI("Connect Succeeded! (status = %d)", status);
+      NCI_DEBUG("Connect Succeeded! (status = %d)", status);
     }
 
     // Check if this type is NDEF formatable
@@ -191,13 +189,13 @@ NdefMessage* NfcTagManager::DoReadNdef()
     int ndefinfo[2];
     status = DoCheckNdef(ndefinfo);
     if (status != 0) {
-      ALOGE("%s: Check NDEF Failed - status = %d", __FUNCTION__, status);
+      NCI_ERROR("Check NDEF Failed - status = %d", status);
       if (status == STATUS_CODE_TARGET_LOST) {
         break;
       }
       continue;  // Try next handle.
     } else {
-      ALOGI("Check Succeeded! (status = %d)", status);
+      NCI_DEBUG("Check Succeeded! (status = %d)", status);
     }
 
     // Found our NDEF handle.
@@ -231,19 +229,19 @@ NdefMessage* NfcTagManager::DoReadNdef()
 
 int NfcTagManager::ReconnectWithStatus()
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  NCI_DEBUG("enter");
   int retCode = NFCSTATUS_SUCCESS;
   NfcTag& tag = NfcTag::GetInstance();
 
   if (tag.GetActivationState() != NfcTag::Active) {
-    ALOGD("%s: tag already deactivated", __FUNCTION__);
+    NCI_DEBUG("tag already deactivated");
     retCode = NFCSTATUS_FAILED;
     goto TheEnd;
   }
 
   // Special case for Kovio.
   if (tag.mTechList[0] == TECHNOLOGY_TYPE_KOVIO_BARCODE) {
-    ALOGD("%s: fake out reconnect for Kovio", __FUNCTION__);
+    NCI_DEBUG("fake out reconnect for Kovio");
     goto TheEnd;
   }
 
@@ -259,7 +257,7 @@ int NfcTagManager::ReconnectWithStatus()
   }
 
 TheEnd:
-  ALOGD("%s: exit 0x%X", __FUNCTION__, retCode);
+  NCI_DEBUG("exit 0x%X", retCode);
   return retCode;
 }
 
@@ -296,7 +294,7 @@ int NfcTagManager::ConnectWithStatus(TechnologyType aTechnology)
           status = DoConnect(i);
         } else {
           // Connect to a tech with a different handle.
-          ALOGD("%s: Connect to a tech with a different handle", __FUNCTION__);
+          NCI_DEBUG("Connect to a tech with a different handle");
           status = ReconnectWithStatus(i);
         }
         if (status == 0) {
@@ -329,7 +327,7 @@ int NfcTagManager::ConnectWithStatus(TechnologyType aTechnology)
 void NfcTagManager::NotifyRfTimeout()
 {
   SyncEventGuard g(sTransceiveEvent);
-  ALOGD("%s: waiting for transceive: %d", __FUNCTION__, sWaitingForTransceive);
+  NCI_DEBUG("waiting for transceive: %d", sWaitingForTransceive);
   if (!sWaitingForTransceive) {
     return;
   }
@@ -341,7 +339,7 @@ void NfcTagManager::NotifyRfTimeout()
 void NfcTagManager::DoTransceiveComplete(uint8_t* aBuf,
                                          uint32_t aBufLen)
 {
-  ALOGD("%s: data len=%d, waiting for transceive: %d", __FUNCTION__, aBufLen, sWaitingForTransceive);
+  NCI_DEBUG("data len=%d, waiting for transceive: %d", aBufLen, sWaitingForTransceive);
   NfcTag& tag = NfcTag::GetInstance();
 
   if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
@@ -364,7 +362,7 @@ void NfcTagManager::DoTransceiveComplete(uint8_t* aBuf,
   if (aBufLen) {
     sTransceiveData = new uint8_t[aBufLen];
     if (!sTransceiveData) {
-      ALOGE("%s: memory allocation error", __FUNCTION__);
+      NCI_ERROR("memory allocation error");
     } else {
       sTransceiveDataLen = aBufLen;
       memcpy(sTransceiveData, aBuf, aBufLen);
@@ -413,7 +411,7 @@ bool NfcTagManager::DoTransceive(const std::vector<uint8_t>& aCommand,
       delete cmd;
 
       if (status != NFA_STATUS_OK) {
-        ALOGE("%s: fail send; error=%d", __FUNCTION__, status);
+        NCI_ERROR("fail send; error=%d", status);
         break;
       }
       waitOk = sTransceiveEvent.Wait(
@@ -442,7 +440,7 @@ bool NfcTagManager::DoTransceive(const std::vector<uint8_t>& aCommand,
         uint8_t** sTransData = &sTransceiveData;
         if (NFCSTATUS_FAILED ==
             EXTNS_CheckMfcResponse(sTransData, &sTransceiveDataLen)) {
-          ALOGE("%s: fail get response", __FUNCTION__);
+          NCI_ERROR("fail get response");
         }
 #endif
       }
@@ -464,7 +462,7 @@ bool NfcTagManager::DoTransceive(const std::vector<uint8_t>& aCommand,
 
 void NfcTagManager::DoRead(std::vector<uint8_t>& aBuf)
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  NCI_DEBUG("enter");
   NfcTag& tag = NfcTag::GetInstance();
 
   sReadDataLen = 0;
@@ -491,13 +489,13 @@ void NfcTagManager::DoRead(std::vector<uint8_t>& aBuf)
     sIsReadingNdefMessage = false;
 
     if (sReadDataLen > 0) { // If stack actually read data from the tag.
-      ALOGD("%s: read %u bytes", __FUNCTION__, sReadDataLen);
+      NCI_DEBUG("read %u bytes", sReadDataLen);
       for(uint32_t idx = 0; idx < sReadDataLen; idx++) {
         aBuf.push_back(sReadData[idx]);
       }
     }
   } else {
-    ALOGD("%s: create emtpy buffer", __FUNCTION__);
+    NCI_DEBUG("create emtpy buffer");
     sReadDataLen = 0;
     sReadData = (uint8_t*) malloc(1);
     aBuf.push_back(sReadData[0]);
@@ -509,7 +507,7 @@ void NfcTagManager::DoRead(std::vector<uint8_t>& aBuf)
   }
   sReadDataLen = 0;
 
-  ALOGD("%s: exit", __FUNCTION__);
+  NCI_DEBUG("exit");
   return;
 }
 
@@ -524,12 +522,12 @@ void NfcTagManager::DoWriteStatus(bool aIsWriteOk)
 
 int NfcTagManager::DoCheckNdef(int aNdefInfo[])
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  NCI_DEBUG("enter");
   NfcTag& tag = NfcTag::GetInstance();
 
   // Special case for Kovio.
   if (tag.mTechList[0] == TECHNOLOGY_TYPE_KOVIO_BARCODE) {
-    ALOGD("%s: Kovio tag, no NDEF", __FUNCTION__);
+    NCI_DEBUG("Kovio tag, no NDEF");
     aNdefInfo[0] = 0;
     aNdefInfo[1] = NDEF_MODE_READ_ONLY;
     return NFA_STATUS_FAILED;
@@ -537,35 +535,35 @@ int NfcTagManager::DoCheckNdef(int aNdefInfo[])
 
   // Create the write semaphore.
   if (sem_init(&sCheckNdefSem, 0, 0) == -1) {
-    ALOGE("%s: Check NDEF semaphore creation failed (errno=0x%08x)", __FUNCTION__, errno);
+    NCI_ERROR("Check NDEF semaphore creation failed (errno=0x%08x)", errno);
     return false;
   }
 
   tNFA_STATUS status = NFA_STATUS_FAILED;
   if (tag.GetActivationState() != NfcTag::Active) {
-    ALOGE("%s: tag already deactivated", __FUNCTION__);
+    NCI_ERROR("tag already deactivated");
     goto TheEnd;
   }
 
   sCheckNdefWaitingForComplete = true;
   if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
 #ifdef NFCC_PN547
-    ALOGD("%s: try EXTNS_MfcCheckNDef", __FUNCTION__);
+    NCI_DEBUG("try EXTNS_MfcCheckNDef");
     status = EXTNS_MfcCheckNDef();
 #endif
   } else {
-    ALOGD("%s: try NFA_RwDetectNDef", __FUNCTION__);
+    NCI_DEBUG("try NFA_RwDetectNDef");
     status = NFA_RwDetectNDef();
   }
 
   if (status != NFA_STATUS_OK) {
-    ALOGE("%s: NFA_RwDetectNDef failed, status = 0x%X", __FUNCTION__, status);
+    NCI_ERROR("NFA_RwDetectNDef failed, status = 0x%X", status);
     goto TheEnd;
   }
 
   // Wait for check NDEF completion status.
   if (sem_wait(&sCheckNdefSem)) {
-    ALOGE("%s: Failed to wait for check NDEF semaphore (errno=0x%08x)", __FUNCTION__, errno);
+    NCI_ERROR("Failed to wait for check NDEF semaphore (errno=0x%08x)", errno);
     goto TheEnd;
   }
 
@@ -599,23 +597,23 @@ int NfcTagManager::DoCheckNdef(int aNdefInfo[])
     Pn544InteropStopPolling();
     status = sCheckNdefStatus;
   } else {
-    ALOGD("%s: unknown status 0x%X", __FUNCTION__, sCheckNdefStatus);
+    NCI_DEBUG("unknown status 0x%X", sCheckNdefStatus);
     status = sCheckNdefStatus;
   }
 
 TheEnd:
   // Destroy semaphore.
   if (sem_destroy(&sCheckNdefSem)) {
-    ALOGE("%s: Failed to destroy check NDEF semaphore (errno=0x%08x)", __FUNCTION__, errno);
+    NCI_ERROR("Failed to destroy check NDEF semaphore (errno=0x%08x)", errno);
   }
   sCheckNdefWaitingForComplete = false;
-  ALOGD("%s: exit; status=0x%X", __FUNCTION__, status);
+  NCI_DEBUG("exit; status=0x%X", status);
   return status;
 }
 
 void NfcTagManager::DoAbortWaits()
 {
-  ALOGD("%s", __FUNCTION__);
+  NCI_DEBUG("enter");
   {
     SyncEventGuard g(sReadEvent);
     sReadEvent.NotifyOne();
@@ -640,7 +638,7 @@ void NfcTagManager::DoAbortWaits()
 
 void NfcTagManager::DoReadCompleted(tNFA_STATUS aStatus)
 {
-  ALOGD("%s: status=0x%X; is reading=%u", __FUNCTION__, aStatus, sIsReadingNdefMessage);
+  NCI_DEBUG("status=0x%X; is reading=%u", aStatus, sIsReadingNdefMessage);
 
   if (sIsReadingNdefMessage == false)
     return; // Not reading NDEF message right now, so just return.
@@ -684,13 +682,13 @@ void NfcTagManager::DoPresenceCheckResult(tNFA_STATUS aStatus)
     sCountTagAway++;
   }
   if (sCountTagAway > 0)
-    ALOGD("%s: sCountTagAway=%d", __FUNCTION__, sCountTagAway);
+    NCI_DEBUG("sCountTagAway=%d", sCountTagAway);
   sem_post(&sPresenceCheckSem);
 }
 
 bool NfcTagManager::DoNdefFormat()
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  NCI_DEBUG("enter");
   sem_init(&sFormatSem, 0, 0);
   sFormatOk = false;
 
@@ -706,11 +704,11 @@ bool NfcTagManager::DoNdefFormat()
   }
 
   if (status == NFA_STATUS_OK) {
-    ALOGD("%s: wait for completion", __FUNCTION__);
+    NCI_DEBUG("wait for completion");
     sem_wait(&sFormatSem);
     status = sFormatOk ? NFA_STATUS_OK : NFA_STATUS_FAILED;
   } else {
-    ALOGE("%s: error status=%u", __FUNCTION__, status);
+    NCI_ERROR("error status=%u", status);
   }
   sem_destroy(&sFormatSem);
 
@@ -719,24 +717,24 @@ bool NfcTagManager::DoNdefFormat()
     uint8_t key2[6] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
     sem_init(&sFormatSem, 0, 0);
 
-    ALOGD("%s: Format with Second Key", __FUNCTION__);
+    NCI_DEBUG("Format with Second Key");
     status = EXTNS_MfcFormatTag(key2, sizeof(key2));
     if (status == NFA_STATUS_OK) {
-      ALOGD("%s:2nd try wait for completion", __FUNCTION__);
+      NCI_DEBUG("2nd try wait for completion");
       sem_wait(&sFormatSem);
       status = sFormatOk ? NFA_STATUS_OK : NFA_STATUS_FAILED;
     } else {
-      ALOGE("%s: error status=%u", __FUNCTION__, status);
+      NCI_ERROR("error status=%u", status);
       sem_destroy(&sFormatSem);
     }
 
     if(!sFormatOk) {
-      ALOGE("%s: Format with Second Key Failed", __FUNCTION__);
+      NCI_ERROR("Format with Second Key Failed");
     }
 #endif
   }
 
-  ALOGD("%s: exit", __FUNCTION__);
+  NCI_DEBUG("exit");
   return status == NFA_STATUS_OK;
 }
 
@@ -754,29 +752,29 @@ void NfcTagManager::DoCheckNdefResult(tNFA_STATUS aStatus,
   // #define RW_NDEF_FL_FORMATABLE 0x10    /* Tag supports format operation */
 
   if (aStatus == NFC_STATUS_BUSY) {
-    ALOGE("%s: stack is busy", __FUNCTION__);
+    NCI_ERROR("stack is busy");
     return;
   }
 
   if (!sCheckNdefWaitingForComplete) {
-    ALOGE("%s: not waiting", __FUNCTION__);
+    NCI_ERROR("not waiting");
     return;
   }
 
   if (aFlags & RW_NDEF_FL_READ_ONLY) {
-    ALOGD("%s: flag read-only", __FUNCTION__);
+    NCI_DEBUG("flag read-only");
   }
   if (aFlags & RW_NDEF_FL_FORMATED) {
-    ALOGD("%s: flag formatted for ndef", __FUNCTION__);
+    NCI_DEBUG("flag formatted for ndef");
   }
   if (aFlags & RW_NDEF_FL_SUPPORTED) {
-    ALOGD("%s: flag ndef supported", __FUNCTION__);
+    NCI_DEBUG("flag ndef supported");
   }
   if (aFlags & RW_NDEF_FL_UNKNOWN) {
-    ALOGD("%s: flag all unknown", __FUNCTION__);
+    NCI_DEBUG("flag all unknown");
   }
   if (aFlags & RW_NDEF_FL_FORMATABLE) {
-    ALOGD("%s: flag formattable", __FUNCTION__);
+    NCI_DEBUG("flag formattable");
   }
 
   sCheckNdefWaitingForComplete = false;
@@ -799,7 +797,7 @@ void NfcTagManager::DoCheckNdefResult(tNFA_STATUS aStatus,
       }
     }
   } else {
-    ALOGE("%s: unknown status=0x%X", __FUNCTION__, aStatus);
+    NCI_ERROR("unknown status=0x%X", aStatus);
     sCheckNdefMaxSize = 0;
     sCheckNdefCurrentSize = 0;
     sCheckNdefCardReadOnly = false;
@@ -822,11 +820,11 @@ bool NfcTagManager::DoMakeReadonly()
   bool result = false;
   NfcTag& tag = NfcTag::GetInstance();
 
-  ALOGD("%s", __FUNCTION__);
+  NCI_DEBUG("enter");
 
   // Create the make_readonly semaphore.
   if (sem_init(&sMakeReadonlySem, 0, 0) == -1) {
-    ALOGE("%s: Make readonly semaphore creation failed (errno=0x%08x)", __FUNCTION__, errno);
+    NCI_ERROR("Make readonly semaphore creation failed (errno=0x%08x)", errno);
     return false;
   }
 
@@ -846,13 +844,13 @@ bool NfcTagManager::DoMakeReadonly()
   status = NFA_RwSetTagReadOnly(true);
 
   if (status != NFA_STATUS_OK) {
-    ALOGE("%s: NFA_RwSetTagReadOnly failed, status = %d", __FUNCTION__, status);
+    NCI_ERROR("NFA_RwSetTagReadOnly failed, status = %d", status);
     goto TheEnd;
   }
 
   // Wait for check NDEF completion status.
   if (sem_wait(&sMakeReadonlySem)) {
-    ALOGE("%s: Failed to wait for make_readonly semaphore (errno=0x%08x)", __FUNCTION__, errno);
+    NCI_ERROR("Failed to wait for make_readonly semaphore (errno=0x%08x)", errno);
     goto TheEnd;
   }
 
@@ -863,7 +861,7 @@ bool NfcTagManager::DoMakeReadonly()
 TheEnd:
   // Destroy semaphore.
   if (sem_destroy(&sMakeReadonlySem)) {
-    ALOGE("%s: Failed to destroy read_only semaphore (errno=0x%08x)", __FUNCTION__, errno);
+    NCI_ERROR("Failed to destroy read_only semaphore (errno=0x%08x)", errno);
   }
   sMakeReadonlyWaitingForComplete = false;
   return result;
@@ -873,47 +871,47 @@ TheEnd:
 // from the NFA_NDEF_DATA_EVT.
 void NfcTagManager::DoRegisterNdefTypeHandler()
 {
-  ALOGD("%s", __FUNCTION__);
+  NCI_DEBUG("enter");
   sNdefTypeHandlerHandle = NFA_HANDLE_INVALID;
   NFA_RegisterNDefTypeHandler(TRUE, NFA_TNF_DEFAULT, (UINT8 *) "", 0, NdefHandlerCallback);
 }
 
 void NfcTagManager::DoDeregisterNdefTypeHandler()
 {
-  ALOGD("%s", __FUNCTION__);
+  NCI_DEBUG("enter");
   NFA_DeregisterNDefTypeHandler(sNdefTypeHandlerHandle);
   sNdefTypeHandlerHandle = NFA_HANDLE_INVALID;
 }
 
 int NfcTagManager::DoConnect(int aTargetHandle)
 {
-  ALOGD("%s: targetHandle = %d", __FUNCTION__, aTargetHandle);
+  NCI_DEBUG("targetHandle = %d", aTargetHandle);
   int i = aTargetHandle;
   int retCode = NFCSTATUS_SUCCESS;
   NfcTag& tag = NfcTag::GetInstance();
 
   sNeedToSwitchRf = false;
   if (i >= NfcTag::MAX_NUM_TECHNOLOGY) {
-    ALOGE("%s: Handle not found", __FUNCTION__);
+    NCI_ERROR("Handle not found");
     retCode = NFCSTATUS_FAILED;
     goto TheEnd;
   }
 
   if (tag.GetActivationState() != NfcTag::Active) {
-    ALOGE("%s: tag already deactivated", __FUNCTION__);
+    NCI_ERROR("tag already deactivated");
     retCode = NFCSTATUS_FAILED;
     goto TheEnd;
   }
 
   sCurrentConnectedTargetType = tag.mTechList[i];
   if (tag.mTechLibNfcTypes[i] != NFC_PROTOCOL_ISO_DEP) {
-    ALOGD("%s() Nfc type = %d, do nothing for non ISO_DEP", __FUNCTION__, tag.mTechLibNfcTypes[i]);
+    NCI_DEBUG("Nfc type = %d, do nothing for non ISO_DEP", tag.mTechLibNfcTypes[i]);
     retCode = NFCSTATUS_SUCCESS;
     goto TheEnd;
   }
 
   if (tag.mTechList[i] == TECHNOLOGY_TYPE_ISO14443_3A || tag.mTechList[i] == TECHNOLOGY_TYPE_ISO14443_3B) {
-    ALOGD("%s: switching to tech: %d need to switch rf intf to frame", __FUNCTION__, tag.mTechList[i]);
+    NCI_DEBUG("switching to tech: %d need to switch rf intf to frame", tag.mTechList[i]);
     // Connecting to NfcA or NfcB don't actually switch until/unless we get a transceive.
     sNeedToSwitchRf = true;
   } else {
@@ -922,13 +920,13 @@ int NfcTagManager::DoConnect(int aTargetHandle)
   }
 
 TheEnd:
-  ALOGD("%s: exit 0x%X", __FUNCTION__, retCode);
+  NCI_DEBUG("exit 0x%X", retCode);
   return retCode;
 }
 
 bool NfcTagManager::DoPresenceCheck()
 {
-  ALOGD("%s", __FUNCTION__);
+  NCI_DEBUG("enter");
   bool isPresent = false;
   NfcTag& tag = NfcTag::GetInstance();
 
@@ -936,7 +934,7 @@ bool NfcTagManager::DoPresenceCheck()
   // but was ignored so that normal tag opertions could complete.  Now we
   // want to process as if the deactivate just happened.
   if (tag.mTechList[0] == TECHNOLOGY_TYPE_KOVIO_BARCODE) {
-    ALOGD("%s: Kovio, force deactivate handling", __FUNCTION__);
+    NCI_DEBUG("Kovio, force deactivate handling");
     tNFA_DEACTIVATED deactivated = {NFA_DEACTIVATE_TYPE_IDLE};
 
     tag.SetDeactivationState(deactivated);
@@ -949,17 +947,17 @@ bool NfcTagManager::DoPresenceCheck()
   }
 
   if (IsNfcActive() == false) {
-    ALOGD("%s: NFC is no longer active.", __FUNCTION__);
+    NCI_DEBUG("NFC is no longer active.");
     return false;
   }
 
   if (tag.GetActivationState() != NfcTag::Active) {
-    ALOGD("%s: tag already deactivated", __FUNCTION__);
+    NCI_DEBUG("tag already deactivated");
     return false;
   }
 
   if (sem_init(&sPresenceCheckSem, 0, 0) == -1) {
-    ALOGE("%s: semaphore creation failed (errno=0x%08x)", __FUNCTION__, errno);
+    NCI_ERROR("semaphore creation failed (errno=0x%08x)", errno);
     return false;
   }
 
@@ -972,25 +970,25 @@ bool NfcTagManager::DoPresenceCheck()
 
   if (status == NFA_STATUS_OK) {
     if (sem_wait(&sPresenceCheckSem)) {
-      ALOGE("%s: failed to wait (errno=0x%08x)", __FUNCTION__, errno);
+      NCI_ERROR("failed to wait (errno=0x%08x)", errno);
     } else {
       isPresent = (sCountTagAway > 3) ? false : true;
     }
   }
 
   if (sem_destroy(&sPresenceCheckSem)) {
-    ALOGE("%s: Failed to destroy check NDEF semaphore (errno=0x%08x)", __FUNCTION__, errno);
+    NCI_ERROR("Failed to destroy check NDEF semaphore (errno=0x%08x)", errno);
   }
 
   if (isPresent == false)
-    ALOGD("%s: tag absent ????", __FUNCTION__);
+    NCI_DEBUG("tag absent ????");
 
   return isPresent;
 }
 
 int NfcTagManager::ReSelect(tNFA_INTF_TYPE aRfInterface)
 {
-  ALOGD("%s: enter; rf intf = %d", __FUNCTION__, aRfInterface);
+  NCI_DEBUG("enter; rf intf = %d", aRfInterface);
   NfcTag& tag = NfcTag::GetInstance();
 
   tNFA_STATUS status;
@@ -1000,7 +998,7 @@ int NfcTagManager::ReSelect(tNFA_INTF_TYPE aRfInterface)
   {
     // If tag has shutdown, abort this method.
     if (tag.IsNdefDetectionTimedOut()) {
-      ALOGD("%s: ndef detection timeout; break", __FUNCTION__);
+      NCI_DEBUG("ndef detection timeout; break");
       rVal = STATUS_CODE_TARGET_LOST;
       break;
     }
@@ -1008,19 +1006,19 @@ int NfcTagManager::ReSelect(tNFA_INTF_TYPE aRfInterface)
     {
       SyncEventGuard g(sReconnectEvent);
       gIsTagDeactivating = true;
-      ALOGD("%s: deactivate to sleep", __FUNCTION__);
+      NCI_DEBUG("deactivate to sleep");
       if (NFA_STATUS_OK != (status = NFA_Deactivate(TRUE))) { // Deactivate to sleep state.
-        ALOGE("%s: deactivate failed, status = %d", __FUNCTION__, status);
+        NCI_ERROR("deactivate failed, status = %d", status);
         break;
       }
 
       if (sReconnectEvent.Wait(1000) == false) { // If timeout occurred.
-        ALOGE("%s: timeout waiting for deactivate", __FUNCTION__);
+        NCI_ERROR("timeout waiting for deactivate");
       }
     }
 
     if (tag.GetActivationState() != NfcTag::Sleep) {
-      ALOGD("%s: tag is not in sleep", __FUNCTION__);
+      NCI_DEBUG("tag is not in sleep");
       rVal = STATUS_CODE_TARGET_LOST;
       break;
     }
@@ -1031,25 +1029,25 @@ int NfcTagManager::ReSelect(tNFA_INTF_TYPE aRfInterface)
       SyncEventGuard g2 (sReconnectEvent);
 
       sConnectWaitingForComplete = true;
-      ALOGD("%s: select interface %u", __FUNCTION__, aRfInterface);
+      NCI_DEBUG("select interface %u", aRfInterface);
       gIsSelectingRfInterface = true;
       status = NFA_Select(
                  tag.mTechHandles[0], tag.mTechLibNfcTypes[0], aRfInterface);
       if (NFA_STATUS_OK != status) {
-        ALOGE("%s: NFA_Select failed, status = %d", __FUNCTION__, status);
+        NCI_ERROR("NFA_Select failed, status = %d", status);
         break;
       }
 
       sConnectOk = false;
       if (sReconnectEvent.Wait(1000) == false) { // If timeout occured.
-          ALOGE("%s: timeout waiting for select", __FUNCTION__);
+          NCI_ERROR("timeout waiting for select");
           break;
       }
     }
 
-    ALOGD("%s: select completed; sConnectOk=%d", __FUNCTION__, sConnectOk);
+    NCI_DEBUG("select completed; sConnectOk=%d", sConnectOk);
     if (tag.GetActivationState() != NfcTag::Active) {
-      ALOGD("%s: tag is not active", __FUNCTION__);
+      NCI_DEBUG("tag is not active");
       rVal = STATUS_CODE_TARGET_LOST;
       break;
     }
@@ -1059,22 +1057,22 @@ int NfcTagManager::ReSelect(tNFA_INTF_TYPE aRfInterface)
   sConnectWaitingForComplete = false;
   gIsTagDeactivating = false;
   gIsSelectingRfInterface = false;
-  ALOGD("%s: exit; status=%d", __FUNCTION__, rVal);
+  NCI_DEBUG("exit; status=%d", rVal);
   return rVal;
 }
 
 bool NfcTagManager::SwitchRfInterface(tNFA_INTF_TYPE aRfInterface)
 {
-  ALOGD("%s: rf intf = %d", __FUNCTION__, aRfInterface);
+  NCI_DEBUG("rf intf = %d", aRfInterface);
   NfcTag& tag = NfcTag::GetInstance();
 
   if (tag.mTechLibNfcTypes[0] != NFC_PROTOCOL_ISO_DEP) {
-    ALOGD("%s: protocol: %d not ISO_DEP, do nothing", __FUNCTION__, tag.mTechLibNfcTypes[0]);
+    NCI_DEBUG("protocol: %d not ISO_DEP, do nothing", tag.mTechLibNfcTypes[0]);
     return true;
   }
 
   sRfInterfaceMutex.Lock();
-  ALOGD("%s: new rf intf = %d, cur rf intf = %d", __FUNCTION__, aRfInterface, sCurrentRfInterface);
+  NCI_DEBUG("new rf intf = %d, cur rf intf = %d", aRfInterface, sCurrentRfInterface);
 
   bool rVal = true;
   if (aRfInterface != sCurrentRfInterface) {
@@ -1142,23 +1140,23 @@ int NfcTagManager::GetConnectedLibNfcType()
 
 bool NfcTagManager::DoDisconnect()
 {
-  ALOGD("%s: enter", __FUNCTION__);
+  NCI_DEBUG("enter");
   tNFA_STATUS nfaStat = NFA_STATUS_OK;
   NfcTag& tag = NfcTag::GetInstance();
 
   gGeneralTransceiveTimeout = DEFAULT_GENERAL_TRANS_TIMEOUT;
 
   if (tag.GetActivationState() != NfcTag::Active) {
-    ALOGD("%s: tag already deactivated", __FUNCTION__);
+    NCI_DEBUG("tag already deactivated");
     goto TheEnd;
   }
 
   nfaStat = NFA_Deactivate(FALSE);
   if (nfaStat != NFA_STATUS_OK)
-    ALOGE("%s: deactivate failed; error=0x%X", __FUNCTION__, nfaStat);
+    NCI_ERROR("deactivate failed; error=0x%X", nfaStat);
 
 TheEnd:
-  ALOGD("%s: exit", __FUNCTION__);
+  NCI_DEBUG("exit");
   return (nfaStat == NFA_STATUS_OK) ? true : false;
 }
 
@@ -1181,11 +1179,11 @@ bool NfcTagManager::DoWrite(std::vector<uint8_t>& aBuf)
     p_data[idx] = aBuf[idx];
   }
 
-  ALOGD("%s: enter; len = %zu", __FUNCTION__, aBuf.size());
+  NCI_DEBUG("enter; len = %zu", aBuf.size());
 
   // Create the write semaphore.
   if (sem_init(&sWriteSem, 0, 0) == -1) {
-    ALOGE("%s: semaphore creation failed (errno=0x%08x)", __FUNCTION__, errno);
+    NCI_ERROR("semaphore creation failed (errno=0x%08x)", errno);
     free(p_data);
     return false;
   }
@@ -1196,7 +1194,7 @@ bool NfcTagManager::DoWrite(std::vector<uint8_t>& aBuf)
     // If tag does not contain a NDEF message
     // and tag is capable of storing NDEF message.
     if (sCheckNdefCapable) {
-      ALOGD("%s: try format", __FUNCTION__);
+      NCI_DEBUG("try format");
       sem_init(&sFormatSem, 0, 0);
       sFormatOk = false;
 
@@ -1226,13 +1224,13 @@ bool NfcTagManager::DoWrite(std::vector<uint8_t>& aBuf)
         goto TheEnd;
       }
     }
-    ALOGD("%s: try write", __FUNCTION__);
+    NCI_DEBUG("try write");
     status = NFA_RwWriteNDef(p_data, aBuf.size());
   } else if (aBuf.size() == 0) {
     // If (NXP TagWriter wants to erase tag) then create and write an empty ndef message.
     NDEF_MsgInit(buffer, maxBufferSize, &curDataSize);
     status = NDEF_MsgAddRec(buffer, maxBufferSize, &curDataSize, NDEF_TNF_EMPTY, NULL, 0, NULL, 0, NULL, 0);
-    ALOGD("%s: create empty ndef msg; status=%u; size=%lu", __FUNCTION__, status, curDataSize);
+    NCI_DEBUG("create empty ndef msg; status=%u; size=%lu", status, curDataSize);
 
     if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
 #ifdef NFCC_PN547
@@ -1242,7 +1240,7 @@ bool NfcTagManager::DoWrite(std::vector<uint8_t>& aBuf)
       status = NFA_RwWriteNDef(buffer, curDataSize);
     }
   } else {
-    ALOGD("%s: NFA_RwWriteNDef", __FUNCTION__);
+    NCI_DEBUG("NFA_RwWriteNDef");
     if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
 #ifdef NFCC_PN547
       status = EXTNS_MfcWriteNDef(p_data, aBuf.size());
@@ -1253,14 +1251,14 @@ bool NfcTagManager::DoWrite(std::vector<uint8_t>& aBuf)
   }
 
   if (status != NFA_STATUS_OK) {
-    ALOGE("%s: write/format error=%d", __FUNCTION__, status);
+    NCI_ERROR("write/format error=%d", status);
     goto TheEnd;
   }
 
   // Wait for write completion status
   sWriteOk = false;
   if (sem_wait(&sWriteSem)) {
-    ALOGE("%s: wait semaphore (errno=0x%08x)", __FUNCTION__, errno);
+    NCI_ERROR("wait semaphore (errno=0x%08x)", errno);
     goto TheEnd;
   }
 
@@ -1269,10 +1267,10 @@ bool NfcTagManager::DoWrite(std::vector<uint8_t>& aBuf)
 TheEnd:
   // Destroy semaphore
   if (sem_destroy(&sWriteSem)) {
-    ALOGE("%s: failed destroy semaphore (errno=0x%08x)", __FUNCTION__, errno);
+    NCI_ERROR("failed destroy semaphore (errno=0x%08x)", errno);
   }
   sWriteWaitingForComplete = false;
-  ALOGD("%s: exit; result=%d", __FUNCTION__, result);
+  NCI_DEBUG("exit; result=%d", result);
   free(p_data);
   return result;
 }
@@ -1292,9 +1290,10 @@ bool NfcTagManager::DoIsNdefFormatable()
       isFormattable = true;
       break;
     case NFA_PROTOCOL_T2T:
-        isFormattable = tag.IsMifareUltralight();
+      isFormattable = tag.IsMifareUltralight();
+      break;
   }
-  ALOGD("%s: is formattable=%u", __FUNCTION__, isFormattable);
+  NCI_DEBUG("is formattable=%u", isFormattable);
   return isFormattable;
 }
 
