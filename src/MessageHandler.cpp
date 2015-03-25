@@ -25,7 +25,7 @@
 #include "NfcDebug.h"
 
 #define MAJOR_VERSION (1)
-#define MINOR_VERSION (21)
+#define MINOR_VERSION (22)
 
 using android::Parcel;
 
@@ -79,6 +79,16 @@ void MessageHandler::NotifyTransactionEvent(Parcel& aParcel, void* aData)
   SendResponse(aParcel);
 
   delete event;
+}
+
+void MessageHandler::NotifyNdefReceived(Parcel& aParcel, void* aData)
+{
+  NdefReceivedEvent *event = reinterpret_cast<NdefReceivedEvent*>(aData);
+
+  aParcel.writeInt32(event->sessionId);
+  aParcel.writeInt32(event->ndefMsgCount);
+  SendNdefMsg(aParcel, event->ndefMsg);
+  SendResponse(aParcel);
 }
 
 void MessageHandler::ProcessRequest(const uint8_t* aData, size_t aDataLen)
@@ -168,6 +178,9 @@ void MessageHandler::ProcessNotification(NfcNotificationType aNotification, void
       break;
     case NFC_NOTIFICATION_TRANSACTION_EVENT:
       NotifyTransactionEvent(parcel, aData);
+      break;
+    case NFC_NOTIFICATION_NDEF_RECEIVED:
+      NotifyNdefReceived(parcel, aData);
       break;
     default:
       NFCD_ERROR("Not implement");

@@ -42,6 +42,7 @@ private:
   void NotifyTechDiscovered(android::Parcel& aParcel, void* aData);
   void NotifyTechLost(android::Parcel& aParcel, void* aData);
   void NotifyTransactionEvent(android::Parcel& aParcel, void* aData);
+  void NotifyNdefReceived(android::Parcel& aParcel, void* aData);
 
   bool HandleChangeRFStateRequest(android::Parcel& aParcel);
   bool HandleReadNdefRequest(android::Parcel& aParcel);
@@ -74,6 +75,12 @@ struct TechDiscoveredEvent {
   uint32_t ndefMsgCount;
   NdefMessage* ndefMsg;
   NdefInfo* ndefInfo;
+};
+
+struct NdefReceivedEvent {
+  int sessionId;
+  uint32_t ndefMsgCount;
+  NdefMessage* ndefMsg;
 };
 
 #endif // mozilla_nfcd_MessageHandler_h

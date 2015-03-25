@@ -453,16 +453,11 @@ void NfcService::HandleReceiveNdefEvent(NfcEvent* aEvent)
 {
   NdefMessage* ndef = reinterpret_cast<NdefMessage*>(aEvent->obj);
 
-  TechDiscoveredEvent* data = new TechDiscoveredEvent();
+  NdefReceivedEvent* data = new NdefReceivedEvent();
   data->sessionId = SessionId::GetCurrentId();
-  data->isP2P = true;
-  data->techCount = 0;
-  data->techList = NULL;
-  data->tagIdCount = 0;
-  data->tagId = NULL;
   data->ndefMsgCount = ndef ? 1 : 0;
   data->ndefMsg = ndef;
-  mMsgHandler->ProcessNotification(NFC_NOTIFICATION_TECH_DISCOVERED, data);
+  mMsgHandler->ProcessNotification(NFC_NOTIFICATION_NDEF_RECEIVED, data);
 
   delete data;
   delete ndef;

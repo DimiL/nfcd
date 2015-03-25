@@ -332,6 +332,13 @@ typedef enum {
    * data is [origin type][origin index][aid length][aid][payload length][payload]
    */
   NFC_NOTIFICATION_TRANSACTION_EVENT,
+
+  /**
+   * NFC_NOTIFICATION_NDEF_RECEIVED
+   *
+   * To notify when a NDEF message is received from a P2P connection.
+   */
+  NFC_NOTIFICATION_NDEF_RECEIVED,
 } NfcNotificationType;
 
 /**
