@@ -98,7 +98,7 @@ NfcService::~NfcService()
   delete mP2pLinkManager;
 }
 
-static void *ServiceThreadFunc(void *aArg)
+static void* ServiceThreadFunc(void* aArg)
 {
   pthread_setname_np(pthread_self(), "NFCService thread");
   NfcService* service = reinterpret_cast<NfcService*>(aArg);
@@ -124,7 +124,7 @@ void NfcService::Initialize(NfcManager* aNfcManager, MessageHandler* aMsgHandler
 void NfcService::NotifyLlcpLinkActivated(IP2pDevice* aDevice)
 {
   NFCD_DEBUG("enter");
-  NfcEvent *event = new NfcEvent(MSG_LLCP_LINK_ACTIVATION);
+  NfcEvent* event = new NfcEvent(MSG_LLCP_LINK_ACTIVATION);
   event->obj = reinterpret_cast<void*>(aDevice);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -133,7 +133,7 @@ void NfcService::NotifyLlcpLinkActivated(IP2pDevice* aDevice)
 void NfcService::NotifyLlcpLinkDeactivated(IP2pDevice* aDevice)
 {
   NFCD_DEBUG("enter");
-  NfcEvent *event = new NfcEvent(MSG_LLCP_LINK_DEACTIVATION);
+  NfcEvent* event = new NfcEvent(MSG_LLCP_LINK_DEACTIVATION);
   event->obj = reinterpret_cast<void*>(aDevice);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -142,7 +142,7 @@ void NfcService::NotifyLlcpLinkDeactivated(IP2pDevice* aDevice)
 void NfcService::NotifyTagDiscovered(INfcTag* aTag)
 {
   NFCD_DEBUG("enter");
-  NfcEvent *event = new NfcEvent(MSG_TAG_DISCOVERED);
+  NfcEvent* event = new NfcEvent(MSG_TAG_DISCOVERED);
   event->obj = reinterpret_cast<void*>(aTag);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -151,7 +151,7 @@ void NfcService::NotifyTagDiscovered(INfcTag* aTag)
 void NfcService::NotifyTagLost(int aSessionId)
 {
   NFCD_DEBUG("enter");
-  NfcEvent *event = new NfcEvent(MSG_TAG_LOST);
+  NfcEvent* event = new NfcEvent(MSG_TAG_LOST);
   event->obj = reinterpret_cast<void*>(aSessionId);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
@@ -160,7 +160,7 @@ void NfcService::NotifyTagLost(int aSessionId)
 void NfcService::NotifySEFieldActivated()
 {
   NFCD_DEBUG("enter");
-  NfcEvent *event = new NfcEvent(MSG_SE_FIELD_ACTIVATED);
+  NfcEvent* event = new NfcEvent(MSG_SE_FIELD_ACTIVATED);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
 }
@@ -168,7 +168,7 @@ void NfcService::NotifySEFieldActivated()
 void NfcService::NotifySEFieldDeactivated()
 {
   NFCD_DEBUG("enter");
-  NfcEvent *event = new NfcEvent(MSG_SE_FIELD_DEACTIVATED);
+  NfcEvent* event = new NfcEvent(MSG_SE_FIELD_DEACTIVATED);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);
 }
@@ -176,7 +176,7 @@ void NfcService::NotifySEFieldDeactivated()
 void NfcService::NotifySETransactionEvent(TransactionEvent* aEvent)
 {
   NFCD_DEBUG("enter");
-  NfcEvent *event = new NfcEvent(MSG_SE_NOTIFY_TRANSACTION_EVENT);
+  NfcEvent* event = new NfcEvent(MSG_SE_NOTIFY_TRANSACTION_EVENT);
   event->obj = reinterpret_cast<void*>(aEvent);
   NfcService::Instance()->mQueue.push_back(event);
   sem_post(&thread_sem);

@@ -38,7 +38,7 @@ struct Options {
     : mSocketName(DEFAULT_SOCKET_NAME)
   { }
 
-  int Parse(int aArgc, char *aArgv[])
+  int Parse(int aArgc, char* aArgv[])
   {
     int res = 0;
 
@@ -117,7 +117,7 @@ void Init() {
   gNfcDebugFlag = !strcmp(debug, "true");
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
 
   struct Options options;
   int res = options.Parse(argc, argv);

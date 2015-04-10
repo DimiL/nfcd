@@ -39,7 +39,7 @@ void* SnepConnectionThreadFunc(void* aArg)
   }
 
   ISnepCallback* ICallback = pConnectionThread->mCallback;
-  while(pConnectionThread->IsServerRunning()) {
+  while (pConnectionThread->IsServerRunning()) {
     // Handle message.
     if (!SnepServer::HandleRequest(pConnectionThread->mMessenger, ICallback)) {
       break;
@@ -78,7 +78,7 @@ SnepConnectionThread::~SnepConnectionThread()
 void SnepConnectionThread::Run()
 {
   pthread_t tid;
-  if(pthread_create(&tid, NULL, SnepConnectionThreadFunc, this) != 0) {
+  if (pthread_create(&tid, NULL, SnepConnectionThreadFunc, this) != 0) {
     NFCD_ERROR("pthread_create fail");
     abort();
   }
@@ -109,7 +109,7 @@ void* SnepServerThreadFunc(void* aArg)
     return NULL;
   }
 
-  while(pSnepServer->mServerRunning) {
+  while (pSnepServer->mServerRunning) {
     if (!serverSocket) {
       NFCD_DEBUG("server socket shut down");
       return NULL;
@@ -208,7 +208,7 @@ void SnepServer::Start()
   }
 
   pthread_t tid;
-  if(pthread_create(&tid, NULL, SnepServerThreadFunc, this) != 0)
+  if (pthread_create(&tid, NULL, SnepServerThreadFunc, this) != 0)
   {
     NFCD_ERROR("pthread_create failed");
     abort();

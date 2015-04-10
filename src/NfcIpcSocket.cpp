@@ -178,13 +178,13 @@ void NfcIpcSocket::Loop(const char* aSocketName)
 
     ret = fcntl(mNfcdRw, F_SETFL, O_NONBLOCK);
     if (ret < 0) {
-      NFCD_ERROR ("Error setting O_NONBLOCK errno:%d", errno);
+      NFCD_ERROR("Error setting O_NONBLOCK errno:%d", errno);
     }
 
     NFCD_DEBUG("Socket connected");
     connected = true;
 
-    RecordStream *rs = record_stream_new(mNfcdRw, MAX_COMMAND_BYTES);
+    RecordStream* rs = record_stream_new(mNfcdRw, MAX_COMMAND_BYTES);
 
     mListener->OnConnected();
 
@@ -193,9 +193,9 @@ void NfcIpcSocket::Loop(const char* aSocketName)
     fds[0].events = POLLIN;
     fds[0].revents = 0;
 
-    while(connected) {
+    while (connected) {
       poll(fds, 1, -1);
-      if(fds[0].revents > 0) {
+      if (fds[0].revents > 0) {
         fds[0].revents = 0;
 
         void* data;

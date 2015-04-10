@@ -32,7 +32,7 @@ public:
   virtual void Receive() = 0;
   virtual bool Send() = 0;
 
-  virtual int& GetMode() =0;
+  virtual int& GetMode() = 0;
   virtual int& GetHandle() = 0;
 };
 

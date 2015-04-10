@@ -25,7 +25,7 @@ TagTechnology NfcNciUtil::ToTagTechnology(TechnologyType aTechType)
     NCI_ERROR("NDEF technology should only be used internally in NCI");
   }
 
-  switch(aTechType) {
+  switch (aTechType) {
     case TECHNOLOGY_TYPE_ISO14443_3A:     return NFC_A;
     case TECHNOLOGY_TYPE_ISO14443_3B:     return NFC_B;
     case TECHNOLOGY_TYPE_ISO14443_4:      return NFC_ISO_DEP;
@@ -41,7 +41,7 @@ TagTechnology NfcNciUtil::ToTagTechnology(TechnologyType aTechType)
 
 TechnologyType NfcNciUtil::ToTechnologyType(TagTechnology aTagTech)
 {
-  switch(aTagTech) {
+  switch (aTagTech) {
     case NFC_A:                return TECHNOLOGY_TYPE_ISO14443_3A;
     case NFC_B:                return TECHNOLOGY_TYPE_ISO14443_3B;
     case NFC_ISO_DEP:          return TECHNOLOGY_TYPE_ISO14443_4;

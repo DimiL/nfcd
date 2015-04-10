@@ -23,5 +23,4 @@ public:
   virtual ~IpcSocketListener() = 0;
 };
 
-
 #endif // mozilla_nfcd_IpcSocketListener_h

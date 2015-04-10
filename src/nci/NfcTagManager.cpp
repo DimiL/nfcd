@@ -87,29 +87,26 @@ static tNFA_STATUS     sMakeReadonlyStatus = NFA_STATUS_FAILED;
 static bool            sMakeReadonlyWaitingForComplete = false;
 static TechnologyType  sCurrentConnectedTargetType = TECHNOLOGY_TYPE_UNKNOWN;
 
-static void NdefHandlerCallback(tNFA_NDEF_EVT event, tNFA_NDEF_EVT_DATA *eventData)
+static void NdefHandlerCallback(tNFA_NDEF_EVT aEvent, tNFA_NDEF_EVT_DATA* aEventData)
 {
-  NCI_DEBUG("event=%u, eventData=%p", event, eventData);
+  NCI_DEBUG("event=%u, eventData=%p", aEvent, aEventData);
 
-  switch (event) {
+  switch (aEvent) {
     case NFA_NDEF_REGISTER_EVT: {
-      tNFA_NDEF_REGISTER& ndef_reg = eventData->ndef_reg;
+      tNFA_NDEF_REGISTER& ndef_reg = aEventData->ndef_reg;
       NCI_DEBUG("NFA_NDEF_REGISTER_EVT; status=0x%X; h=0x%X",
-                ndef_reg.status, ndef_reg.ndef_type_handle);
+              ndef_reg.status, ndef_reg.ndef_type_handle);
       sNdefTypeHandlerHandle = ndef_reg.ndef_type_handle;
       break;
     }
-
-    case NFA_NDEF_DATA_EVT: {
-      NCI_DEBUG("NFA_NDEF_DATA_EVT; data_len = %lu", eventData->ndef_data.len);
-      sReadDataLen = eventData->ndef_data.len;
-      sReadData = (uint8_t*) malloc(sReadDataLen);
-      memcpy(sReadData, eventData->ndef_data.p_data, eventData->ndef_data.len);
+    case NFA_NDEF_DATA_EVT:
+      NCI_DEBUG("NFA_NDEF_DATA_EVT; data_len = %lu", aEventData->ndef_data.len);
+      sReadDataLen = aEventData->ndef_data.len;
+      sReadData = (uint8_t*)malloc(sReadDataLen);
+      memcpy(sReadData, aEventData->ndef_data.p_data, aEventData->ndef_data.len);
       break;
-    }
-
     default:
-      NCI_ERROR("Unknown event %u ????", event);
+      NCI_ERROR("Unknown event %u ????", aEvent);
       break;
   }
 }
@@ -153,9 +150,9 @@ NdefMessage* NfcTagManager::DoReadNdef()
   int status;
   NfcTag& tag = NfcTag::GetInstance();
 
-  for(uint32_t techIndex = 0; techIndex < mTechList.size(); techIndex++) {
+  for (size_t techIndex = 0; techIndex < mTechList.size(); techIndex++) {
     // Have we seen this handle before?
-    for (uint32_t i = 0; i < techIndex; i++) {
+    for (size_t i = 0; i < techIndex; i++) {
       if (tag.mTechHandles[i] == tag.mTechHandles[techIndex]) {
         continue;  // Don't check duplicate handles.
       }
@@ -452,7 +449,7 @@ bool NfcTagManager::DoTransceive(const std::vector<uint8_t>& aCommand,
     delete sTransceiveData;
     sTransceiveData = NULL;
     sTransceiveDataLen = 0;
-  } while(0);
+  } while (0);
 
   sWaitingForTransceive = false;
 
@@ -490,8 +487,8 @@ void NfcTagManager::DoRead(std::vector<uint8_t>& aBuf)
 
     if (sReadDataLen > 0) { // If stack actually read data from the tag.
       NCI_DEBUG("read %u bytes", sReadDataLen);
-      for(uint32_t idx = 0; idx < sReadDataLen; idx++) {
-        aBuf.push_back(sReadData[idx]);
+      for (uint32_t i = 0; i < sReadDataLen; i++) {
+        aBuf.push_back(sReadData[i]);
       }
     }
   } else {
@@ -625,7 +622,7 @@ void NfcTagManager::DoAbortWaits()
     sTransceiveEvent.NotifyOne();
   }
   {
-    SyncEventGuard g (sReconnectEvent);
+    SyncEventGuard g(sReconnectEvent);
     sReconnectEvent.NotifyOne();
   }
 
@@ -712,7 +709,7 @@ bool NfcTagManager::DoNdefFormat()
   }
   sem_destroy(&sFormatSem);
 
-  if(IsMifareTech(tag.mTechLibNfcTypes[0]) && !sFormatOk) {
+  if (IsMifareTech(tag.mTechLibNfcTypes[0]) && !sFormatOk) {
 #ifdef NFCC_PN547
     uint8_t key2[6] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
     sem_init(&sFormatSem, 0, 0);
@@ -873,7 +870,7 @@ void NfcTagManager::DoRegisterNdefTypeHandler()
 {
   NCI_DEBUG("enter");
   sNdefTypeHandlerHandle = NFA_HANDLE_INVALID;
-  NFA_RegisterNDefTypeHandler(TRUE, NFA_TNF_DEFAULT, (UINT8 *) "", 0, NdefHandlerCallback);
+  NFA_RegisterNDefTypeHandler(TRUE, NFA_TNF_DEFAULT, (uint8_t*)"", 0, NdefHandlerCallback);
 }
 
 void NfcTagManager::DoDeregisterNdefTypeHandler()
@@ -1095,43 +1092,28 @@ bool NfcTagManager::IsMifareTech(int aTechTypes)
 
 NdefType NfcTagManager::GetNdefType(int aLibnfcType)
 {
-  NdefType ndefType = NDEF_UNKNOWN_TYPE;
-
   // For NFA, libnfcType is mapped to the protocol value received
   // in the NFA_ACTIVATED_EVT and NFA_DISC_RESULT_EVT event.
   switch (aLibnfcType) {
-    case NFA_PROTOCOL_T1T:
-      ndefType = NDEF_TYPE1_TAG;
-      break;
-    case NFA_PROTOCOL_T2T:
-      ndefType = NDEF_TYPE2_TAG;
-      break;
-    case NFA_PROTOCOL_T3T:
-      ndefType = NDEF_TYPE3_TAG;
-      break;
-    case NFA_PROTOCOL_ISO_DEP:
-      ndefType = NDEF_TYPE4_TAG;
-      break;
+    case NFA_PROTOCOL_T1T:      return NDEF_TYPE1_TAG;
+    case NFA_PROTOCOL_T2T:      return NDEF_TYPE2_TAG;
+    case NFA_PROTOCOL_T3T:      return NDEF_TYPE3_TAG;
+    case NFA_PROTOCOL_ISO_DEP:  return NDEF_TYPE4_TAG;
 #ifdef NFCC_PN547
-    case NFA_PROTOCOL_MIFARE:
-      ndefType = NDEF_MIFARE_CLASSIC_TAG;
-      break;
+    case NFA_PROTOCOL_MIFARE:   return NDEF_MIFARE_CLASSIC_TAG;
 #endif
     case NFA_PROTOCOL_ISO15693:
     case NFA_PROTOCOL_INVALID:
-    default:
-      ndefType = NDEF_UNKNOWN_TYPE;
-      break;
+    default:                    return NDEF_UNKNOWN_TYPE;
   }
-
-  return ndefType;
 }
 
 int NfcTagManager::GetConnectedLibNfcType()
 {
   NfcTag& tag = NfcTag::GetInstance();
 
-  if (mConnectedTechIndex != -1 && mConnectedTechIndex < (int)mTechLibNfcTypes.size()) {
+  if (mConnectedTechIndex != -1 &&
+      mConnectedTechIndex < (int)mTechLibNfcTypes.size()) {
     return tag.mTechLibNfcTypes[mConnectedTechIndex];
   } else {
     return 0;
@@ -1170,13 +1152,13 @@ bool NfcTagManager::DoWrite(std::vector<uint8_t>& aBuf)
 {
   bool result = false;
   const int maxBufferSize = 1024;
-  UINT8 buffer[maxBufferSize] = { 0 };
-  UINT32 curDataSize = 0;
+  unsigned char buffer[maxBufferSize] = { 0 };
+  long unsigned int curDataSize = 0;
   NfcTag& tag = NfcTag::GetInstance();
 
   uint8_t* p_data = reinterpret_cast<uint8_t*>(malloc(aBuf.size()));
-  for (uint8_t idx = 0; idx < aBuf.size(); idx++) {
-    p_data[idx] = aBuf[idx];
+  for (uint8_t i = 0; i < aBuf.size(); i++) {
+    p_data[i] = aBuf[i];
   }
 
   NCI_DEBUG("enter; len = %zu", aBuf.size());
@@ -1210,7 +1192,7 @@ bool NfcTagManager::DoWrite(std::vector<uint8_t>& aBuf)
       sem_wait(&sFormatSem);
       sem_destroy(&sFormatSem);
 
-      if(IsMifareTech(tag.mTechLibNfcTypes[0]) && !sFormatOk) {
+      if (IsMifareTech(tag.mTechLibNfcTypes[0]) && !sFormatOk) {
 #ifdef NFCC_PN547
         uint8_t key2[6] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
         sem_init (&sFormatSem, 0, 0);
@@ -1229,7 +1211,8 @@ bool NfcTagManager::DoWrite(std::vector<uint8_t>& aBuf)
   } else if (aBuf.size() == 0) {
     // If (NXP TagWriter wants to erase tag) then create and write an empty ndef message.
     NDEF_MsgInit(buffer, maxBufferSize, &curDataSize);
-    status = NDEF_MsgAddRec(buffer, maxBufferSize, &curDataSize, NDEF_TNF_EMPTY, NULL, 0, NULL, 0, NULL, 0);
+    status = NDEF_MsgAddRec(
+      buffer, maxBufferSize, &curDataSize, NDEF_TNF_EMPTY, NULL, 0, NULL, 0, NULL, 0);
     NCI_DEBUG("create empty ndef msg; status=%u; size=%lu", status, curDataSize);
 
     if (IsMifareTech(tag.mTechLibNfcTypes[0])) {
@@ -1280,8 +1263,7 @@ bool NfcTagManager::DoIsNdefFormatable()
   bool isFormattable = false;
   NfcTag& tag = NfcTag::GetInstance();
 
-  switch (tag.GetProtocol())
-  {
+  switch (tag.GetProtocol()) {
     case NFA_PROTOCOL_T1T:
     case NFA_PROTOCOL_ISO15693:
 #ifdef NFCC_PN547

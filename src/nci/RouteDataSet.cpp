@@ -54,7 +54,7 @@ static const char* ROUTE_TYPE_SEC = "SecElemSelectedRoutes";
 static const char* BOOL_TRUE = "true";
 static const char* BOOL_FALSE = "false";
 
-void RouteDataSet::ImportProtocolRoute(const char **aAttribute)
+void RouteDataSet::ImportProtocolRoute(const char** aAttribute)
 {
   RouteDataForProtocol* data = new RouteDataForProtocol;
 
@@ -86,7 +86,7 @@ void RouteDataSet::ImportProtocolRoute(const char **aAttribute)
   mCurrentDB->push_back(data);
 }
 
-void RouteDataSet::ImportTechnologyRoute(const char **aAttribute)
+void RouteDataSet::ImportTechnologyRoute(const char** aAttribute)
 {
   RouteDataForTechnology* data = new RouteDataForTechnology;
 
@@ -116,9 +116,9 @@ void RouteDataSet::ImportTechnologyRoute(const char **aAttribute)
   mCurrentDB->push_back(data);
 }
 
-void RouteDataSet::XmlStartElement(void *aData,
-                                   const char *aElement,
-                                   const char **aAttribute)
+void RouteDataSet::XmlStartElement(void* aData,
+                                   const char* aElement,
+                                   const char** aAttribute)
 {
   RouteDataSet* route = reinterpret_cast<RouteDataSet*>(aData);
   if (!route) {
@@ -145,8 +145,8 @@ void RouteDataSet::XmlStartElement(void *aData,
   }
 }
 
-void RouteDataSet::XmlEndElement(void *aData,
-                                 const char *aElement)
+void RouteDataSet::XmlEndElement(void* aData,
+                                 const char* aElement)
 {
 }
 
@@ -186,7 +186,7 @@ bool RouteDataSet::Import()
 
   DeleteDatabase();
 
-  FILE *file = fopen(strFilename.c_str(), "r");
+  FILE* file = fopen(strFilename.c_str(), "r");
   if (!file) {
     NCI_DEBUG("Failed to open %s", strFilename.c_str());
     return false;

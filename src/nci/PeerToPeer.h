@@ -83,7 +83,7 @@ public:
    * @param  aEventData Event data.
    * @return            None.
    */
-  void ConnectionEventHandler(UINT8 aEvent,
+  void ConnectionEventHandler(uint8_t aEvent,
                               tNFA_CONN_EVT_DATA* aEventData);
 
   /**
@@ -127,8 +127,8 @@ public:
    * @return         True if ok.
    */
   bool CreateClient(unsigned int aHandle,
-                    UINT16 aMiu,
-                    UINT8 aRw);
+                    uint16_t aMiu,
+                    uint8_t aRw);
 
   /**
    * Estabish a connection-oriented connection to a peer.
@@ -148,7 +148,7 @@ public:
    * @return                 True if ok.
    */
   bool ConnectConnOriented(unsigned int aHandle,
-                           UINT8 aDestinationSap);
+                           uint8_t aDestinationSap);
 
   /**
    * Send data to peer.
@@ -159,8 +159,8 @@ public:
    * @return            True if ok.
    */
   bool Send(unsigned int aHandle,
-            UINT8* aBuffer,
-            UINT16 aBufferLen);
+            uint8_t* aBuffer,
+            uint16_t aBufferLen);
 
   /**
    * Receive data from peer.
@@ -172,9 +172,9 @@ public:
    * @return            True if ok.
    */
   bool Receive(unsigned int aHandle,
-               UINT8* aBuffer,
-               UINT16 aBufferLen,
-               UINT16& aActualLen);
+               uint8_t* aBuffer,
+               uint16_t aBufferLen,
+               uint16_t& aActualLen);
 
   /**
    * Disconnect a connection-oriented connection with peer.
@@ -190,7 +190,7 @@ public:
    * @param  aHandle Handle of the connection.
    * @return         Peer's max information unit.
    */
-  UINT16 GetRemoteMaxInfoUnit(unsigned int aHandle);
+  uint16_t GetRemoteMaxInfoUnit(unsigned int aHandle);
 
   /**
    * Get peer's receive window size.
@@ -198,7 +198,7 @@ public:
    * @param  aHandle Handle of the connection.
    * @return         Peer's receive window size.
    */
-  UINT8 GetRemoteRecvWindow(unsigned int aHandle);
+  uint8_t GetRemoteRecvWindow(unsigned int aHandle);
 
   /**
    * Sets the p2p listen technology mask.
@@ -239,7 +239,7 @@ public:
    * @return            None.
    */
   static void NfaServerCallback(tNFA_P2P_EVT aP2pEvent,
-                                tNFA_P2P_EVT_DATA *aEventData);
+                                tNFA_P2P_EVT_DATA* aEventData);
 
   /**
    * Receive LLCP-related events from the stack.
@@ -249,26 +249,26 @@ public:
    * @return            None.
    */
   static void NfaClientCallback(tNFA_P2P_EVT aP2pEvent,
-                                tNFA_P2P_EVT_DATA *aEventData);
+                                tNFA_P2P_EVT_DATA* aEventData);
 
 private:
-  static const int  sMax = 10;
+  static const int sMax = 10;
   static PeerToPeer sP2p;
 
   // Variables below only accessed from a single thread.
-  UINT16                mRemoteWKS;         // Peer's well known services.
+  uint16_t              mRemoteWKS;         // Peer's well known services.
   bool                  mIsP2pListening;    // If P2P listening is enabled or not.
   tNFA_TECHNOLOGY_MASK  mP2pListenTechMask; // P2P Listen mask.
 
   // Variable below is protected by mNewHandleMutex.
-  unsigned int     mNextHandle;
+  unsigned int mNextHandle;
 
   // Variables below protected by mMutex.
   // A note on locking order: mMutex in PeerToPeer is *ALWAYS*.
   // locked before any locks / guards in P2pServer / P2pClient.
   Mutex                    mMutex;
-  android::sp<P2pServer>   mServers [sMax];
-  android::sp<P2pClient>   mClients [sMax];
+  android::sp<P2pServer>   mServers[sMax];
+  android::sp<P2pClient>   mClients[sMax];
 
   // Synchronization variables.
   // Completion event for NFA_SetP2pListenTech().
@@ -285,7 +285,7 @@ private:
   NfcManager*     mNfcManager;
 
   static void NdefTypeCallback(tNFA_NDEF_EVT aEvent,
-                               tNFA_NDEF_EVT_DATA *aEvetnData);
+                               tNFA_NDEF_EVT_DATA* aEvetnData);
 
   android::sp<P2pServer> FindServerLocked(tNFA_HANDLE aNfaP2pServerHandle);
   android::sp<P2pServer> FindServerLocked(unsigned int aHandle);
@@ -295,7 +295,7 @@ private:
   void RemoveConn(unsigned int aHandle);
   bool CreateDataLinkConn(unsigned int aHandle,
                           const char* aServiceName,
-                          UINT8 aDestinationSap);
+                          uint8_t aDestinationSap);
 
   android::sp<P2pClient> FindClient(tNFA_HANDLE aNfaConnHandle);
   android::sp<P2pClient> FindClient(unsigned int aHandle);
@@ -310,10 +310,10 @@ class NfaConn
 public:
   tNFA_HANDLE         mNfaConnHandle;      // NFA handle of the P2P connection.
   unsigned int        mHandle;             // Handle of the P2P connection.
-  UINT16              mMaxInfoUnit;
-  UINT8               mRecvWindow;
-  UINT16              mRemoteMaxInfoUnit;
-  UINT8               mRemoteRecvWindow;
+  uint16_t            mMaxInfoUnit;
+  uint8_t             mRecvWindow;
+  uint16_t            mRemoteMaxInfoUnit;
+  uint8_t             mRemoteRecvWindow;
   SyncEvent           mReadEvent;          // Event for reading.
   SyncEvent           mCongEvent;          // Event for congestion.
   SyncEvent           mDisconnectingEvent; // Event for disconnecting.
