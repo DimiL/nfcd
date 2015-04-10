@@ -43,7 +43,7 @@ void* HandoverConnectionThreadFunc(void* aArg)
   ILlcpSocket* socket = pConnectionThread->GetSocket();
   bool connectionBroken = false;
   std::vector<uint8_t> buffer;
-  while(!connectionBroken) {
+  while (!connectionBroken) {
     std::vector<uint8_t> partial;
     int size = socket->Receive(partial);
     if (size < 0) {
@@ -95,7 +95,7 @@ HandoverConnectionThread::~HandoverConnectionThread()
 void HandoverConnectionThread::Run()
 {
   pthread_t tid;
-  if(pthread_create(&tid, NULL, HandoverConnectionThreadFunc, this) != 0) {
+  if (pthread_create(&tid, NULL, HandoverConnectionThreadFunc, this) != 0) {
     NFCD_ERROR("connection pthread_create failed");
     abort();
   }
@@ -123,7 +123,7 @@ void* HandoverServerThreadFunc(void* aArg)
     return NULL;
   }
 
-  while(pHandoverServer->mServerRunning) {
+  while (pHandoverServer->mServerRunning) {
     if (!serverSocket) {
       NFCD_ERROR("server socket shut down");
       return NULL;
@@ -174,7 +174,7 @@ void HandoverServer::Start()
   }
 
   pthread_t tid;
-  if(pthread_create(&tid, NULL, HandoverServerThreadFunc, this) != 0) {
+  if (pthread_create(&tid, NULL, HandoverServerThreadFunc, this) != 0) {
     NFCD_ERROR("pthread_create failed");
     abort();
   }

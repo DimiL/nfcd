@@ -122,7 +122,7 @@ private:
    * @param  aAttribute Array of XML property and value pair of a XML node
    * @return None.
    */
-  void ImportProtocolRoute(const char **aAttribute);
+  void ImportProtocolRoute(const char** aAttribute);
 
   /**
    * Parse data for technology routes.
@@ -130,7 +130,7 @@ private:
    * @param  attribute Array of XML property and value pair of a XML node
    * @return None.
    */
-  void ImportTechnologyRoute(const char **aAttribute);
+  void ImportTechnologyRoute(const char** aAttribute);
 
   /**
    * Callback function when expat-lib process a start tag.
@@ -140,9 +140,9 @@ private:
    * @param  aAttribute Array of the attribute name and value of the given tag.
    * @return None.
    */
-  static void XmlStartElement(void *aData,
-                              const char *aElement,
-                              const char **aAttribute);
+  static void XmlStartElement(void* aData,
+                              const char* aElement,
+                              const char** aAttribute);
 
   /**
    * Callback function when expat-lib process a end tag.
@@ -152,6 +152,6 @@ private:
    * @param  attribute Array of the attribute name and value of the given tag.
    * @return None.
    */
-  static void XmlEndElement(void *aData,
-                            const char *aElement);
+  static void XmlEndElement(void* aData,
+                            const char* aElement);
 };

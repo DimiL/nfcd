@@ -39,7 +39,7 @@ void MessageHandler::NotifyInitialized(Parcel& aParcel)
 
 void MessageHandler::NotifyTechDiscovered(Parcel& aParcel, void* aData)
 {
-  TechDiscoveredEvent *event = reinterpret_cast<TechDiscoveredEvent*>(aData);
+  TechDiscoveredEvent* event = reinterpret_cast<TechDiscoveredEvent*>(aData);
 
   aParcel.writeInt32(event->sessionId);
   aParcel.writeInt32(event->isP2P);
@@ -63,7 +63,7 @@ void MessageHandler::NotifyTechLost(Parcel& aParcel, void* aData)
 
 void MessageHandler::NotifyTransactionEvent(Parcel& aParcel, void* aData)
 {
-  TransactionEvent *event = reinterpret_cast<TransactionEvent*>(aData);
+  TransactionEvent* event = reinterpret_cast<TransactionEvent*>(aData);
 
   aParcel.writeInt32(NfcUtil::ConvertOriginType(event->originType));
   aParcel.writeInt32(event->originIndex);
@@ -83,7 +83,7 @@ void MessageHandler::NotifyTransactionEvent(Parcel& aParcel, void* aData)
 
 void MessageHandler::NotifyNdefReceived(Parcel& aParcel, void* aData)
 {
-  NdefReceivedEvent *event = reinterpret_cast<NdefReceivedEvent*>(aData);
+  NdefReceivedEvent* event = reinterpret_cast<NdefReceivedEvent*>(aData);
 
   aParcel.writeInt32(event->sessionId);
   aParcel.writeInt32(event->ndefMsgCount);
@@ -213,9 +213,9 @@ bool MessageHandler::HandleChangeRFStateRequest(Parcel& aParcel)
     case NFC_RF_STATE_LISTEN:
       value = rfState == NFC_RF_STATE_LISTEN;
       return mService->HandleEnterLowPowerRequest(value);
+    default:
+      return false;
   }
-  return false;
-
 }
 
 bool MessageHandler::HandleReadNdefRequest(Parcel& aParcel)

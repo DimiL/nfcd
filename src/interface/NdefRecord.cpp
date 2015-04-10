@@ -39,13 +39,13 @@ NdefRecord::NdefRecord(uint8_t aTnf,
 {
   mTnf = aTnf;
 
-  for(uint32_t i = 0; i < aType.size(); i++) {
+  for (size_t i = 0; i < aType.size(); i++) {
     mType.push_back(aType[i]);
   }
-  for(uint32_t i = 0; i < aId.size(); i++) {
+  for (size_t i = 0; i < aId.size(); i++) {
     mId.push_back(aId[i]);
   }
-  for(uint32_t i = 0; i < aPayload.size(); i++) {
+  for (size_t i = 0; i < aPayload.size(); i++) {
     mPayload.push_back(aPayload[i]);
   }
 }
@@ -92,7 +92,7 @@ bool NdefRecord::Parse(std::vector<uint8_t>& aBuf,
   bool me = false;
   uint32_t index = aOffset;
 
-  while(!me) {
+  while (!me) {
     std::vector<uint8_t> type;
     std::vector<uint8_t> id;
     std::vector<uint8_t> payload;
@@ -163,10 +163,10 @@ bool NdefRecord::Parse(std::vector<uint8_t>& aBuf,
     }
 
     if (!inChunk) {
-      for (uint32_t idx = 0; idx < typeLength; idx++) {
+      for (uint32_t i = 0; i < typeLength; i++) {
         type.push_back(aBuf[index++]);
       }
-      for (uint32_t idx = 0; idx < idLength; idx++) {
+      for (uint32_t i = 0; i < idLength; i++) {
         id.push_back(aBuf[index++]);
       }
     }
@@ -175,7 +175,7 @@ bool NdefRecord::Parse(std::vector<uint8_t>& aBuf,
       return false;
     }
 
-    for (uint32_t idx = 0; idx < payloadLength; idx++) {
+    for (uint32_t i = 0; i < payloadLength; i++) {
       payload.push_back(aBuf[index++]);
     }
 
@@ -191,15 +191,15 @@ bool NdefRecord::Parse(std::vector<uint8_t>& aBuf,
     if (!cf && inChunk) {
       // last chunk, flatten the payload.
       payloadLength = 0;
-      for (uint32_t idx = 0; idx < chunks.size(); idx++) {
-        payloadLength += chunks[idx].size();
+      for (size_t i = 0; i < chunks.size(); i++) {
+        payloadLength += chunks[i].size();
       }
       if (!EnsureSanePayloadSize(payloadLength)) {
         return false;
       }
 
-      for(uint32_t i = 0; i < chunks.size(); i++) {
-        for(uint32_t j = 0; j < chunks[i].size(); j++) {
+      for (size_t i = 0; i < chunks.size(); i++) {
+        for (size_t j = 0; j < chunks[i].size(); j++) {
           payload.push_back(chunks[i][j]);
         }
       }

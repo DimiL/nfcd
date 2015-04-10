@@ -42,10 +42,10 @@ public:
   // Max number of technologies supported by one or more tags.
   static const int MAX_NUM_TECHNOLOGY = 10;
 
-  TechnologyType mTechList [MAX_NUM_TECHNOLOGY];  // Array of NFC technologies.
-  int mTechHandles [MAX_NUM_TECHNOLOGY];          // Array of tag handles.
-  int mTechLibNfcTypes [MAX_NUM_TECHNOLOGY];      // Array of detailed tag types.
-  int mNumTechList;                               // Number of NFC technologies in the list.
+  TechnologyType mTechList[MAX_NUM_TECHNOLOGY];  // Array of NFC technologies.
+  int mTechHandles[MAX_NUM_TECHNOLOGY];          // Array of tag handles.
+  int mTechLibNfcTypes[MAX_NUM_TECHNOLOGY];      // Array of detailed tag types.
+  int mNumTechList;                              // Number of NFC technologies in the list.
 
   /**
    * Get a reference to the singleton NfcTag object.
@@ -76,7 +76,7 @@ public:
    * @param  aData  Pointer to event data.
    * @return       None
    */
-  void ConnectionEventHandler(UINT8 aEvent,
+  void ConnectionEventHandler(uint8_t aEvent,
                               tNFA_CONN_EVT_DATA* aData);
 
   /**
@@ -167,8 +167,8 @@ public:
    * @param  aResponseLen Length of the response.
    * @return              True if the response is NACK
    */
-  bool IsT2tNackResponse(const UINT8* aResponse,
-                         UINT32 aResponseLen);
+  bool IsT2tNackResponse(const uint8_t* aResponse,
+                         uint32_t aResponseLen);
 
   /**
    * Whether NDEF-detection algorithm has timed out.
@@ -181,16 +181,16 @@ private:
   std::vector<int> mTimeoutTable;
   ActivationState mActivationState;
   tNFC_PROTOCOL mProtocol;
-  int mtT1tMaxMessageSize;                  // T1T max NDEF message size.
+  int mtT1tMaxMessageSize;                   // T1T max NDEF message size.
   tNFA_STATUS mReadCompletedStatus;
-  int mLastKovioUidLen;                     // Len of uid of last Kovio tag activated.
-  bool mNdefDetectionTimedOut;              // Whether NDEF detection algorithm timed out.
+  int mLastKovioUidLen;                      // Len of uid of last Kovio tag activated.
+  bool mNdefDetectionTimedOut;               // Whether NDEF detection algorithm timed out.
   SyncEvent mReadCompleteEvent;
-  struct timespec mLastKovioTime;           // Time of last Kovio tag activation.
-  UINT8 mLastKovioUid[NFC_KOVIO_MAX_LEN];   // uid of last Kovio tag activated.
-  tNFC_RF_TECH_PARAMS mTechParams [MAX_NUM_TECHNOLOGY]; // Array of technology parameters.
+  struct timespec mLastKovioTime;            // Time of last Kovio tag activation.
+  uint8_t mLastKovioUid[NFC_KOVIO_MAX_LEN];  // uid of last Kovio tag activated.
+  tNFC_RF_TECH_PARAMS mTechParams[MAX_NUM_TECHNOLOGY]; // Array of technology parameters.
 
-  NfcManager*     mNfcManager;
+  NfcManager* mNfcManager;
 
   /**
    * Checks if tag activate is the same (UID) Kovio tag previously

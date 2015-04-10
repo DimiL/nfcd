@@ -137,7 +137,7 @@ void SecureElement::Finalize()
     NFA_HciDeregister(const_cast<char*>(APP_NAME));
   }
 
-  mIsInit       = false;
+  mIsInit = false;
   mActualNumEe  = 0;
 }
 
@@ -202,7 +202,7 @@ static uint32_t TimeDiff(timespec aStart, timespec aEnd)
 
   if (aEnd.tv_nsec < 0) {
     aEnd.tv_nsec += 10e8;
-    aEnd.tv_sec -=1;
+    aEnd.tv_sec -= 1;
   }
 
   return (aEnd.tv_sec * 1000) + (aEnd.tv_nsec / 10e5);
@@ -284,8 +284,8 @@ bool SecureElement::Activate()
 
   NCI_DEBUG("override ee h=0x%X", overrideEeHandle);
   //activate every discovered secure element
-  for (int index = 0; index < mActualNumEe; index++) {
-    tNFA_EE_INFO& eeItem = mEeInfo[index];
+  for (int i = 0; i < mActualNumEe; i++) {
+    tNFA_EE_INFO& eeItem = mEeInfo[i];
     if ((eeItem.ee_handle != EE_HANDLE_0xF3) &&
         (eeItem.ee_handle != EE_HANDLE_0xF4) &&
         (eeItem.ee_handle != EE_HANDLE_0x01) &&
@@ -332,14 +332,14 @@ bool SecureElement::Deactivate()
   NCI_DEBUG("enter; mActiveEeHandle=0x%X", mActiveEeHandle);
 
   if (!mIsInit) {
-    NCI_ERROR ("not init");
+    NCI_ERROR("not init");
     return retval;
   }
 
   // if the controller is routing to sec elems or piping,
   // then the secure element cannot be deactivated
   if (IsBusy()) {
-    NCI_ERROR ("still busy");
+    NCI_ERROR("still busy");
     return retval;
   } else if (mActiveEeHandle == NFA_HANDLE_INVALID) {
     NCI_ERROR("invalid EE handle");
@@ -534,7 +534,7 @@ void SecureElement::AdjustTechnologyRoutes(RouteSelection aRouteSelection)
         (mEeInfo[i].ee_status == NFA_EE_STATUS_ACTIVE)) {
       NCI_DEBUG("delete route to EE h=0x%X", mEeInfo[i].ee_handle);
       SyncEventGuard guard(mRoutingEvent);
-      if ((nfaStat = NFA_EeSetDefaultTechRouting (mEeInfo[i].ee_handle, 0, 0, 0)) == NFA_STATUS_OK) {
+      if ((nfaStat = NFA_EeSetDefaultTechRouting(mEeInfo[i].ee_handle, 0, 0, 0)) == NFA_STATUS_OK) {
         mRoutingEvent.Wait();
       } else {
         NCI_ERROR("fail delete route to EE; error=0x%X", nfaStat);
@@ -578,7 +578,7 @@ void SecureElement::NfaEeCallback(tNFA_EE_EVT aEvent,
                 sSecElem.mActiveEeHandle);
 
       if (aEventData->mode_set.status == NFA_STATUS_OK) {
-        tNFA_EE_INFO *pEE = sSecElem.FindEeByHandle (aEventData->mode_set.ee_handle);
+        tNFA_EE_INFO* pEE = sSecElem.FindEeByHandle (aEventData->mode_set.ee_handle);
         if (pEE) {
           pEE->ee_status ^= 1;
           NCI_DEBUG("NFA_EE_MODE_SET_EVT; pEE->ee_status: %s (0x%04x)",
@@ -604,13 +604,12 @@ void SecureElement::NfaEeCallback(tNFA_EE_EVT aEvent,
       sSecElem.mRoutingEvent.NotifyOne();
       break;
     }
-    case NFA_EE_DISCOVER_REQ_EVT: {
+    case NFA_EE_DISCOVER_REQ_EVT:
       NCI_DEBUG("NFA_EE_DISCOVER_REQ_EVT; status=0x%X; num ee=%u",
                 aEventData->discover_req.status,
                 aEventData->discover_req.num_ee);
       sSecElem.StoreUiccInfo(aEventData->discover_req);
       break;
-    }
     case NFA_EE_ADD_AID_EVT: {
       NCI_DEBUG("NFA_EE_ADD_AID_EVT  status=%u", aEventData->status);
       SyncEventGuard guard(sSecElem.mAidAddRemoveEvent);
@@ -623,20 +622,19 @@ void SecureElement::NfaEeCallback(tNFA_EE_EVT aEvent,
       sSecElem.mAidAddRemoveEvent.NotifyOne();
       break;
     }
-    case NFA_EE_NEW_EE_EVT: {
+    case NFA_EE_NEW_EE_EVT:
       NCI_DEBUG("NFA_EE_NEW_EE_EVT  h=0x%X; status=%u",
                 aEventData->new_ee.ee_handle, aEventData->new_ee.ee_status);
       // Indicate there are new EE
       sSecElem.mbNewEE = true;
       break;
-    }
     default:
       NCI_ERROR("unknown event=%u ????", aEvent);
       break;
   }
 }
 
-tNFA_EE_INFO *SecureElement::FindEeByHandle(tNFA_HANDLE aEeHandle)
+tNFA_EE_INFO* SecureElement::FindEeByHandle(tNFA_HANDLE aEeHandle)
 {
   for (uint8_t i = 0; i < mActualNumEe; i++) {
     if (mEeInfo[i].ee_handle == aEeHandle) {

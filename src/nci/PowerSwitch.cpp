@@ -28,15 +28,15 @@
 // 500 millis-seconds is experiment result.
 #define PowerOnOffDelay 500   // milli-seconds.
 
-static UINT32 TimeDiff(timespec start, timespec end)
+static uint32_t TimeDiff(timespec aStart, timespec aEnd)
 {
   timespec temp;
-  if ((end.tv_nsec-start.tv_nsec)<0) {
-    temp.tv_sec = end.tv_sec-start.tv_sec-1;
-    temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
+  if ((aEnd.tv_nsec - aStart.tv_nsec) < 0) {
+    temp.tv_sec = aEnd.tv_sec - aStart.tv_sec-1;
+    temp.tv_nsec = 1000000000 + aEnd.tv_nsec - aStart.tv_nsec;
   } else {
-    temp.tv_sec = end.tv_sec-start.tv_sec;
-    temp.tv_nsec = end.tv_nsec-start.tv_nsec;
+    temp.tv_sec = aEnd.tv_sec - aStart.tv_sec;
+    temp.tv_nsec = aEnd.tv_nsec - aStart.tv_nsec;
   }
   return (temp.tv_sec * 1000) + (temp.tv_nsec / 1000000);
 }
@@ -44,9 +44,9 @@ static UINT32 TimeDiff(timespec start, timespec end)
 void DoStartupConfig();
 
 PowerSwitch PowerSwitch::sPowerSwitch;
-const PowerSwitch::PowerActivity PowerSwitch::DISCOVERY=0x01;
-const PowerSwitch::PowerActivity PowerSwitch::SE_ROUTING=0x02;
-const PowerSwitch::PowerActivity PowerSwitch::SE_CONNECTED=0x04;
+const PowerSwitch::PowerActivity PowerSwitch::DISCOVERY = 0x01;
+const PowerSwitch::PowerActivity PowerSwitch::SE_ROUTING = 0x02;
+const PowerSwitch::PowerActivity PowerSwitch::SE_CONNECTED = 0x04;
 
 PowerSwitch::PowerSwitch()
  : mCurrLevel(UNKNOWN_LEVEL)
@@ -113,8 +113,9 @@ bool PowerSwitch::SetLevel(PowerLevel aNewLevel)
 
   switch (aNewLevel) {
     case FULL_POWER:
-      if (mCurrDeviceMgtPowerState == NFA_DM_PWR_MODE_OFF_SLEEP)
+      if (mCurrDeviceMgtPowerState == NFA_DM_PWR_MODE_OFF_SLEEP) {
         retval = SetPowerOffSleepState(false);
+      }
       break;
     case LOW_POWER:
     case POWER_OFF:
@@ -229,7 +230,7 @@ TheEnd:
   return retval;
 }
 
-const char* PowerSwitch::DeviceMgtPowerStateToString(UINT8 aDeviceMgtPowerState)
+const char* PowerSwitch::DeviceMgtPowerStateToString(uint8_t aDeviceMgtPowerState)
 {
   switch (aDeviceMgtPowerState) {
     case NFA_DM_PWR_MODE_FULL:
@@ -264,7 +265,7 @@ void PowerSwitch::Abort()
   mPowerStateEvent.NotifyOne();
 }
 
-void PowerSwitch::DeviceManagementCallback(UINT8 aEvent,
+void PowerSwitch::DeviceManagementCallback(uint8_t aEvent,
                                            tNFA_DM_CBACK_DATA* aEventData)
 {
   switch (aEvent) {

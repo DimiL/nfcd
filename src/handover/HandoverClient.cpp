@@ -89,7 +89,7 @@ NdefMessage* HandoverClient::ProcessHandoverRequest(NdefMessage& aMsg)
 NdefMessage* HandoverClient::Receive()
 {
   std::vector<uint8_t> buffer;
-  while(true) {
+  while (true) {
     std::vector<uint8_t> partial;
     int size = mSocket->Receive(partial);
     if (size < 0) {
@@ -100,7 +100,7 @@ NdefMessage* HandoverClient::Receive()
     }
 
     NdefMessage* ndef = new NdefMessage();
-    if(ndef->Init(buffer)) {
+    if (ndef->Init(buffer)) {
       NFCD_DEBUG("get a complete NDEF message");
       return ndef;
     } else {

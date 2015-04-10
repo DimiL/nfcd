@@ -123,10 +123,10 @@ bool LlcpSocket::DoClose()
 
 bool LlcpSocket::DoSend(std::vector<uint8_t>& aData)
 {
-  UINT8* raw_ptr = new UINT8[aData.size()];
+  uint8_t* raw_ptr = new uint8_t[aData.size()];
 
-  for(uint32_t i = 0; i < aData.size(); i++) {
-    raw_ptr[i] = (UINT8)aData[i];
+  for (size_t i = 0; i < aData.size(); i++) {
+    raw_ptr[i] = (uint8_t)aData[i];
   }
 
   bool stat = PeerToPeer::GetInstance().Send(mHandle, raw_ptr, aData.size());
@@ -144,7 +144,7 @@ int LlcpSocket::DoReceive(std::vector<uint8_t>& aRecvBuf)
   const uint16_t MAX_BUF_SIZE = 4096;
   uint16_t actualLen = 0;
 
-  UINT8* raw_ptr = new UINT8[MAX_BUF_SIZE];
+  uint8_t* raw_ptr = new uint8_t[MAX_BUF_SIZE];
   bool stat = PeerToPeer::GetInstance().Receive(mHandle, raw_ptr, MAX_BUF_SIZE, actualLen);
 
   int retval = 0;

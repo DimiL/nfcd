@@ -31,20 +31,16 @@ void NfcUtil::ConvertNdefPduToNdefMessage(NdefMessagePdu& aNdefPdu,
 NfcEvtTransactionOrigin NfcUtil::ConvertOriginType(TransactionEvent::OriginType aType)
 {
   switch (aType) {
-    case TransactionEvent::SIM:
-      return NFC_EVT_TRANSACTION_SIM;
-    case TransactionEvent::ESE:
-      return NFC_EVT_TRANSACTION_ESE;
-    case TransactionEvent::ASSD:
-      return NFC_EVT_TRANSACTION_ASSD;
-    default:
-      return NFC_EVT_TRANSACTION_SIM;
+    case TransactionEvent::SIM:    return NFC_EVT_TRANSACTION_SIM;
+    case TransactionEvent::ESE:    return NFC_EVT_TRANSACTION_ESE;
+    case TransactionEvent::ASSD:   return NFC_EVT_TRANSACTION_ASSD;
+    default:                       return NFC_EVT_TRANSACTION_SIM;
   }
 }
 
 NfcNdefType NfcUtil::ConvertNdefType(NdefType aType)
 {
-  switch(aType) {
+  switch (aType) {
     case NDEF_TYPE1_TAG:           return NFC_NDEF_TYPE_1_TAG;
     case NDEF_TYPE2_TAG:           return NFC_NDEF_TYPE_2_TAG;
     case NDEF_TYPE3_TAG:           return NFC_NDEF_TYPE_3_TAG;

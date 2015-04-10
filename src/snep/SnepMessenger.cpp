@@ -95,7 +95,7 @@ void SnepMessenger::SendMessage(SnepMessage& aMsg)
     std::vector<uint8_t> tmpBuf;
     length = buf.size() - offset < mFragmentLength ? buf.size() - offset : mFragmentLength;
     // TODO : Need check here
-    for(uint32_t i = offset; i < offset + length; i++) {
+    for (uint32_t i = offset; i < offset + length; i++) {
       tmpBuf.push_back(buf[i]);
     }
     mSocket->Send(tmpBuf);
