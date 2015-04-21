@@ -627,19 +627,11 @@ void NfcService::HandleEnableResponse(NfcEvent* aEvent)
       code = SetLowPowerMode(false);
     } else if (mState == STATE_NFC_OFF) {
       code = EnableNfc();
-      if (code != NFC_SUCCESS) {
-        goto TheEnd;
-      }
-      code = EnableSE();
     }
   } else {
-    code = DisableSE();
-    if (code != NFC_SUCCESS) {
-        goto TheEnd;
-    }
     code = DisableNfc();
   }
-TheEnd:
+
   NFCD_DEBUG("mState=%d", mState);
   mMsgHandler->ProcessResponse(NFC_RESPONSE_CHANGE_RF_STATE, code, &mState);
 }
@@ -658,6 +650,13 @@ NfcErrorCode NfcService::EnableNfc()
 
   if (mP2pLinkManager) {
     mP2pLinkManager->EnableDisable(true);
+  }
+
+  // TODO: Emulator doesn't support SE now so do not do fail return here.
+  // Put EnableSecureEleemnt before EnableDiscovery to avoid redundant
+  // turning on/off RF
+  if (!sNfcManager->EnableSecureElement()) {
+    NFCD_DEBUG("Enable secure element not succeed");
   }
 
   if (!sNfcManager->EnableDiscovery()) {
@@ -689,6 +688,13 @@ NfcErrorCode NfcService::DisableNfc()
     return NFC_ERROR_FAIL_DISABLE_DISCOVERY;
   }
 
+  // TODO: Emulator doesn't support SE now so do not do fail return here.
+  // Put DisableSecureEleemnt after DisableDiscovery to avoid redundant
+  // turning on/off RF
+  if (!sNfcManager->DisableSecureElement()) {
+    NFCD_DEBUG("Disable secure element not succeed");
+  }
+
   mState = STATE_NFC_OFF;
 
   return NFC_SUCCESS;
@@ -715,32 +721,6 @@ NfcErrorCode NfcService::SetLowPowerMode(bool aLow)
     }
 
     mState = STATE_NFC_ON;
-  }
-
-  return NFC_SUCCESS;
-}
-
-// TODO: Emulator doesn't support SE now.
-//       So always return sucess to pass testcase.
-NfcErrorCode NfcService::EnableSE()
-{
-  NFCD_DEBUG("Enable secure element");
-
-  if (!sNfcManager->DoSelectSecureElement()) {
-    NFCD_ERROR("Enable secure element fail");
-  }
-
-  return NFC_SUCCESS;
-}
-
-// TODO: Emulator doesn't support SE now.
-//       So always return sucess to pass testcase.
-NfcErrorCode NfcService::DisableSE()
-{
-  NFCD_DEBUG("Disable secure element");
-
-  if (!sNfcManager->DoDeselectSecureElement()) {
-    NFCD_ERROR("Disable secure element fail");
   }
 
   return NFC_SUCCESS;

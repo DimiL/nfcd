@@ -151,14 +151,14 @@ public:
    *
    * @return True if ok.
    */
-  virtual bool DoSelectSecureElement() = 0;
+  virtual bool EnableSecureElement() = 0;
 
   /**
    * NFC controller stops routing data in listen mode.
    *
    * @return True if ok.
    */
-  virtual bool DoDeselectSecureElement() = 0;
+  virtual bool DisableSecureElement() = 0;
 };
 
 #endif

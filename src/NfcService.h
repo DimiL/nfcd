@@ -76,6 +76,7 @@ public:
   void OnP2pReceivedNdef(NdefMessage* aNdef);
   NfcErrorCode EnableNfc();
   NfcErrorCode DisableNfc();
+  NfcErrorCode SetLowPowerMode(bool aLow);
 
   void TagDetected()    { mIsTagPresent = true; }
   void TagRemoved()     { mIsTagPresent = false; }
@@ -83,10 +84,6 @@ public:
 
 private:
   NfcService();
-
-  NfcErrorCode SetLowPowerMode(bool aLow);
-  NfcErrorCode EnableSE();
-  NfcErrorCode DisableSE();
 
   uint32_t mState;
   bool mIsTagPresent;

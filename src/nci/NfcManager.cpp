@@ -301,7 +301,7 @@ bool NfcManager::EnableDiscovery()
 bool NfcManager::DisableDiscovery()
 {
   tNFA_STATUS status = NFA_STATUS_OK;
-  NCI_DEBUG("enter;");
+  NCI_DEBUG("enter");
 
   Pn544InteropAbortNow();
   if (!sDiscoveryEnabled) {
@@ -411,8 +411,9 @@ ILlcpServerSocket* NfcManager::CreateLlcpServerSocket(int aSap,
   return static_cast<ILlcpServerSocket*>(pLlcpServiceSocket);
 }
 
-bool NfcManager::DoSelectSecureElement()
+bool NfcManager::EnableSecureElement()
 {
+  NCI_DEBUG("enter");
   bool result = true;
 
   if (sIsSecElemSelected) {
@@ -440,8 +441,9 @@ bool NfcManager::DoSelectSecureElement()
   return result;
 }
 
-bool NfcManager::DoDeselectSecureElement()
+bool NfcManager::DisableSecureElement()
 {
+  NCI_DEBUG("enter");
   bool result = false;
   bool reDiscover = false;
 
