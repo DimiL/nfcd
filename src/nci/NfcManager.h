@@ -170,14 +170,14 @@ public:
    *
    * @return True if ok.
    */
-  bool DoSelectSecureElement();
+  bool EnableSecureElement();
 
   /**
    * NFC controller stops routing data in listen mode.
    *
    * @return True if ok.
    */
-  bool DoDeselectSecureElement();
+  bool DisableSecureElement();
 
   /**
    * This function is called to shutdown NFC.
