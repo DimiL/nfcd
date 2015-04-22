@@ -657,16 +657,8 @@ void NfcService::handleEnableResponse(NfcEvent* event)
       code = setLowPowerMode(false);
     } else if (mState == STATE_NFC_OFF) {
       code = enableNfc();
-      if (code != NFC_SUCCESS) {
-        goto TheEnd;
-      }
-      code = enableSE();
     }
   } else {
-    code = disableSE();
-    if (code != NFC_SUCCESS) {
-        goto TheEnd;
-    }
     code = disableNfc();
   }
 TheEnd:
@@ -688,6 +680,13 @@ NfcErrorCode NfcService::enableNfc()
 
   if (mP2pLinkManager) {
     mP2pLinkManager->enableDisable(true);
+  }
+
+  // TODO: Emulator doesn't support SE now so do not do fail return here.
+  // Put EnableSecureEleemnt before EnableDiscovery to avoid redundant
+  // turning on/off RF
+  if (!sNfcManager->enableSecureElement()) {
+    ALOGD("Enable secure element not succeed");
   }
 
   if (!sNfcManager->enableDiscovery()) {
@@ -719,6 +718,13 @@ NfcErrorCode NfcService::disableNfc()
     return NFC_ERROR_FAIL_DISABLE_DISCOVERY;
   }
 
+  // TODO: Emulator doesn't support SE now so do not do fail return here.
+  // Put DisableSecureEleemnt after DisableDiscovery to avoid redundant
+  // turning on/off RF
+  if (!sNfcManager->disableSecureElement()) {
+    ALOGD("Disable secure element not succeed");
+  }
+
   mState = STATE_NFC_OFF;
 
   return NFC_SUCCESS;
@@ -745,32 +751,6 @@ NfcErrorCode NfcService::setLowPowerMode(bool low)
     }
 
     mState = STATE_NFC_ON;
-  }
-
-  return NFC_SUCCESS;
-}
-
-// TODO: Emulator doesn't support SE now.
-//       So always return sucess to pass testcase.
-NfcErrorCode NfcService::enableSE()
-{
-  ALOGD("Enable secure element");
-
-  if (!sNfcManager->doSelectSecureElement()) {
-    ALOGE("Enable secure element fail");
-  }
-
-  return NFC_SUCCESS;
-}
-
-// TODO: Emulator doesn't support SE now.
-//       So always return sucess to pass testcase.
-NfcErrorCode NfcService::disableSE()
-{
-  ALOGD("Disable secure element");
-
-  if (!sNfcManager->doDeselectSecureElement()) {
-    ALOGE("Disable secure element fail");
   }
 
   return NFC_SUCCESS;

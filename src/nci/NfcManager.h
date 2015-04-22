@@ -174,14 +174,14 @@ public:
    *
    * @return True if ok.
    */
-  bool doSelectSecureElement();
+  bool enableSecureElement();
 
   /**
    * NFC controller stops routing data in listen mode.
    *
    * @return True if ok.
    */
-  bool doDeselectSecureElement();
+  bool disableSecureElement();
 
 private:
   P2pDevice* mP2pDevice;

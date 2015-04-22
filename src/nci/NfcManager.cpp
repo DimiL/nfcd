@@ -431,7 +431,7 @@ void NfcManager::setP2pTargetModes(int modes)
   // This function is not called by the NFC service nor exposed by public API.
 }
 
-bool NfcManager::doSelectSecureElement()
+bool NfcManager::enableSecureElement()
 {
   bool result = true;
 
@@ -460,7 +460,7 @@ bool NfcManager::doSelectSecureElement()
   return result;
 }
 
-bool NfcManager::doDeselectSecureElement()
+bool NfcManager::disableSecureElement()
 {
   bool result = false;
   bool reDiscover = false;
