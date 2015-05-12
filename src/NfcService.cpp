@@ -89,6 +89,8 @@ NfcManager* NfcService::sNfcManager = NULL;
 NfcService::NfcService()
  : mState(STATE_NFC_OFF)
  , mIsTagPresent(false)
+ , mTagSessionId(-1)
+ , mNotifyTagLost(false)
 {
   mP2pLinkManager = new P2pLinkManager(this);
 }
@@ -151,6 +153,7 @@ void NfcService::NotifyTagDiscovered(INfcTag* aTag)
 void NfcService::NotifyTagLost(int aSessionId)
 {
   NFCD_DEBUG("enter");
+  NfcService::Instance()->mNotifyTagLost = true;
   NfcEvent* event = new NfcEvent(MSG_TAG_LOST);
   event->obj = reinterpret_cast<void*>(aSessionId);
   NfcService::Instance()->mQueue.push_back(event);
@@ -297,7 +300,7 @@ void NfcService::HandleTagDiscovered(NfcEvent* aEvent)
   std::copy(techList.begin(), techList.end(), gonkTechList);
 
   TechDiscoveredEvent* data = new TechDiscoveredEvent();
-  data->sessionId = SessionId::GenerateNewId();
+  data->sessionId = mTagSessionId = SessionId::GenerateNewId();
   data->isP2P = false;
   data->techCount = techCount;
   data->techList = gonkTechList;
@@ -324,7 +327,15 @@ void NfcService::HandleTagDiscovered(NfcEvent* aEvent)
 
 void NfcService::HandleTagLost(NfcEvent* aEvent)
 {
-  mMsgHandler->ProcessNotification(NFC_NOTIFICATION_TECH_LOST, aEvent->obj);
+  // mNotifyTagLost is used for:
+  // If there is a tag connection and nfcd is shutdown by gecko
+  // Then tag detected thread may not be able to notify tag lost before nfcd is killed
+  // So tech lost will be notified right after DisableNfc
+  if (mNotifyTagLost) {
+    mMsgHandler->ProcessNotification(NFC_NOTIFICATION_TECH_LOST, aEvent->obj);
+  }
+  mTagSessionId = -1;
+  mNotifyTagLost = false;
 }
 
 void NfcService::HandleTransactionEvent(NfcEvent* aEvent)
@@ -630,6 +641,16 @@ void NfcService::HandleEnableResponse(NfcEvent* aEvent)
     }
   } else {
     code = DisableNfc();
+    if (code == NFC_SUCCESS) {
+      if (mP2pLinkManager->IsLlcpActive()) {
+        mMsgHandler->ProcessNotification(NFC_NOTIFICATION_TECH_LOST,
+          reinterpret_cast<void*>(mP2pLinkManager->GetSessionId()));
+      } else if (IsTagPresent() || mNotifyTagLost){
+        mMsgHandler->ProcessNotification(NFC_NOTIFICATION_TECH_LOST,
+          reinterpret_cast<void*>(GetTagSessionId()));
+        mNotifyTagLost = false;
+      }
+    }
   }
 
   NFCD_DEBUG("mState=%d", mState);

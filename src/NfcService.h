@@ -80,13 +80,16 @@ public:
 
   void TagDetected()    { mIsTagPresent = true; }
   void TagRemoved()     { mIsTagPresent = false; }
-  bool IsTagPresent()  { return mIsTagPresent; }
+  bool IsTagPresent()   { return mIsTagPresent; }
+  int GetTagSessionId() { return mTagSessionId; }
 
 private:
   NfcService();
 
   uint32_t mState;
   bool mIsTagPresent;
+  int mTagSessionId;
+  bool mNotifyTagLost;
   static NfcService* sInstance;
   static NfcManager* sNfcManager;
   android::List<NfcEvent*> mQueue;
